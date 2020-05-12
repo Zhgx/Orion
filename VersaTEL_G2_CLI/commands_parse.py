@@ -1,5 +1,4 @@
 # coding:utf-8
-
 import argparse
 import sys
 from excute_sys_command import (crm,lvm,linstor,stor,iscsi_map)
@@ -25,23 +24,33 @@ class CLIParse():
         self.vtel = self.cmd.vtel
         self.args = self.vtel.parse_args()
 
+
+    def CLIjudge(self):
         if self.args.vtel_sub == 'stor':
-            self.stor_judge()
+            stor = StorParse(self.args,self.cmd)
+            stor.stor_judge()
         elif self.args.vtel_sub == 'iscsi':
             print('iscsi')
         else:
             self.vtel.print_help()
 
+
+
+class StorParse():
+    def __init__(self,args,cmd):
+        self.args = args
+        self.cmd = cmd
+
     def node_judge(self):
         # 对输入参数的判断（node的下一个参数）
         args = self.args
-        parser = self.cmd
+        parser_ = self.cmd
         if args.node_sub in ['create', 'c']:
-            NodeCase.node_create(args,parser)
+            NodeCase.node_create(args,parser_)
         elif args.node_sub in ['modify', 'm']:
             NodeCase.node_modify(args)
         elif args.node_sub in ['delete', 'd']:
-            NodeCase.node_delete(args,parser)
+            NodeCase.node_delete(args,parser_)
         elif args.node_sub in ['show', 's']:
             NodeCase.node_show(args)
         else:
@@ -60,6 +69,7 @@ class CLIParse():
             ResCase.resource_show(args)
         else:
             self.cmd.stor_resource.print_help()
+
 
     def sp_judge(self):
         args = self.args
@@ -158,16 +168,7 @@ class ResCase():
 
     @classmethod
     def resource_create(cls,args,parser):
-        # def is_args_correct():
-        #     if len(args.node) >= len(args.storagepool):
-        #         return True
-
-        """
-        以下注释代码为创建resource判断分支的另一种写法
-        把创建resource的三种模式：正常创建（包括自动和手动），创建diskless，添加mirror分别封装
-        最后再执行
-        """
-        parser_create = parser.resource_create
+        parser_create = parser.res_create
 
         # 指定node和storagepool数量的规范判断，符合则继续执行
         def is_args_correct():
@@ -178,156 +179,60 @@ class ResCase():
             if not regex.judge_size(size):
                 raise InvalidSize('Invalid Size')
 
-        # 特定模式必需的参数
+        # 对应创建模式必需输入的参数和禁止输入的参数
         list_auto_required = [args.auto, args.num]
+        list_auto_forbid = [args.node, args.storagepool, args.diskless,args.add_mirror]
         list_manual_required = [args.node, args.storagepool]
+        list_manual_forbid = [args.auto, args.num, args.diskless,args.add_mirror]
+        list_diskless_forbid = [args.auto, args.num, args.storagepool,args.add_mirror]
 
-        # 正常创建resource
-        def create_normal_resource():
-            # 正常创建resource禁止输入的参数
-            list_normal_forbid = [args.diskless, args.add_mirror]
-            if not args.size:
-                return
-            if any(list_normal_forbid):
-                return
+
+        if args.size:
+            #judge size
             try:
                 is_vail_size(args.size)
             except InvalidSize:
                 print('%s is not a valid size!' % args.size)
                 sys.exit(0)
-            else:
-                pass
-
-            if all(list_auto_required) and not any(list_manual_required):
-                # For GUI
-                if args.gui:
-                    handle = SocketSend()
-                    handle.send_result(stor.create_res_auto, args.resource, args.size, args.num)
-                    return True
-                # CLI
-                else:
-                    stor.create_res_auto(args.resource, args.size, args.num)
-                    return True
-            elif all(list_manual_required) and not any(list_auto_required):
+            #自动创建条件判断，符合则执行
+            if all(list_auto_required) and not any(list_auto_forbid):
+                stor.create_res_auto(args.resource, args.size, args.num)
+            #手动创建条件判断，符合则执行
+            elif all(list_manual_required) and not any(list_manual_forbid):
                 try:
                     is_args_correct()
-                except NodeLessThanSPError:
-                    print('The number of nodes and storage pools do not meet the requirements')
-                    return True
-                else:
-                    # For GUI
-                    if args.gui:
-                        handle = SocketSend()
-                        handle.send_result(stor.create_res_manual, args.resource, args.size, args.node,
-                                           args.storagepool)
-                        return True
-                    # CLI
-                    else:
-                        stor.create_res_manual(args.resource, args.size, args.node, args.storagepool)
-                        return True
-
-        # 创建resource的diskless资源条件判断，符合则执行
-        def create_diskless_resource():
-            list_diskless_forbid = [args.auto, args.num, args.storagepool, args.add_mirror, args.size]
-            if not args.node:
-                return
-            if not any(list_diskless_forbid):
-                if args.gui:
-                    handle = SocketSend()
-                    handle.send_result(stor.create_res_diskless, args.node, args.resource)
-                    return True
-                else:
-                    stor.create_res_diskless(args.node, args.resource)
-                    return True
-
-        # 添加mirror
-        def add_resource_mirror():
-            # 添加mirror禁止输入的参数
-            list_add_mirror_forbid = [args.diskless, args.size]
-            if not args.add_mirror:
-                return
-            if any(list_add_mirror_forbid):
-                return
-            if all(list_auto_required) and not any(list_manual_required):
-                # For GUI
-                if args.gui:
-                    handle = SocketSend()
-                    handle.send_result(stor.add_mirror_auto, args.resource, args.num)
-                    return True
-                else:
-                    stor.add_mirror_auto(args.resource, args.num)
-                    return True
-            elif all(list_manual_required) and not any(list_auto_required):
-                try:
-                    is_args_correct()
+                    stor.create_res_manual(args.resource, args.size, args.node, args.storagepool)
                 except NodeLessThanSPError:
                     print('The number of nodes does not meet the requirements')
-                    return True
+                    sys.exit(0)
                 else:
-                    # For GUI
-                    if args.gui:
-                        handle = SocketSend()
-                        handle.send_result(stor.add_mirror_manual, args.resource, args.node,
-                                           args.storagepool)
-                        return True
-                    else:
-                        stor.add_mirror_manual(args.resource, args.node, args.storagepool)
-                        return True
+                    parser_create.print_help()
+            else:
+                parser_create.print_help()
 
-        # 总执行
-        if create_normal_resource():
-            pass
-        elif create_diskless_resource():
-            pass
-        elif add_resource_mirror():
-            pass
+
+        elif args.diskless:
+            # 创建resource的diskless资源条件判断，符合则执行
+            if args.node and not any(list_diskless_forbid):
+                stor.create_res_diskless(args.node, args.resource)
+            else:
+                parser_create.print_help()
+
+        elif args.add_mirror:
+            #手动添加mirror条件判断，符合则执行
+            if all([args.node,args.storagepool]) and not any([args.auto, args.num]):
+                if is_args_correct():
+                    stor.add_mirror_manual(args.resource,args.node,args.storagepool)
+                else:
+                    parser_create.print_help()
+            #自动添加mirror条件判断，符合则执行
+            elif all([args.auto,args.num]) and not any([args.node,args.storagepool]):
+                stor.add_mirror_auto(args.resource,args.num)
+            else:
+                parser_create.print_help()
+
         else:
             parser_create.print_help()
-
-        # # 对应创建模式必需输入的参数和禁止输入的参数
-        # list_auto_required = [args.auto, args.num]
-        # list_auto_forbid = [args.node, args.storagepool, args.diskless,args.add_mirror]
-        # list_manual_required = [args.node, args.storagepool]
-        # list_manual_forbid = [args.auto, args.num, args.diskless,args.add_mirror]
-        # list_diskless_forbid = [args.auto, args.num, args.storagepool,args.add_mirror]
-        #
-        #
-        # if args.size:
-        #     #自动创建条件判断，符合则执行
-        #     if all(list_auto_required) and not any(list_auto_forbid):
-        #         stor.create_res_auto(args.resource, args.size, args.num)
-        #     #手动创建条件判断，符合则执行
-        #     elif all(list_manual_required) and not any(list_manual_forbid):
-        #         if is_args_correct():
-        #             stor.create_res_manual(args.resource,args.size,args.node,args.storagepool)
-        #         else:
-        #             parser_create.print_help()
-        #     else:
-        #         parser_create.print_help()
-        #
-        #
-        # elif args.diskless:
-        #     # 创建resource的diskless资源条件判断，符合则执行
-        #     if args.node and not any(list_diskless_forbid):
-        #         stor.create_res_diskless(args.node, args.resource)
-        #     else:
-        #         parser_create.print_help()
-        #
-        # elif args.add_mirror:
-        #     #手动添加mirror条件判断，符合则执行
-        #     if all([args.node,args.storagepool]) and not any([args.auto, args.num]):
-        #         if is_args_correct():
-        #             stor.add_mirror_manual(args.resource,args.node,args.storagepool)
-        #         else:
-        #             parser_create.print_help()
-        #     #自动添加mirror条件判断，符合则执行
-        #     elif all([args.auto,args.num]) and not any([args.node,args.storagepool]):
-        #         stor.add_mirror_auto(args.resource,args.num)
-        #     else:
-        #         parser_create.print_help()
-        #
-        # else:
-        #     parser_create.print_help()
 
     # resource修改功能，未开发
     @classmethod
@@ -337,7 +242,8 @@ class ResCase():
     # resource删除判断
     @classmethod
     def resource_delete(cls,args,parser):
-        parser_delete = parser.resource_delete
+        print(parser)
+        parser_delete = parser.res_delete
 
         def excute():  # 判断是否指定节点
             if args.node:
@@ -817,4 +723,5 @@ class SnapCase():
 
 
 if __name__ == '__main__':
-    CLIParse()
+    obj_cli = CLIParse()
+    obj_cli.CLIjudge()
