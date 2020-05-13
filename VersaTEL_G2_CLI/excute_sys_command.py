@@ -2,7 +2,6 @@
 import re
 import subprocess
 import time
-import regex
 from collections import OrderedDict
 
 class crm():

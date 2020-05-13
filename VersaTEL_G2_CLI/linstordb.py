@@ -7,12 +7,6 @@ import multiprocessing as mp
 import regex
 from excute_sys_command import (linstor,lvm)
 
-def nowtime():
-    time = datetime.datetime.now()
-    return time
-
-
-
 class LINSTORDB():
     #LINSTOR表
     crt_sptb_sql = '''

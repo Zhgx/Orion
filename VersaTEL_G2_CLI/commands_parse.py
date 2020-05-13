@@ -5,7 +5,6 @@ from excute_sys_command import (crm,lvm,linstor,stor,iscsi_map)
 import linstordb
 from iscsi_json import JSON_OPERATION
 from cli_socketclient import SocketSend
-import regex
 from commands import CLI
 import re
 
