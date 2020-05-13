@@ -5,8 +5,6 @@ import time
 import regex
 from collections import OrderedDict
 
-
-
 class crm():
 
     def re_data(self, crmdatas):
@@ -125,6 +123,7 @@ class crm():
 
 
 class lvm():
+
     @staticmethod
     def get_vg():
         result_vg = subprocess.Popen('vgs',shell=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
@@ -134,6 +133,27 @@ class lvm():
     def get_thinlv():
         result_thinlv = subprocess.Popen('lvs',shell=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
         return result_thinlv.stdout.read().decode()
+
+    @staticmethod
+    def refine_thinlv(str):
+        list_tb = str.splitlines()
+        list_thinlv = []
+        re_ = re.compile(r'\s*(\S*)\s*(\S*)\s*\S*\s*(\S*)\s*\S*\s*\S*\s*\S*\s*?')
+        for list_one in list_tb:
+            if 'twi' in list_one:
+                thinlv_one = re_.findall(list_one)
+                list_thinlv.append(list(thinlv_one[0]))
+        return list_thinlv
+
+    @staticmethod
+    def refine_vg(str):
+        list_tb = str.splitlines()
+        list_vg = []
+        re_ = re.compile(r'\s*(\S*)\s*\S*\s*\S*\s*\S*\s*\S*\s*(\S*)\s*(\S*)\s*?')
+        for list_one in list_tb[1:]:
+            vg_one = re_.findall(list_one)
+            list_vg.append(list(vg_one[0]))
+        return list_vg
 
 
 class linstor():
@@ -156,29 +176,78 @@ class linstor():
         return result_sp.stdout.read().decode('utf-8')
 
     @staticmethod
-    def delete_rd(res):
-        cmd = 'linstor rd d %s' % res
-        subprocess.check_output(cmd, shell=True)
+    def refine_linstor(table_data):
+        reSeparate = re.compile('(.*?\s\|)')
+        list_table = table_data.split('\n')
+        list_data_all = []
 
-    @staticmethod
-    def delete_vd(res):
-        cmd = 'linstor vd d %s' % res
-        subprocess.check_output(cmd, shell=True)
+        def clear_symbol(list_data):
+            for i in range(len(list_data)):
+                list_data[i] = list_data[i].replace(' ', '')
+                list_data[i] = list_data[i].replace('|', '')
+
+        for i in range(len(list_table)):
+            if list_table[i].startswith('|') and '=' not in list_table[i]:
+                valid_data = reSeparate.findall(list_table[i])
+                clear_symbol(valid_data)
+                list_data_all.append(valid_data)
+        try:
+            list_data_all.pop(0)
+        except IndexError:
+            print('The data cannot be read, please check whether LINSTOR is normal.')
+        return list_data_all
 
 
 #子命令stor调用的方法
 class stor():
+
+
+    @staticmethod
+    def judge_cmd_result_suc(cmd):
+        re_suc = re.compile('SUCCESS')
+        if re_suc.search(cmd):
+            return True
+
+    @staticmethod
+    def judge_cmd_result_err(cmd):
+        re_err = re.compile('ERROR')
+        if re_err.search(cmd):
+            return True
+
+    @staticmethod
+    def judge_cmd_result_war(cmd):
+        re_err = re.compile('WARNING')
+        if re_err.search(cmd):
+            return True
+    @staticmethod
+    def get_err_not_vg(result, node, vg):
+        re_ = re.compile(r'\(Node: \'' + node + '\'\) Volume group \'' + vg + '\' not found')
+        if re_.search(result):
+            return (re_.search(result).group())
+
+    @staticmethod
+    def get_err_detailes(result):
+        re_ = re.compile(r'Description:\n[\t\s]*(.*)\n')
+        if re_.search(result):
+            return (re_.search(result).group(1))
+
+    @staticmethod
+    def get_war_mes(result):
+        re_ = re.compile(r'\x1b\[1;33mWARNING:\n\x1b(?:.*\s*)+\n$')
+        if re_.search(result):
+            return (re_.search(result).group())
+
     @staticmethod
     def execute_cmd(cmd):
         action = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         result = action.stdout.read()
-        if regex.judge_cmd_result_suc(str(result)):
+        if stor.judge_cmd_result_suc(str(result)):
             return True
-        elif regex.judge_cmd_result_err(str(result)):
+        elif stor.judge_cmd_result_err(str(result)):
             print(result.decode('utf-8'))
             return result.decode()
-        if regex.judge_cmd_result_war(str(result)):
-            messege_war = regex.get_war_mes(result.decode('utf-8'))
+        if stor.judge_cmd_result_war(str(result)):
+            messege_war = stor.get_war_mes(result.decode('utf-8'))
             print(messege_war)
             return messege_war
 
@@ -260,13 +329,13 @@ class stor():
         def create_resource(cmd):
             action = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             result = action.stdout
-            if regex.judge_cmd_result_war(str(result)):
-                print(regex.get_war_mes(result.decode('utf-8')))
+            if stor.judge_cmd_result_war(str(result)):
+                print(stor.get_war_mes(result.decode('utf-8')))
 
-            if regex.judge_cmd_result_suc(str(result)):
+            if stor.judge_cmd_result_suc(str(result)):
                 print('Resource %s was successfully created on Node %s' % (res, node_one))
-            elif regex.judge_cmd_result_err(str(result)):
-                str_fail_cause = regex.get_err_detailes(result.decode('utf-8'))
+            elif stor.judge_cmd_result_err(str(result)):
+                str_fail_cause = stor.get_err_detailes(result.decode('utf-8'))
                 dict_fail = {node_one: str_fail_cause}
                 flag.update(dict_fail)
 
@@ -311,10 +380,10 @@ class stor():
         def add_mirror():
             action = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             result = action.stdout
-            if regex.judge_cmd_result_suc(str(result)):
+            if stor.judge_cmd_result_suc(str(result)):
                 print('Resource %s was successfully created on Node %s' % (res, node_one))
-            elif regex.judge_cmd_result_err(str(result)):
-                str_fail_cause = regex.get_err_detailes(result.decode('utf-8'))
+            elif stor.judge_cmd_result_err(str(result)):
+                str_fail_cause = stor.get_err_detailes(result.decode('utf-8'))
                 dict_fail = {node_one: str_fail_cause}
                 flag.update(dict_fail)
 
@@ -329,7 +398,7 @@ class stor():
                 add_mirror()
             return print_fail_node()
         else:
-            print('sp数量为1或者与node相等')
+            print('The number of storage pools does not meet the requirements.')
 
     # 创建resource --diskless
     @staticmethod
@@ -355,20 +424,20 @@ class stor():
         cmd = 'linstor storage-pool create lvm %s %s %s' % (node, stp, vg)
         action = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         result = action.stdout
-        if regex.judge_cmd_result_war(str(result)):
+        if stor.judge_cmd_result_war(str(result)):
             print(result.decode('utf-8'))
         # 发生ERROR的情况
-        if regex.judge_cmd_result_err(str(result)):
+        if stor.judge_cmd_result_err(str(result)):
             # 使用不存的vg
-            if regex.get_err_not_vg(str(result), node, vg):
-                print(regex.get_err_not_vg(str(result), node, vg))
+            if stor.get_err_not_vg(str(result), node, vg):
+                print(stor.get_err_not_vg(str(result), node, vg))
                 subprocess.check_output('linstor storage-pool delete %s %s' % (node, stp), shell=True)
             else:
                 print(result.decode('utf-8'))
                 print('FAIL')
                 return result.decode()
         # 成功
-        elif regex.judge_cmd_result_suc(str(result)):
+        elif stor.judge_cmd_result_suc(str(result)):
             print('SUCCESS')
             return True
 
@@ -434,7 +503,7 @@ class iscsi_map():
         disk = js.get_data('DiskGroup').get(dg)
         cd = crm()
         data = cd.get_data_linstor()
-        linstorlv = regex.refine_linstor(data)
+        linstorlv = linstor.refine_linstor(data)
         print("get linstor r lv data")
         diskd = {}
         for d in linstorlv:

@@ -7,7 +7,7 @@ class CLI():
     def __init__(self):
         self.add_vtel()
         self.add_stor()
-        self.parser_iscsi()
+        self.add_iscsi()
 
 
     def add_vtel(self):
@@ -113,28 +113,28 @@ class CLI():
         self.res_create.add_argument('-gui', dest='gui', action='store_true', help=argparse.SUPPRESS,
                                           default=False)
 
-        # 自动创建在num个节点上
+        #Parameter group : Select several nodes to create resources
         group_auto = self.res_create.add_argument_group(title='auto create')
         group_auto.add_argument('-a', dest='auto', action='store_true', default=False,
                                 help='Auto create method Automatic create')
         group_auto.add_argument('-num', dest='num', action='store',
                                 help='Number of nodes specified by auto creation method', type=int)
 
-        # 手动选择节点和存储池
+        #Parameter group :Create resources by selecting nodes and storage pools
         group_manual = self.res_create.add_argument_group(title='manual create')
         group_manual.add_argument('-n', dest='node', action='store', nargs='+',
                                   help='Name of the node to deploy the resource')
         group_manual.add_argument('-sp', dest='storagepool', nargs='+', help='Storage pool name to use.')
 
-        # 创建diskless
+        #Parameter group : Create diskless resources
         group_manual_diskless = self.res_create.add_argument_group(title='diskless create')
         group_manual_diskless.add_argument('-diskless', action='store_true', default=False, dest='diskless',
                                            help='Will add a diskless resource on all non replica nodes.')
 
-        # 创建mirror way，可用于自动创建和手动创建
+        #Parameter group : Add mirror
         group_add_mirror = self.res_create.add_argument_group(title='add mirror way')
         group_add_mirror.add_argument('-am', action='store_true', default=False, dest='add_mirror',
-                                      help='Add resource mirror on other nodes')
+                                      help='Add mirror member base on specify node to specify resource.')
 
         #level4,arguments of resource modify
         self.res_modify.add_argument('resource', metavar='RESOURCE', action='store',
@@ -193,92 +193,96 @@ class CLI():
 
 
 
-    def parser_iscsi(self):
-        ## iscsi
+    def add_iscsi(self):
+        # level2,subcommands of iscsi: host,disk,hostgroup,diskgroup,map,show
         sub_iscsi = self.iscsi.add_subparsers(dest='iscsi')
-        self.iscsi_host = sub_iscsi.add_parser('host', aliases='h', help='host operation')
-        self.iscsi_disk = sub_iscsi.add_parser('disk', aliases='d', help='disk operation')
-        self.iscsi_hostgroup = sub_iscsi.add_parser('hostgroup', aliases=['hg'], help='hostgroup operation')
-        self.iscsi_diskgroup = sub_iscsi.add_parser('diskgroup', aliases=['dg'], help='diskgroup operation')
-        self.iscsi_map = sub_iscsi.add_parser('map', aliases='m', help='map operation')
-        self.iscsi_show = sub_iscsi.add_parser('show', aliases='s')
+        self.host = sub_iscsi.add_parser('host', aliases='h', help='host operation')
+        self.disk = sub_iscsi.add_parser('disk', aliases='d', help='disk operation')
+        self.hostgroup = sub_iscsi.add_parser('hostgroup', aliases=['hg'], help='hostgroup operation')
+        self.diskgroup = sub_iscsi.add_parser('diskgroup', aliases=['dg'], help='diskgroup operation')
+        self.map = sub_iscsi.add_parser('map', aliases='m', help='map operation')
+        self.show = sub_iscsi.add_parser('show', aliases='s')
 
-        ### iscsi show
-        self.iscsi_show.add_argument('js', help='js show')
+        # level3,subcommands of show: js
+        self.show.add_argument('js', help='js show')
 
-        ### iscsi host
-        sub_iscsi_host = self.iscsi_host.add_subparsers(dest='host')
-        self.iscsi_host_create = sub_iscsi_host.add_parser('create', aliases='c',
-                                                           help='host create [host_name] [host_iqn]')
-        self.iscsi_host_show = sub_iscsi_host.add_parser('show', aliases='s', help='host show / host show [host_name]')
-        self.iscsi_host_delete = sub_iscsi_host.add_parser('delete', aliases='d', help='host delete [host_name]')
-        # self.iscsi_host_modify = sub_iscsi_host.add_parser('modify',help='host modify')
+        # level3,subcommands of host: create, show, delete
+        sub_host = self.host.add_subparsers(dest='host')
+        self.host_create = sub_host.add_parser('create', aliases='c', help='host create [host_name] [host_iqn]')
+        self.host_show = sub_host.add_parser('show', aliases='s', help='host show / host show [host_name]')
+        self.host_delete = sub_host.add_parser('delete', aliases='d', help='host delete [host_name]')
+        # self.iscsi_host_modify = sub_host.add_parser('modify',help='host modify')
 
-        ### iscsi disk
-        sub_iscsi_disk = self.iscsi_disk.add_subparsers(dest='disk')
-        self.iscsi_disk_show = sub_iscsi_disk.add_parser('show', aliases='s', help='disk show')
+        # level3,subcommands of disk: show
+        sub_disk = self.disk.add_subparsers(dest='disk')
+        self.disk_show = sub_disk.add_parser('show', aliases='s', help='disk show')
 
-        ### iscsi hostgroup
-        sub_iscsi_hostgroup = self.iscsi_hostgroup.add_subparsers(dest='hostgroup')
-        self.iscsi_hostgroup_create = sub_iscsi_hostgroup.add_parser('create', aliases='c',
-                                                                     help='hostgroup create [hostgroup_name] [host_name1] [host_name2] ...')
-        self.iscsi_hostgroup_show = sub_iscsi_hostgroup.add_parser('show', aliases='s',
-                                                                   help='hostgroup show / hostgroup show [hostgroup_name]')
-        self.iscsi_hostgroup_delete = sub_iscsi_hostgroup.add_parser('delete', aliases='d',
-                                                                     help='hostgroup delete [hostgroup_name]')
+        # level3,subcommands of hostgroup: create, show, delete
+        """ hg = hostgroup """
+        sub_hostgroup = self.hostgroup.add_subparsers(dest='hostgroup')
+        self.hg_create = sub_hostgroup.add_parser('create', aliases='c', help='hostgroup create [hostgroup_name] [host_name1] [host_name2] ...')
+        self.hg_show = sub_hostgroup.add_parser('show', aliases='s',help='hostgroup show / hostgroup show [hostgroup_name]')
+        self.hg_delete = sub_hostgroup.add_parser('delete', aliases='d', help='hostgroup delete [hostgroup_name]')
 
-        ### iscsi diskgroup
-        sub_iscsi_diskgroup = self.iscsi_diskgroup.add_subparsers(dest='diskgroup')
-        self.iscsi_diskgroup_create = sub_iscsi_diskgroup.add_parser('create', aliases='c',
-                                                                     help='diskgroup create [diskgroup_name] [disk_name1] [disk_name2] ...')
-        self.iscsi_diskgroup_show = sub_iscsi_diskgroup.add_parser('show', aliases='s',
-                                                                   help='diskgroup show / diskgroup show [diskgroup_name]')
-        self.iscsi_diskgroup_delete = sub_iscsi_diskgroup.add_parser('delete', aliases='d',
-                                                                     help='diskgroup delete [diskgroup_name]')
+        # level3,subcommands of diskgroup: create, show, delete
+        """ dg = diskgroup """
+        sub_diskgroup = self.diskgroup.add_subparsers(dest='diskgroup')
+        self.dg_create = sub_diskgroup.add_parser('create', aliases='c', help='diskgroup create [diskgroup_name] [disk_name1] [disk_name2] ...')
+        self.dg_show = sub_diskgroup.add_parser('show', aliases='s', help='diskgroup show / diskgroup show [diskgroup_name]')
+        self.dg_delete = sub_diskgroup.add_parser('delete', aliases='d', help='diskgroup delete [diskgroup_name]')
 
-        ### iscsi map
-        sub_iscsi_map = self.iscsi_map.add_subparsers(dest='map')
-        self.iscsi_map_create = sub_iscsi_map.add_parser('create', aliases='c',
-                                                         help='map create [map_name] -hg [hostgroup_name] -dg [diskgroup_name]')
-        self.iscsi_map_show = sub_iscsi_map.add_parser('show', aliases='s', help='map show / map show [map_name]')
-        self.iscsi_map_delete = sub_iscsi_map.add_parser('delete', aliases='d', help='map delete [map_name]')
+        # level3,subcommands of map: create, show, delete
+        sub_map = self.map.add_subparsers(dest='map')
+        self.map_create = sub_map.add_parser('create', aliases='c', help='map create [map_name] -hg [hostgroup_name] -dg [diskgroup_name]')
+        self.map_show = sub_map.add_parser('show', aliases='s', help='map show / map show [map_name]')
+        self.map_delete = sub_map.add_parser('delete', aliases='d', help='map delete [map_name]')
 
-        #### iscsi host argument
-        self.iscsi_host_create.add_argument('iqnname', action='store', help='host_name')
-        self.iscsi_host_create.add_argument('iqn', action='store', help='host_iqn')
-        self.iscsi_host_create.add_argument('-gui', help='iscsi gui', nargs='?', default='cmd')
-        self.iscsi_host_show.add_argument('show', action='store', help='host show [host_name]', nargs='?',
-                                          default='all')
-        self.iscsi_host_delete.add_argument('iqnname', action='store', help='host_name', default=None)
+        # level4,arguments of host create
+        self.host_create.add_argument('iqnname', action='store', help='host_name')
+        self.host_create.add_argument('iqn', action='store', help='host_iqn')
+        self.host_create.add_argument('-gui', help='iscsi gui', nargs='?', default='cmd')
 
-        #### iscsi disk argument
-        self.iscsi_disk_show.add_argument('show', action='store', help='disk show [disk_name]', nargs='?',
-                                          default='all')
+        # level4,arguments of host show
+        self.host_show.add_argument('show', action='store', help='host show [host_name]', nargs='?', default='all')
+        # level4,arguments of host delete
+        self.host_delete.add_argument('iqnname', action='store', help='host_name', default=None)
 
-        #### iscsi hostgroup argument
-        self.iscsi_hostgroup_create.add_argument('hostgroupname', action='store', help='hostgroup_name')
-        self.iscsi_hostgroup_create.add_argument('iqnname', action='store', help='host_name', nargs='+')
-        self.iscsi_hostgroup_create.add_argument('-gui', help='iscsi gui', nargs='?', default='cmd')
-        self.iscsi_hostgroup_show.add_argument('show', action='store', help='hostgroup show [hostgroup_name]',
-                                               nargs='?', default='all')
-        self.iscsi_hostgroup_delete.add_argument('hostgroupname', action='store', help='hostgroup_name', default=None)
+        # level4,arguments of disk show
+        self.disk_show.add_argument('show', action='store', help='disk show [disk_name]', nargs='?', default='all')
 
-        #### iscsi diskgroup argument
-        self.iscsi_diskgroup_create.add_argument('diskgroupname', action='store', help='diskgroup_name')
-        self.iscsi_diskgroup_create.add_argument('diskname', action='store', help='disk_name', nargs='+')
-        self.iscsi_diskgroup_create.add_argument('-gui', help='iscsi gui', nargs='?', default='cmd')
-        self.iscsi_diskgroup_show.add_argument('show', action='store', help='diskgroup show [diskgroup_name]',
-                                               nargs='?', default='all')
-        self.iscsi_diskgroup_delete.add_argument('diskgroupname', action='store', help='diskgroup_name', default=None)
+        # level4,arguments of hostgroup create
+        self.hg_create.add_argument('hostgroupname', action='store', help='hostgroup_name')
+        self.hg_create.add_argument('iqnname', action='store', help='host_name', nargs='+')
+        self.hg_create.add_argument('-gui', help='iscsi gui', nargs='?', default='cmd')
 
-        #### iscsi map argument
-        self.iscsi_map_create.add_argument('mapname', action='store', help='map_name')
-        self.iscsi_map_create.add_argument('-hg', action='store', help='hostgroup_name')
-        self.iscsi_map_create.add_argument('-dg', action='store', help='diskgroup_name')
-        self.iscsi_map_create.add_argument('-gui', help='iscsi gui', nargs='?', default='cmd')
-        self.iscsi_map_show.add_argument('show', action='store', help='map show [map_name]', nargs='?', default='all')
-        self.iscsi_map_delete.add_argument('mapname', action='store', help='map_name', default=None)
+        # level4,arguments of hostgroup show
+        self.hg_show.add_argument('show', action='store', help='hostgroup show [hostgroup_name]', nargs='?', default='all')
 
+        # level4,arguments of hostgroup delete
+        self.hg_delete.add_argument('hostgroupname', action='store', help='hostgroup_name', default=None)
+
+        # level4,arguments of diskgroup create
+        self.dg_create.add_argument('diskgroupname', action='store', help='diskgroup_name')
+        self.dg_create.add_argument('diskname', action='store', help='disk_name', nargs='+')
+        self.dg_create.add_argument('-gui', help='iscsi gui', nargs='?', default='cmd')
+
+        # level4,arguments of diskgroup show
+        self.dg_show.add_argument('show', action='store', help='diskgroup show [diskgroup_name]', nargs='?', default='all')
+
+        # level4,arguments of diskgroup delete
+        self.dg_delete.add_argument('diskgroupname', action='store', help='diskgroup_name', default=None)
+
+        # level4,arguments of map create
+        self.map_create.add_argument('mapname', action='store', help='map_name')
+        self.map_create.add_argument('-hg', action='store', help='hostgroup_name')
+        self.map_create.add_argument('-dg', action='store', help='diskgroup_name')
+        self.map_create.add_argument('-gui', help='iscsi gui', nargs='?', default='cmd')
+
+        # level4,arguments of map show
+        self.map_show.add_argument('show', action='store', help='map show [map_name]', nargs='?', default='all')
+
+        # level4,arguments of map delete
+        self.map_delete.add_argument('mapname', action='store', help='map_name', default=None)
 
 if __name__ == '__main__':
     pass

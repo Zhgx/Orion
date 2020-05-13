@@ -166,24 +166,23 @@ class LINSTORDB():
             threads[i].join()
 
     def exc_get_vg(self):
-        vg = regex.refine_vg(lvm.get_vg())
+        vg = lvm.refine_vg(lvm.get_vg())
         self.insert_data(self.replace_vgtb_sql,vg)
 
-
     def exc_get_thinlv(self):
-        thinlv = regex.refine_thinlv(lvm.get_thinlv())
+        thinlv = lvm.refine_thinlv(lvm.get_thinlv())
         self.insert_data(self.replace_thinlvtb_sql, thinlv)
 
     def thread_get_node(self):
-        node = regex.refine_linstor(linstor.get_node())
+        node = linstor.refine_linstor(linstor.get_node())
         self.insert_data(self.replace_ntb_sql,node)
 
     def thread_get_res(self):
-        res = regex.refine_linstor(linstor.get_res())
+        res = linstor.refine_linstor(linstor.get_res())
         self.insert_data(self.replace_rtb_sql,res)
 
     def thread_get_sp(self):
-        sp = regex.refine_linstor(linstor.get_sp())
+        sp = linstor.refine_linstor(linstor.get_sp())
         self.insert_data(self.replace_stb_sql,sp)
 
 
