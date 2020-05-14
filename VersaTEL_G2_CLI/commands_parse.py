@@ -1,12 +1,13 @@
 # coding:utf-8
 import argparse
 import sys
-from excute_sys_command import (crm,lvm,linstor,stor,iscsi_map)
+import re
+import pickle
+from execute_sys_command import (crm,lvm,linstor,stor,iscsi_map)
 import linstordb
 from iscsi_json import JSON_OPERATION
-from cli_socketclient import SocketSend
-from commands import CLI
-import re
+from argparse_init import Commands
+import sundry
 
 # 多节点创建resource时，storapoo多于node的异常类
 class NodeLessThanSPError(Exception):
@@ -18,13 +19,13 @@ class InvalidSizeError(Exception):
 
 
 
-class CLIParse():
+class VtelParse():
     def __init__(self):
-        self.cmd = CLI()
+        self.cmd = Commands()
         self.vtel = self.cmd.vtel
         self.args = self.vtel.parse_args()
 
-    def CLIjudge(self):
+    def vtel_judge(self):
         if self.args.vtel_sub == 'stor':
             stor = StorParse(self.args,self.cmd)
             stor.stor_judge()
@@ -53,7 +54,7 @@ class StorParse():
         elif args.node_sub in ['show', 's']:
             NodeCase.node_show(args)
         else:
-            self.cmd.stor_node.print_help()
+            self.cmd.node.print_help()
 
     def res_judge(self):
         args = self.args
@@ -68,7 +69,7 @@ class StorParse():
         elif args.resource_sub in ['show', 's']:
             ResCase.resource_show(args)
         else:
-            self.cmd.stor_resource.print_help()
+            self.cmd.resource.print_help()
 
 
     def sp_judge(self):
@@ -83,7 +84,7 @@ class StorParse():
         elif args.storagepool_sub in ['show', 's']:
             SPCase.storagepool_show(args)
         else:
-            self.cmd.stor_storagepool.print_help()
+            self.cmd.storagepool.print_help()
 
 
 
@@ -99,12 +100,12 @@ class StorParse():
             elif args.stor_sub in ['snap', 'sn']:
                 pass
 
-            elif args.db:
+            elif args.gui:
                 db = linstordb.LINSTORDB()
-                handle = SocketSend()
-                handle.send_result(db.data_base_dump)
+                data = pickle.dumps(db.data_base_dump)
+                sundry.socket_send_result(data)
             else:
-                self.cmd.vtel_stor.print_help()
+                self.cmd.stor.print_help()
 
 
 class NodeCase():
@@ -112,8 +113,8 @@ class NodeCase():
     def node_create(cls,args,parser):
         parser_create = parser.node_create
         if args.gui:
-            handle = SocketSend()
-            handle.send_result(stor.create_node, args.node, args.ip, args.nodetype)
+            data = pickle.dumps(stor.create_node(args.node, args.ip, args.nodetype))
+            sundry.socket_send_result(data)
         elif args.node and args.nodetype and args.ip:
             stor.create_node(args.node, args.ip, args.nodetype)
         else:
@@ -215,7 +216,7 @@ class ResCase():
         elif args.add_mirror:
             #手动添加mirror条件判断，符合则执行
             if all([args.node,args.storagepool]) and not any([args.auto, args.num]):
-                if is_args_correct():
+                if ResCase.is_args_correct():
                     stor.add_mirror_manual(args.resource,args.node,args.storagepool)
                 else:
                     parser_create.print_help()
@@ -301,14 +302,14 @@ class SPCase():
         if args.storagepool and args.node:
             if args.lvm:
                 if args.gui:
-                    handle = SocketSend()
-                    handle.send_result(stor.create_storagepool_lvm, args.node, args.storagepool, args.lvm)
+                    data = pickle.dumps(stor.create_storagepool_lvm(args.node, args.storagepool, args.lvm))
+                    sundry.socket_send_result(data)
                 else:
                     stor.create_storagepool_lvm(args.node, args.storagepool, args.lvm)
             elif args.tlv:
                 if args.gui:
-                    handle = SocketSend()
-                    handle.send_result(stor.create_storagepool_thinlv, args.node, args.storagepool, args.tlv)
+                    data = pickle.dumps(stor.create_storagepool_thinlv(args.node, args.storagepool, args.tlv))
+                    sundry.socket_send_result(data)
                 else:
                     stor.create_storagepool_thinlv(args.node, args.storagepool, args.tlv)
             else:
@@ -388,15 +389,15 @@ class IscsiParse():
             self.show_judge(args, js)
         else:
             print("iscsi (choose from 'host', 'disk', 'hg', 'dg', 'map')")
-            self.cmd.vtel_iscsi.print_help()
+            self.cmd.iscsi.print_help()
 
     # iscsi host
     def host_judge(self, args, js):
         # host判断
         if args.host in ['create', 'c']:
             if args.gui == 'gui':
-                handle = SocketSend()
-                handle.send_result(HostCase.host_create, args, js)
+                data = pickle.dumps(HostCase.host_create(args, js))
+                sundry.socket_send_result(data)
             else:
                 HostCase.host_create(args, js)
         elif args.host in ['show', 's']:
@@ -405,7 +406,7 @@ class IscsiParse():
             HostCase.host_delete(args, js)
         else:
             print("iscsi host (choose from 'create', 'show', 'delete')")
-            self.cmd.iscsi_host.print_help()
+            self.cmd.host.print_help()
 
     # iscsi disk
     def disk_judge(self, args, js):
@@ -414,15 +415,15 @@ class IscsiParse():
             DiskCase.disk_show(args, js)
         else:
             print("iscsi disk (choose from 'show')")
-            self.cmd.iscsi_disk.print_help()
+            self.cmd.disk.print_help()
 
     # iscsi hostgroup
     def hostgroup_judge(self, args, js):
         # hostgroup判断
         if args.hostgroup in ['create', 'c']:
             if args.gui == 'gui':
-                handle = SocketSend()
-                handle.send_result(HostgroupCase.hostgroup_create, args, js)
+                data = pickle.dumps(HostgroupCase.hostgroup_create(args, js))
+                sundry.socket_send_result(data)
             else:
                 HostgroupCase.hostgroup_create(args, js)
         elif args.hostgroup in ['show', 's']:
@@ -431,15 +432,15 @@ class IscsiParse():
             HostgroupCase.hostgroup_delete(args, js)
         else:
             print("iscsi hostgroup (choose from 'create', 'show', 'delete')")
-            self.cmd.iscsi_hostgroup.print_help()
+            self.cmd.hostgroup.print_help()
 
     # iscsi diskgroup
     def diskgroup_judge(self, args, js):
         # diskgroup判断
         if args.diskgroup in ['create', 'c']:
             if args.gui == 'gui':
-                handle = SocketSend()
-                handle.send_result(DiskgroupCase.diskgroup_create, args, js)
+                data = pickle.dumps(DiskgroupCase.diskgroup_create(args, js))
+                sundry.socket_send_result(data)
             else:
                 DiskgroupCase.diskgroup_create(args, js)
         elif args.diskgroup in ['show', 's']:
@@ -448,15 +449,15 @@ class IscsiParse():
             DiskgroupCase.diskgroup_delete(args, js)
         else:
             print("iscsi diskgroup (choose from 'create', 'show', 'delete')")
-            self.cmd.iscsi_diskgroup.print_help()
+            self.cmd.diskgroup.print_help()
 
     # iscsi map
     def map_judge(self, args, js):
         # map判断
         if args.map in ['create', 'c']:
             if args.gui == 'gui':
-                handle = SocketSend()
-                handle.send_result(MapCase.map_create, args, js)
+                data = pickle.dumps(MapCase.map_create(args, js))
+                sundry.socket_send_result(data)
             else:
                 MapCase.map_create(args, js)
         elif args.map in ['show', 's']:
@@ -465,7 +466,7 @@ class IscsiParse():
             MapCase.map_delete(args, js)
         else:
             print("iscsi map (choose from 'create', 'show', 'delete')")
-            self.cmd.iscsi_map.print_help()
+            self.cmd.map.print_help()
 
     # iscsi show
     def show_judge(self, args, js):
@@ -737,5 +738,5 @@ class MapCase():
 
 
 if __name__ == '__main__':
-    obj_cli = CLIParse()
-    obj_cli.CLIjudge()
+    obj_cli = VtelParse()
+    obj_cli.vtel_judge()

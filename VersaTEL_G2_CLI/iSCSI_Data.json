@@ -1,19 +1,5 @@
 {
-    "DiskGroup": {
-        "dgtest": [
-            "zane1",
-            "zane2"
-        ],
-        "DiskGroup1": [
-            "apple",
-            "banana"
-        ]
-    },
     "HostGroup": {
-        "HostGroup1": [
-            "HostA",
-            "HostB"
-        ],
         "test": [
             "htest1",
             "htest2"
@@ -21,38 +7,52 @@
         "paulhost": [
             "HostA",
             "HostB"
+        ],
+        "HostGroup1": [
+            "HostA",
+            "HostB"
         ]
     },
     "Host": {
         "htest1": "iqn.1993-08.org.debian:01:bc429d5fc3b",
-        "HostA": "iqn.xxxx:aa",
         "htest2": "iqn.2020-02.org.debian:02:bc333iscs3b",
+        "HostA": "iqn.xxxx:aa",
         "HostB": "iqn.xxxx:bb"
-    },
-    "Target": {
-        "Target1": "iqn.xxx",
-        "Target3": "iqn.xxx",
-        "Target2": "iqn.xxx"
-    },
-    "Disk": {
-        "apple": "/dev/drbd1000",
-        "fred": "/dev/drbd1003",
-        "pllo": "None",
-        "zane1": "/dev/drbd1004",
-        "banana": "/dev/drbd1001",
-        "ben": "/dev/drbd1005",
-        "linstordb": "/dev/drbd1002",
-        "zane2": "/dev/drbd1019"
-    },
-    "crm": {
-        "vip": [],
-        "target": [],
-        "resource": []
     },
     "Map": {
         "Map1": [
             "HostGroup1",
             "DiskGroup1"
         ]
+    },
+    "crm": {
+        "resource": [],
+        "target": [],
+        "vip": []
+    },
+    "DiskGroup": {
+        "DiskGroup1": [
+            "apple",
+            "banana"
+        ],
+        "dgtest": [
+            "zane1",
+            "zane2"
+        ]
+    },
+    "Disk": {
+        "linstordb": "/dev/drbd1002",
+        "zane1": "/dev/drbd1004",
+        "apple": "/dev/drbd1000",
+        "pllo": "None",
+        "ben": "/dev/drbd1005",
+        "fred": "/dev/drbd1003",
+        "banana": "/dev/drbd1001",
+        "zane2": "/dev/drbd1019"
+    },
+    "Target": {
+        "Target2": "iqn.xxx",
+        "Target3": "iqn.xxx",
+        "Target1": "iqn.xxx"
     }
 }

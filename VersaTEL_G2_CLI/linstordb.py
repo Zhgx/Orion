@@ -2,10 +2,9 @@
 import colorama as ca
 import prettytable as pt
 from functools import wraps
-import sqlite3,socket,subprocess,datetime,threading
-import multiprocessing as mp
-import regex
-from excute_sys_command import (linstor,lvm)
+import sqlite3,threading
+from execute_sys_command import (lvm,linstor)
+
 
 class LINSTORDB():
     #LINSTOR表

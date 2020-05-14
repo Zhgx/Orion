@@ -3,7 +3,7 @@ import argparse
 import usage
 
 
-class CLI():
+class Commands():
     def __init__(self):
         self.add_vtel()
         self.add_stor()
@@ -11,21 +11,34 @@ class CLI():
 
 
     def add_vtel(self):
+        """
+        Add a parser 'vtel' and some sub parsers.
+        And add parameters for the subcommand 'stor'for interaction with the GUI.
+        vtel: Parser for all commands
+        stor: Used to add commands for LINSTOR management
+        iscsi: Used to add commands for CRM and iSCSI management
+        -gui: Used for interaction with GUI
+        """
         #level0
         self.vtel = argparse.ArgumentParser(prog='vtel')
         sub_vtel = self.vtel.add_subparsers(dest='vtel_sub')
 
         #level1,subcommands of vtel:stor,iscsi,fc,ceph
+        """"""
         self.stor = sub_vtel.add_parser('stor', help='Management operations for LINSTOR', add_help=False,
                                              usage=usage.stor)
         self.iscsi = sub_vtel.add_parser('iscsi', help='Management operations for iSCSI', add_help=False)
         self.fc = sub_vtel.add_parser('fc', help='for fc resource management...', add_help=False)
         self.ceph = sub_vtel.add_parser('ceph', help='for ceph resource management...', add_help=False)
 
-        #add the parameter of stor:-db
-        self.stor.add_argument('-gui', dest='db', action='store_true', help=argparse.SUPPRESS, default=False)
+        #add the parameter of stor:-gui
+        self.stor.add_argument('-gui', dest='gui', action='store_true', help=argparse.SUPPRESS, default=False)
 
     def add_stor(self):
+        """
+        Add subcommands and parameters about sub parser 'stor'
+        """
+
         #level2,subcommands of stor:node,resource,storagepool(sp)
         sub_stor = self.stor.add_subparsers(dest='stor_sub')
         self.node = sub_stor.add_parser('node', aliases='n', help='Management operations for node',
@@ -39,6 +52,9 @@ class CLI():
         # self.stor_gui = sub_stor.add_parser('gui',help='for GUI')
 
         #level3,subcommands of node: create,modify,delete,show
+        """
+        Add commands for the node management:create,modify,delete,show
+        """
         sub_node = self.node.add_subparsers(dest='node_sub')
         self.node_create = sub_node.add_parser('create', aliases='c', help='Create the node', usage=usage.node_create)
         self.node_modify = sub_node.add_parser('modify', aliases='m', help='Modify the node', usage=usage.node_modify)
@@ -47,7 +63,8 @@ class CLI():
 
         #level3,subcommands of resource: create,modify,delete,show
         """
-        res:resource
+        res(resource)
+        Add commands for the resource management:create,modify,delete,show
         """
         sub_resource = self.resource.add_subparsers(dest='resource_sub')
         self.res_create = sub_resource.add_parser('create', aliases='c', help='Create the resource',
@@ -61,7 +78,8 @@ class CLI():
 
         #level3,subcommands of storage pool: create,modify,delete,show
         """
-        sp:storage pool
+        sp(storage pool)
+        Add commands for the storage pool management:create,modify,delete,show
         """
         sub_storagepool = self.storagepool.add_subparsers(dest='storagepool_sub')
         self.sp_create = sub_storagepool.add_parser('create', aliases='c', help='Create the storagpool',
@@ -74,6 +92,9 @@ class CLI():
                                                            usage=usage.storagepool_show)
 
         #level3,subcommands of snap: create,modify,delete,show
+        """
+        To be developed
+        """
         sub_snap = self.snap.add_subparsers(dest='snap_sub')
         self.snap_create = sub_snap.add_parser('create', help='Create the snapshot')
         self.snap_modify = sub_snap.add_parser('modify', help='Modify the snapshot')
@@ -82,6 +103,9 @@ class CLI():
 
 
         #level4,arguments of node create
+        """
+        Add command parameters for creating nodes
+        """
         self.node_create.add_argument('node', metavar='NODE', action='store',
                                       help='Name of the new node, must match the nodes hostname')
         self.node_create.add_argument('-ip', dest='ip', action='store',
@@ -94,12 +118,18 @@ class CLI():
         #level4,arguments of node modify
 
         #level4,arguments of node delete
+        """
+        Add command parameters for deleting nodes
+        """
         self.node_delete.add_argument('node', metavar='NODE', action='store', help=' Name of the node to remove')
         self.node_delete.add_argument('-y', dest='yes', action='store_true', help='Skip to confirm selection',
                                       default=False)
         self.node_delete.add_argument('-gui', dest='gui', action='store_true', help=argparse.SUPPRESS, default=False)
 
         #level4,arguments of node show
+        """
+        Add command parameters for creating nodes
+        """
         self.node_show.add_argument('node', metavar='NODE', help='Print information about the node in LINSTOR cluster',
                                     action='store', nargs='?', default=None)
         self.node_show.add_argument('--no-color', dest='nocolor', help='Do not use colors in output.',
@@ -113,25 +143,25 @@ class CLI():
         self.res_create.add_argument('-gui', dest='gui', action='store_true', help=argparse.SUPPRESS,
                                           default=False)
 
-        #Parameter group : Select several nodes to create resources
+        #Add a parameter group that automatically creates a resource
         group_auto = self.res_create.add_argument_group(title='auto create')
         group_auto.add_argument('-a', dest='auto', action='store_true', default=False,
                                 help='Auto create method Automatic create')
         group_auto.add_argument('-num', dest='num', action='store',
                                 help='Number of nodes specified by auto creation method', type=int)
 
-        #Parameter group :Create resources by selecting nodes and storage pools
+        #Add a parameter group that automatically creates a resource
         group_manual = self.res_create.add_argument_group(title='manual create')
         group_manual.add_argument('-n', dest='node', action='store', nargs='+',
                                   help='Name of the node to deploy the resource')
         group_manual.add_argument('-sp', dest='storagepool', nargs='+', help='Storage pool name to use.')
 
-        #Parameter group : Create diskless resources
+        #Add parameter groups for adding resource mirrors
         group_manual_diskless = self.res_create.add_argument_group(title='diskless create')
         group_manual_diskless.add_argument('-diskless', action='store_true', default=False, dest='diskless',
                                            help='Will add a diskless resource on all non replica nodes.')
 
-        #Parameter group : Add mirror
+        #Add parameter groups for adding resource mirrors
         group_add_mirror = self.res_create.add_argument_group(title='add mirror way')
         group_add_mirror.add_argument('-am', action='store_true', default=False, dest='add_mirror',
                                       help='Add mirror member base on specify node to specify resource.')
