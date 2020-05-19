@@ -3,11 +3,33 @@ import argparse
 import sys
 import re
 import pickle
-from execute_sys_command import (crm,lvm,linstor,stor,iscsi_map)
+from functools import wraps
+import execute_sys_command as esc
+import argparse_init as ai
 import linstordb
-from iscsi_json import JSON_OPERATION
-from argparse_init import Commands
+import iscsi_json as ij
 import sundry
+
+
+def comfirm_del(func):
+    """
+    Decorator providing confirmation of deletion function.
+    :param func: Function to delete linstor resource
+    """
+    @wraps(func)
+    def wrapper(*args):
+        cli_args = args[0]
+        if cli_args.yes:
+            func(*args)
+        else:
+            print('Are you sure you want to delete it? If yes, enter \'y/yes\'')
+            answer = input()
+            if answer in ['y', 'yes']:
+                func(*args)
+            else:
+                print('Delete canceled')
+    return wrapper
+
 
 # 多节点创建resource时，storapoo多于node的异常类
 class NodeLessThanSPError(Exception):
@@ -18,135 +40,120 @@ class InvalidSizeError(Exception):
     pass
 
 
-
-class VtelParse():
+class Vtel():
+    """
+    Analysis and judgment of parsers vtel, stor, iscsi
+    """
     def __init__(self):
-        self.cmd = Commands()
+        self.cmd = ai.Commands()
         self.vtel = self.cmd.vtel
         self.args = self.vtel.parse_args()
 
     def vtel_judge(self):
-        if self.args.vtel_sub == 'stor':
-            stor = StorParse(self.args,self.cmd)
-            stor.stor_judge()
-        elif self.args.vtel_sub == 'iscsi':
-            iscsi = IscsiParse(self.args,self.cmd)
-            iscsi.iscsi_judge()
+        if self.args.subargs_vtel == 'stor':
+            stor = Stor(self.args,self.cmd)
+            stor.parse()
+        elif self.args.subargs_vtel == 'iscsi':
+            iscsi = Iscsi(self.args,self.cmd)
+            iscsi.parse()
         else:
             self.vtel.print_help()
 
-class StorParse():
+
+class Stor():
+    """
+    Analysis of subcommand stor and judgment of parameters.
+    """
     def __init__(self,args,cmd):
         self.args = args
         self.cmd = cmd
 
-    def node_judge(self):
+    def node(self):
         # 对输入参数的判断（node的下一个参数）
         args = self.args
         parser = self.cmd
 
-        if args.node_sub in ['create', 'c']:
-            NodeCase.node_create(args,parser)
-        elif args.node_sub in ['modify', 'm']:
-            NodeCase.node_modify(args)
-        elif args.node_sub in ['delete', 'd']:
-            NodeCase.node_delete(args,parser)
-        elif args.node_sub in ['show', 's']:
-            NodeCase.node_show(args)
+        if args.subargs_node in ['create', 'c']:
+            Node.create(args, parser)
+        elif args.subargs_node in ['modify', 'm']:
+            Node.modify(args)
+        elif args.subargs_node in ['delete', 'd']:
+            Node.delete(args)
+        elif args.subargs_node in ['show', 's']:
+            Node.node_show(args)
         else:
             self.cmd.node.print_help()
 
-    def res_judge(self):
+    def resource(self):
         args = self.args
         parser = self.cmd
 
-        if args.resource_sub in ['create', 'c']:
-            ResCase.resource_create(args,parser)
-        elif args.resource_sub in ['modify', 'm']:
-            ResCase.resource_modify(args)
-        elif args.resource_sub in ['delete', 'd']:
-            ResCase.resource_delete(args,parser)
-        elif args.resource_sub in ['show', 's']:
-            ResCase.resource_show(args)
+        if args.subargs_res in ['create', 'c']:
+            Res.create(args,parser)
+        elif args.subargs_res in ['modify', 'm']:
+            Res.modify(args)
+        elif args.subargs_res in ['delete', 'd']:
+            Res.delete(args)
+        elif args.subargs_res in ['show', 's']:
+            Res.show(args)
         else:
             self.cmd.resource.print_help()
 
-
-    def sp_judge(self):
+    def storagepool(self):
         args = self.args
         parser = self.cmd
-        if args.storagepool_sub in ['create', 'c']:
-            SPCase.storagepool_create(args,parser)
-        elif args.storagepool_sub in ['modify', 'm']:
-            SPCase.storagepool_modify()
-        elif args.storagepool_sub in ['delete', 'd']:
-            SPCase.storagepool_delete(args,parser)
-        elif args.storagepool_sub in ['show', 's']:
-            SPCase.storagepool_show(args)
+        if args.subargs_sp in ['create', 'c']:
+            SP.create(args,parser)
+        elif args.subargs_sp in ['modify', 'm']:
+            SP.modify()
+        elif args.subargs_sp in ['delete', 'd']:
+            SP.delete(args)
+        elif args.subargs_sp in ['show', 's']:
+            SP.show(args)
         else:
             self.cmd.storagepool.print_help()
 
-
-
-    def stor_judge(self):
+    def parse(self):
         args = self.args
-        if args.vtel_sub == 'stor':
-            if args.stor_sub in ['node', 'n']:
-                self.node_judge()
-            elif args.stor_sub in ['resource', 'r']:
-                self.res_judge()
-            elif args.stor_sub in ['storagepool', 'sp']:
-                self.sp_judge()
-            elif args.stor_sub in ['snap', 'sn']:
+        if args.subargs_vtel == 'stor':
+            if args.subargs_stor in ['node', 'n']:
+                self.node()
+            elif args.subargs_stor in ['resource', 'r']:
+                self.resource()
+            elif args.subargs_stor in ['storagepool', 'sp']:
+                self.storagepool()
+            elif args.subargs_stor in ['snap', 'sn']:
                 pass
 
             elif args.gui:
                 db = linstordb.LINSTORDB()
                 data = pickle.dumps(db.data_base_dump)
-                sundry.socket_send_result(data)
+                sundry.send_via_socket(data)
             else:
                 self.cmd.stor.print_help()
 
 
-class NodeCase():
+class Node():
     @classmethod
-    def node_create(cls,args,parser):
+    def create(cls,args,parser):
         parser_create = parser.node_create
         if args.gui:
-            data = pickle.dumps(stor.create_node(args.node, args.ip, args.nodetype))
+            data = pickle.dumps(esc.stor.create_node(args.node, args.ip, args.nodetype))
             sundry.socket_send_result(data)
         elif args.node and args.nodetype and args.ip:
-            stor.create_node(args.node, args.ip, args.nodetype)
+            esc.stor.create_node(args.node, args.ip, args.nodetype)
         else:
             parser_create.print_help()
 
     @classmethod
-    def node_modify(cls,args):
+    def modify(cls,args):
         pass
 
-    @classmethod
-    def node_delete(cls,args,parser):
-        parser_delete = parser.node_delete
 
-        def excute():
-            if args.gui:
-                print('for gui delete node')
-            else:
-                stor.delete_node(args.node)
-
-        def _delete_comfirm():  # 命名，是否删除
-            if stor.confirm_del():
-                excute()
-            else:
-                print('Delete canceled')
-
-        def _skip_confirm():  # 是否跳过确认
-            if args.yes:
-                excute()
-            else:
-                _delete_comfirm()
-
-        _skip_confirm() if args.node else parser_delete.print_help()
+    @staticmethod
+    @comfirm_del
+    def delete(args,parser):
+        esc.stor.delete_node(args.node)
 
 
     @classmethod
@@ -157,8 +164,9 @@ class NodeCase():
         else:
             tb.show_node_one_color(args.node) if args.node else tb.node_all_color()
 
+
 #resource
-class ResCase():
+class Res():
     # 指定node和storagepool数量的规范判断，符合则继续执行
     @staticmethod
     def is_args_correct(node,storagepool):
@@ -173,14 +181,31 @@ class ResCase():
 
 
     @classmethod
-    def resource_create(cls,args,parser):
+    def create(cls,args,parser):
+        """
+        Create a LINSTOR resource. There are three types of creation based on different parameters:
+        Automatically create resource,
+        Create resources by specifying nodes and storage pools,
+        create diskless resource,
+        add mirror on other nodes
+
+        :param args: Namespace that has been parsed for CLI
+        :param parser: The instantiated object of Commands, used to call the parser in the Commands class.
+
+        """
+        #Create a resource parser for printing help instructions
         parser_create = parser.res_create
 
-        # 对应创建模式必需输入的参数和禁止输入的参数
+        """对应创建模式必需输入的参数和禁止输入的参数"""
+        # Parameters required for automatic resource creation
         list_auto_required = [args.auto, args.num]
+        # Automatically create input parameters for resource prohibition
         list_auto_forbid = [args.node, args.storagepool, args.diskless,args.add_mirror]
+        #Specify the node and storage pool to create resources require input parameters
         list_manual_required = [args.node, args.storagepool]
+        #Specify the input parameters for node and storage pool creation resource prohibition
         list_manual_forbid = [args.auto, args.num, args.diskless,args.add_mirror]
+        #Create diskless resource prohibited input parameters
         list_diskless_forbid = [args.auto, args.num, args.storagepool,args.add_mirror]
 
         if args.size:
@@ -193,12 +218,12 @@ class ResCase():
                 sys.exit(0)
             #自动创建条件判断，符合则执行
             if all(list_auto_required) and not any(list_auto_forbid):
-                stor.create_res_auto(args.resource, args.size, args.num)
+                esc.stor.create_res_auto(args.resource, args.size, args.num)
             #手动创建条件判断，符合则执行
             elif all(list_manual_required) and not any(list_manual_forbid):
                 try:
                     cls.is_args_correct(args.node,args.storagepool)
-                    stor.create_res_manual(args.resource, args.size, args.node, args.storagepool)
+                    esc.stor.create_res_manual(args.resource, args.size, args.node, args.storagepool)
                 except NodeLessThanSPError:
                     print('The number of nodes does not meet the requirements')
                     sys.exit(0)
@@ -209,20 +234,20 @@ class ResCase():
         elif args.diskless:
             # 创建resource的diskless资源条件判断，符合则执行
             if args.node and not any(list_diskless_forbid):
-                stor.create_res_diskless(args.node, args.resource)
+                esc.stor.create_res_diskless(args.node, args.resource)
             else:
                 parser_create.print_help()
 
         elif args.add_mirror:
             #手动添加mirror条件判断，符合则执行
             if all([args.node,args.storagepool]) and not any([args.auto, args.num]):
-                if ResCase.is_args_correct():
-                    stor.add_mirror_manual(args.resource,args.node,args.storagepool)
+                if Res.is_args_correct():
+                    esc.stor.add_mirror_manual(args.resource,args.node,args.storagepool)
                 else:
                     parser_create.print_help()
             #自动添加mirror条件判断，符合则执行
             elif all([args.auto,args.num]) and not any([args.node,args.storagepool]):
-                stor.add_mirror_auto(args.resource,args.num)
+                esc.stor.add_mirror_auto(args.resource,args.num)
             else:
                 parser_create.print_help()
 
@@ -231,58 +256,23 @@ class ResCase():
 
     # resource修改功能，未开发
     @classmethod
-    def resource_modify(cls,args):
+    def modify(cls,args):
         pass
 
+
+
     # resource删除判断
-    @classmethod
-    def resource_delete(cls,args,parser):
-        parser_delete = parser.res_delete
+    @staticmethod
+    @comfirm_del
+    def delete(args):
+        if args.node:
+            esc.stor.delete_resource_des(args.node, args.resource)
+        elif not args.node:
+            esc.stor.delete_resource_all(args.resource)
 
-        def excute():  # 判断是否指定节点
-            if args.node:
-                if args.gui:
-                    print('for gui')
-                else:
-                    stor.delete_resource_des(args.node, args.resource)
-            elif not args.node:
-                if args.gui:
-                    print('for gui')
-                else:
-                    stor.delete_resource_all(args.resource)
-
-        def _delete_comfirm():  # 确认是否删除
-            if stor.confirm_del():
-                excute()
-            else:
-                print('Delete canceled')
-
-        def _skip_confirm():  # 是否跳过确认
-            if args.yes:
-                excute()
-            else:
-                _delete_comfirm()
-
-        _skip_confirm() if args.resource else parser_delete.print_help()
-
-        # if args.resource:
-        #     if args.node:
-        #         if args.yes:
-        #             stor.delete_resource_des(args.node, args.resource)
-        #         else:
-        #             if stor.confirm_del():
-        #                 stor.delete_resource_des(args.node, args.resource)
-        #     elif not args.node:
-        #         if args.yes:
-        #             stor.delete_resource_all(args.resource)
-        #         else:
-        #             if stor.confirm_del():
-        #                 stor.delete_resource_all(args.resource)
-        # else:
-        #     parser_delete.print_help()
 
     @classmethod
-    def resource_show(cls,args):
+    def show(cls,args):
         tb = linstordb.OutputData()
         if args.nocolor:
             tb.show_res_one(args.resource) if args.resource else tb.res_all()
@@ -291,62 +281,44 @@ class ResCase():
 
 
 #storage pool
-class SPCase():
+class SP():
     def __init__(self):
         pass
 
     @classmethod
-    def storagepool_create(cls,args,parser):
+    def create(cls,args,parser):
         parser_create = parser.sp_create
 
         if args.storagepool and args.node:
             if args.lvm:
                 if args.gui:
-                    data = pickle.dumps(stor.create_storagepool_lvm(args.node, args.storagepool, args.lvm))
-                    sundry.socket_send_result(data)
+                    data = pickle.dumps(esc.stor.create_storagepool_lvm(args.node, args.storagepool, args.lvm))
+                    sundry.send_via_socket(data)
                 else:
-                    stor.create_storagepool_lvm(args.node, args.storagepool, args.lvm)
+                    esc.stor.create_storagepool_lvm(args.node, args.storagepool, args.lvm)
             elif args.tlv:
                 if args.gui:
-                    data = pickle.dumps(stor.create_storagepool_thinlv(args.node, args.storagepool, args.tlv))
-                    sundry.socket_send_result(data)
+                    data = pickle.dumps(esc.stor.create_storagepool_thinlv(args.node, args.storagepool, args.tlv))
+                    sundry.send_via_socket(data)
                 else:
-                    stor.create_storagepool_thinlv(args.node, args.storagepool, args.tlv)
+                    esc.stor.create_storagepool_thinlv(args.node, args.storagepool, args.tlv)
             else:
                 parser_create.print_help()
         else:
             parser_create.print_help()
 
     @classmethod
-    def storagepool_modify(cls):
+    def modify(cls):
         pass
 
-    @classmethod
-    def storagepool_delete(cls,args,parser):
-        parser_delete = parser.sp_delete
+    @staticmethod
+    @comfirm_del
+    def delete(args):
+        esc.stor.delete_storagepool(args.node, args.storagepool)
 
-        def excute():
-            if args.gui:
-                print('for gui')
-            else:
-                stor.delete_storagepool(args.node, args.storagepool)
-
-        def _delete_comfirm():  #确认是否删除
-            if stor.confirm_del():
-                excute()
-            else:
-                print('Delete canceled')
-
-        def _skip_confirm():  # 是否跳过确认
-            if args.yes:
-                excute()
-            else:
-                _delete_comfirm()
-
-        _skip_confirm() if args.storagepool else parser_delete.print_help()
 
     @classmethod
-    def storagepool_show(cls,args):
+    def show(cls,args):
         tb = linstordb.OutputData()
         if args.nocolor:
             tb.show_sp_one(args.storagepool) if args.storagepool else tb.sp_all()
@@ -354,7 +326,7 @@ class SPCase():
             tb.show_sp_one_color(args.storagepool) if args.storagepool else tb.sp_all_color()
 
 
-class SnapCase():
+class Snap():
     def __init__(self):
         pass
 
@@ -365,120 +337,119 @@ class SnapCase():
         pass
 
 
-
-class IscsiParse():
+class Iscsi():
     def __init__(self, args, cmd):
         self.args = args
         self.cmd = cmd
 
     # iscsi 总命令判断
-    def iscsi_judge(self):
-        js = JSON_OPERATION()
+    def parse(self):
+        js = ij.JSON_OPERATION()
         args = self.args
         if args.iscsi in ['host', 'h']:
-            self.host_judge(args, js)
+            self.host(args, js)
         elif args.iscsi in ['disk', 'd']:
-            self.disk_judge(args, js)
+            self.disk(args, js)
         elif args.iscsi in ['hostgroup', 'hg']:
-            self.hostgroup_judge(args, js)
+            self.hostgroup(args, js)
         elif args.iscsi in ['diskgroup', 'dg']:
-            self.diskgroup_judge(args, js)
+            self.diskgroup(args, js)
         elif args.iscsi in ['map', 'm']:
-            self.map_judge(args, js)
+            self.map(args, js)
         elif args.iscsi in ['show', 's']:
-            self.show_judge(args, js)
+            self.show(args, js)
         else:
             print("iscsi (choose from 'host', 'disk', 'hg', 'dg', 'map')")
             self.cmd.iscsi.print_help()
 
     # iscsi host
-    def host_judge(self, args, js):
+    def host(self, args, js):
         # host判断
         if args.host in ['create', 'c']:
             if args.gui == 'gui':
-                data = pickle.dumps(HostCase.host_create(args, js))
-                sundry.socket_send_result(data)
+                data = pickle.dumps(Host.host_create(args, js))
+                sundry.send_via_socket(data)
             else:
-                HostCase.host_create(args, js)
+                Host.host_create(args, js)
         elif args.host in ['show', 's']:
-            HostCase.host_show(args, js)
+            Host.host_show(args, js)
         elif args.host in ['delete', 'd']:
-            HostCase.host_delete(args, js)
+            Host.host_delete(args, js)
         else:
             print("iscsi host (choose from 'create', 'show', 'delete')")
             self.cmd.host.print_help()
 
     # iscsi disk
-    def disk_judge(self, args, js):
+    def disk(self, args, js):
         # disk判断
         if args.disk in ['show', 's']:
-            DiskCase.disk_show(args, js)
+            Disk.disk_show(args, js)
         else:
             print("iscsi disk (choose from 'show')")
             self.cmd.disk.print_help()
 
     # iscsi hostgroup
-    def hostgroup_judge(self, args, js):
+    def hostgroup(self, args, js):
         # hostgroup判断
         if args.hostgroup in ['create', 'c']:
             if args.gui == 'gui':
-                data = pickle.dumps(HostgroupCase.hostgroup_create(args, js))
-                sundry.socket_send_result(data)
+                data = pickle.dumps(Hostgroup.hostgroup_create(args, js))
+                sundry.send_via_socket(data)
             else:
-                HostgroupCase.hostgroup_create(args, js)
+                Hostgroup.hostgroup_create(args, js)
         elif args.hostgroup in ['show', 's']:
-            HostgroupCase.hostgroup_show(args, js)
+            Hostgroup.hostgroup_show(args, js)
         elif args.hostgroup in ['delete', 'd']:
-            HostgroupCase.hostgroup_delete(args, js)
+            Hostgroup.hostgroup_delete(args, js)
         else:
             print("iscsi hostgroup (choose from 'create', 'show', 'delete')")
             self.cmd.hostgroup.print_help()
 
     # iscsi diskgroup
-    def diskgroup_judge(self, args, js):
+    def diskgroup(self, args, js):
         # diskgroup判断
         if args.diskgroup in ['create', 'c']:
             if args.gui == 'gui':
-                data = pickle.dumps(DiskgroupCase.diskgroup_create(args, js))
-                sundry.socket_send_result(data)
+                data = pickle.dumps(Diskgroup.create(args, js))
+                sundry.send_via_socket(data)
             else:
-                DiskgroupCase.diskgroup_create(args, js)
+                Diskgroup.create(args, js)
         elif args.diskgroup in ['show', 's']:
-            DiskgroupCase.diskgroup_show(args, js)
+            Diskgroup.show(args, js)
         elif args.diskgroup in ['delete', 'd']:
-            DiskgroupCase.diskgroup_delete(args, js)
+            Diskgroup.delete(args, js)
         else:
             print("iscsi diskgroup (choose from 'create', 'show', 'delete')")
             self.cmd.diskgroup.print_help()
 
     # iscsi map
-    def map_judge(self, args, js):
+    def map(self, args, js):
         # map判断
         if args.map in ['create', 'c']:
             if args.gui == 'gui':
-                data = pickle.dumps(MapCase.map_create(args, js))
-                sundry.socket_send_result(data)
+                data = pickle.dumps(Map.create(args, js))
+                sundry.send_via_socket(data)
             else:
-                MapCase.map_create(args, js)
+                Map.create(args, js)
         elif args.map in ['show', 's']:
-            MapCase.map_show(args, js)
+            Map.show(args, js)
         elif args.map in ['delete', 'd']:
-            MapCase.map_delete(args, js)
+            Map.delete(args, js)
         else:
             print("iscsi map (choose from 'create', 'show', 'delete')")
             self.cmd.map.print_help()
 
     # iscsi show
-    def show_judge(self, args, js):
+    def show(self, args, js):
         data = js.read_data_json()
         if args.json in ['json']:
-            handle = SocketSend()
+            handle = sundry.send_via_socket()
             handle.send_result(data, js)
         else:
             print(data)
 
 
-class HostCase():
+class Host():
     # host创建
     @classmethod
     def host_create(cls, args, js):
@@ -525,14 +496,15 @@ class HostCase():
             print("Fail! Can't find " + args.iqnname)
             return False
 
+
 # iscsi disk
-class DiskCase():
+class Disk():
     # disk查询
     @classmethod
     def disk_show(cls, args, js):
-        cd = crm()
+        cd = esc.crm()
         data = cd.get_data_linstor()
-        linstorlv = linstor.refine_linstor(data)
+        linstorlv = esc.linstor.refine_linstor(data)
         disks = {}
         for d in linstorlv:
             disks.update({d[1]: d[5]})
@@ -548,8 +520,9 @@ class DiskCase():
             else:
                 print("Fail! Can't find " + args.show)
 
+
 # iscsi hostgroup
-class HostgroupCase():
+class Hostgroup():
     # hostgroup创建
     @classmethod
     def hostgroup_create(cls, args, js):
@@ -606,10 +579,10 @@ class HostgroupCase():
 
 
 # iscsi diskgroup
-class DiskgroupCase():
+class Diskgroup():
     # diskgroup创建
     @classmethod
-    def diskgroup_create(cls, args, js):
+    def create(cls, args, js):
         print("Diskgroup name:", args.diskgroupname)
         print("Disk name:", args.diskname)
         if js.check_key('DiskGroup', args.diskgroupname):
@@ -631,7 +604,7 @@ class DiskgroupCase():
 
     # diskgroup查询
     @classmethod
-    def diskgroup_show(cls, args, js):
+    def show(cls, args, js):
         if args.show == 'all' or args.show == None:
             print("Diskgroup:")
             diskgroups = js.get_data("DiskGroup")
@@ -650,7 +623,7 @@ class DiskgroupCase():
 
     # diskgroup删除
     @classmethod
-    def diskgroup_delete(cls, args, js):
+    def delete(cls, args, js):
         print("Delete the diskgroup <", args.diskgroupname, "> ...")
         if js.check_key('DiskGroup', args.diskgroupname):
             if js.check_value('Map', args.diskgroupname):
@@ -663,11 +636,11 @@ class DiskgroupCase():
 
 
 # iscsi map
-class MapCase():
-    obj_map = iscsi_map()
+class Map():
+    obj_map = esc.iscsi_map()
     # map创建
     @classmethod
-    def map_create(cls, args, js):
+    def create(cls, args, js):
         print("Map name:", args.mapname)
         print("Hostgroup name:", args.hg)
         print("Diskgroup name:", args.dg)
@@ -699,7 +672,7 @@ class MapCase():
 
     # map查询
     @classmethod
-    def map_show(cls, args, js):
+    def show(cls, args, js):
         crmdata = cls.obj_map.crm_up(js)
         if args.show == 'all' or args.show == None:
             print("Map:")
@@ -724,7 +697,7 @@ class MapCase():
 
     # map删除
     @classmethod
-    def map_delete(cls, args, js):
+    def delete(cls, args, js):
         print("Delete the map <", args.mapname, ">...")
         if js.check_key('Map', args.mapname):
             print(js.get_data('Map').get(args.mapname), "will probably be affected ")
@@ -737,6 +710,10 @@ class MapCase():
 
 
 
+
 if __name__ == '__main__':
-    obj_cli = VtelParse()
+    obj_cli = Vtel()
     obj_cli.vtel_judge()
+    # args = obj_cli.args
+    # parser = obj_cli.cmd
+    # args.func(args,parser)

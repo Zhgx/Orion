@@ -2,11 +2,17 @@
 import colorama as ca
 import prettytable as pt
 from functools import wraps
-import sqlite3,threading
-from execute_sys_command import (lvm,linstor)
+import sqlite3
+import threading
+import execute_sys_command as esc
 
 
 class LINSTORDB():
+    """
+    Get the output of LINSTOR through the command, use regular expression to get and process it into a list,
+    and insert it into the newly created memory database.
+    """
+
     #LINSTOR表
     crt_sptb_sql = '''
     create table if not exists storagepooltb(
@@ -159,23 +165,23 @@ class LINSTORDB():
             threads[i].join()
 
     def exc_get_vg(self):
-        vg = lvm.refine_vg(lvm.get_vg())
+        vg = esc.lvm.refine_vg(esc.lvm.get_vg())
         self.insert_data(self.replace_vgtb_sql,vg)
 
     def exc_get_thinlv(self):
-        thinlv = lvm.refine_thinlv(lvm.get_thinlv())
+        thinlv = esc.lvm.refine_thinlv(esc.lvm.get_thinlv())
         self.insert_data(self.replace_thinlvtb_sql, thinlv)
 
     def thread_get_node(self):
-        node = linstor.refine_linstor(linstor.get_node())
+        node = esc.linstor.refine_linstor(esc.linstor.get_node())
         self.insert_data(self.replace_ntb_sql,node)
 
     def thread_get_res(self):
-        res = linstor.refine_linstor(linstor.get_res())
+        res = esc.linstor.refine_linstor(esc.linstor.get_res())
         self.insert_data(self.replace_rtb_sql,res)
 
     def thread_get_sp(self):
-        sp = linstor.refine_linstor(linstor.get_sp())
+        sp = esc.linstor.refine_linstor(esc.linstor.get_sp())
         self.insert_data(self.replace_stb_sql,sp)
 
 
@@ -216,6 +222,10 @@ class LINSTORDB():
 
 
 class DataProcess():
+    """
+    Provide a data interface to retrieve specific data in the LINSTOR database.
+    """
+
     def __init__(self):
         self.linstor_db = LINSTORDB()
         self.linstor_db.rebuild_tb()
@@ -235,12 +245,12 @@ class DataProcess():
         return list(date_set)
 
 
-    #node
+    #Return all data of node table
     def _select_nodetb_all(self):
         select_sql = "SELECT Node,NodeType,Addresses,State FROM nodetb"
         return self.sql_fetch_all(select_sql)
 
-
+    #The node name of the incoming data, and return its information in the node table
     def _select_nodetb_one(self,node):
         select_sql = "SELECT Node,NodeType,Addresses,State FROM nodetb WHERE  Node = \'%s\'"%node
         return self.sql_fetch_one(select_sql)
@@ -448,6 +458,8 @@ def table(func):
             table.add_row(i)
         print(table)
     return wrapper
+
+
 
 
 

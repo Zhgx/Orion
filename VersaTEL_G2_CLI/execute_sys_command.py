@@ -5,7 +5,6 @@ import time
 from collections import OrderedDict
 
 class crm():
-
     def re_data(self, crmdatas):
         crmdata = str(crmdatas)
         plogical = re.compile(
@@ -199,8 +198,6 @@ class linstor():
 
 #子命令stor调用的方法
 class stor():
-
-
     @staticmethod
     def judge_cmd_result_suc(cmd):
         re_suc = re.compile('SUCCESS')
@@ -453,7 +450,7 @@ class stor():
 
     # 创建集群节点
     @staticmethod
-    def create_node(node, ip, nt):
+    def create(node, ip, nt):
         cmd = 'linstor node create %s %s  --node-type %s' % (node, ip, nt)
         nt_value = ['Combined', 'combined', 'Controller', 'Auxiliary', 'Satellite']
         if nt not in nt_value:
@@ -466,15 +463,6 @@ class stor():
         cmd = 'linstor node delete %s' % node
         return stor.print_excute_result(cmd)
 
-    # 确认删除函数
-    @staticmethod
-    def confirm_del():
-        print('Are you sure you want to delete it? If yes, enter \'y/yes\'')
-        answer = input()
-        if answer in ['y', 'yes']:
-            return True
-        else:
-            return False
 
 
 class iscsi_map():
