@@ -46,7 +46,7 @@ class Commands():
         Add subcommands and parameters about sub parser 'stor'
         """
         #level2,subcommands of stor:node,resource,storagepool(sp)
-        subargs_stor = self.stor.add_subparsers(dest='subargs_stor')
+        subargs_stor = self.stor.add_subparsers(dest='`subargs_stor`')
         self.node = subargs_stor.add_parser('node', aliases='n', help='Management operations for node',
                                              usage=usage.node)
         self.resource = subargs_stor.add_parser('resource', aliases='r', help='Management operations for storagepool',
