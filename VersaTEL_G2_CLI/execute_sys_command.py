@@ -450,7 +450,7 @@ class stor():
 
     # 创建集群节点
     @staticmethod
-    def create(node, ip, nt):
+    def create_node(node, ip, nt):
         cmd = 'linstor node create %s %s  --node-type %s' % (node, ip, nt)
         nt_value = ['Combined', 'combined', 'Controller', 'Auxiliary', 'Satellite']
         if nt not in nt_value:

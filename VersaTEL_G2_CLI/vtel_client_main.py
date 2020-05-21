@@ -1,13 +1,11 @@
 import argparse
 import sys
 import os
-from VersaTEL_G2_CLI.commands import (
+from commands import (
     NodeCommands
 )
 
-from VersaTEL_G2_CLI.consts import (
-    VERSION
-)
+
 
 
 class VtelCLI(object):
@@ -15,7 +13,6 @@ class VtelCLI(object):
     Vtel command line client
     """
     def __init__(self):
-        pass
         self._node_commands = NodeCommands()
         self._parser = self.setup_parser()
 
@@ -32,7 +29,8 @@ class VtelCLI(object):
                                      help='Use the list command to print a '
                                           'nicer looking overview of all valid commands')
 
-        parser_stor = subp.add_parser('stor', help='Management operations for LINSTOR', add_help=False,usage=usage.stor)
+        parser_stor = subp.add_parser('stor', help='Management operations for LINSTOR', add_help=False,formatter_class=argparse.RawTextHelpFormatter,)
+        self.parser_stor = parser_stor
         parser_iscsi = subp.add_parser('iscsi', help='Management operations for iSCSI', add_help=False)
 
         # add parameters to interact with the GUI
@@ -42,18 +40,20 @@ class VtelCLI(object):
         subp.choices.keys()
 
         subp_stor = parser_stor.add_subparsers(dest = 'subargs_stor')
-        subp_iscsi = parser_iscsi.add_subparsers(dest = 'subargs_iscsi')
+        # subp_iscsi = parser_iscsi.add_subparsers(dest = 'subargs_iscsi')
 
         # add all node commands
         self._node_commands.setup_commands(subp_stor)
 
+        parser.set_defaults(func=parser.print_help)
+
         return parser
 
-    def func_stor(self,args,parser):
+    def func_stor(self,args):
         if args.gui:
             print('gui')
         else:
-            parser.stor.print_help()
+            self.parser_stor.print_help()
 
     def parse(self,pargs):
         return self._parser.parse_args(pargs)
@@ -61,10 +61,17 @@ class VtelCLI(object):
     def run(self):
         pass
 
+    def _parse(self):
+        args = self._parser.parse_args()
+        args.func(args)
+
+
 
 def main():
     try:
-        VtelCLI().run()
+        cmd = VtelCLI()
+        cmd._parse()
+        # VtelCLI().run()
     except KeyboardInterrupt:
         sys.stderr.write("\nlinstor: Client exiting (received SIGINT)\n")
 
