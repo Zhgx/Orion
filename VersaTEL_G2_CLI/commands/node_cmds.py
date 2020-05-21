@@ -3,11 +3,25 @@ import pickle
 
 import sundry as sd
 import execute_sys_command as esc
-import linstordb as linstordb
+import linstordb
 
 class usage():
-    node = "111"
-    node_create = 'node create'
+    # node部分使用手册
+    node = '''
+    node(n) {create(c)/modify(m)/delete(d)/show(s)}'''
+
+    node_create = '''
+    node(n) create(c) NODE -ip IP -nt NODETYPE'''
+
+    node_delete = '''
+    node(n) delete(d) NODE'''
+
+    # 待完善
+    node_modify = '''
+    node(n) modify(m) NODE ...'''
+
+    node_show = '''
+    node(n) show(s) [NODE]'''
 
 
 class NodeCommands():
@@ -32,7 +46,7 @@ class NodeCommands():
         Create LINSTOR Node
         """
         p_create_node = node_subp.add_parser('create', aliases='c', help='Create the node',
-                                                   usage=usage.node)
+                                                   usage=usage.node_create)
         self.p_create_node = p_create_node
         #add the parameters needed to create the node
         p_create_node.add_argument('node', metavar='NODE', action='store',
@@ -57,7 +71,7 @@ class NodeCommands():
         Delete LINSTOR Node
         """
         p_delete_node = node_subp.add_parser('delete', aliases='d', help='Delete the node',
-                                                   usage=usage.node)
+                                                   usage=usage.node_delete)
         self.p_delete_node = p_delete_node
         p_delete_node.add_argument('node', metavar='NODE', action='store', help=' Name of the node to remove')
         p_delete_node.add_argument('-y', dest='yes', action='store_true', help='Skip to confirm selection',
@@ -69,7 +83,7 @@ class NodeCommands():
         """
         Show LINSTOR Node
         """
-        p_show_node = node_subp.add_parser('show', aliases='s', help='Displays the node view', usage=usage.node)
+        p_show_node = node_subp.add_parser('show', aliases='s', help='Displays the node view', usage=usage.node_show)
         self.p_show_node = p_show_node
         p_show_node.add_argument('node', metavar='NODE', help='Print information about the node in LINSTOR cluster',
                                     action='store', nargs='?', default=None)
@@ -88,7 +102,7 @@ class NodeCommands():
             self.p_create_node.print_help()
 
 
-    @sd.comfirm_del
+    @sd.comfirm_del('node')
     def delete(self,args):
         esc.stor.delete_node(args.node)
 

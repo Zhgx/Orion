@@ -19,21 +19,24 @@ def send_via_socket(data):
     client.close()
 
 
-def comfirm_del(func):
+
+def comfirm_del(type):
     """
     Decorator providing confirmation of deletion function.
     :param func: Function to delete linstor resource
     """
-    @wraps(func)
-    def wrapper(*args):
-        cli_args = args[0]
-        if cli_args.yes:
-            func(*args)
-        else:
-            print('Are you sure you want to delete it? If yes, enter \'y/yes\'')
-            answer = input()
-            if answer in ['y', 'yes']:
+    def decorate(func):
+        @wraps(func)
+        def wrapper(*args):
+            cli_args = args[1]
+            if cli_args.yes:
                 func(*args)
             else:
-                print('Delete canceled')
-    return wrapper
+                print('Are you sure you want to delete this %s? If yes, enter \'y/yes\'' % type)
+                answer = input()
+                if answer in ['y', 'yes']:
+                    func(*args)
+                else:
+                    print('Delete canceled')
+        return wrapper
+    return decorate

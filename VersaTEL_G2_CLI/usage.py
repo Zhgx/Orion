@@ -21,7 +21,6 @@ node(n) modify(m) NODE ...'''
 node_show ='''
 node(n) show(s) [NODE]'''
 
-#storagepool部分使用手册
 resource = '''
 resource(r) {create(c)/modify(m)/delete(d)/show(s)}'''
 
