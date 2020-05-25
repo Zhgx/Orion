@@ -140,14 +140,21 @@ class LINSTORDB():
         self.cur = self.con.cursor()
 
     # 执行获取数据，删除表，创建表，插入数据
-    def rebuild_tb(self):
-        self.drop_tb()
+    def rebuild_linstor_tb(self):
+        self.cur.execute(self.crt_sptb_sql)  # 检查是否存在表，如不存在，则新创建表
+        self.cur.execute(self.crt_rtb_sql)
+        self.cur.execute(self.crt_ntb_sql)
+        self.con.commit()
+        self.get_output()
+        self.con.commit()
+
+
+    def rebuild_all_tb(self):
+        # self.drop_tb()
         self.create_tb()
         self.exc_get_vg()
         self.exc_get_thinlv()
         self.get_output()
-        # self.create_tb()
-        # self.run_insert()
         self.con.commit()
 
     def get_output(self):
@@ -213,7 +220,7 @@ class LINSTORDB():
     def data_base_dump(self):
         cur = self.cur
         con = self.con
-        self.rebuild_tb()
+        self.rebuild_all_tb()
         SQL_script = con.iterdump()
         cur.close()
         return "\n".join(SQL_script)
@@ -226,7 +233,7 @@ class DataProcess():
 
     def __init__(self):
         self.linstor_db = LINSTORDB()
-        self.linstor_db.rebuild_tb()
+        self.linstor_db.rebuild_linstor_tb()
         self.cur = self.linstor_db.cur
 
     # 获取表单行数据的通用方法

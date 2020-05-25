@@ -24,7 +24,7 @@ class usage():
     storagepool(sp) show(s) [STORAGEPOOL]'''
 
 
-class NodeCommands():
+class StoragePoolCommands():
     def __init__(self):
         pass
 
@@ -32,6 +32,7 @@ class NodeCommands():
         """
         sp(storage pool)
         Add commands for the storage pool management:create,modify,delete,show
+        :param:parser:sub-parser of the previous command
         """
         sp_parser = parser.add_parser(
             'storagepool',
@@ -80,6 +81,7 @@ class NodeCommands():
             action='store',
             help='The LvmThin volume group to use. The full name of the thin pool, namely VG/LV')
 
+        self.p_create_sp = p_create_sp
         p_create_sp.set_defaults(func=self.create)
 
 
@@ -121,7 +123,7 @@ class NodeCommands():
             help=argparse.SUPPRESS,
             default=False)
 
-
+        p_delete_sp.set_defaults(func=self.delete)
 
 
         """
@@ -151,23 +153,40 @@ class NodeCommands():
 
 
     def create(self, args):
-        if args.gui:
-            result = esc.stor.create_node(args.node, args.ip, args.nodetype)
-            result_pickled = pickle.dumps(result)
-            sd.send_via_socket(result_pickled)
-        elif args.node and args.nodetype and args.ip:
-            esc.stor.create_node(args.node, args.ip, args.nodetype)
+        if args.storagepool and args.node:
+            #The judgment of the lvm module to create a storage pool
+            if args.lvm:
+                if args.gui:
+                    result = esc.stor.create_storagepool_lvm(args.node, args.storagepool, args.lvm)
+                    result_pickled = pickle.dumps(result)
+                    sd.send_via_socket(result_pickled)
+                else:
+                    esc.stor.create_storagepool_lvm(args.node, args.storagepool, args.lvm)
+            # The judgment of the thin-lv module to create a storage pool
+            elif args.tlv:
+                if args.gui:
+                    result = esc.stor.create_storagepool_thinlv(args.node, args.storagepool, args.tlv)
+                    result_pickled = pickle.dumps(result)
+                    sd.send_via_socket(result_pickled)
+                else:
+                    esc.stor.create_storagepool_thinlv(args.node, args.storagepool, args.tlv)
+            else:
+                self.p_create_sp.print_help()
         else:
-            self.p_create_node.print_help()
+            self.p_create_sp.print_help()
 
-    @sd.comfirm_del('node')
-    def delete(self, args):
-        esc.stor.delete_node(args.node)
+    def modify(self):
+        pass
+
+    @sd.comfirm_del('storage pool')
+    def delete(self,args):
+        esc.stor.delete_storagepool(args.node, args.storagepool)
 
     def show(self, args):
         tb = linstordb.OutputData()
         if args.nocolor:
-            tb.show_node_one(args.node) if args.node else tb.node_all()
+            tb.show_sp_one(
+                args.storagepool) if args.storagepool else tb.sp_all()
         else:
-            tb.show_node_one_color(
-                args.node) if args.node else tb.node_all_color()
+            tb.show_sp_one_color(
+                args.storagepool) if args.storagepool else tb.sp_all_color()

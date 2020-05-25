@@ -3,7 +3,8 @@ import sys
 import os
 from commands import (
     NodeCommands,
-    ResourceCommands
+    ResourceCommands,
+    StoragePoolCommands
 )
 
 
@@ -15,6 +16,7 @@ class VtelCLI(object):
     def __init__(self):
         self._node_commands = NodeCommands()
         self._resource_commands = ResourceCommands()
+        self._storagepool_commands = StoragePoolCommands()
         self._parser = self.setup_parser()
 
     def setup_parser(self):
@@ -46,7 +48,7 @@ class VtelCLI(object):
             action='store_true',
             help=argparse.SUPPRESS,
             default=False)
-        parser_stor.set_defaults(func=self.func_stor)
+        parser_stor.set_defaults(func=self.send_database)
 
         subp.choices.keys()
 
@@ -56,12 +58,13 @@ class VtelCLI(object):
         # add all subcommands and argument
         self._node_commands.setup_commands(subp_stor)
         self._resource_commands.setup_commands(subp_stor)
+        self._storagepool_commands.setup_commands(subp_stor)
 
         parser.set_defaults(func=parser.print_help)
 
         return parser
 
-    def func_stor(self, args):
+    def send_database(self, args):
         if args.gui:
             print('gui')
         else:
