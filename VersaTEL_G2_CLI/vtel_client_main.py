@@ -7,17 +7,15 @@ from commands import (
 )
 
 
-
-
 class VtelCLI(object):
     """
     Vtel command line client
     """
+
     def __init__(self):
         self._node_commands = NodeCommands()
         self._resource_commands = ResourceCommands()
         self._parser = self.setup_parser()
-
 
     def setup_parser(self):
         parser = argparse.ArgumentParser(prog="vtel")
@@ -27,19 +25,32 @@ class VtelCLI(object):
         #parser.add_argument('--version','-v',action='version',version='%(prog)s ' + VERSION + '; ')
 
         subp = parser.add_subparsers(title='subcommands',
-                                     dest = 'subargs_vtel')
+                                     dest='subargs_vtel')
 
-        parser_stor = subp.add_parser('stor', help='Management operations for LINSTOR', add_help=False,formatter_class=argparse.RawTextHelpFormatter,)
+        parser_stor = subp.add_parser(
+            'stor',
+            help='Management operations for LINSTOR',
+            add_help=False,
+            formatter_class=argparse.RawTextHelpFormatter,
+        )
         self.parser_stor = parser_stor
-        parser_iscsi = subp.add_parser('iscsi', help='Management operations for iSCSI', add_help=False)
+        parser_iscsi = subp.add_parser(
+            'iscsi',
+            help='Management operations for iSCSI',
+            add_help=False)
 
         # add parameters to interact with the GUI
-        parser_stor.add_argument('-gui', dest='gui', action='store_true', help=argparse.SUPPRESS, default=False)
+        parser_stor.add_argument(
+            '-gui',
+            dest='gui',
+            action='store_true',
+            help=argparse.SUPPRESS,
+            default=False)
         parser_stor.set_defaults(func=self.func_stor)
 
         subp.choices.keys()
 
-        subp_stor = parser_stor.add_subparsers(dest = 'subargs_stor')
+        subp_stor = parser_stor.add_subparsers(dest='subargs_stor')
         # subp_iscsi = parser_iscsi.add_subparsers(dest = 'subargs_iscsi')
 
         # add all subcommands and argument
@@ -50,7 +61,7 @@ class VtelCLI(object):
 
         return parser
 
-    def func_stor(self,args):
+    def func_stor(self, args):
         if args.gui:
             print('gui')
         else:
@@ -68,7 +79,6 @@ class VtelCLI(object):
             args.func(args)
         else:
             self._parser.print_help()
-
 
 
 def main():

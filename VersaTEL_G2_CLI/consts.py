@@ -5,7 +5,6 @@ Global constants for vtel
 VERSION = "1.1.0"
 
 
-
 class ExitCode(object):
     OK = 0
     UNKNOWN_ERROR = 1

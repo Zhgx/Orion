@@ -5,6 +5,7 @@ import sundry as sd
 import execute_sys_command as esc
 import linstordb
 
+
 class usage():
     # node部分使用手册
     node = '''
@@ -28,11 +29,10 @@ class NodeCommands():
     def __init__(self):
         pass
 
-    def setup_commands(self,parser):
+    def setup_commands(self, parser):
         """
         Add commands for the node management:create,modify,delete,show
         """
-
         node_parser = parser.add_parser(
             'node',
             aliases='n',
@@ -41,23 +41,40 @@ class NodeCommands():
 
         node_subp = node_parser.add_subparsers(dest='subargs_node')
 
-
         """
         Create LINSTOR Node
         """
-        p_create_node = node_subp.add_parser('create', aliases='c', help='Create the node',
-                                                   usage=usage.node_create)
+        p_create_node = node_subp.add_parser(
+            'create',
+            aliases='c',
+            help='Create the node',
+            usage=usage.node_create)
         self.p_create_node = p_create_node
-        #add the parameters needed to create the node
-        p_create_node.add_argument('node', metavar='NODE', action='store',
-                                      help='Name of the new node, must match the nodes hostname')
-        p_create_node.add_argument('-ip', dest='ip', action='store',
-                                      help='IP address of the new node, if not specified it will be resolved by the name.',
-                                      required=True)
-        p_create_node.add_argument('-nt', dest='nodetype', action='store',
-                                      help='node type: {Controller,Auxiliary,Combined,Satellite}', required=True)
+        # add the parameters needed to create the node
+        p_create_node.add_argument(
+            'node',
+            metavar='NODE',
+            action='store',
+            help='Name of the new node, must match the nodes hostname')
+        p_create_node.add_argument(
+            '-ip',
+            dest='ip',
+            action='store',
+            help='IP address of the new node, if not specified it will be resolved by the name.',
+            required=True)
+        p_create_node.add_argument(
+            '-nt',
+            dest='nodetype',
+            action='store',
+            help='node type: {Controller,Auxiliary,Combined,Satellite}',
+            required=True)
         # add a parameter to interact with the GUI
-        p_create_node.add_argument('-gui', dest='gui', action='store_true', help=argparse.SUPPRESS, default=False)
+        p_create_node.add_argument(
+            '-gui',
+            dest='gui',
+            action='store_true',
+            help=argparse.SUPPRESS,
+            default=False)
 
         p_create_node.set_defaults(func=self.create)
 
@@ -66,32 +83,59 @@ class NodeCommands():
         """
         pass
 
-
         """
         Delete LINSTOR Node
         """
-        p_delete_node = node_subp.add_parser('delete', aliases='d', help='Delete the node',
-                                                   usage=usage.node_delete)
+        p_delete_node = node_subp.add_parser(
+            'delete',
+            aliases='d',
+            help='Delete the node',
+            usage=usage.node_delete)
         self.p_delete_node = p_delete_node
-        p_delete_node.add_argument('node', metavar='NODE', action='store', help=' Name of the node to remove')
-        p_delete_node.add_argument('-y', dest='yes', action='store_true', help='Skip to confirm selection',
-                                      default=False)
-        p_delete_node.add_argument('-gui', dest='gui', action='store_true', help=argparse.SUPPRESS, default=False)
+        p_delete_node.add_argument(
+            'node',
+            metavar='NODE',
+            action='store',
+            help=' Name of the node to remove')
+        p_delete_node.add_argument(
+            '-y',
+            dest='yes',
+            action='store_true',
+            help='Skip to confirm selection',
+            default=False)
+        p_delete_node.add_argument(
+            '-gui',
+            dest='gui',
+            action='store_true',
+            help=argparse.SUPPRESS,
+            default=False)
         p_delete_node.set_defaults(func=self.delete)
-
 
         """
         Show LINSTOR Node
         """
-        p_show_node = node_subp.add_parser('show', aliases='s', help='Displays the node view', usage=usage.node_show)
+        p_show_node = node_subp.add_parser(
+            'show',
+            aliases='s',
+            help='Displays the node view',
+            usage=usage.node_show)
         self.p_show_node = p_show_node
-        p_show_node.add_argument('node', metavar='NODE', help='Print information about the node in LINSTOR cluster',
-                                    action='store', nargs='?', default=None)
-        p_show_node.add_argument('--no-color', dest='nocolor', help='Do not use colors in output.',
-                                    action='store_true', default=False)
+        p_show_node.add_argument(
+            'node',
+            metavar='NODE',
+            help='Print information about the node in LINSTOR cluster',
+            action='store',
+            nargs='?',
+            default=None)
+        p_show_node.add_argument(
+            '--no-color',
+            dest='nocolor',
+            help='Do not use colors in output.',
+            action='store_true',
+            default=False)
         p_show_node.set_defaults(func=self.show)
 
-    def create(self,args):
+    def create(self, args):
         if args.gui:
             result = esc.stor.create_node(args.node, args.ip, args.nodetype)
             result_pickled = pickle.dumps(result)
@@ -101,15 +145,14 @@ class NodeCommands():
         else:
             self.p_create_node.print_help()
 
-
     @sd.comfirm_del('node')
-    def delete(self,args):
+    def delete(self, args):
         esc.stor.delete_node(args.node)
 
-
-    def show(self,args):
+    def show(self, args):
         tb = linstordb.OutputData()
         if args.nocolor:
             tb.show_node_one(args.node) if args.node else tb.node_all()
         else:
-            tb.show_node_one_color(args.node) if args.node else tb.node_all_color()
+            tb.show_node_one_color(
+                args.node) if args.node else tb.node_all_color()
