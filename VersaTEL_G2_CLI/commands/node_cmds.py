@@ -2,7 +2,7 @@ import argparse
 import pickle
 
 import sundry as sd
-import execute_sys_command as esc
+import execute as exec
 import linstordb
 
 
@@ -39,6 +39,7 @@ class NodeCommands():
             help='Management operations for node',
             usage=usage.node)
 
+        self.node_parser = node_parser
         node_subp = node_parser.add_subparsers(dest='subargs_node')
 
         """
@@ -135,19 +136,21 @@ class NodeCommands():
             default=False)
         p_show_node.set_defaults(func=self.show)
 
+        node_parser.set_defaults(func=self.print_node_help)
+
     def create(self, args):
         if args.gui:
-            result = esc.stor.create_node(args.node, args.ip, args.nodetype)
+            result = exec.Stor.create_node(args.node, args.ip, args.nodetype)
             result_pickled = pickle.dumps(result)
             sd.send_via_socket(result_pickled)
         elif args.node and args.nodetype and args.ip:
-            esc.stor.create_node(args.node, args.ip, args.nodetype)
+            exec.Stor.create_node(args.node, args.ip, args.nodetype)
         else:
             self.p_create_node.print_help()
 
     @sd.comfirm_del('node')
     def delete(self, args):
-        esc.stor.delete_node(args.node)
+        exec.Stor.delete_node(args.node)
 
     def show(self, args):
         tb = linstordb.OutputData()
@@ -156,3 +159,6 @@ class NodeCommands():
         else:
             tb.show_node_one_color(
                 args.node) if args.node else tb.node_all_color()
+
+    def print_node_help(self, *args):
+        self.node_parser.print_help()

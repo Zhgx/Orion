@@ -4,7 +4,7 @@ import prettytable as pt
 from functools import wraps
 import sqlite3
 import threading
-import execute_sys_command as esc
+import execute as esc
 
 
 class LINSTORDB():
@@ -147,7 +147,6 @@ class LINSTORDB():
         self.con.commit()
         self.get_output()
         self.con.commit()
-
 
     def rebuild_all_tb(self):
         # self.drop_tb()

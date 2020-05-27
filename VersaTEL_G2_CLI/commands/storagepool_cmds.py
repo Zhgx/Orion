@@ -2,7 +2,7 @@ import argparse
 import pickle
 
 import sundry as sd
-import execute_sys_command as esc
+import execute as exec
 import linstordb
 
 
@@ -84,7 +84,6 @@ class StoragePoolCommands():
         self.p_create_sp = p_create_sp
         p_create_sp.set_defaults(func=self.create)
 
-
         """
         Modify LISNTOR Storage Pool
         """
@@ -125,7 +124,6 @@ class StoragePoolCommands():
 
         p_delete_sp.set_defaults(func=self.delete)
 
-
         """
         Show LISNTOR Storage Pool
         """
@@ -150,26 +148,28 @@ class StoragePoolCommands():
 
         p_show_sp.set_defaults(func=self.show)
 
-
-
     def create(self, args):
         if args.storagepool and args.node:
-            #The judgment of the lvm module to create a storage pool
+            # The judgment of the lvm module to create a storage pool
             if args.lvm:
                 if args.gui:
-                    result = esc.stor.create_storagepool_lvm(args.node, args.storagepool, args.lvm)
+                    result = exec.stor.create_storagepool_lvm(
+                        args.node, args.storagepool, args.lvm)
                     result_pickled = pickle.dumps(result)
                     sd.send_via_socket(result_pickled)
                 else:
-                    esc.stor.create_storagepool_lvm(args.node, args.storagepool, args.lvm)
+                    exec.stor.create_storagepool_lvm(
+                        args.node, args.storagepool, args.lvm)
             # The judgment of the thin-lv module to create a storage pool
             elif args.tlv:
                 if args.gui:
-                    result = esc.stor.create_storagepool_thinlv(args.node, args.storagepool, args.tlv)
+                    result = exec.stor.create_storagepool_thinlv(
+                        args.node, args.storagepool, args.tlv)
                     result_pickled = pickle.dumps(result)
                     sd.send_via_socket(result_pickled)
                 else:
-                    esc.stor.create_storagepool_thinlv(args.node, args.storagepool, args.tlv)
+                    exec.stor.create_storagepool_thinlv(
+                        args.node, args.storagepool, args.tlv)
             else:
                 self.p_create_sp.print_help()
         else:
@@ -179,8 +179,8 @@ class StoragePoolCommands():
         pass
 
     @sd.comfirm_del('storage pool')
-    def delete(self,args):
-        esc.stor.delete_storagepool(args.node, args.storagepool)
+    def delete(self, args):
+        exec.stor.delete_storagepool(args.node, args.storagepool)
 
     def show(self, args):
         tb = linstordb.OutputData()

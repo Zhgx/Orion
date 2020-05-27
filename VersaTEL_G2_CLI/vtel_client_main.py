@@ -4,7 +4,13 @@ import os
 from commands import (
     NodeCommands,
     ResourceCommands,
-    StoragePoolCommands
+    StoragePoolCommands,
+    DiskCommands,
+    DiskGroupCommands,
+    HostCommands,
+    HostGroupCommands,
+    MapCommands
+
 )
 
 
@@ -17,6 +23,11 @@ class VtelCLI(object):
         self._node_commands = NodeCommands()
         self._resource_commands = ResourceCommands()
         self._storagepool_commands = StoragePoolCommands()
+        self._disk_commands = DiskCommands()
+        self._diskgroup_commands = DiskGroupCommands()
+        self._host_commands = HostCommands()
+        self._hostgroup_commands = HostGroupCommands()
+        self._map_commands = MapCommands()
         self._parser = self.setup_parser()
 
     def setup_parser(self):
@@ -35,7 +46,7 @@ class VtelCLI(object):
             add_help=False,
             formatter_class=argparse.RawTextHelpFormatter,
         )
-        self.parser_stor = parser_stor
+
         parser_iscsi = subp.add_parser(
             'iscsi',
             help='Management operations for iSCSI',
@@ -48,17 +59,29 @@ class VtelCLI(object):
             action='store_true',
             help=argparse.SUPPRESS,
             default=False)
-        parser_stor.set_defaults(func=self.send_database)
 
-        subp.choices.keys()
+        self.parser_stor = parser_stor
+        self.parser_iscsi = parser_iscsi
+        # Set the binding function of stor
+        parser_stor.set_defaults(func=self.send_database)
+        # Set the binding function of iscsi
+        parser_iscsi.set_defaults(func=self.print_iscsi_help)
+
+        print(subp.choices.keys())
 
         subp_stor = parser_stor.add_subparsers(dest='subargs_stor')
-        # subp_iscsi = parser_iscsi.add_subparsers(dest = 'subargs_iscsi')
+        subp_iscsi = parser_iscsi.add_subparsers(dest='subargs_iscsi')
 
         # add all subcommands and argument
         self._node_commands.setup_commands(subp_stor)
         self._resource_commands.setup_commands(subp_stor)
         self._storagepool_commands.setup_commands(subp_stor)
+
+        self._disk_commands.setup_commands(subp_iscsi)
+        self._diskgroup_commands.setup_commands(subp_iscsi)
+        self._host_commands.setup_commands(subp_iscsi)
+        self._hostgroup_commands.setup_commands(subp_iscsi)
+        self._map_commands.setup_commands(subp_iscsi)
 
         parser.set_defaults(func=parser.print_help)
 
@@ -69,6 +92,9 @@ class VtelCLI(object):
             print('gui')
         else:
             self.parser_stor.print_help()
+
+    def print_iscsi_help(self, args):
+        self.parser_iscsi.print_help()
 
     # def parse(self,pargs):
     #     return self._parser.parse_args(pargs)
