@@ -141,7 +141,6 @@ class CRM():
 
 
 class LVM():
-
     @staticmethod
     def get_vg():
         result_vg = subprocess.Popen(
@@ -292,18 +291,24 @@ class Stor():
         if Stor.judge_cmd_result_suc(str(result)):
             return True
         elif Stor.judge_cmd_result_err(str(result)):
-            print(result.decode('utf-8'))
+            # print(result.decode('utf-8'))
             return result.decode()
+        else:
+            return
 
     @staticmethod
     def print_excute_result(cmd):
         result = Stor.execute_cmd(cmd)
-        if result:
+        if not result:
+            return
+        if result is True:
             print('SUCCESS')
             return True
         else:
+            print(result)
             print('FAIL')
             return result
+
 
     # 创建resource相关 -- ok
     @staticmethod
@@ -320,7 +325,7 @@ class Stor():
     def linstor_create_rd(res):
         cmd_rd = 'linstor rd c %s' % res
         result = Stor.execute_cmd(cmd_rd)
-        if result:
+        if result is True:
             return True
         else:
             print('FAIL')
@@ -330,7 +335,7 @@ class Stor():
     def linstor_create_vd(res, size):
         cmd_vd = 'linstor vd c %s %s' % (res, size)
         result = Stor.execute_cmd(cmd_vd)
-        if result:
+        if result is True:
             return True
         else:
             print('FAIL')
@@ -341,19 +346,20 @@ class Stor():
     @staticmethod
     def create_res_auto(res, size, num):
         cmd = 'linstor r c %s --auto-place %d' % (res, num)
-        if Stor.linstor_create_rd(
-                res) is True and Stor.linstor_create_vd(res, size) is True:
+        if Stor.linstor_create_rd(res) is True and Stor.linstor_create_vd(res, size) is True:
             result = Stor.execute_cmd(cmd)
-            if result:
+            if result is True:
                 print('SUCCESS')
                 return True
             else:
                 print('FAIL')
                 Stor.linstor_delete_rd(res)
                 return result
+        else:
+            print('The resource already exists')
+            return ('The resource already exists')
 
-        # 创建resource 手动
-
+    # 创建resource 手动
     @staticmethod
     def create_res_manual(res, size, node, stp):
         flag = OrderedDict()
@@ -391,17 +397,16 @@ class Stor():
                 flag.update(dict_fail)
 
         if len(stp) == 1:
-            if Stor.linstor_create_rd(
-                    res) is True and Stor.linstor_create_vd(res, size) is True:
+            if Stor.linstor_create_rd(res) is True and Stor.linstor_create_vd(res, size) is True:
                 for node_one in node:
-                    cmd = 'linstor resource create %s %s --storage-pool %s' % (
-                        node_one, res, stp[0])
+                    cmd = 'linstor resource create %s %s --storage-pool %s' % (node_one, res, stp[0])
                     create_resource(cmd)
                 whether_delete_rd()
                 return print_fail_node()
             else:
                 # need to be prefect
-                return ('The ResourceDefinition already exists')
+                print('The resource already exists')
+                return ('The resource already exists')
         elif len(node) == len(stp):
             if Stor.linstor_create_rd(
                     res) is True and Stor.linstor_create_vd(res, size) is True:
@@ -412,7 +417,8 @@ class Stor():
                 whether_delete_rd()
                 return print_fail_node()
             else:
-                return ('The ResourceDefinition already exists')
+                print('The resource already exists')
+                return ('The resource already exists')
         else:
             print('The number of Node and Storage pool do not meet the requirements')
 
@@ -568,9 +574,9 @@ class Iscsi():
             hostiqn.append(iqn)
         mapdata.update({'host_iqn': hostiqn})
         disk = js.get_data('DiskGroup').get(dg)
-        cd = crm()
+        cd = CRM()
         data = cd.get_data_linstor()
-        linstorlv = linstor.refine_linstor(data)
+        linstorlv = LINSTOR.refine_linstor(data)
         print("get linstor r lv data")
         diskd = {}
         for d in linstorlv:
@@ -589,7 +595,7 @@ class Iscsi():
 
     # 调用crm创建map
     def map_crm_c(self, mapdata):
-        cd = crm()
+        cd = CRM()
         for i in mapdata['target']:
             target = i[0]
             targetiqn = i[1]
@@ -599,8 +605,8 @@ class Iscsi():
                 mapdata['disk'].get(disk)[0],
                 mapdata['disk'].get(disk)[1]]
             if cd.createres(res, mapdata['host_iqn'], targetiqn):
-                c = cd.createco(res[0], target)
-                o = cd.createor(res[0], target)
+                c = cd.createco(res[0],target)
+                o = cd.createor(res[0],target)
                 s = cd.resstart(res[0])
                 if c and o and s:
                     print('create colocation and order success:', disk)
@@ -614,7 +620,7 @@ class Iscsi():
 
     # 调用crm删除map
     def map_crm_d(self, resname):
-        cd = crm()
+        cd = CRM()
         crm_config_statu = cd.get_data_crm()
         if 'ERROR' in crm_config_statu:
             print("Could not perform requested operations, are you root?")

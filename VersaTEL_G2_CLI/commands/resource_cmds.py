@@ -4,7 +4,7 @@ import sys
 import re
 
 import sundry as sd
-import execute as exec
+import execute as ex
 import linstordb
 
 
@@ -254,12 +254,12 @@ class ResourceCommands():
                 sys.exit(0)
             # 自动创建条件判断，符合则执行
             if all(list_auto_required) and not any(list_auto_forbid):
-                exec.stor.create_res_auto(args.resource, args.size, args.num)
+                ex.Stor.create_res_auto(args.resource, args.size, args.num)
             # 手动创建条件判断，符合则执行
             elif all(list_manual_required) and not any(list_manual_forbid):
                 try:
                     self.is_args_correct(args.node, args.storagepool)
-                    exec.stor.create_res_manual(
+                    ex.Stor.create_res_manual(
                         args.resource, args.size, args.node, args.storagepool)
                 except NodeLessThanSPError:
                     print('The number of nodes does not meet the requirements')
@@ -270,7 +270,7 @@ class ResourceCommands():
         elif args.diskless:
             # 创建resource的diskless资源条件判断，符合则执行
             if args.node and not any(list_diskless_forbid):
-                exec.stor.create_res_diskless(args.node, args.resource)
+                ex.Stor.create_res_diskless(args.node, args.resource)
             else:
                 self.p_create_res.print_help()
 
@@ -279,13 +279,13 @@ class ResourceCommands():
             if all([args.node, args.storagepool]) and not any(
                     [args.auto, args.num]):
                 if ResourceCommands.is_args_correct():
-                    exec.stor.add_mirror_manual(
+                    ex.Stor.add_mirror_manual(
                         args.resource, args.node, args.storagepool)
                 else:
                     self.p_create_res.print_help()
             # 自动添加mirror条件判断，符合则执行
             elif all([args.auto, args.num]) and not any([args.node, args.storagepool]):
-                exec.stor.add_mirror_auto(args.resource, args.num)
+                ex.Stor.add_mirror_auto(args.resource, args.num)
             else:
                 self.p_create_res.print_help()
 
@@ -295,9 +295,9 @@ class ResourceCommands():
     @sd.comfirm_del('resource')
     def delete(self, args):
         if args.node:
-            exec.stor.delete_resource_des(args.node, args.resource)
+            ex.Stor.delete_resource_des(args.node, args.resource)
         elif not args.node:
-            exec.stor.delete_resource_all(args.resource)
+            ex.Stor.delete_resource_all(args.resource)
 
     def show(self, args):
         tb = linstordb.OutputData()

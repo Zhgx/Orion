@@ -1,6 +1,11 @@
 import argparse
 import sys
 import os
+import pickle
+
+import linstordb
+
+import sundry
 from commands import (
     NodeCommands,
     ResourceCommands,
@@ -10,7 +15,6 @@ from commands import (
     HostCommands,
     HostGroupCommands,
     MapCommands
-
 )
 
 
@@ -67,7 +71,6 @@ class VtelCLI(object):
         # Set the binding function of iscsi
         parser_iscsi.set_defaults(func=self.print_iscsi_help)
 
-        print(subp.choices.keys())
 
         subp_stor = parser_stor.add_subparsers(dest='subargs_stor')
         subp_iscsi = parser_iscsi.add_subparsers(dest='subargs_iscsi')
@@ -87,17 +90,18 @@ class VtelCLI(object):
 
         return parser
 
+    # When using the parameter '-gui', send the database through the socket
     def send_database(self, args):
         if args.gui:
-            print('gui')
+            db = linstordb.LINSTORDB()
+            data = pickle.dumps(db.data_base_dump())
+            sundry.send_via_socket(data)
         else:
             self.parser_stor.print_help()
 
     def print_iscsi_help(self, args):
         self.parser_iscsi.print_help()
 
-    # def parse(self,pargs):
-    #     return self._parser.parse_args(pargs)
 
     def run(self):
         pass
@@ -115,7 +119,7 @@ def main():
         cmd = VtelCLI()
         cmd.parse()
     except KeyboardInterrupt:
-        sys.stderr.write("\nlinstor: Client exiting (received SIGINT)\n")
+        sys.stderr.write("\nClient exiting (received SIGINT)\n")
 
 
 if __name__ == '__main__':

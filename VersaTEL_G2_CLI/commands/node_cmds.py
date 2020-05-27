@@ -2,7 +2,7 @@ import argparse
 import pickle
 
 import sundry as sd
-import execute as exec
+import execute as ex
 import linstordb
 
 
@@ -140,17 +140,17 @@ class NodeCommands():
 
     def create(self, args):
         if args.gui:
-            result = exec.Stor.create_node(args.node, args.ip, args.nodetype)
+            result = ex.Stor.create_node(args.node, args.ip, args.nodetype)
             result_pickled = pickle.dumps(result)
             sd.send_via_socket(result_pickled)
         elif args.node and args.nodetype and args.ip:
-            exec.Stor.create_node(args.node, args.ip, args.nodetype)
+            ex.Stor.create_node(args.node, args.ip, args.nodetype)
         else:
             self.p_create_node.print_help()
 
     @sd.comfirm_del('node')
     def delete(self, args):
-        exec.Stor.delete_node(args.node)
+        ex.Stor.delete_node(args.node)
 
     def show(self, args):
         tb = linstordb.OutputData()

@@ -3,7 +3,7 @@ import pickle
 
 import sundry as sd
 import iscsi_json
-import execute as exec
+import execute as ex
 
 
 class DiskCommands():
@@ -40,9 +40,9 @@ class DiskCommands():
 
     def show(self, args):
         js = iscsi_json.JSON_OPERATION()
-        cd = exec.CRM()
+        cd = ex.CRM()
         data = cd.get_data_linstor()
-        linstorlv = exec.LINSTOR.refine_linstor(data)
+        linstorlv = ex.LINSTOR.refine_linstor(data)
         disks = {}
         for d in linstorlv:
             disks.update({d[1]: d[5]})

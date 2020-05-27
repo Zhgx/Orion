@@ -4,7 +4,7 @@ import prettytable as pt
 from functools import wraps
 import sqlite3
 import threading
-import execute as esc
+import execute as ex
 
 
 class LINSTORDB():
@@ -172,23 +172,23 @@ class LINSTORDB():
             threads[i].join()
 
     def exc_get_vg(self):
-        vg = esc.lvm.refine_vg(esc.lvm.get_vg())
+        vg = ex.LVM.refine_vg(ex.LVM.get_vg())
         self.insert_data(self.replace_vgtb_sql, vg)
 
     def exc_get_thinlv(self):
-        thinlv = esc.lvm.refine_thinlv(esc.lvm.get_thinlv())
+        thinlv = ex.LVM.refine_thinlv(ex.LVM.get_thinlv())
         self.insert_data(self.replace_thinlvtb_sql, thinlv)
 
     def thread_get_node(self):
-        node = esc.linstor.refine_linstor(esc.linstor.get_node())
+        node = ex.LINSTOR.refine_linstor(ex.LINSTOR.get_node())
         self.insert_data(self.replace_ntb_sql, node)
 
     def thread_get_res(self):
-        res = esc.linstor.refine_linstor(esc.linstor.get_res())
+        res = ex.LINSTOR.refine_linstor(ex.LINSTOR.get_res())
         self.insert_data(self.replace_rtb_sql, res)
 
     def thread_get_sp(self):
-        sp = esc.linstor.refine_linstor(esc.linstor.get_sp())
+        sp = ex.LINSTOR.refine_linstor(ex.LINSTOR.get_sp())
         self.insert_data(self.replace_stb_sql, sp)
 
     # 创建表
