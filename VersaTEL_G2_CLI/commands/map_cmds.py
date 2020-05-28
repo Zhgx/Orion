@@ -19,8 +19,6 @@ class MapCommands():
         map_subp = map_parser.add_subparsers(dest='map')
         self.map_parser = map_parser
 
-        # show_parser = parser.add_parser('show', aliases='s')
-        # show_parser.add_argument('js', help='js show')
 
         """
         Create map
@@ -73,19 +71,19 @@ class MapCommands():
         map_parser.set_defaults(func=self.print_map_help)
 
     def create(self, args):
-        obj_map = ex.Iscsi()
+        obj_iscsi = ex.Iscsi()
         if args.gui == 'gui':
-            data = pickle.dumps(obj_map.create_map(args.map, args.hg, args.dg))
+            data = pickle.dumps(obj_iscsi.create_map(args.map, args.hg, args.dg))
             sd.send_via_socket(data)
         else:
-            obj_map.create_map(args.map, args.hg, args.dg)
+            obj_iscsi.create_map(args.map, args.hg, args.dg)
 
     def show(self, args):
         ex.Iscsi.show_map(args.map)
 
     def delete(self, args):
-        obj_map = ex.Iscsi()
-        obj_map.show_map(args.map)
+        obj_iscsi = ex.Iscsi()
+        obj_iscsi.delete_map(args.map)
 
     def print_map_help(self, *args):
         self.map_parser.print_help()

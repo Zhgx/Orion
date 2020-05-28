@@ -684,6 +684,26 @@ class Iscsi():
                     return False
             return True
 
+
+    def show_disk(self,disk):
+        js = iscsi_json.JSON_OPERATION()
+        data = LINSTOR.get_res()
+        linstorlv = LINSTOR.refine_linstor(data)
+        disks = {}
+        for d in linstorlv:
+            disks.update({d[1]: d[5]})
+        js.up_data('Disk', disks)
+        if disk == 'all' or disk is None:
+            print(" " + "{:<15}".format("Diskname") + "Path")
+            print(" " + "{:<15}".format("---------------") + "---------------")
+            for k in disks:
+                print(" " + "{:<15}".format(k) + disks[k])
+        else:
+            if js.check_key('Disk', disk):
+                print(disk, ":", js.get_data('Disk').get(disk))
+            else:
+                print("Fail! Can't find " + disk)
+
     @staticmethod
     def create_host(host, iqn):
         js = iscsi_json.JSON_OPERATION()
@@ -731,7 +751,6 @@ class Iscsi():
             print("Fail! Can't find " + host)
             return False
 
-
     @staticmethod
     def create_diskgroup(diskgroup, disk):
         js = iscsi_json.JSON_OPERATION()
@@ -756,6 +775,38 @@ class Iscsi():
             else:
                 print("Fail! Please give the true name.")
                 return False
+
+    @staticmethod
+    def show_diskgroup(dg):
+        js = iscsi_json.JSON_OPERATION()
+        if dg == 'all' or dg is None:
+            print("Diskgroup:")
+            diskgroups = js.get_data("DiskGroup")
+            for k in diskgroups:
+                print(" " + "---------------")
+                print(" " + k + ":")
+                for v in diskgroups[k]:
+                    print("     " + v)
+        else:
+            if js.check_key('DiskGroup', dg):
+                print(dg + ":")
+                for k in js.get_data('DiskGroup').get(dg):
+                    print(" " + k)
+            else:
+                print("Fail! Can't find " + dg)
+
+    @staticmethod
+    def delete_diskgroup(dg):
+        js = iscsi_json.JSON_OPERATION()
+        print("Delete the diskgroup <", dg, "> ...")
+        if js.check_key('DiskGroup', dg):
+            if js.check_value('Map', dg):
+                print("Fail! The diskgroup already map,Please delete the map")
+            else:
+                js.delete_data('DiskGroup', dg)
+                print("Delete success!")
+        else:
+            print("Fail! Can't find " + dg)
 
     @staticmethod
     def create_hostgroup(hostgroup, host):
@@ -783,7 +834,7 @@ class Iscsi():
                 return False
 
     @staticmethod
-    def show_hg(hg):
+    def show_hostgroup(hg):
         js = iscsi_json.JSON_OPERATION()
         if hg == 'all' or hg is None:
             print("Hostgroup:")
@@ -802,7 +853,7 @@ class Iscsi():
                 print("Fail! Can't find " + hg)
 
     @staticmethod
-    def delete_hg(hg):
+    def delete_hostgroup(hg):
         js = iscsi_json.JSON_OPERATION()
         print("Delete the hostgroup <", hg, "> ...")
         if js.check_key('HostGroup', hg):
@@ -845,7 +896,6 @@ class Iscsi():
                         return False
                 else:
                     return False
-
 
     @staticmethod
     def show_map(map):

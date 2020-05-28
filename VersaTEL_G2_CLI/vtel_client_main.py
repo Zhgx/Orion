@@ -6,6 +6,7 @@ import pickle
 import linstordb
 
 import sundry
+import iscsi_json
 from commands import (
     NodeCommands,
     ResourceCommands,
@@ -51,13 +52,21 @@ class VtelCLI(object):
             formatter_class=argparse.RawTextHelpFormatter,
         )
 
+        # add parameters to interact with the GUI
+        parser_stor.add_argument(
+            '-gui',
+            dest='gui',
+            action='store_true',
+            help=argparse.SUPPRESS,
+            default=False)
+
         parser_iscsi = subp.add_parser(
             'iscsi',
             help='Management operations for iSCSI',
             add_help=False)
 
-        # add parameters to interact with the GUI
-        parser_stor.add_argument(
+
+        parser_iscsi.add_argument(
             '-gui',
             dest='gui',
             action='store_true',
@@ -68,9 +77,9 @@ class VtelCLI(object):
         self.parser_iscsi = parser_iscsi
         # Set the binding function of stor
         parser_stor.set_defaults(func=self.send_database)
+        parser_iscsi.set_defaults(func=self.send_json)
         # Set the binding function of iscsi
         parser_iscsi.set_defaults(func=self.print_iscsi_help)
-
 
         subp_stor = parser_stor.add_subparsers(dest='subargs_stor')
         subp_iscsi = parser_iscsi.add_subparsers(dest='subargs_iscsi')
@@ -98,6 +107,15 @@ class VtelCLI(object):
             sundry.send_via_socket(data)
         else:
             self.parser_stor.print_help()
+
+    def send_json(self, args):
+        js = iscsi_json.JSON_OPERATION()
+        if args.json in ['json']:
+            data = js.read_data_json()
+            data_pickled = pickle.dumps(data)
+            sundry.send_via_socket(data_pickled)
+        else:
+            self.parser_iscsi.print_help()
 
     def print_iscsi_help(self, args):
         self.parser_iscsi.print_help()

@@ -1,4 +1,35 @@
 {
+    "Target": {
+        "Target1": "iqn.xxx",
+        "Target2": "iqn.xxx",
+        "Target3": "iqn.xxx"
+    },
+    "crm": {
+        "target": [],
+        "resource": [],
+        "vip": []
+    },
+    "Disk": {},
+    "Host": {
+        "HostA": "iqn.xxxx:aa",
+        "htest2": "iqn.2020-02.org.debian:02:bc333iscs3b",
+        "htest1": "iqn.1993-08.org.debian:01:bc429d5fc3b",
+        "HostB": "iqn.xxxx:bb"
+    },
+    "HostGroup": {
+        "test": [
+            "htest1",
+            "htest2"
+        ],
+        "paulhost": [
+            "HostA",
+            "HostB"
+        ],
+        "HostGroup1": [
+            "HostA",
+            "HostB"
+        ]
+    },
     "DiskGroup": {
         "DiskGroup1": [
             "apple",
@@ -9,44 +40,10 @@
             "zane2"
         ]
     },
-    "Target": {
-        "Target3": "iqn.xxx",
-        "Target2": "iqn.xxx",
-        "Target1": "iqn.xxx"
-    },
     "Map": {
         "Map1": [
             "HostGroup1",
             "DiskGroup1"
         ]
-    },
-    "crm": {
-        "resource": [],
-        "vip": [],
-        "target": []
-    },
-    "HostGroup": {
-        "paulhost": [
-            "HostA",
-            "HostB"
-        ],
-        "HostGroup1": [
-            "HostA",
-            "HostB"
-        ],
-        "test": [
-            "htest1",
-            "htest2"
-        ]
-    },
-    "Host": {
-        "htest2": "iqn.2020-02.org.debian:02:bc333iscs3b",
-        "htest1": "iqn.1993-08.org.debian:01:bc429d5fc3b",
-        "HostA": "iqn.xxxx:aa",
-        "HostB": "iqn.xxxx:bb"
-    },
-    "Disk": {
-        "res_a": "/dev/drbd1000",
-        "res_b": "/dev/drbd1001"
     }
 }

@@ -56,7 +56,7 @@ class DiskGroupCommands():
 
         # add arguments of diskgroup show
         p_show_dg.add_argument(
-            'show',
+            'diskgroup',
             action='store',
             help='diskgroup show [diskgroup_name]',
             nargs='?',
@@ -89,34 +89,10 @@ class DiskGroupCommands():
             ex.Iscsi.create_diskgroup(args.diskgroup, args.disk)
 
     def show(self, args):
-        js = iscsi_json.JSON_OPERATION()
-        if args.show == 'all' or args.show is None:
-            print("Diskgroup:")
-            diskgroups = js.get_data("DiskGroup")
-            for k in diskgroups:
-                print(" " + "---------------")
-                print(" " + k + ":")
-                for v in diskgroups[k]:
-                    print("     " + v)
-        else:
-            if js.check_key('DiskGroup', args.show):
-                print(args.show + ":")
-                for k in js.get_data('DiskGroup').get(args.show):
-                    print(" " + k)
-            else:
-                print("Fail! Can't find " + args.show)
+        ex.Iscsi.show_diskgroup(args.diskgroup)
 
     def delete(self, args):
-        js = iscsi_json.JSON_OPERATION()
-        print("Delete the diskgroup <", args.diskgroup, "> ...")
-        if js.check_key('DiskGroup', args.diskgroup):
-            if js.check_value('Map', args.diskgroup):
-                print("Fail! The diskgroup already map,Please delete the map")
-            else:
-                js.delete_data('DiskGroup', args.diskgroup)
-                print("Delete success!")
-        else:
-            print("Fail! Can't find " + args.diskgroup)
+        ex.Iscsi.delete_diskgroup(args.diskgroup)
 
     def print_dg_help(self, *args):
         self.dg_parser.print_help()

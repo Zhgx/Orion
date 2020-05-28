@@ -28,7 +28,7 @@ class DiskCommands():
             'show', aliases='s', help='disk show')
 
         p_show_disk.add_argument(
-            'show',
+            'disk',
             action='store',
             help='disk show [disk_name]',
             nargs='?',
@@ -39,24 +39,8 @@ class DiskCommands():
         p_show_disk.set_defaults(func=self.show)
 
     def show(self, args):
-        js = iscsi_json.JSON_OPERATION()
-        cd = ex.CRM()
-        data = cd.get_data_linstor()
-        linstorlv = ex.LINSTOR.refine_linstor(data)
-        disks = {}
-        for d in linstorlv:
-            disks.update({d[1]: d[5]})
-        js.up_data('Disk', disks)
-        if args.show == 'all' or args.show is None:
-            print(" " + "{:<15}".format("Diskname") + "Path")
-            print(" " + "{:<15}".format("---------------") + "---------------")
-            for k in disks:
-                print(" " + "{:<15}".format(k) + disks[k])
-        else:
-            if js.check_key('Disk', args.show):
-                print(args.show, ":", js.get_data('Disk').get(args.show))
-            else:
-                print("Fail! Can't find " + args.show)
+        obj_iscsi = ex.Iscsi()
+        obj_iscsi.show_disk(args.disk)
 
     def print_disk_help(self, *args):
         self.disk_parser.print_help()

@@ -60,7 +60,7 @@ class HostGroupCommands():
             help='hostgroup show / hostgroup show [hostgroup_name]')
 
         p_show_hg.add_argument(
-            'hg',
+            'hostgroup',
             action='store',
             help='hostgroup show [hostgroup_name]',
             nargs='?',
@@ -94,10 +94,10 @@ class HostGroupCommands():
             ex.Iscsi.create_hostgroup(args.hostgroup, args.host)
 
     def show(self, args):
-        ex.Iscsi.show_hg(args.hostgroup)
+        ex.Iscsi.show_hostgroup(args.hostgroup)
 
     def delete(self, args):
-        ex.Iscsi.delete_hg(args.hostgroup)
+        ex.Iscsi.delete_hostgroup(args.hostgroup)
 
     def print_hg_help(self, *args):
         self.hg_parser.print_help()
