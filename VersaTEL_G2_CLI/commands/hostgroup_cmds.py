@@ -60,7 +60,7 @@ class HostGroupCommands():
             help='hostgroup show / hostgroup show [hostgroup_name]')
 
         p_show_hg.add_argument(
-            'show',
+            'hg',
             action='store',
             help='hostgroup show [hostgroup_name]',
             nargs='?',
@@ -94,33 +94,10 @@ class HostGroupCommands():
             ex.Iscsi.create_hostgroup(args.hostgroup, args.host)
 
     def show(self, args):
-        js = iscsi_json.JSON_OPERATION()
-        if args.show == 'all' or args.show is None:
-            print("Hostgroup:")
-            hostgroups = js.get_data("HostGroup")
-            for k in hostgroups:
-                print(" " + "---------------")
-                print(" " + k + ":")
-                for v in hostgroups[k]:
-                    print("     " + v)
-        else:
-            if js.check_key('HostGroup', args.show):
-                print(args.show + ":")
-                for k in js.get_data('HostGroup').get(args.show):
-                    print(" " + k)
-            else:
-                print("Fail! Can't find " + args.show)
+        ex.Iscsi.show_hg(args.hostgroup)
 
-    def delete(self, args, js):
-        print("Delete the hostgroup <", args.hostgroup, "> ...")
-        if js.check_key('HostGroup', args.hostgroup):
-            if js.check_value('Map', args.hostgroup):
-                print("Fail! The hostgroup already map,Please delete the map")
-            else:
-                js.delete_data('HostGroup', args.hostgroup)
-                print("Delete success!")
-        else:
-            print("Fail! Can't find " + args.hostgroup)
+    def delete(self, args):
+        ex.Iscsi.delete_hg(args.hostgroup)
 
     def print_hg_help(self, *args):
         self.hg_parser.print_help()

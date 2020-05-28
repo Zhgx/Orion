@@ -62,7 +62,7 @@ class MapCommands():
             'show', aliases='s', help='map show / map show [map_name]')
 
         p_show_map.add_argument(
-            'show',
+            'map',
             action='store',
             help='map show [map_name]',
             nargs='?',
@@ -81,45 +81,11 @@ class MapCommands():
             obj_map.create_map(args.map, args.hg, args.dg)
 
     def show(self, args):
-        obj_map = ex.Iscsi()
-        js = iscsi_json.JSON_OPERATION()
-        crmdata = obj_map.crm_up(js)
-        if args.show == 'all' or args.show is None:
-            print("Map:")
-            maps = js.get_data("Map")
-            for k in maps:
-                print(" " + "---------------")
-                print(" " + k + ":")
-                for v in maps[k]:
-                    print("     " + v)
-        else:
-            if js.check_key('Map', args.show):
-                print(args.show + ":")
-                maplist = js.get_data('Map').get(args.show)
-                print(' ' + maplist[0] + ':')
-                for i in js.get_data('HostGroup').get(maplist[0]):
-                    print('     ' + i + ': ' + js.get_data('Host').get(i))
-                print(' ' + maplist[1] + ':')
-                for i in js.get_data('DiskGroup').get(maplist[1]):
-                    print('     ' + i + ': ' + js.get_data('Disk').get(i))
-            else:
-                print("Fail! Can't find " + args.show)
+        ex.Iscsi.show_map(args.map)
 
     def delete(self, args):
-        js = iscsi_json.JSON_OPERATION()
         obj_map = ex.Iscsi()
-        print("Delete the map <", args.map, ">...")
-        if js.check_key('Map', args.map):
-            print(
-                js.get_data('Map').get(
-                    args.map),
-                "will probably be affected ")
-            resname = obj_map.map_data_d(js, args.map)
-            if obj_map.map_crm_d(resname):
-                js.delete_data('Map', args.map)
-                print("Delete success!")
-        else:
-            print("Fail! Can't find " + args.map)
+        obj_map.show_map(args.map)
 
     def print_map_help(self, *args):
         self.map_parser.print_help()

@@ -698,6 +698,41 @@ class Iscsi():
             return True
 
     @staticmethod
+    def show_host(host):
+        js = iscsi_json.JSON_OPERATION()
+        if host == 'all' or host is None:
+            hosts = js.get_data("Host")
+            print(" " + "{:<15}".format("Hostname") + "Iqn")
+            print(" " + "{:<15}".format("---------------") + "---------------")
+            for k in hosts:
+                print(" " + "{:<15}".format(k) + hosts[k])
+        else:
+            if js.check_key('Host', host):
+                print(host, ":", js.get_data('Host').get(host))
+            else:
+                print("Fail! Can't find " + host)
+                return False
+        return True
+
+    @staticmethod
+    def delete_host(host):
+        js = iscsi_json.JSON_OPERATION()
+        print("Delete the host <", host, "> ...")
+        if js.check_key('Host', host):
+            if js.check_value('HostGroup', host):
+                print(
+                    "Fail! The host in ... hostgroup, Please delete the hostgroup first.")
+                return False
+            else:
+                js.delete_data('Host', host)
+                print("Delete success!")
+                return True
+        else:
+            print("Fail! Can't find " + host)
+            return False
+
+
+    @staticmethod
     def create_diskgroup(diskgroup, disk):
         js = iscsi_json.JSON_OPERATION()
         print("Diskgroup name:", diskgroup)
@@ -747,6 +782,38 @@ class Iscsi():
                 print("Fail! Please give the true name.")
                 return False
 
+    @staticmethod
+    def show_hg(hg):
+        js = iscsi_json.JSON_OPERATION()
+        if hg == 'all' or hg is None:
+            print("Hostgroup:")
+            hostgroups = js.get_data("HostGroup")
+            for k in hostgroups:
+                print(" " + "---------------")
+                print(" " + k + ":")
+                for v in hostgroups[k]:
+                    print("     " + v)
+        else:
+            if js.check_key('HostGroup', hg):
+                print(hg + ":")
+                for k in js.get_data('HostGroup').get(hg):
+                    print(" " + k)
+            else:
+                print("Fail! Can't find " + hg)
+
+    @staticmethod
+    def delete_hg(hg):
+        js = iscsi_json.JSON_OPERATION()
+        print("Delete the hostgroup <", hg, "> ...")
+        if js.check_key('HostGroup', hg):
+            if js.check_value('Map', hg):
+                print("Fail! The hostgroup already map,Please delete the map")
+            else:
+                js.delete_data('HostGroup', hg)
+                print("Delete success!")
+        else:
+            print("Fail! Can't find " + hg)
+
     def create_map(self, map, hg, dg):
         js = iscsi_json.JSON_OPERATION()
         print("Map name:", map)
@@ -778,3 +845,43 @@ class Iscsi():
                         return False
                 else:
                     return False
+
+
+    @staticmethod
+    def show_map(map):
+        js = iscsi_json.JSON_OPERATION()
+        if map == 'all' or map is None:
+            print("Map:")
+            maps = js.get_data("Map")
+            for k in maps:
+                print(" " + "---------------")
+                print(" " + k + ":")
+                for v in maps[k]:
+                    print("     " + v)
+        else:
+            if js.check_key('Map', map):
+                print(map + ":")
+                maplist = js.get_data('Map').get(map)
+                print(' ' + maplist[0] + ':')
+                for i in js.get_data('HostGroup').get(maplist[0]):
+                    print('     ' + i + ': ' + js.get_data('Host').get(i))
+                print(' ' + maplist[1] + ':')
+                for i in js.get_data('DiskGroup').get(maplist[1]):
+                    print('     ' + i + ': ' + js.get_data('Disk').get(i))
+            else:
+                print("Fail! Can't find " + map)
+
+    def delete_map(self,map):
+        js = iscsi_json.JSON_OPERATION()
+        print("Delete the map <", map, ">...")
+        if js.check_key('Map', map):
+            print(
+                js.get_data('Map').get(
+                    map),
+                "will probably be affected ")
+            resname = self.map_data_d(js, map)
+            if self.map_crm_d(resname):
+                js.delete_data('Map', map)
+                print("Delete success!")
+        else:
+            print("Fail! Can't find " + map)

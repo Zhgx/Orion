@@ -56,7 +56,7 @@ class HostCommands():
 
         # add arguments of host show
         p_show_host.add_argument(
-            'show',
+            'host',
             action='store',
             help='host show [host_name]',
             nargs='?',
@@ -75,36 +75,11 @@ class HostCommands():
 
     # host查询
     def show(self, args):
-        js = iscsi_json.JSON_OPERATION()
-        if args.show == 'all' or args.show is None:
-            hosts = js.get_data("Host")
-            print(" " + "{:<15}".format("Hostname") + "Iqn")
-            print(" " + "{:<15}".format("---------------") + "---------------")
-            for k in hosts:
-                print(" " + "{:<15}".format(k) + hosts[k])
-        else:
-            if js.check_key('Host', args.show):
-                print(args.show, ":", js.get_data('Host').get(args.show))
-            else:
-                print("Fail! Can't find " + args.show)
-                return False
-        return True
+        ex.Iscsi.show_host(args.host)
+
 
     def delete(self, args):
-        js = iscsi_json.JSON_OPERATION()
-        print("Delete the host <", args.host, "> ...")
-        if js.check_key('Host', args.host):
-            if js.check_value('HostGroup', args.host):
-                print(
-                    "Fail! The host in ... hostgroup, Please delete the hostgroup first.")
-                return False
-            else:
-                js.delete_data('Host', args.host)
-                print("Delete success!")
-                return True
-        else:
-            print("Fail! Can't find " + args.host)
-            return False
+        ex.Iscsi.delete_host(args.host)
 
     def print_host_help(self, *args):
         self.host_parser.print_help()
