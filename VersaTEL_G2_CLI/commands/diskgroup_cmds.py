@@ -83,9 +83,7 @@ class DiskGroupCommands():
 
     def create(self, args):
         if args.gui == 'gui':
-            data = pickle.dumps(
-                ex.Iscsi.create_diskgroup(
-                    args.diskgroup, args.disk))
+            data = pickle.dumps(ex.Iscsi.create_diskgroup(args.diskgroup, args.disk))
             sd.send_via_socket(data)
         else:
             ex.Iscsi.create_diskgroup(args.diskgroup, args.disk)

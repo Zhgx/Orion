@@ -3,8 +3,13 @@ import re
 import subprocess
 import time
 import iscsi_json
+import sys
+from functools import wraps
 from collections import OrderedDict
 
+
+class TimeoutError(Exception):
+    pass
 
 class CRM():
     def re_data(self, crmdatas):
@@ -234,6 +239,27 @@ class LINSTOR():
         return list_data_all
 
 
+def result_cmd(func):
+    """
+    Judge the output of the command.
+    :param result: command stdout
+    :return: True/Command output
+    """
+    @wraps(func)
+    def wrapper(*args):
+        result = func(*args)
+        if Stor.judge_cmd_result_war(str(result)):
+            messege_war = Stor.get_war_mes(result.decode('utf-8'))
+            print(messege_war)
+        if Stor.judge_cmd_result_suc(str(result)):
+            return True
+        elif Stor.judge_cmd_result_err(str(result)):
+            return result.decode()
+        else:
+            return
+    return wrapper
+
+
 # 子命令stor调用的方法
 class Stor():
     @staticmethod
@@ -277,27 +303,35 @@ class Stor():
         if re_.search(result):
             return (re_.search(result).group())
 
-    @staticmethod
-    def execute_cmd(cmd):
-        action = subprocess.Popen(
-            cmd,
-            shell=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT)
-        result = action.stdout.read()
-        if Stor.judge_cmd_result_war(str(result)):
-            messege_war = Stor.get_war_mes(result.decode('utf-8'))
-            print(messege_war)
-        if Stor.judge_cmd_result_suc(str(result)):
-            return True
-        elif Stor.judge_cmd_result_err(str(result)):
-            # print(result.decode('utf-8'))
-            return result.decode()
-        else:
-            return
+
+
+
 
     @staticmethod
-    def print_excute_result(cmd):
+    @result_cmd
+    def execute_cmd(cmd, timeout=60):
+        """
+        Execute the command cmd to return the content of the command output.
+        If it times out, a TimeoutError exception will be thrown.
+        cmd - Command to be executed
+        timeout - The longest waiting time(unit:second)
+        """
+        p = subprocess.Popen(cmd, stderr=subprocess.STDOUT, stdout=subprocess.PIPE, shell=True)
+        t_beginning = time.time()
+        seconds_passed = 0
+        while True:
+            if p.poll() is not None:
+                break
+            seconds_passed = time.time() - t_beginning
+            if timeout and seconds_passed > timeout:
+                p.terminate()
+                raise TimeoutError(cmd, timeout)
+            time.sleep(0.1)
+        return p.stdout.read()
+
+
+    @staticmethod
+    def print_execute_result(cmd):
         result = Stor.execute_cmd(cmd)
         if not result:
             return
@@ -378,23 +412,41 @@ class Stor():
                 Stor.linstor_delete_rd(res)
 
         def create_resource(cmd):
-            action = subprocess.run(
-                cmd,
-                shell=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT)
-            result = action.stdout
-            if Stor.judge_cmd_result_war(str(result)):
-                print(Stor.get_war_mes(result.decode('utf-8')))
+            try:
+                action = subprocess.Popen(
+                    cmd,
+                    shell=True,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.STDOUT)
 
-            if Stor.judge_cmd_result_suc(str(result)):
-                print(
-                    'Resource %s was successfully created on Node %s' %
-                    (res, node_one))
-            elif Stor.judge_cmd_result_err(str(result)):
-                str_fail_cause = Stor.get_err_detailes(result.decode('utf-8'))
-                dict_fail = {node_one: str_fail_cause}
-                flag.update(dict_fail)
+                t_beginning = time.time()
+                seconds_passed = 0
+                timeout = 1
+                while True:
+                    if action.poll() is not None:
+                        break
+                    seconds_passed = time.time() - t_beginning
+                    if timeout and seconds_passed > timeout:
+                        action.terminate()
+                        raise TimeoutError(cmd, timeout)
+                    time.sleep(0.1)
+
+                result = action.stdout.read()
+
+                if Stor.judge_cmd_result_war(str(result)):
+                    print(Stor.get_war_mes(result.decode('utf-8')))
+
+                if Stor.judge_cmd_result_suc(str(result)):
+                    print(
+                        'Resource %s was successfully created on Node %s' %
+                        (res, node_one))
+                elif Stor.judge_cmd_result_err(str(result)):
+                    str_fail_cause = Stor.get_err_detailes(result.decode('utf-8'))
+                    dict_fail = {node_one: str_fail_cause}
+                    flag.update(dict_fail)
+            except TimeoutError as e:
+                flag.update({node_one: 'Time out'})
+                print('%s created timeout on node %s, the operation has been cancelled' %(res, node_one))
 
         if len(stp) == 1:
             if Stor.linstor_create_rd(res) is True and Stor.linstor_create_vd(res, size) is True:
@@ -408,8 +460,7 @@ class Stor():
                 print('The resource already exists')
                 return ('The resource already exists')
         elif len(node) == len(stp):
-            if Stor.linstor_create_rd(
-                    res) is True and Stor.linstor_create_vd(res, size) is True:
+            if Stor.linstor_create_rd(res) is True and Stor.linstor_create_vd(res, size) is True:
                 for node_one, stp_one in zip(node, stp):
                     cmd = 'linstor resource create %s %s --storage-pool %s' % (
                         node_one, res, stp_one)
@@ -426,7 +477,7 @@ class Stor():
     @staticmethod
     def add_mirror_auto(res, num):
         cmd = 'linstor r c %s --auto-place %d' % (res, num)
-        return Stor.print_excute_result(cmd)
+        return Stor.print_execute_result(cmd)
 
     @staticmethod
     def add_mirror_manual(res, node, stp):
@@ -474,19 +525,19 @@ class Stor():
     @staticmethod
     def create_res_diskless(node, res):
         cmd = 'linstor r c %s %s --diskless' % (node, res)
-        return Stor.print_excute_result(cmd)
+        return Stor.print_execute_result(cmd)
 
     # 删除resource,指定节点 -- ok
     @staticmethod
     def delete_resource_des(node, res):
         cmd = 'linstor resource delete %s %s' % (node, res)
-        return Stor.print_excute_result(cmd)
+        return Stor.print_execute_result(cmd)
 
     # 删除resource，全部节点 -- ok
     @staticmethod
     def delete_resource_all(res):
         cmd = 'linstor resource-definition delete %s' % res
-        return Stor.print_excute_result(cmd)
+        return Stor.print_execute_result(cmd)
 
     # 创建storagepool  -- ok
     @staticmethod
@@ -520,13 +571,13 @@ class Stor():
     @staticmethod
     def create_storagepool_thinlv(node, stp, tlv):
         cmd = 'linstor storage-pool create lvmthin %s %s %s' % (node, stp, tlv)
-        return Stor.print_excute_result(cmd)
+        return Stor.print_execute_result(cmd)
 
     # 删除storagepool -- ok
     @staticmethod
     def delete_storagepool(node, stp):
         cmd = 'linstor storage-pool delete %s %s' % (node, stp)
-        return Stor.print_excute_result(cmd)
+        return Stor.print_execute_result(cmd)
 
     # 创建集群节点
     @staticmethod
@@ -542,13 +593,13 @@ class Stor():
             print('node type error,choose from ''Combined',
                   'Controller', 'Auxiliary', 'Satellite''')
         else:
-            return Stor.print_excute_result(cmd)
+            return Stor.print_execute_result(cmd)
     # 删除node
 
     @staticmethod
     def delete_node(node):
         cmd = 'linstor node delete %s' % node
-        return Stor.print_excute_result(cmd)
+        return Stor.print_execute_result(cmd)
 
 
 class Iscsi():

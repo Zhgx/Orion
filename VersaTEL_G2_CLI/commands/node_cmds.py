@@ -4,6 +4,7 @@ import pickle
 import sundry as sd
 import execute as ex
 import linstordb
+from consts import ExitCode
 
 
 class usage():
@@ -143,10 +144,13 @@ class NodeCommands():
             result = ex.Stor.create_node(args.node, args.ip, args.nodetype)
             result_pickled = pickle.dumps(result)
             sd.send_via_socket(result_pickled)
+            return ExitCode.OK
         elif args.node and args.nodetype and args.ip:
             ex.Stor.create_node(args.node, args.ip, args.nodetype)
+            return ExitCode.OK
         else:
             self.p_create_node.print_help()
+            return ExitCode.ARGPARSE_ERROR
 
     @sd.comfirm_del('node')
     def delete(self, args):
@@ -155,10 +159,20 @@ class NodeCommands():
     def show(self, args):
         tb = linstordb.OutputData()
         if args.nocolor:
-            tb.show_node_one(args.node) if args.node else tb.node_all()
+            if args.node:
+                tb.show_node_one(args.node)
+                return ExitCode.OK
+            else:
+                tb.node_all()
+                return ExitCode.OK
         else:
-            tb.show_node_one_color(
-                args.node) if args.node else tb.node_all_color()
+            if args.node:
+                tb.show_node_one_color(args.node)
+                return ExitCode.OK
+            else:
+                tb.node_all_color()
+                return ExitCode.OK
+
 
     def print_node_help(self, *args):
         self.node_parser.print_help()
