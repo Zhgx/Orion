@@ -241,6 +241,7 @@ class LINSTOR():
 
 def result_cmd(func):
     """
+    Decorator for post processing of execution commands.
     Judge the output of the command.
     :param result: command stdout
     :return: True/Command output
@@ -302,9 +303,6 @@ class Stor():
         re_ = re.compile(r'\x1b\[1;33mWARNING:\n\x1b(?:.*\s*)+\n$')
         if re_.search(result):
             return (re_.search(result).group())
-
-
-
 
 
     @staticmethod
@@ -421,7 +419,7 @@ class Stor():
 
                 t_beginning = time.time()
                 seconds_passed = 0
-                timeout = 1
+                timeout = 60
                 while True:
                     if action.poll() is not None:
                         break

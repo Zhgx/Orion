@@ -1,9 +1,11 @@
 # coding:utf-8
 import socket
 from functools import wraps
+import signal
 
 # Connect to the socket server and transfer data, and finally close the
 # connection.
+
 
 
 def send_via_socket(data):
@@ -44,3 +46,21 @@ def comfirm_del(type):
                     print('Delete canceled')
         return wrapper
     return decorate
+
+
+def timeout(seconds,error_message = 'Funtion call timed out'):
+    def decorated(func):
+        def _handled_timeout(signum,frame):
+            raise TimeoutError(error_message)
+
+        def wrapper(*args,**kwargs):
+            signal.signal(signal.SIGALRM, _handled_timeout)
+            signal.alarm(seconds)
+            try:
+                result = func(*args,**kwargs)
+            finally:
+                signal.alarm(0)
+            return result
+        return wrapper
+    return decorated
+
