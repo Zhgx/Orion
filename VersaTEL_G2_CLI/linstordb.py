@@ -349,7 +349,6 @@ class DataProcess():
         return date_list
 
     # 置顶文字
-
     def process_data_node_one(self, node):
         n = self._select_nodetb_one(node)
         node, node_type, addr, status = n

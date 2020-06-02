@@ -1,6 +1,7 @@
 import argparse
 import pickle
 
+import log
 import sundry as sd
 import execute as ex
 import linstordb
@@ -28,7 +29,8 @@ class usage():
 
 class NodeCommands():
     def __init__(self):
-        pass
+        self.logger = log.Log()
+        self.collector = log.Collector()
 
     def setup_commands(self, parser):
         """
@@ -147,6 +149,7 @@ class NodeCommands():
             return ExitCode.OK
         elif args.node and args.nodetype and args.ip:
             ex.Stor.create_node(args.node, args.ip, args.nodetype)
+
             return ExitCode.OK
         else:
             self.p_create_node.print_help()
@@ -167,6 +170,14 @@ class NodeCommands():
                 return ExitCode.OK
         else:
             if args.node:
+                self.logger.InputLogger.debug(
+                    '',
+                    extra={
+                        'username': self.collector.get_username(),
+                        'type': 'cli_user_input',
+                        'describe1': self.collector.get_path(),
+                        'describe2': '',
+                        'data': 'vtel stor n s %s' % args.node})
                 tb.show_node_one_color(args.node)
                 return ExitCode.OK
             else:

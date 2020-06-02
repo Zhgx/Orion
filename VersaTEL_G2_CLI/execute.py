@@ -411,26 +411,9 @@ class Stor():
 
         def create_resource(cmd):
             try:
-                action = subprocess.Popen(
-                    cmd,
-                    shell=True,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.STDOUT)
-
-                t_beginning = time.time()
-                seconds_passed = 0
-                timeout = 60
-                while True:
-                    if action.poll() is not None:
-                        break
-                    seconds_passed = time.time() - t_beginning
-                    if timeout and seconds_passed > timeout:
-                        action.terminate()
-                        raise TimeoutError(cmd, timeout)
-                    time.sleep(0.1)
-
-                result = action.stdout.read()
-
+                #Undo the decorator @result_cmd, and execute execute_cmd function
+                ex_cmd = Stor.execute_cmd.__wrapped__
+                result = ex_cmd(cmd)
                 if Stor.judge_cmd_result_war(str(result)):
                     print(Stor.get_war_mes(result.decode('utf-8')))
 
@@ -443,7 +426,7 @@ class Stor():
                     dict_fail = {node_one: str_fail_cause}
                     flag.update(dict_fail)
             except TimeoutError as e:
-                flag.update({node_one: 'Time out'})
+                flag.update({node_one: 'Execution creation timeout'})
                 print('%s created timeout on node %s, the operation has been cancelled' %(res, node_one))
 
         if len(stp) == 1:

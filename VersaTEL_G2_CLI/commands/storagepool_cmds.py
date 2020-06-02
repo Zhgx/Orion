@@ -39,7 +39,7 @@ class StoragePoolCommands():
             aliases=['sp'],
             help='Management operations for storagepool',
             usage=usage.storagepool)
-
+        self.sp_parser = sp_parser
         sp_subp = sp_parser.add_subparsers(
             dest='subargs_sp')
 
@@ -148,6 +148,7 @@ class StoragePoolCommands():
 
         p_show_sp.set_defaults(func=self.show)
 
+
     def create(self, args):
         if args.storagepool and args.node:
             # The judgment of the lvm module to create a storage pool
@@ -190,3 +191,6 @@ class StoragePoolCommands():
         else:
             tb.show_sp_one_color(
                 args.storagepool) if args.storagepool else tb.sp_all_color()
+
+    def print_resource_help(self, *args):
+        self.sp_parser.print_help()

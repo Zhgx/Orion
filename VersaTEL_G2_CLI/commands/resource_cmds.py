@@ -54,6 +54,8 @@ class ResourceCommands():
             help='Management operations for storagepool',
             usage=usage.resource)
         res_subp = res_parser.add_subparsers(dest='subargs_res')
+        self.res_parser = res_parser
+
         """
         Create LINSTOR Resource
         """
@@ -306,3 +308,6 @@ class ResourceCommands():
         else:
             tb.show_res_one_color(
                 args.resource) if args.resource else tb.res_all_color()
+
+    def print_resource_help(self, *args):
+        self.res_parser.print_help()
