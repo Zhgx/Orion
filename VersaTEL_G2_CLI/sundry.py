@@ -2,6 +2,8 @@
 import socket
 from functools import wraps
 import signal
+import hashlib
+import time
 
 # Connect to the socket server and transfer data, and finally close the
 # connection.
@@ -9,7 +11,7 @@ import signal
 
 
 def send_via_socket(data):
-    ip = "127.0.0.1"
+    ip = "10.203.1.151"
     port = 12144
 
     client = socket.socket()
@@ -63,4 +65,11 @@ def timeout(seconds,error_message = 'Funtion call timed out'):
             return result
         return wrapper
     return decorated
+
+
+def get_transaction_id():
+    return int(time.time())
+    # data = str(time.time())
+    # result = int(hashlib.sha256(data.encode('utf-8')).hexdigest(), 16) % (10**8)
+    # return result
 

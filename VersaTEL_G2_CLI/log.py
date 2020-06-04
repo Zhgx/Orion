@@ -42,6 +42,7 @@ class Log(object):
         extra_dict = {
             "username": "USERNAME",
             "type": "TYPE",
+            "transaction_id":"",
             "describe1": "",
             "describe2": "",
             "data": ""}
@@ -55,6 +56,7 @@ class Log(object):
         extra_dict = {
             "username": "USERNAME",
             "type": "TYPE",
+            "transaction_id": "",
             "describe1": "",
             "describe2": "",
             "data": ""}
@@ -74,11 +76,29 @@ class Log(object):
         extra_dict = {
             "username": "USERNAME",
             "type": "TYPE",
-            "describe1": "DESCRIBE",
-            "describe2": "DESCRIBE",
+            "transaction_id": "",
+            "describe1": "",
+            "describe2": "",
             "data": "DATA"}
         logger = MyLoggerAdapter(logger_gui, extra_dict)
         return logger
+
+
+    # write to log file
+    def add_log(self,username,type,transaction_id,describe1,describe2,data):
+        self.InputLogger.debug(
+            '',
+            extra={
+                'username': username,
+                'type': type,
+                'transaction_id': transaction_id,
+                'describe1': describe1,
+                'describe2': describe2,
+                'data': data})
+
+
+
+
 
 
 class Collector(object):

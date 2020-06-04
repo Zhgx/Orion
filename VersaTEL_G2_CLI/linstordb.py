@@ -1,10 +1,12 @@
 # coding:utf-8
+import traceback
 import colorama as ca
 import prettytable as pt
 from functools import wraps
 import sqlite3
 import threading
 import execute as ex
+import log
 
 
 class LINSTORDB():
@@ -158,13 +160,11 @@ class LINSTORDB():
 
     def get_output(self):
         # threading
-        threads = []
         thread_ins_node = threading.Thread(target=self.thread_get_node())
-        threads.append(thread_ins_node)
         thread_ins_res = threading.Thread(target=self.thread_get_res())
-        threads.append(thread_ins_res)
         thread_ins_sp = threading.Thread(target=self.thread_get_sp())
-        threads.append(thread_ins_sp)
+
+        threads = [thread_ins_node,thread_ins_res,thread_ins_sp]
 
         for i in range(len(threads)):
             threads[i].start()
@@ -465,6 +465,7 @@ def table_color(func):
         for i in data:
             table.add_row(i)
         print(table)
+        return table
     return wrapper
 
 # 无颜色输出表格装饰器
@@ -478,17 +479,20 @@ def table(func):
         for i in data:
             table.add_row(i)
         print(table)
+        return table
     return wrapper
 
 
 class OutputData(DataProcess):
     def __init__(self):
         DataProcess.__init__(self)
+        self.logger = log.Log()
 
     """Node视图
     """
     @table_color
-    def node_all_color(self):
+    def node_all_color(self,*args):
+        username,transaction_id = args
         data = super().process_data_node_all()
         header = ["node", "node type", "res num", "stp num", "addr", "status"]
         return data, header
@@ -555,24 +559,53 @@ class OutputData(DataProcess):
 
     # 指定的node视图
 
-    def show_node_one_color(self, node):
+    def show_node_one_color(self, node,*args):
+        username,transaction_id = args
         try:
-            print(
-                "node:%s\nnodetype:%s\nresource num:%s\nstoragepool num:%s\naddr:%s\nstatus:%s" %
-                self.process_data_node_one(node))
-            self.node_one_color(node)
-            self.node_stp_one_color(node)
+            info_first = (
+                    "node:%s\nnodetype:%s\nresource num:%s\nstoragepool num:%s\naddr:%s\nstatus:%s" %
+                    self.process_data_node_one(node))
+            print(info_first)
+            info_second = self.node_one_color(node)
+            info_third = self.node_stp_one_color(node)
+            result = '\n'.join([info_first, str(info_second), str(info_third)])
+            self.logger.add_log(username,'result_to_show',transaction_id,'','',result)
         except TypeError:
+            info_err = str(traceback.format_exc())
+            self.logger.add_log(username,'result_to_show',transaction_id,'','',info_err)
             print('Node %s does not exist.' % node)
 
     def show_node_one(self, node):
+        # node = args[0]
         try:
-            print(
-                "node:%s\nnodetype:%s\nresource num:%s\nstoragepool num:%s\naddr:%s\nstatus:%s" %
-                self.process_data_node_one(node))
-            self.node_one(node)
-            self.node_stp_one(node)
+            info_first = (
+                    "node:%s\nnodetype:%s\nresource num:%s\nstoragepool num:%s\naddr:%s\nstatus:%s" %
+                    self.process_data_node_one(node))
+            print(info_first)
+            info_second = self.node_one(node)
+            info_third = self.node_stp_one(node)
+            result = '\n'.join([info_first, str(info_second), str(info_third)])
+            self.logger.add_log(username, 'result_to_show', transaction_id, '', '', result)
+            # _logger.OutputLogger.debug(
+            #     '',
+            #     extra={
+            #         'username': _collector.get_username(),
+            #         'type': 'result_to_show',
+            #         'transaction_id': transaction_id,#How to get this value
+            #         'describe1': '',
+            #         'describe2': '',
+            #         'data': result})
         except TypeError:
+            # _logger.InputLogger.debug(
+            #     '',
+            #     extra={
+            #         'username': _collector.get_username(),
+            #         'type': 'result_to_show',
+            #         'transaction_id': transaction_id,
+            #         'describe1': '',
+            #         'describe2': '',
+            #         'data': str(
+            #             traceback.format_exc())})
             print('Node %s does not exist.' % node)
 
     """Resource视图

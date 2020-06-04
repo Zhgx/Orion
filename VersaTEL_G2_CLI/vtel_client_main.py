@@ -4,7 +4,7 @@ import os
 import pickle
 
 import linstordb
-
+import log
 import sundry
 import iscsi_json
 from commands import (
@@ -18,11 +18,25 @@ from commands import (
     MapCommands
 )
 
+class MyArgumentParser(argparse.ArgumentParser):
+    def parse_args(self, args=None, namespace=None):
+        args, argv = self.parse_known_args(args, namespace)
+        if argv:
+            msg = ('unrecognized arguments: %s')
+            logger = log.Log()
+            collocter = log.Collector()
+            username = collocter.get_username()
+            transaction_id = sundry.get_transaction_id()
+            logger.add_log(username,'args_error',transaction_id,(' '.join(sys.argv)),'',(msg % ' '.join(argv)))
+            self.error(msg % ' '.join(argv))
+        return args
+
 
 class VtelCLI(object):
     """
     Vtel command line client
     """
+
 
     def __init__(self):
         self._node_commands = NodeCommands()
@@ -36,7 +50,7 @@ class VtelCLI(object):
         self._parser = self.setup_parser()
 
     def setup_parser(self):
-        parser = argparse.ArgumentParser(prog="vtel")
+        parser = MyArgumentParser(prog="vtel")
         """
         Set parser vtel sub-parser
         """
@@ -123,6 +137,7 @@ class VtelCLI(object):
 
     def run(self):
         pass
+
 
     def parse(self):
         args = self._parser.parse_args()
