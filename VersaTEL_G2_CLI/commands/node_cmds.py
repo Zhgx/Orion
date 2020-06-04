@@ -1,11 +1,14 @@
 import argparse
 import pickle
+import sys
+from functools import wraps
 
 import log
 import sundry as sd
 import execute as ex
 import linstordb
 from consts import ExitCode
+
 
 
 class usage():
@@ -142,14 +145,23 @@ class NodeCommands():
         node_parser.set_defaults(func=self.print_node_help)
 
     def create(self, args):
+        transaction_id = sd.get_transaction_id()
         if args.gui:
             result = ex.Stor.create_node(args.node, args.ip, args.nodetype)
             result_pickled = pickle.dumps(result)
             sd.send_via_socket(result_pickled)
             return ExitCode.OK
         elif args.node and args.nodetype and args.ip:
+            self.logger.InputLogger.debug(
+                '',
+                extra={
+                    'username': self.collector.get_username(),
+                    'type': 'cli_user_input',
+                    'transaction_id': transaction_id,
+                    'describe1': self.collector.get_path(),
+                    'describe2': '',
+                    'data': 'vtel stor n c %s -ip %s -nt %s' %(args.node,args.ip,args.nodetype)})
             ex.Stor.create_node(args.node, args.ip, args.nodetype)
-
             return ExitCode.OK
         else:
             self.p_create_node.print_help()
@@ -160,30 +172,53 @@ class NodeCommands():
         ex.Stor.delete_node(args.node)
 
     def show(self, args):
+        #sys.argv
+        transaction_id = sd.get_transaction_id()
+        username = self.collector.get_username()
+        path = self.collector.get_path()
         tb = linstordb.OutputData()
+        cmd = ' '.join(sys.argv)
+
         if args.nocolor:
             if args.node:
-                tb.show_node_one(args.node)
+                self.logger.add_log(username, 'cli_user_input', transaction_id, path, '', cmd)
+                tb.show_node_one(args.node,username,transaction_id)
                 return ExitCode.OK
             else:
                 tb.node_all()
                 return ExitCode.OK
         else:
             if args.node:
-                self.logger.InputLogger.debug(
-                    '',
-                    extra={
-                        'username': self.collector.get_username(),
-                        'type': 'cli_user_input',
-                        'describe1': self.collector.get_path(),
-                        'describe2': '',
-                        'data': 'vtel stor n s %s' % args.node})
-                tb.show_node_one_color(args.node)
+                self.logger.add_log(username,'cli_user_input',transaction_id,path,'',cmd)
+                tb.show_node_one_color(args.node,username,transaction_id)
                 return ExitCode.OK
             else:
-                tb.node_all_color()
+                self.logger.add_log(username, 'cli_user_input', transaction_id, path, '', cmd)
+                result = tb.node_all_color(username,transaction_id)
+                self.logger.add_log(username,'result_to_show', transaction_id, '', '', result)
                 return ExitCode.OK
-
 
     def print_node_help(self, *args):
         self.node_parser.print_help()
+
+
+# def log_node_show(str):
+#     logger = log.Log()
+#     collector = log.Collector()
+#     transaction_id = sd.get_transaction_id()
+#     def decorate(func):
+#         @wraps(func)
+#         def wrapper(*args):
+#
+#             logger.InputLogger.debug(
+#                 '',
+#                 extra={
+#                     'username': collector.get_username(),
+#                     'type': 'cli_user_input',
+#                     'transaction_id': transaction_id,
+#                     'describe1': collector.get_path(),
+#                     'describe2': '',
+#                     'data': 'vtel stor n s %s' % args.node})
+#             func(*args)
+#             return wrapper
+#         return decorate

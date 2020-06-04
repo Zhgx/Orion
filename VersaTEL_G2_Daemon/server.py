@@ -14,7 +14,8 @@ def get_host_ip():
     return ip
 
 host_port = 12144
-host_ip = get_host_ip()
+# host_ip = get_host_ip()
+host_ip = '10.203.1.151'
 byteData = b'null'
 
 class MyTCPHandler(socketserver.BaseRequestHandler):
