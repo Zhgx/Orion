@@ -2,11 +2,15 @@
 import socket
 from functools import wraps
 import signal
-import hashlib
 import time
+import os
+import getpass
 
 # Connect to the socket server and transfer data, and finally close the
 # connection.
+
+
+
 
 
 
@@ -24,6 +28,8 @@ def send_via_socket(data):
     client.recv(8192)
     client.send(b'exit')
     client.close()
+
+
 
 
 def comfirm_del(type):
@@ -50,6 +56,10 @@ def comfirm_del(type):
     return decorate
 
 
+
+
+
+
 def timeout(seconds,error_message = 'Funtion call timed out'):
     def decorated(func):
         def _handled_timeout(signum,frame):
@@ -69,7 +79,21 @@ def timeout(seconds,error_message = 'Funtion call timed out'):
 
 def get_transaction_id():
     return int(time.time())
-    # data = str(time.time())
-    # result = int(hashlib.sha256(data.encode('utf-8')).hexdigest(), 16) % (10**8)
-    # return result
 
+def get_username():
+    return getpass.getuser()
+
+def get_hostname():
+    return socket.gethostname()
+
+# Get the path of the program
+def get_path():
+    return os.getcwd()
+
+# Get LISNTOR controller configuration file information
+# linstor_conf_path = '/etc/linstor/linstor-client.conf'
+# def get_linstor_controller(self, path):
+#     path = self.linstor_conf_path
+#     with open(path, 'r') as f:
+#         data = f.read()
+#         return data

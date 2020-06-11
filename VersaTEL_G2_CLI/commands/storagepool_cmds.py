@@ -1,9 +1,15 @@
 import argparse
 import pickle
+import traceback
+from functools import wraps
 
 import sundry as sd
 import execute as ex
 import linstordb
+
+
+
+
 
 
 class usage():
@@ -24,9 +30,14 @@ class usage():
     storagepool(sp) show(s) [STORAGEPOOL]'''
 
 
+
+
+
 class StoragePoolCommands():
-    def __init__(self):
-        pass
+    def __init__(self,logger):
+        self.logger = logger
+        self.actuator = ex.Stor(logger)
+
 
     def setup_commands(self, parser):
         """
@@ -150,47 +161,68 @@ class StoragePoolCommands():
 
 
     def create(self, args):
-        if args.storagepool and args.node:
-            # The judgment of the lvm module to create a storage pool
-            if args.lvm:
-                if args.gui:
-                    result = ex.Stor.create_storagepool_lvm(
-                        args.node, args.storagepool, args.lvm)
-                    result_pickled = pickle.dumps(result)
-                    sd.send_via_socket(result_pickled)
+        try:
+            if args.storagepool and args.node:
+                # The judgment of the lvm module to create a storage pool
+                if args.lvm:
+                    if args.gui:
+                        result = self.actuator.create_storagepool_lvm(
+                            args.node, args.storagepool, args.lvm)
+                        result_pickled = pickle.dumps(result)
+                        sd.send_via_socket(result_pickled)
+                    else:
+                        self.actuator.create_storagepool_lvm(
+                            args.node, args.storagepool, args.lvm)
+                # The judgment of the thin-lv module to create a storage pool
+                elif args.tlv:
+                    if args.gui:
+                        result = self.actuator.create_storagepool_thinlv(
+                            args.node, args.storagepool, args.tlv)
+                        result_pickled = pickle.dumps(result)
+                        sd.send_via_socket(result_pickled)
+                    else:
+                        self.actuator.create_storagepool_thinlv(
+                            args.node, args.storagepool, args.tlv)
                 else:
-                    ex.Stor.create_storagepool_lvm(
-                        args.node, args.storagepool, args.lvm)
-            # The judgment of the thin-lv module to create a storage pool
-            elif args.tlv:
-                if args.gui:
-                    result = ex.Stor.create_storagepool_thinlv(
-                        args.node, args.storagepool, args.tlv)
-                    result_pickled = pickle.dumps(result)
-                    sd.send_via_socket(result_pickled)
-                else:
-                    ex.Stor.create_storagepool_thinlv(
-                        args.node, args.storagepool, args.tlv)
+                    self.p_create_sp.print_help()
             else:
                 self.p_create_sp.print_help()
-        else:
-            self.p_create_sp.print_help()
+
+        except Exception as e:
+            self.logger.write_to_log('ERR','','',str(traceback.format_exc()))
+            raise e
 
     def modify(self):
         pass
 
     @sd.comfirm_del('storage pool')
     def delete(self, args):
-        ex.Stor.delete_storagepool(args.node, args.storagepool)
+        try:
+            self.actuator.delete_storagepool(args.node, args.storagepool)
+        except Exception as e:
+            self.logger.write_to_log('result_to_show','','',str(traceback.format_exc()))
+            raise e
 
     def show(self, args):
-        tb = linstordb.OutputData()
-        if args.nocolor:
-            tb.show_sp_one(
-                args.storagepool) if args.storagepool else tb.sp_all()
-        else:
-            tb.show_sp_one_color(
-                args.storagepool) if args.storagepool else tb.sp_all_color()
+        try:
+            tb = linstordb.OutputData(self.logger)
+            if args.nocolor:
+                if args.storagepool:
+                    tb.show_sp_one(args.storagepool)
+                else:
+                    result = tb.sp_all()
+                    self.logger.write_to_log('result_to_show','','','',result)
+
+            else:
+                if args.storagepool:
+                    tb.show_sp_one_color(args.storagepool)
+                else:
+                    result = tb.sp_all_color()
+                    self.logger.write_to_log('result_to_show','','',result)
+        except Exception as e:
+            self.logger.write_to_log('result_to_show','','',str(traceback.format_exc()))
+            raise e
+
 
     def print_resource_help(self, *args):
         self.sp_parser.print_help()

@@ -6,8 +6,9 @@ import sundry
 
 
 class HostCommands():
-    def __init__(self):
-        pass
+    def __init__(self,logger):
+        self.logger = logger
+        self.actuator = ex.Iscsi(logger)
 
     def setup_commands(self, parser):
         """
@@ -68,18 +69,18 @@ class HostCommands():
 
     def create(self, args):
         if args.gui == 'gui':
-            data = pickle.dumps(ex.Iscsi.create_host(args.host, args.iqn))
+            data = pickle.dumps(self.actuator.create_host(args.host, args.iqn))
             sundry.send_via_socket(data)
         else:
-            ex.Iscsi.create_host(args.host, args.iqn)
+            self.actuator.create_host(args.host, args.iqn)
 
     # host查询
     def show(self, args):
-        ex.Iscsi.show_host(args.host)
+        self.actuator.show_host(args.host)
 
 
     def delete(self, args):
-        ex.Iscsi.delete_host(args.host)
+        self.actuator.delete_host(args.host)
 
     def print_host_help(self, *args):
         self.host_parser.print_help()

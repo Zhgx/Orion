@@ -2,6 +2,8 @@
 import logging
 import logging.handlers
 import logging.config
+from functools import wraps
+import traceback
 import sys
 import os
 import getpass
@@ -23,16 +25,34 @@ class MyLoggerAdapter(logging.LoggerAdapter):
 
 
 class Log(object):
-    def __init__(self):
+    def __init__(self,username,transaction_id):
         # log_dir = 'logs'
         # os.makedirs(log_dir, exist_ok=True)
         # self._log_dir = log_dir
         # self._log_name = log_name
         logging.config.fileConfig('logging_CLI.conf')
-        self.InputLogger = self.logger_input()
-        self.OutputLogger = self.logger_output()
-        self.LocalLogger = self.logger_local()
+        self.username = username
+        self.transaction_id = transaction_id
+        # self.InputLogger = self.logger_input()
+        # self.OutputLogger = self.logger_output()
+        # self.LocalLogger = self.logger_local()
         # self.GUILogger = self.logger_gui() # GUI only, temporarily stored
+        self.func = True
+
+    def record_exception(self,func):
+        """
+        Capture possible exceptions, record the information in the log, and then throw the exception.
+        :param logger: Logger for logging
+        """
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            try:
+                return func(*args, **kwargs)
+            except Exception as e:
+                self.write_to_log('ERR','','',str(traceback.format_exc()))
+                raise e
+        return wrapper
+
 
 
     def logger_input(self):
@@ -85,38 +105,37 @@ class Log(object):
 
 
     # write to log file
-    def add_log(self,username,type,transaction_id,describe1,describe2,data):
-        self.InputLogger.debug(
+    def write_to_log(self,type,describe1,describe2,data):
+        InputLogger = self.logger_input()
+        InputLogger.debug(
             '',
             extra={
-                'username': username,
+                'username': self.username,
                 'type': type,
-                'transaction_id': transaction_id,
+                'transaction_id': self.transaction_id,
                 'describe1': describe1,
                 'describe2': describe2,
                 'data': data})
 
 
 
-
-
-
-class Collector(object):
-    linstor_conf_path = '/etc/linstor/linstor-client.conf'
-
-    def get_username(self):
-        return getpass.getuser()
-
-    def get_hostname(self):
-        return socket.gethostname()
-
-    # Get the path of the program
-    def get_path(self):
-        return os.getcwd()
-
-    # Get LISNTOR controller configuration file information
-    def get_linstor_controller(self, path):
-        path = self.linstor_conf_path
-        with open(path, 'r') as f:
-            data = f.read()
-            return data
+# 放置到sundry模块中去了
+# class Collector(object):
+#     linstor_conf_path = '/etc/linstor/linstor-client.conf'
+#
+#     def get_username(self):
+#         return getpass.getuser()
+#
+#     def get_hostname(self):
+#         return socket.gethostname()
+#
+#     # Get the path of the program
+#     def get_path(self):
+#         return os.getcwd()
+#
+#     # Get LISNTOR controller configuration file information
+#     def get_linstor_controller(self, path):
+#         path = self.linstor_conf_path
+#         with open(path, 'r') as f:
+#             data = f.read()
+#             return data

@@ -7,8 +7,9 @@ import execute as ex
 
 
 class DiskCommands():
-    def __init__(self):
-        pass
+    def __init__(self,logger):
+        self.logger = logger
+
 
     def setup_commands(self, parser):
         """
@@ -39,7 +40,7 @@ class DiskCommands():
         p_show_disk.set_defaults(func=self.show)
 
     def show(self, args):
-        obj_iscsi = ex.Iscsi()
+        obj_iscsi = ex.Iscsi(self.logger)
         obj_iscsi.show_disk(args.disk)
 
     def print_disk_help(self, *args):

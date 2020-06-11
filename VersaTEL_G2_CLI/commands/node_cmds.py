@@ -1,7 +1,7 @@
 import argparse
 import pickle
 import sys
-from functools import wraps
+import traceback
 
 import log
 import sundry as sd
@@ -31,9 +31,9 @@ class usage():
 
 
 class NodeCommands():
-    def __init__(self):
-        self.logger = log.Log()
-        self.collector = log.Collector()
+    def __init__(self,logger):
+        self.logger = logger
+        self.actuator = ex.Stor(logger)
 
     def setup_commands(self, parser):
         """
@@ -145,80 +145,45 @@ class NodeCommands():
         node_parser.set_defaults(func=self.print_node_help)
 
     def create(self, args):
-        transaction_id = sd.get_transaction_id()
-        if args.gui:
-            result = ex.Stor.create_node(args.node, args.ip, args.nodetype)
-            result_pickled = pickle.dumps(result)
-            sd.send_via_socket(result_pickled)
-            return ExitCode.OK
-        elif args.node and args.nodetype and args.ip:
-            self.logger.InputLogger.debug(
-                '',
-                extra={
-                    'username': self.collector.get_username(),
-                    'type': 'cli_user_input',
-                    'transaction_id': transaction_id,
-                    'describe1': self.collector.get_path(),
-                    'describe2': '',
-                    'data': 'vtel stor n c %s -ip %s -nt %s' %(args.node,args.ip,args.nodetype)})
-            ex.Stor.create_node(args.node, args.ip, args.nodetype)
-            return ExitCode.OK
-        else:
-            self.p_create_node.print_help()
-            return ExitCode.ARGPARSE_ERROR
+        try:
+            if args.gui:
+                result = self.actuator.create_node(args.node, args.ip, args.nodetype)
+                result_pickled = pickle.dumps(result)
+                sd.send_via_socket(result_pickled)
+                return ExitCode.OK
+            elif args.node and args.nodetype and args.ip:
+                self.actuator.create_node(args.node, args.ip, args.nodetype)
+                return ExitCode.OK
+            else:
+                self.p_create_node.print_help()
+                self.logger.write_to_log('result_to_show','','','ARGPARSE_ERROR')
+                return ExitCode.ARGPARSE_ERROR
+        except Exception as e:
+            self.logger.write_to_log('result_to_show','','',str(traceback.format_exc()))
+            raise e
+
 
     @sd.comfirm_del('node')
     def delete(self, args):
-        ex.Stor.delete_node(args.node)
+        self.actuator.delete_node(args.node)
 
     def show(self, args):
-        #sys.argv
-        transaction_id = sd.get_transaction_id()
-        username = self.collector.get_username()
-        path = self.collector.get_path()
-        tb = linstordb.OutputData()
-        cmd = ' '.join(sys.argv)
-
+        tb = linstordb.OutputData(self.logger)
         if args.nocolor:
             if args.node:
-                self.logger.add_log(username, 'cli_user_input', transaction_id, path, '', cmd)
-                tb.show_node_one(args.node,username,transaction_id)
+                tb.show_node_one(args.node)
                 return ExitCode.OK
             else:
                 tb.node_all()
                 return ExitCode.OK
         else:
             if args.node:
-                self.logger.add_log(username,'cli_user_input',transaction_id,path,'',cmd)
-                tb.show_node_one_color(args.node,username,transaction_id)
+                tb.show_node_one_color(args.node)
                 return ExitCode.OK
             else:
-                self.logger.add_log(username, 'cli_user_input', transaction_id, path, '', cmd)
-                result = tb.node_all_color(username,transaction_id)
-                self.logger.add_log(username,'result_to_show', transaction_id, '', '', result)
+                result = tb.node_all_color()
+                self.logger.write_to_log('result_to_show', '', '', result)
                 return ExitCode.OK
 
     def print_node_help(self, *args):
         self.node_parser.print_help()
-
-
-# def log_node_show(str):
-#     logger = log.Log()
-#     collector = log.Collector()
-#     transaction_id = sd.get_transaction_id()
-#     def decorate(func):
-#         @wraps(func)
-#         def wrapper(*args):
-#
-#             logger.InputLogger.debug(
-#                 '',
-#                 extra={
-#                     'username': collector.get_username(),
-#                     'type': 'cli_user_input',
-#                     'transaction_id': transaction_id,
-#                     'describe1': collector.get_path(),
-#                     'describe2': '',
-#                     'data': 'vtel stor n s %s' % args.node})
-#             func(*args)
-#             return wrapper
-#         return decorate

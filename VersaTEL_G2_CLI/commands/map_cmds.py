@@ -7,8 +7,8 @@ import sundry as sd
 
 class MapCommands():
 
-    def __init__(self):
-        pass
+    def __init__(self,logger):
+        self.logger = logger
 
     def setup_commands(self, parser):
         """

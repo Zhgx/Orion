@@ -23,11 +23,10 @@ class MyArgumentParser(argparse.ArgumentParser):
         args, argv = self.parse_known_args(args, namespace)
         if argv:
             msg = ('unrecognized arguments: %s')
-            logger = log.Log()
-            collocter = log.Collector()
-            username = collocter.get_username()
+            username = sundry.get_username()
             transaction_id = sundry.get_transaction_id()
-            logger.add_log(username,'args_error',transaction_id,(' '.join(sys.argv)),'',(msg % ' '.join(argv)))
+            logger = log.Log(username,transaction_id)
+            logger.write_to_log('args_error','','',(msg % ' '.join(argv)))
             self.error(msg % ' '.join(argv))
         return args
 
@@ -39,15 +38,25 @@ class VtelCLI(object):
 
 
     def __init__(self):
-        self._node_commands = NodeCommands()
-        self._resource_commands = ResourceCommands()
-        self._storagepool_commands = StoragePoolCommands()
-        self._disk_commands = DiskCommands()
-        self._diskgroup_commands = DiskGroupCommands()
-        self._host_commands = HostCommands()
-        self._hostgroup_commands = HostGroupCommands()
-        self._map_commands = MapCommands()
+        self.username = sundry.get_username()
+        self.transaction_id = sundry.get_transaction_id()
+        self.logger = log.Log(self.username,self.transaction_id)
+
+        self._node_commands = NodeCommands(self.logger)
+        self._resource_commands = ResourceCommands(self.logger)
+        self._storagepool_commands = StoragePoolCommands(self.logger)
+        self._disk_commands = DiskCommands(self.logger)
+        self._diskgroup_commands = DiskGroupCommands(self.logger)
+        self._host_commands = HostCommands(self.logger)
+        self._hostgroup_commands = HostGroupCommands(self.logger)
+        self._map_commands = MapCommands(self.logger)
         self._parser = self.setup_parser()
+
+    # def write_to_log(self,type,description1,description2,data):
+    #     logger = log.Log()
+    #     username = self.username
+    #     transaction_id = self.transaction_id
+    #     logger.add_log(username, type, transaction_id, description1, description2, data)
 
     def setup_parser(self):
         parser = MyArgumentParser(prog="vtel")
@@ -56,7 +65,8 @@ class VtelCLI(object):
         """
         #parser.add_argument('--version','-v',action='version',version='%(prog)s ' + VERSION + '; ')
 
-        subp = parser.add_subparsers(title='subcommands',
+
+        subp = parser.add_subparsers(metavar='',
                                      dest='subargs_vtel')
 
         parser_stor = subp.add_parser(
@@ -65,6 +75,7 @@ class VtelCLI(object):
             add_help=False,
             formatter_class=argparse.RawTextHelpFormatter,
         )
+
 
         # add parameters to interact with the GUI
         parser_stor.add_argument(
@@ -87,16 +98,41 @@ class VtelCLI(object):
             help=argparse.SUPPRESS,
             default=False)
 
+
+        # replay function related parameter settings
+        parser_replay = subp.add_parser(
+            'replay',
+            aliases=['re'],
+            formatter_class=argparse.RawTextHelpFormatter
+        )
+
+        parser_replay.add_argument(
+            '-t',
+            '--transactionid',
+            dest='transactionid',
+            metavar='',
+            help='transaction id')
+
+        parser_replay.add_argument(
+            '-d',
+            '--date',
+            dest='date',
+            metavar='',
+            help='date')
+
         self.parser_stor = parser_stor
         self.parser_iscsi = parser_iscsi
+        self.parser_replay = parser_replay
+
         # Set the binding function of stor
         parser_stor.set_defaults(func=self.send_database)
-        parser_iscsi.set_defaults(func=self.send_json)
         # Set the binding function of iscsi
-        parser_iscsi.set_defaults(func=self.print_iscsi_help)
+        parser_iscsi.set_defaults(func=self.send_json)
 
-        subp_stor = parser_stor.add_subparsers(dest='subargs_stor')
-        subp_iscsi = parser_iscsi.add_subparsers(dest='subargs_iscsi')
+        parser_replay.set_defaults(func=self.replay)
+
+        subp_stor = parser_stor.add_subparsers(dest='subargs_stor',metavar='')
+        subp_iscsi = parser_iscsi.add_subparsers(dest='subargs_iscsi',metavar='')
 
         # add all subcommands and argument
         self._node_commands.setup_commands(subp_stor)
@@ -116,23 +152,24 @@ class VtelCLI(object):
     # When using the parameter '-gui', send the database through the socket
     def send_database(self, args):
         if args.gui:
-            db = linstordb.LINSTORDB()
+            db = linstordb.LINSTORDB(self.username,self.transaction_id)
             data = pickle.dumps(db.data_base_dump())
             sundry.send_via_socket(data)
         else:
             self.parser_stor.print_help()
 
+    # When using the parameter '-gui', send the json through the socket
     def send_json(self, args):
         js = iscsi_json.JSON_OPERATION()
-        if args.json in ['json']:
+        if args.gui:
             data = js.read_data_json()
             data_pickled = pickle.dumps(data)
             sundry.send_via_socket(data_pickled)
         else:
             self.parser_iscsi.print_help()
 
-    def print_iscsi_help(self, args):
-        self.parser_iscsi.print_help()
+    def replay(self,args):
+        self.parser_replay.print_help()
 
 
     def run(self):
@@ -140,9 +177,13 @@ class VtelCLI(object):
 
 
     def parse(self):
+        if sys.argv:
+            path = sundry.get_path()
+            cmd = ' '.join(sys.argv)
+            self.logger.write_to_log('user_input',path,'',cmd)
         args = self._parser.parse_args()
         if args.subargs_vtel:
-            args.func(args)
+            args.func(args) # try expect
         else:
             self._parser.print_help()
 

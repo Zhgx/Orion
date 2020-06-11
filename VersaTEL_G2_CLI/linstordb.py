@@ -17,8 +17,7 @@ class LINSTORDB():
 
     # LINSTOR表
     crt_sptb_sql = '''
-    create table if not exists storagepooltb(
-        id integer primary key,
+    create table if not exists storagepooltb(id integer primary key,
         StoragePool varchar(20),
         Node varchar(20),
         Driver varchar(20),
@@ -136,10 +135,11 @@ class LINSTORDB():
     '''
     # 连接数据库,创建光标对象
 
-    def __init__(self):
+    def __init__(self,logger):
         # linstor.db
         self.con = sqlite3.connect(":memory:", check_same_thread=False)
         self.cur = self.con.cursor()
+        self.logger = logger
 
     # 执行获取数据，删除表，创建表，插入数据
     def rebuild_linstor_tb(self):
@@ -159,17 +159,29 @@ class LINSTORDB():
         self.con.commit()
 
     def get_output(self):
+        thread_all = []
+        cmds = ['linstor --no-color --no-utf8 n l',
+         'linstor --no-color --no-utf8 r lv',
+         'linstor --no-color --no-utf8 sp l']
+        sql = [self.replace_ntb_sql,
+               self.replace_rtb_sql,
+               self.replace_stb_sql]
+
+        for cmd,sql in zip(cmds,sql):
+            thread_ins_data = threading.Thread(target=self.thread_get_linstor,args=(cmd,sql))
+            thread_all.append(thread_ins_data)
+
         # threading
-        thread_ins_node = threading.Thread(target=self.thread_get_node())
-        thread_ins_res = threading.Thread(target=self.thread_get_res())
-        thread_ins_sp = threading.Thread(target=self.thread_get_sp())
+        # thread_ins_node = threading.Thread(target=self.thread_get_linstor,args=(cmds[0]))
+        # thread_ins_res = threading.Thread(target=self.thread_get_res())
+        # thread_ins_sp = threading.Thread(target=self.thread_get_sp())
+        #
+        # threads = [thread_ins_node,thread_ins_res,thread_ins_sp]
 
-        threads = [thread_ins_node,thread_ins_res,thread_ins_sp]
-
-        for i in range(len(threads)):
-            threads[i].start()
-        for i in range(len(threads)):
-            threads[i].join()
+        for i in range(len(thread_all)):
+            thread_all[i].start()
+        for i in range(len(thread_all)):
+            thread_all[i].join()
 
     def exc_get_vg(self):
         vg = ex.LVM.refine_vg(ex.LVM.get_vg())
@@ -179,17 +191,22 @@ class LINSTORDB():
         thinlv = ex.LVM.refine_thinlv(ex.LVM.get_thinlv())
         self.insert_data(self.replace_thinlvtb_sql, thinlv)
 
-    def thread_get_node(self):
-        node = ex.LINSTOR.refine_linstor(ex.LINSTOR.get_node())
-        self.insert_data(self.replace_ntb_sql, node)
-
-    def thread_get_res(self):
-        res = ex.LINSTOR.refine_linstor(ex.LINSTOR.get_res())
-        self.insert_data(self.replace_rtb_sql, res)
-
-    def thread_get_sp(self):
-        sp = ex.LINSTOR.refine_linstor(ex.LINSTOR.get_sp())
-        self.insert_data(self.replace_stb_sql, sp)
+    def thread_get_linstor(self,cmd,sql):
+        actuator = ex.LINSTOR(self.logger)
+        linstor = actuator.refine_linstor(actuator.get_linstor(cmd))
+        self.insert_data(sql,linstor)
+    #
+    # def thread_get_node(self):
+    #     node = ex.LINSTOR.refine_linstor(ex.LINSTOR.get_linstor('linstor --no-color --no-utf8 n l'))
+    #     self.insert_data(self.replace_ntb_sql, node)
+    #
+    # def thread_get_res(self):
+    #     res = ex.LINSTOR.refine_linstor(ex.LINSTOR.get_res())
+    #     self.insert_data(self.replace_rtb_sql, res)
+    #
+    # def thread_get_sp(self):
+    #     sp = ex.LINSTOR.refine_linstor(ex.LINSTOR.get_sp())
+    #     self.insert_data(self.replace_stb_sql, sp)
 
     # 创建表
 
@@ -215,6 +232,8 @@ class LINSTORDB():
         for i in range(len(list_data)):
             list_data[i].insert(0, i + 1)
             self.cur.execute(sql, list_data[i])
+            self.logger.write_to_log('LISNTORDB_insert_data', 'sql_insert_data', '', list_data[i])
+
 
     def data_base_dump(self):
         cur = self.cur
@@ -230,15 +249,17 @@ class DataProcess():
     Provide a data interface to retrieve specific data in the LINSTOR database.
     """
 
-    def __init__(self):
-        self.linstor_db = LINSTORDB()
+    def __init__(self,logger):
+        self.linstor_db = LINSTORDB(logger)
         self.linstor_db.rebuild_linstor_tb()
         self.cur = self.linstor_db.cur
+        self.logger = logger
 
     # 获取表单行数据的通用方法
     def sql_fetch_one(self, sql):
         self.cur.execute(sql)
         date_set = self.cur.fetchone()
+        self.logger.write_to_log('sql_fetch_one',sql,'',date_set)
         return date_set
 
     # 获取表全部数据的通用方法
@@ -246,6 +267,7 @@ class DataProcess():
         cur = self.cur
         cur.execute(sql)
         date_set = cur.fetchall()
+        self.logger.write_to_log('sql_fetch_all', sql, '', list(date_set))
         return list(date_set)
 
     # Return all data of node table
@@ -484,15 +506,14 @@ def table(func):
 
 
 class OutputData(DataProcess):
-    def __init__(self):
-        DataProcess.__init__(self)
-        self.logger = log.Log()
+    def __init__(self,logger):
+        DataProcess.__init__(self,logger)
+
 
     """Node视图
     """
     @table_color
-    def node_all_color(self,*args):
-        username,transaction_id = args
+    def node_all_color(self):
         data = super().process_data_node_all()
         header = ["node", "node type", "res num", "stp num", "addr", "status"]
         return data, header
@@ -559,8 +580,8 @@ class OutputData(DataProcess):
 
     # 指定的node视图
 
-    def show_node_one_color(self, node,*args):
-        username,transaction_id = args
+    def show_node_one_color(self, node):
+
         try:
             info_first = (
                     "node:%s\nnodetype:%s\nresource num:%s\nstoragepool num:%s\naddr:%s\nstatus:%s" %
@@ -569,10 +590,10 @@ class OutputData(DataProcess):
             info_second = self.node_one_color(node)
             info_third = self.node_stp_one_color(node)
             result = '\n'.join([info_first, str(info_second), str(info_third)])
-            self.logger.add_log(username,'result_to_show',transaction_id,'','',result)
+            self.logger.write_to_log('result_to_show','','',result)
         except TypeError:
             info_err = str(traceback.format_exc())
-            self.logger.add_log(username,'result_to_show',transaction_id,'','',info_err)
+            self.logger.write_to_log('result_to_show','','',info_err)
             print('Node %s does not exist.' % node)
 
     def show_node_one(self, node):
@@ -585,27 +606,9 @@ class OutputData(DataProcess):
             info_second = self.node_one(node)
             info_third = self.node_stp_one(node)
             result = '\n'.join([info_first, str(info_second), str(info_third)])
-            self.logger.add_log(username, 'result_to_show', transaction_id, '', '', result)
-            # _logger.OutputLogger.debug(
-            #     '',
-            #     extra={
-            #         'username': _collector.get_username(),
-            #         'type': 'result_to_show',
-            #         'transaction_id': transaction_id,#How to get this value
-            #         'describe1': '',
-            #         'describe2': '',
-            #         'data': result})
+            self.logger.write_to_log('result_to_show','','',result)
         except TypeError:
-            # _logger.InputLogger.debug(
-            #     '',
-            #     extra={
-            #         'username': _collector.get_username(),
-            #         'type': 'result_to_show',
-            #         'transaction_id': transaction_id,
-            #         'describe1': '',
-            #         'describe2': '',
-            #         'data': str(
-            #             traceback.format_exc())})
+            self.logger.write_to_log('result_to_show','','',str(traceback.format_exc()))
             print('Node %s does not exist.' % node)
 
     """Resource视图
@@ -636,11 +639,15 @@ class OutputData(DataProcess):
 
     def show_res_one_color(self, res):
         try:
-            print(
+            info_first = (
                 "resource:%s\nmirror_way:%s\nsize:%s\ndevice_name:%s\nused:%s" %
                 self.process_data_resource_one(res))
-            self.res_one_color(res)
+            print(info_first)
+            info_second = self.res_one_color(res)
+            result = '\n'.join([info_first, str(info_second)])
+            self.logger.write_to_log('result_to_show','','',result)
         except TypeError:
+            self.logger.write_to_log('result_to_show','','',str(traceback.format_exc()))
             print('Resource %s does not exist.' % res)
 
     def show_res_one(self, res):
@@ -702,31 +709,43 @@ class OutputData(DataProcess):
         node_name = self._node_name_of_storagepool(sp)
         if node_num == 0:
             print('The storagepool does not exist')
+            self.logger.write_to_log('result_to_show', '', '', 'The storagepool does not exist')
         elif node_num == 1:
-            print(
+            info_first = (
                 'Only one node (%s) exists in the storage pool named %s' %
                 (node_name, sp))
-            self.sp_one_color(sp)
+            print(info_first)
+            info_second = self.sp_one_color(sp)
+            result = '\n'.join([info_first, str(info_second)])
+            self.logger.write_to_log('result_to_show', '', '', result)
         else:
             node_name = ' and '.join(node_name)
-            print(
+            info_first = (
                 'The storagepool name for %s nodes is %s,they are %s.' %
                 (node_num, sp, node_name))
-            self.sp_one_color(sp)
+            print(info_first)
+            info_second = self.sp_one_color(sp)
+            result = '\n'.join([info_first, str(info_second)])
+            self.logger.write_to_log('result_to_show','','',result)
 
     def show_sp_one(self, sp):
         node_num = self._node_num_of_storagepool(sp)
         node_name = self._node_name_of_storagepool(sp)
         if node_num == 0:
             print('The storagepool does not exist')
+            self.logger.write_to_log('result_to_show', '', '', 'The storagepool does not exist')
         elif node_num == 1:
-            print(
+            info_first = (
                 'Only one node (%s) exists in the storage pool named %s' %
                 (node_name, sp))
-            self.sp_one(sp)
+            info_second = self.sp_one(sp)
+            result = '\n'.join([info_first, str(info_second)])
+            self.logger.write_to_log('result_to_show','','',result)
         else:
             node_name = ' and '.join(node_name)
-            print(
+            info_first = (
                 'The storagepool name for %s nodes is %s,they are %s.' %
                 (node_num, sp, node_name))
-            self.sp_one(sp)
+            info_second = self.sp_one(sp)
+            result = '\n'.join([info_first, str(info_second)])
+            self.logger.write_to_log('result_to_show','','',result)

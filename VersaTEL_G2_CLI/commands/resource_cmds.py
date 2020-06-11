@@ -2,7 +2,9 @@ import argparse
 import pickle
 import sys
 import re
+import traceback
 
+import log
 import sundry as sd
 import execute as ex
 import linstordb
@@ -31,7 +33,7 @@ class usage():
 
 
 # 多节点创建resource时，storapoo多于node的异常类
-class NodeLessThanSPError(Exception):
+class NodeAndSPNumError(Exception):
     pass
 
 
@@ -40,8 +42,9 @@ class InvalidSizeError(Exception):
 
 
 class ResourceCommands():
-    def __init__(self):
-        pass
+    def __init__(self,logger):
+        self.logger = logger
+        self.actuator = ex.Stor(logger)
 
     def setup_commands(self, parser):
         """
@@ -202,7 +205,10 @@ class ResourceCommands():
     @staticmethod
     def is_args_correct(node, storagepool):
         if len(node) < len(storagepool):
-            raise NodeLessThanSPError('指定的storagepool数量应少于node数量')
+            raise NodeAndSPNumError('指定的storagepool数量应少于node数量')
+        elif len(node) > len(storagepool) > 1:
+            raise NodeAndSPNumError('The number of Node and Storage pool do not meet the requirements')
+
 
     @staticmethod
     def is_vail_size(size):
@@ -253,20 +259,35 @@ class ResourceCommands():
                 self.is_vail_size(args.size)
             except InvalidSizeError:
                 print('%s is not a valid size!' % args.size)
-                sys.exit(0)
+                sys.exit()
             # 自动创建条件判断，符合则执行
             if all(list_auto_required) and not any(list_auto_forbid):
-                ex.Stor.create_res_auto(args.resource, args.size, args.num)
+                if args.gui:
+                    result = self.actuator.create_res_auto(args.resource, args.size, args.num)
+                    result_pickled = pickle.dumps(result)
+                    sd.send_via_socket(result_pickled)
+                else:
+                    self.actuator.create_res_auto(args.resource, args.size, args.num)
             # 手动创建条件判断，符合则执行
             elif all(list_manual_required) and not any(list_manual_forbid):
                 try:
                     self.is_args_correct(args.node, args.storagepool)
-                    ex.Stor.create_res_manual(
-                        args.resource, args.size, args.node, args.storagepool)
-                except NodeLessThanSPError:
+                except NodeAndSPNumError:
                     print('The number of nodes does not meet the requirements')
-                    sys.exit(0)
+                    self.logger.write_to_log('result_to_show','','',str(traceback.format_exc()))
+                    sys.exit()
+                else:
+                    if args.gui:
+                        result = self.actuator.create_res_manual(
+                            args.resource, args.size, args.node, args.storagepool)
+                        result_pickled = pickle.dumps(result)
+                        sd.send_via_socket(result_pickled)
+                        # CLI
+                    else:
+                        self.actuator.create_res_manual(
+                            args.resource, args.size, args.node, args.storagepool)
             else:
+                # self.logger.add_log(username, 'cli_user_input', transaction_id, path, 'ARGPARSE_ERROR', cmd)
                 self.p_create_res.print_help()
 
         elif args.diskless:
@@ -280,14 +301,14 @@ class ResourceCommands():
             # 手动添加mirror条件判断，符合则执行
             if all([args.node, args.storagepool]) and not any(
                     [args.auto, args.num]):
-                if ResourceCommands.is_args_correct():
+                if self.is_args_correct(args.node, args.storagepool):
                     ex.Stor.add_mirror_manual(
                         args.resource, args.node, args.storagepool)
                 else:
                     self.p_create_res.print_help()
             # 自动添加mirror条件判断，符合则执行
             elif all([args.auto, args.num]) and not any([args.node, args.storagepool]):
-                ex.Stor.add_mirror_auto(args.resource, args.num)
+                self.actuator.add_mirror_auto(args.resource, args.num)
             else:
                 self.p_create_res.print_help()
 
@@ -297,17 +318,23 @@ class ResourceCommands():
     @sd.comfirm_del('resource')
     def delete(self, args):
         if args.node:
-            ex.Stor.delete_resource_des(args.node, args.resource)
+            self.actuator.delete_resource_des(args.node, args.resource)
         elif not args.node:
-            ex.Stor.delete_resource_all(args.resource)
+            self.actuator.delete_resource_all(args.resource)
 
     def show(self, args):
-        tb = linstordb.OutputData()
+        tb = linstordb.OutputData(self.logger)
         if args.nocolor:
-            tb.show_res_one(args.resource) if args.resource else tb.res_all()
+            if args.resource:
+                tb.show_res_one(args.resource)
+            else:
+                tb.res_all()
         else:
-            tb.show_res_one_color(
-                args.resource) if args.resource else tb.res_all_color()
+            if args.resource:
+                tb.show_res_one_color(args.resource)
+            else:
+                result = tb.res_all_color()
+                self.logger.write_to_log('result_to_show','','',result)
 
     def print_resource_help(self, *args):
         self.res_parser.print_help()

@@ -8,8 +8,9 @@ import sundry as sd
 
 class DiskGroupCommands():
 
-    def __init__(self):
-        pass
+    def __init__(self,logger):
+        self.logger = logger
+        self.actuator = ex.Iscsi(logger)
 
     def setup_commands(self, parser):
         """
@@ -83,16 +84,16 @@ class DiskGroupCommands():
 
     def create(self, args):
         if args.gui == 'gui':
-            data = pickle.dumps(ex.Iscsi.create_diskgroup(args.diskgroup, args.disk))
+            data = pickle.dumps(self.actuator.create_diskgroup(args.diskgroup, args.disk))
             sd.send_via_socket(data)
         else:
-            ex.Iscsi.create_diskgroup(args.diskgroup, args.disk)
+            self.actuator.create_diskgroup(args.diskgroup, args.disk)
 
     def show(self, args):
-        ex.Iscsi.show_diskgroup(args.diskgroup)
+        self.actuator.show_diskgroup(args.diskgroup)
 
     def delete(self, args):
-        ex.Iscsi.delete_diskgroup(args.diskgroup)
+        self.actuator.delete_diskgroup(args.diskgroup)
 
     def print_dg_help(self, *args):
         self.dg_parser.print_help()

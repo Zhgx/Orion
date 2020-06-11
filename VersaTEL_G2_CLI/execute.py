@@ -2,7 +2,9 @@
 import re
 import subprocess
 import time
+import traceback
 import iscsi_json
+import log
 import sys
 from functools import wraps
 from collections import OrderedDict
@@ -12,6 +14,9 @@ class TimeoutError(Exception):
     pass
 
 class CRM():
+    def __init__(self,logger):
+        self.logger = logger
+
     def re_data(self, crmdatas):
         crmdata = str(crmdatas)
         plogical = re.compile(
@@ -29,6 +34,7 @@ class CRM():
 
     def get_data_crm(self):
         crmconfig = subprocess.getoutput('crm configure show')
+        self.logger.write_to_log('CRM_CMD','crm configure show','',crmconfig)
         print("do crm configure show")
         # print("crmconfig:",crmconfig)
         return crmconfig
@@ -189,32 +195,44 @@ class LVM():
 
 
 class LINSTOR():
-    @staticmethod
-    def get_node():
-        result_node = subprocess.Popen(
-            'linstor --no-color --no-utf8 n l',
-            shell=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT)
-        return result_node.stdout.read().decode('utf-8')
+    def __init__(self,logger):
+        self.logger = logger
 
-    @staticmethod
-    def get_res():
-        result_res = subprocess.Popen(
-            'linstor --no-color --no-utf8 r lv',
+    def get_linstor(self,cmd):
+        Popen_linstor = subprocess.Popen(
+            cmd,
             shell=True,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT)
-        return result_res.stdout.read().decode('utf-8')
+        str_result = Popen_linstor.stdout.read().decode('utf-8')
+        self.logger.write_to_log('LINSTORDB',cmd,'',str_result)
+        return str_result
 
-    @staticmethod
-    def get_sp():
-        result_sp = subprocess.Popen(
-            'linstor --no-color --no-utf8 sp l',
-            shell=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT)
-        return result_sp.stdout.read().decode('utf-8')
+    # def get_node(self):
+    #     result_node = subprocess.Popen(
+    #         'linstor --no-color --no-utf8 n l',
+    #         shell=True,
+    #         stdout=subprocess.PIPE,
+    #         stderr=subprocess.STDOUT)
+    #     return result_node.stdout.read().decode('utf-8')
+    #
+    # @staticmethod
+    # def get_res():
+    #     result_res = subprocess.Popen(
+    #         'linstor --no-color --no-utf8 r lv',
+    #         shell=True,
+    #         stdout=subprocess.PIPE,
+    #         stderr=subprocess.STDOUT)
+    #     return result_res.stdout.read().decode('utf-8')
+    #
+    # @staticmethod
+    # def get_sp():
+    #     result_sp = subprocess.Popen(
+    #         'linstor --no-color --no-utf8 sp l',
+    #         shell=True,
+    #         stdout=subprocess.PIPE,
+    #         stderr=subprocess.STDOUT)
+    #     return result_sp.stdout.read().decode('utf-8')
 
     @staticmethod
     def refine_linstor(table_data):
@@ -257,12 +275,30 @@ def result_cmd(func):
         elif Stor.judge_cmd_result_err(str(result)):
             return result.decode()
         else:
-            return
+            return result.decode()
     return wrapper
 
 
 # 子命令stor调用的方法
 class Stor():
+
+    def __init__(self,logger):
+        self.logger = logger
+
+
+    @staticmethod
+    def judge_cmd_result(result):
+        re_suc = re.compile('SUCCESS')
+        re_war = re.compile('WARNING')
+        re_err = re.compile('ERROR')
+        if re_war.search(result):
+            return 'WAR'
+        elif re_err.search(result):
+            return 'ERR'
+        elif re_suc.search(result):
+            return 'SUC'
+
+
     @staticmethod
     def judge_cmd_result_suc(cmd):
         re_suc = re.compile('SUCCESS')
@@ -282,7 +318,7 @@ class Stor():
             return True
 
     @staticmethod
-    def get_err_not_vg(result, node, vg):
+    def judge_no_vg(result, node, vg):
         re_ = re.compile(
             r'\(Node: \'' +
             node +
@@ -305,9 +341,8 @@ class Stor():
             return (re_.search(result).group())
 
 
-    @staticmethod
     @result_cmd
-    def execute_cmd(cmd, timeout=60):
+    def execute_cmd(self,cmd, timeout=60):
         """
         Execute the command cmd to return the content of the command output.
         If it times out, a TimeoutError exception will be thrown.
@@ -323,206 +358,213 @@ class Stor():
             seconds_passed = time.time() - t_beginning
             if timeout and seconds_passed > timeout:
                 p.terminate()
+                self.logger.write_to_log('LINSTOR',cmd,'','TimeoutError')
                 raise TimeoutError(cmd, timeout)
             time.sleep(0.1)
-        return p.stdout.read()
+        result = p.stdout.read()
+        self.logger.write_to_log('LINSTOR', cmd, '', result)
+        return result
 
 
-    @staticmethod
-    def print_execute_result(cmd):
-        result = Stor.execute_cmd(cmd)
+    def print_execute_result(self,cmd):
+        result = self.execute_cmd(cmd)
         if not result:
+            self.logger.write_to_log('result_to_show','','',result)
             return
         if result is True:
             print('SUCCESS')
+            self.logger.write_to_log('result_to_show','','','SUCCESS')
             return True
         else:
             print(result)
             print('FAIL')
+            self.logger.write_to_log('result_to_show',result,'','FAIL')
             return result
 
 
     # 创建resource相关 -- ok
-    @staticmethod
-    def linstor_delete_rd(res):
+    def linstor_delete_rd(self,res):
         cmd = 'linstor rd d %s' % res
-        subprocess.check_output(cmd, shell=True)
+        result = subprocess.check_output(cmd, shell=True)
+        self.logger.write_to_log('LINSTOR',cmd,'',result)
 
-    @staticmethod
-    def linstor_delete_vd(res):
+
+    def linstor_delete_vd(self,res):
         cmd = 'linstor vd d %s' % res
-        subprocess.check_output(cmd, shell=True)
+        result = subprocess.check_output(cmd, shell=True)
+        self.logger.write_to_log('LINSTOR',cmd,'',result)
 
-    @staticmethod
-    def linstor_create_rd(res):
+    def linstor_create_rd(self,res):
         cmd_rd = 'linstor rd c %s' % res
-        result = Stor.execute_cmd(cmd_rd)
+        result = self.execute_cmd(cmd_rd)
         if result is True:
             return True
         else:
             print('FAIL')
             return result
 
-    @staticmethod
-    def linstor_create_vd(res, size):
+    def linstor_create_vd(self,res, size):
         cmd_vd = 'linstor vd c %s %s' % (res, size)
-        result = Stor.execute_cmd(cmd_vd)
+        result = self.execute_cmd(cmd_vd)
         if result is True:
             return True
         else:
             print('FAIL')
-            Stor.linstor_delete_rd(res)
+            self.linstor_delete_rd(res)
             return result
 
     # 创建resource 自动
-    @staticmethod
-    def create_res_auto(res, size, num):
+    def create_res_auto(self,res, size, num):
         cmd = 'linstor r c %s --auto-place %d' % (res, num)
-        if Stor.linstor_create_rd(res) is True and Stor.linstor_create_vd(res, size) is True:
-            result = Stor.execute_cmd(cmd)
+        if self.linstor_create_rd(res) is True and self.linstor_create_vd(res, size) is True:
+            result = self.execute_cmd(cmd)
             if result is True:
                 print('SUCCESS')
+                self.logger.write_to_log('result_to_show','','','SUCCESS')
                 return True
             else:
                 print('FAIL')
-                Stor.linstor_delete_rd(res)
+                self.linstor_delete_rd(res)
+                self.logger.write_to_log('result_to_show','','','FAIL')
                 return result
         else:
             print('The resource already exists')
+            # cls.logger.add_log(username, 'result_to_show', transaction_id, '', '', 'The resource already exists')
             return ('The resource already exists')
 
-    # 创建resource 手动
-    @staticmethod
-    def create_res_manual(res, size, node, stp):
+
+    def create_res_manual(self,res,size,node,sp):
         flag = OrderedDict()
 
-        def print_fail_node():
-            if len(flag.keys()):
-                print('Creation failure on', *flag.keys(), sep=' ')
-                for node, cause in flag.items():
-                    print(node, ':', cause)
-                return flag
-            else:
-                return True
-
-        def whether_delete_rd():
-            if len(flag.keys()) == len(node):
-                Stor.linstor_delete_rd(res)
-
-        def create_resource(cmd):
+        # Actions needed to create a resource
+        def excute_(cmd):
             try:
-                #Undo the decorator @result_cmd, and execute execute_cmd function
-                ex_cmd = Stor.execute_cmd.__wrapped__
-                result = ex_cmd(cmd)
+                # Undo the decorator @result_cmd, and execute execute_cmd function
+                ex_cmd = self.execute_cmd.__wrapped__
+                result = ex_cmd(self, cmd)
                 if Stor.judge_cmd_result_war(str(result)):
                     print(Stor.get_war_mes(result.decode('utf-8')))
-
                 if Stor.judge_cmd_result_suc(str(result)):
-                    print(
-                        'Resource %s was successfully created on Node %s' %
-                        (res, node_one))
+                    result = ('Resource %s was successfully created on Node %s' % (res, node_one))
+                    print(result)
+                    self.logger.write_to_log('result_to_show','','',result)
                 elif Stor.judge_cmd_result_err(str(result)):
                     str_fail_cause = Stor.get_err_detailes(result.decode('utf-8'))
                     dict_fail = {node_one: str_fail_cause}
                     flag.update(dict_fail)
             except TimeoutError as e:
                 flag.update({node_one: 'Execution creation timeout'})
-                print('%s created timeout on node %s, the operation has been cancelled' %(res, node_one))
+                # logger
+                print('%s created timeout on node %s, the operation has been cancelled' % (res, node_one))
 
-        if len(stp) == 1:
-            if Stor.linstor_create_rd(res) is True and Stor.linstor_create_vd(res, size) is True:
-                for node_one in node:
-                    cmd = 'linstor resource create %s %s --storage-pool %s' % (node_one, res, stp[0])
-                    create_resource(cmd)
-                whether_delete_rd()
-                return print_fail_node()
-            else:
-                # need to be prefect
-                print('The resource already exists')
-                return ('The resource already exists')
-        elif len(node) == len(stp):
-            if Stor.linstor_create_rd(res) is True and Stor.linstor_create_vd(res, size) is True:
-                for node_one, stp_one in zip(node, stp):
-                    cmd = 'linstor resource create %s %s --storage-pool %s' % (
-                        node_one, res, stp_one)
-                    create_resource(cmd)
-                whether_delete_rd()
-                return print_fail_node()
-            else:
-                print('The resource already exists')
-                return ('The resource already exists')
+        if self.linstor_create_rd(res) is True and self.linstor_create_vd(res, size) is True:
+            pass
         else:
-            print('The number of Node and Storage pool do not meet the requirements')
+            # need to be prefect
+            print('The resource already exists')
+            self.logger.write_to_log('result_to_show','','','The resource already exists')
+            return ('The resource already exists')
 
-    # 添加mirror（自动）
-    @staticmethod
-    def add_mirror_auto(res, num):
-        cmd = 'linstor r c %s --auto-place %d' % (res, num)
-        return Stor.print_execute_result(cmd)
-
-    @staticmethod
-    def add_mirror_manual(res, node, stp):
-        flag = OrderedDict()
-
-        def print_fail_node():
+        if len(sp) == 1:
+            for node_one in node:
+                cmd = 'linstor resource create %s %s --storage-pool %s' % (node_one, res, sp[0])
+                excute_(cmd)
+            if len(flag.keys()) == len(node):
+                self.linstor_delete_rd(res)
             if len(flag.keys()):
                 print('Creation failure on', *flag.keys(), sep=' ')
+                self.logger.write_to_log('result_to_show', '', '','Creation failure on %s'%' '.join(flag.keys()))
+                for node, cause in flag.items():
+                    print(node, ':', cause)
                 return flag
             else:
                 return True
 
-        def add_mirror():
-            action = subprocess.run(
-                cmd,
-                shell=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT)
-            result = action.stdout
-            if Stor.judge_cmd_result_suc(str(result)):
-                print(
-                    'Resource %s was successfully created on Node %s' %
-                    (res, node_one))
-            elif Stor.judge_cmd_result_err(str(result)):
-                str_fail_cause = Stor.get_err_detailes(result.decode('utf-8'))
-                dict_fail = {node_one: str_fail_cause}
-                flag.update(dict_fail)
+        # When sp is not one, it is equal to the number of nodes
+        else:
+            for node_one, sp_one in zip(node, sp):
+                cmd = 'linstor resource create %s %s --storage-pool %s' % (node_one, res, sp_one)
+                excute_(cmd)
+            if len(flag.keys()) == len(node):
+                self.linstor_delete_rd(res)
+            # whether_delete_rd()
+            if len(flag.keys()):
+                print('Creation failure on', *flag.keys(), sep=' ')
+                self.logger.write_to_log('result_to_show', '', '','Creation failure on %s'%' '.join(flag.keys()))
+                for node, cause in flag.items():
+                    print(node, ':', cause)
+                return flag
+            else:
+                return True
+            # return print_fail_node()
 
-        if len(stp) == 1:
+    # 添加mirror（自动）
+    def add_mirror_auto(self,res, num):
+        cmd = 'linstor r c %s --auto-place %d' % (res, num)
+        return self.print_execute_result(cmd)
+
+    def add_mirror_manual(self,res, node, sp):
+        flag = OrderedDict()
+        def excute_(cmd):
+            try:
+                # Undo the decorator @result_cmd, and execute execute_cmd function
+                ex_cmd = self.execute_cmd.__wrapped__
+                result = ex_cmd(self, cmd)
+                if Stor.judge_cmd_result_war(str(result)):
+                    print(Stor.get_war_mes(result.decode('utf-8')))
+                if Stor.judge_cmd_result_suc(str(result)):
+                    result = ('Resource %s was successfully created on Node %s' % (res, node_one))
+                    print(result)
+                    self.logger.write_to_log('result_to_show','','',result)
+                elif Stor.judge_cmd_result_err(str(result)):
+                    str_fail_cause = Stor.get_err_detailes(result.decode('utf-8'))
+                    dict_fail = {node_one: str_fail_cause}
+                    flag.update(dict_fail)
+            except TimeoutError as e:
+                flag.update({node_one: 'Execution creation timeout'})
+                print('%s created timeout on node %s, the operation has been cancelled' % (res, node_one))
+                self.logger.write_to_log('result_to_show','','','%s created timeout on node %s, the operation has been cancelled' % (res, node_one))
+
+        def print_fail_node():
+            if len(flag.keys()):
+                print('Creation failure on', *flag.keys(), sep=' ')
+                self.logger.write_to_log('result_to_show','','','Creation failure on %s'%' '.join(flag.keys()))
+                return flag
+            else:
+                return True
+
+        if len(sp) == 1:
             for node_one in node:
                 cmd = 'linstor resource create %s %s --storage-pool %s' % (
-                    node_one, res, stp[0])
-                add_mirror()
+                    node_one, res, sp[0])
+                excute_(cmd)
             return print_fail_node()
-        elif len(node) == len(stp):
-            for node_one, stp_one in zip(node, stp):
+        elif len(node) == len(sp):
+            for node_one, stp_one in zip(node, sp):
                 cmd = 'linstor resource create %s %s --storage-pool %s' % (
                     node_one, res, stp_one)
-                add_mirror()
+                excute_(cmd)
             return print_fail_node()
         else:
             print('The number of storage pools does not meet the requirements.')
 
     # 创建resource --diskless
-    @staticmethod
-    def create_res_diskless(node, res):
+    def create_res_diskless(self,node, res):
         cmd = 'linstor r c %s %s --diskless' % (node, res)
-        return Stor.print_execute_result(cmd)
+        return self.print_execute_result(cmd)
 
-    # 删除resource,指定节点 -- ok
-    @staticmethod
-    def delete_resource_des(node, res):
+    # 删除resource,指定节点
+    def delete_resource_des(self,node, res):
         cmd = 'linstor resource delete %s %s' % (node, res)
-        return Stor.print_execute_result(cmd)
+        return self.print_execute_result(cmd)
 
-    # 删除resource，全部节点 -- ok
-    @staticmethod
-    def delete_resource_all(res):
+    # 删除resource，全部节点
+    def delete_resource_all(self,res):
         cmd = 'linstor resource-definition delete %s' % res
-        return Stor.print_execute_result(cmd)
+        return self.print_execute_result(cmd)
 
-    # 创建storagepool  -- ok
-    @staticmethod
-    def create_storagepool_lvm(node, stp, vg):
+    # 创建storagepool
+    def create_storagepool_lvm(self,node, stp, vg):
         cmd = 'linstor storage-pool create lvm %s %s %s' % (node, stp, vg)
         action = subprocess.run(
             cmd,
@@ -530,39 +572,49 @@ class Stor():
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT)
         result = action.stdout
+        self.logger.write_to_log('LINSTOR', cmd, '', result.decode())
         if Stor.judge_cmd_result_war(str(result)):
             print(result.decode('utf-8'))
+            self.logger.write_to_log('result_to_show','','',result.decode())
         # 发生ERROR的情况
         if Stor.judge_cmd_result_err(str(result)):
             # 使用不存的vg
-            if Stor.get_err_not_vg(str(result), node, vg):
-                print(Stor.get_err_not_vg(str(result), node, vg))
-                subprocess.check_output(
-                    'linstor storage-pool delete %s %s' %
+            if Stor.judge_no_vg(str(result), node, vg):
+                # 获取和打印提示信息
+                result = Stor.judge_no_vg(str(result), node, vg)
+                print(result)
+                self.logger.write_to_log('result_to_show','','',result) # result为vg相关的提示
+                # 删除掉已创建的sp
+                result_del = subprocess.check_output(
+                    'linstor --no-color storage-pool delete %s %s' %
                     (node, stp), shell=True)
+                self.logger.write_to_log('LINSTOR','linstor --no-color storage-pool delete %s %s'%(node, stp), 'post-processing', result_del.decode())
             else:
                 print(result.decode('utf-8'))
                 print('FAIL')
+                self.logger.write_to_log('result_to_show',str(result),'','FAIL') # result为其他ERROR信息
                 return result.decode()
         # 成功
         elif Stor.judge_cmd_result_suc(str(result)):
             print('SUCCESS')
+            self.logger.write_to_log('LINSTOR',cmd,'',str(result))
+            self.logger.write_to_log('result_to_show','','','SUCCESS')
             return True
 
-    @staticmethod
-    def create_storagepool_thinlv(node, stp, tlv):
+    def create_storagepool_thinlv(self,node, stp, tlv):
         cmd = 'linstor storage-pool create lvmthin %s %s %s' % (node, stp, tlv)
-        return Stor.print_execute_result(cmd)
+        return self.print_execute_result(cmd)
 
     # 删除storagepool -- ok
-    @staticmethod
-    def delete_storagepool(node, stp):
+    def delete_storagepool(self,node, stp):
         cmd = 'linstor storage-pool delete %s %s' % (node, stp)
-        return Stor.print_execute_result(cmd)
+        try:
+            return self.print_execute_result(cmd)
+        except Exception as e:
+            self.logger.write_to_log('result_to_show','','',str(traceback.format_exc()))
 
     # 创建集群节点
-    @staticmethod
-    def create_node(node, ip, nt):
+    def create_node(self,node, ip, nt):
         cmd = 'linstor node create %s %s  --node-type %s' % (node, ip, nt)
         nt_value = [
             'Combined',
@@ -573,24 +625,27 @@ class Stor():
         if nt not in nt_value:
             print('node type error,choose from ''Combined',
                   'Controller', 'Auxiliary', 'Satellite''')
+            self.logger.write_to_log('result_to_show','','','node type error,choose from Combined Controller Auxiliary Satellite')
         else:
-            return Stor.print_execute_result(cmd)
-    # 删除node
+            return self.print_execute_result(cmd)
 
-    @staticmethod
-    def delete_node(node):
+    # 删除node
+    def delete_node(self,node):
         cmd = 'linstor node delete %s' % node
-        return Stor.print_execute_result(cmd)
+        return self.print_execute_result(cmd)
 
 
 class Iscsi():
+    def __init__(self,logger):
+        self.logger = logger
 
     # 获取并更新crm信息
     def crm_up(self, js):
-        cd = CRM()
+        cd = CRM(self.logger)
         crm_config_statu = cd.get_data_crm()
         if 'ERROR' in crm_config_statu:
             print("Could not perform requested operations, are you root?")
+            self.logger.write_to_log('result_to_show','','','Could not perform requested operations, are you root?')
             return False
         else:
             redata = cd.re_data(crm_config_statu)
@@ -606,10 +661,9 @@ class Iscsi():
             hostiqn.append(iqn)
         mapdata.update({'host_iqn': hostiqn})
         disk = js.get_data('DiskGroup').get(dg)
-        cd = CRM()
+        cd = CRM(self.logger)
         data = cd.get_data_linstor()
         linstorlv = LINSTOR.refine_linstor(data)
-        print("get linstor r lv data")
         diskd = {}
         for d in linstorlv:
             for i in disk:
@@ -617,6 +671,7 @@ class Iscsi():
                     diskd.update({d[1]: [d[4], d[5]]})
         mapdata.update({'disk': diskd})
         mapdata.update({'target': crmdata[2]})
+
         return mapdata
 
     # 获取删除map所需的数据
@@ -627,7 +682,7 @@ class Iscsi():
 
     # 调用crm创建map
     def map_crm_c(self, mapdata):
-        cd = CRM()
+        cd = CRM(self.logger)
         for i in mapdata['target']:
             target = i[0]
             targetiqn = i[1]
@@ -652,7 +707,7 @@ class Iscsi():
 
     # 调用crm删除map
     def map_crm_d(self, resname):
-        cd = CRM()
+        cd = CRM(self.logger)
         crm_config_statu = cd.get_data_crm()
         if 'ERROR' in crm_config_statu:
             print("Could not perform requested operations, are you root?")
@@ -667,8 +722,9 @@ class Iscsi():
 
 
     def show_disk(self,disk):
-        js = iscsi_json.JSON_OPERATION()
-        data = LINSTOR.get_res()
+        js = iscsi_json.JSON_OPERATION(self.logger)
+
+        data = LINSTOR.get_linstor(LINSTOR(self.logger),'linstor --no-color --no-utf8 r lv')
         linstorlv = LINSTOR.refine_linstor(data)
         disks = {}
         for d in linstorlv:
@@ -677,17 +733,23 @@ class Iscsi():
         if disk == 'all' or disk is None:
             print(" " + "{:<15}".format("Diskname") + "Path")
             print(" " + "{:<15}".format("---------------") + "---------------")
+            self.logger.write_to_log('result_to_show','','',(" " + "{:<15}".format("Diskname") + "Path"))
             for k in disks:
-                print(" " + "{:<15}".format(k) + disks[k])
+                output = (" " + "{:<15}".format(k) + disks[k])
+                print(output)
+                self.logger.write_to_log('result_to_show','','',output)
         else:
             if js.check_key('Disk', disk):
-                print(disk, ":", js.get_data('Disk').get(disk))
+                output = (disk, ":", js.get_data('Disk').get(disk))
+                print(output)
+                self.logger.write_to_log('result_to_show','','',output)
             else:
                 print("Fail! Can't find " + disk)
+                self.logger.write_to_log('result_to_show','','',"Fail! Can't find %s"%disk)
 
-    @staticmethod
-    def create_host(host, iqn):
-        js = iscsi_json.JSON_OPERATION()
+
+    def create_host(self,host, iqn):
+        js = iscsi_json.JSON_OPERATION(self.logger)
         print("Host name:", host)
         print("iqn:", iqn)
         if js.check_key('Host', host):
@@ -696,11 +758,11 @@ class Iscsi():
         else:
             js.creat_data("Host", host, iqn)
             print("Create success!")
+            self.logger.write_to_log('result_to_show','','','Create success!')
             return True
 
-    @staticmethod
-    def show_host(host):
-        js = iscsi_json.JSON_OPERATION()
+    def show_host(self,host):
+        js = iscsi_json.JSON_OPERATION(self.logger)
         if host == 'all' or host is None:
             hosts = js.get_data("Host")
             print(" " + "{:<15}".format("Hostname") + "Iqn")
@@ -715,9 +777,8 @@ class Iscsi():
                 return False
         return True
 
-    @staticmethod
-    def delete_host(host):
-        js = iscsi_json.JSON_OPERATION()
+    def delete_host(self,host):
+        js = iscsi_json.JSON_OPERATION(self.logger)
         print("Delete the host <", host, "> ...")
         if js.check_key('Host', host):
             if js.check_value('HostGroup', host):
@@ -732,16 +793,19 @@ class Iscsi():
             print("Fail! Can't find " + host)
             return False
 
-    @staticmethod
-    def create_diskgroup(diskgroup, disk):
-        js = iscsi_json.JSON_OPERATION()
-        print("Diskgroup name:", diskgroup)
-        print("Disk name:", disk)
+    def create_diskgroup(self,diskgroup, disk):
+        js = iscsi_json.JSON_OPERATION(self.logger)
+        # print("Diskgroup name:", diskgroup)
+        # print("Disk name:", disk)
         if js.check_key('DiskGroup', diskgroup):
             print(
                 "Fail! The DiskGroup " +
                 diskgroup +
                 " already existed.")
+            self.logger.write_to_log('result_to_show','','',(
+                "Fail! The DiskGroup " +
+                diskgroup +
+                " already existed."))
             return False
         else:
             t = True
@@ -749,17 +813,19 @@ class Iscsi():
                 if js.check_key('Disk', i) == False:
                     t = False
                     print("Fail! Can't find " + i)
+                    self.logger.write_to_log('resutl_to_show','','',("Fail! Can't find " + i))
             if t:
                 js.creat_data('DiskGroup', diskgroup, disk)
                 print("Create success!")
+                self.logger.write_to_log('result_to_show','','','Create success!')
                 return True
             else:
                 print("Fail! Please give the true name.")
+                self.logger.write_to_log('result_to_show','','','Fail! Please give the true name.')
                 return False
 
-    @staticmethod
-    def show_diskgroup(dg):
-        js = iscsi_json.JSON_OPERATION()
+    def show_diskgroup(self,dg):
+        js = iscsi_json.JSON_OPERATION(self.logger)
         if dg == 'all' or dg is None:
             print("Diskgroup:")
             diskgroups = js.get_data("DiskGroup")
@@ -776,9 +842,8 @@ class Iscsi():
             else:
                 print("Fail! Can't find " + dg)
 
-    @staticmethod
-    def delete_diskgroup(dg):
-        js = iscsi_json.JSON_OPERATION()
+    def delete_diskgroup(self,dg):
+        js = iscsi_json.JSON_OPERATION(self.logger)
         print("Delete the diskgroup <", dg, "> ...")
         if js.check_key('DiskGroup', dg):
             if js.check_value('Map', dg):
@@ -789,9 +854,8 @@ class Iscsi():
         else:
             print("Fail! Can't find " + dg)
 
-    @staticmethod
-    def create_hostgroup(hostgroup, host):
-        js = iscsi_json.JSON_OPERATION()
+    def create_hostgroup(self,hostgroup, host):
+        js = iscsi_json.JSON_OPERATION(self.logger)
         print("Hostgroup name:", hostgroup)
         print("Host name:", host)
         if js.check_key('HostGroup', hostgroup):
@@ -814,9 +878,8 @@ class Iscsi():
                 print("Fail! Please give the true name.")
                 return False
 
-    @staticmethod
-    def show_hostgroup(hg):
-        js = iscsi_json.JSON_OPERATION()
+    def show_hostgroup(self,hg):
+        js = iscsi_json.JSON_OPERATION(self.logger)
         if hg == 'all' or hg is None:
             print("Hostgroup:")
             hostgroups = js.get_data("HostGroup")
@@ -833,9 +896,8 @@ class Iscsi():
             else:
                 print("Fail! Can't find " + hg)
 
-    @staticmethod
-    def delete_hostgroup(hg):
-        js = iscsi_json.JSON_OPERATION()
+    def delete_hostgroup(self,hg):
+        js = iscsi_json.JSON_OPERATION(self.logger)
         print("Delete the hostgroup <", hg, "> ...")
         if js.check_key('HostGroup', hg):
             if js.check_value('Map', hg):
@@ -847,7 +909,7 @@ class Iscsi():
             print("Fail! Can't find " + hg)
 
     def create_map(self, map, hg, dg):
-        js = iscsi_json.JSON_OPERATION()
+        js = iscsi_json.JSON_OPERATION(self.logger)
         print("Map name:", map)
         print("Hostgroup name:", hg)
         print("Diskgroup name:", dg)
@@ -878,9 +940,8 @@ class Iscsi():
                 else:
                     return False
 
-    @staticmethod
-    def show_map(map):
-        js = iscsi_json.JSON_OPERATION()
+    def show_map(self,map):
+        js = iscsi_json.JSON_OPERATION(self.logger)
         if map == 'all' or map is None:
             print("Map:")
             maps = js.get_data("Map")
@@ -903,7 +964,7 @@ class Iscsi():
                 print("Fail! Can't find " + map)
 
     def delete_map(self,map):
-        js = iscsi_json.JSON_OPERATION()
+        js = iscsi_json.JSON_OPERATION(self.logger)
         print("Delete the map <", map, ">...")
         if js.check_key('Map', map):
             print(
