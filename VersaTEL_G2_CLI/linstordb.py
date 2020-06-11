@@ -184,11 +184,13 @@ class LINSTORDB():
             thread_all[i].join()
 
     def exc_get_vg(self):
-        vg = ex.LVM.refine_vg(ex.LVM.get_vg())
+        obj_lvm = ex.LVM(self.logger)
+        vg = obj_lvm.refine_vg(obj_lvm.get_vg())
         self.insert_data(self.replace_vgtb_sql, vg)
 
     def exc_get_thinlv(self):
-        thinlv = ex.LVM.refine_thinlv(ex.LVM.get_thinlv())
+        obj_lvm = ex.LVM(self.logger)
+        thinlv = obj_lvm.refine_thinlv(obj_lvm.get_thinlv())
         self.insert_data(self.replace_thinlvtb_sql, thinlv)
 
     def thread_get_linstor(self,cmd,sql):

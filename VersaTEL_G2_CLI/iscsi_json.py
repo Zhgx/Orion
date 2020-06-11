@@ -12,7 +12,8 @@ class JSON_OPERATION:
         try:
             rdata = open("iSCSI_Data.json", encoding='utf-8')
             read_json_dict = json.load(rdata)
-            rdata.close
+            rdata.close()
+            self.logger.write_to_log('json_operating','read_data_json','',read_json_dict)
             return read_json_dict
         except BaseException:
             with open('iSCSI_Data.json', "w") as fw:
@@ -23,6 +24,7 @@ class JSON_OPERATION:
                     "DiskGroup": {},
                     "Map": {}}
                 json.dump(keydata, fw, indent=4, separators=(',', ': '))
+            self.logger.write_to_log('json_operating','err','',keydata)
             return keydata
 
     # 创建Host、HostGroup、DiskGroup、Map
@@ -30,7 +32,7 @@ class JSON_OPERATION:
         self.read_data[first_key].update({data_key: data_value})
         with open('iSCSI_Data.json', "w") as fw:
             json.dump(self.read_data, fw, indent=4, separators=(',', ': '))
-        self.logger.write_to_log('json_operating',('Create %s'%first_key),'',{data_key: data_value})
+        self.logger.write_to_log('json_operating',('Create %s'%first_key),'func_name:creat_data',{data_key: data_value})
 
 
     # 删除Host、HostGroup、DiskGroup、Map
@@ -43,6 +45,7 @@ class JSON_OPERATION:
     # 获取Host,Disk、Target，HostGroup、DiskGroup、Map的信息
     def get_data(self, first_key):
         all_data = self.read_data[first_key]
+        self.logger.write_to_log('json_operating',('Get %s'%first_key),'',all_data)
         return all_data
 
     # 检查key值是否存在
@@ -60,7 +63,7 @@ class JSON_OPERATION:
             if data_value in self.read_data[first_key][key]:
                 self.logger.write_to_log('json_operating',('Check Value %s'%first_key),data_value,True)
                 return True
-
+        self.logger.write_to_log('json_operating', ('Check Value %s' % first_key), data_value, False)
         return False
 
 

@@ -17,7 +17,7 @@ class usage():
     storagepool(sp) {create(c)/modify(m)/delete(d)/show(s)}'''
 
     storagepool_create = '''
-    storagepool(sp) create(c) STORAGEPOOL -n NODE -lvm LVM/-tlv THINLV'''
+    storagepool(sp) create(c) STORAGEPOOL -n NODE -lvm VG/-tlv THINLV'''
 
     storagepool_delete = '''
     storagepool(sp) delete(d) STORAGEPOOL -n NODE'''

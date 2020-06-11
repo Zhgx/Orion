@@ -71,7 +71,7 @@ class MapCommands():
         map_parser.set_defaults(func=self.print_map_help)
 
     def create(self, args):
-        obj_iscsi = ex.Iscsi()
+        obj_iscsi = ex.Iscsi(self.logger)
         if args.gui == 'gui':
             data = pickle.dumps(obj_iscsi.create_map(args.map, args.hg, args.dg))
             sd.send_via_socket(data)
@@ -79,10 +79,11 @@ class MapCommands():
             obj_iscsi.create_map(args.map, args.hg, args.dg)
 
     def show(self, args):
-        ex.Iscsi.show_map(args.map)
+        obj_iscsi = ex.Iscsi(self.logger)
+        obj_iscsi.show_map(args.map)
 
     def delete(self, args):
-        obj_iscsi = ex.Iscsi()
+        obj_iscsi = ex.Iscsi(self.logger)
         obj_iscsi.delete_map(args.map)
 
     def print_map_help(self, *args):
