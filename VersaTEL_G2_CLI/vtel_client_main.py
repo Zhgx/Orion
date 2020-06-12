@@ -192,6 +192,7 @@ def main():
     try:
         cmd = VtelCLI()
         cmd.parse()
+        print(sqlite3.version_info)
     except KeyboardInterrupt:
         sys.stderr.write("\nClient exiting (received SIGINT)\n")
 
