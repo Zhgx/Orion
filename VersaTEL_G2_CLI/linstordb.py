@@ -305,12 +305,15 @@ class DataProcess():
         sql_res_inuse = "SELECT DISTINCT Resource,Allocated,DeviceName,InUse FROM resourcetb WHERE InUse = 'InUse'"
         in_use = self.sql_fetch_all(sql_res_inuse)
 
+
         for i in in_use:
             res.append(i[0])
+
 
         for i in res_all:
             if i[0] in res and i[3] == 'Unused':
                 res_all.remove(i)
+            print(res_all)
         return res_all
 
     def _get_mirro_way(self, res):

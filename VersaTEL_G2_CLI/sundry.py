@@ -5,15 +5,10 @@ import signal
 import time
 import os
 import getpass
+import traceback
 
 # Connect to the socket server and transfer data, and finally close the
 # connection.
-
-
-
-
-
-
 def send_via_socket(data):
     ip = "10.203.1.151"
     port = 12144
@@ -29,8 +24,19 @@ def send_via_socket(data):
     client.send(b'exit')
     client.close()
 
-
-
+def record_exception(func):
+    """
+    Decorator
+    Get exception, throw the exception after recording
+    :param func:Command binding function
+    """
+    def wrapper(self,*args):
+        try:
+            return func(self,*args)
+        except Exception as e:
+            self.logger.write_to_log('result_to_show', 'ERR', '', str(traceback.format_exc()))
+            raise e
+    return wrapper
 
 def comfirm_del(type):
     """
@@ -90,10 +96,3 @@ def get_hostname():
 def get_path():
     return os.getcwd()
 
-# Get LISNTOR controller configuration file information
-# linstor_conf_path = '/etc/linstor/linstor-client.conf'
-# def get_linstor_controller(self, path):
-#     path = self.linstor_conf_path
-#     with open(path, 'r') as f:
-#         data = f.read()
-#         return data

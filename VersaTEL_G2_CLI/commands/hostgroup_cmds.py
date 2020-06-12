@@ -85,6 +85,7 @@ class HostGroupCommands():
 
         hg_parser.set_defaults(func=self.print_hg_help)
 
+    @sd.record_exception
     def create(self, args):
         if args.gui == 'gui':
             data = pickle.dumps(
@@ -94,9 +95,11 @@ class HostGroupCommands():
         else:
             self.actuator.create_hostgroup(args.hostgroup, args.host)
 
+    @sd.record_exception
     def show(self, args):
         self.actuator.show_hostgroup(args.hostgroup)
 
+    @sd.record_exception
     def delete(self, args):
         self.actuator.delete_hostgroup(args.hostgroup)
 

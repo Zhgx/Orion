@@ -4,6 +4,22 @@ import pickle
 import sundry as sd
 import iscsi_json
 import execute as ex
+from functools import wraps
+import traceback
+
+
+def record_exception(func):
+    """
+    Decorator providing confirmation of deletion function.
+    :param func: Function to delete linstor resource
+    """
+    def wrapper(self,*args):
+        try:
+            return func(self,*args)
+        except Exception as e:
+            self.logger.write_to_log('result_to_show', 'ERR', '', str(traceback.format_exc()))
+            raise e
+    return wrapper
 
 
 class DiskCommands():
@@ -39,9 +55,14 @@ class DiskCommands():
         self.p_show_disk = p_show_disk
         p_show_disk.set_defaults(func=self.show)
 
+
+
+    @record_exception
     def show(self, args):
         obj_iscsi = ex.Iscsi(self.logger)
         obj_iscsi.show_disk(args.disk)
+
+
 
     def print_disk_help(self, *args):
         self.disk_parser.print_help()

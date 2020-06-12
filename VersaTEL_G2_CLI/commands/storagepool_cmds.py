@@ -160,6 +160,7 @@ class StoragePoolCommands():
         p_show_sp.set_defaults(func=self.show)
 
 
+    @sd.record_exception
     def create(self, args):
         try:
             if args.storagepool and args.node:
@@ -203,25 +204,22 @@ class StoragePoolCommands():
             self.logger.write_to_log('result_to_show','','',str(traceback.format_exc()))
             raise e
 
+    @sd.record_exception
     def show(self, args):
-        try:
-            tb = linstordb.OutputData(self.logger)
-            if args.nocolor:
-                if args.storagepool:
-                    tb.show_sp_one(args.storagepool)
-                else:
-                    result = tb.sp_all()
-                    self.logger.write_to_log('result_to_show','','','',result)
-
+        tb = linstordb.OutputData(self.logger)
+        if args.nocolor:
+            if args.storagepool:
+                tb.show_sp_one(args.storagepool)
             else:
-                if args.storagepool:
-                    tb.show_sp_one_color(args.storagepool)
-                else:
-                    result = tb.sp_all_color()
-                    self.logger.write_to_log('result_to_show','','',result)
-        except Exception as e:
-            self.logger.write_to_log('result_to_show','','',str(traceback.format_exc()))
-            raise e
+                result = tb.sp_all()
+                self.logger.write_to_log('result_to_show','','','',result)
+
+        else:
+            if args.storagepool:
+                tb.show_sp_one_color(args.storagepool)
+            else:
+                result = tb.sp_all_color()
+                self.logger.write_to_log('result_to_show','','',result)
 
 
     def print_resource_help(self, *args):

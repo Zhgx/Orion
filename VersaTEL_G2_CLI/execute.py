@@ -273,7 +273,7 @@ def result_cmd(func):
         result = func(*args)
         if Stor.judge_cmd_result_war(str(result)):
             messege_war = Stor.get_war_mes(result.decode('utf-8'))
-            print(messege_war)
+            # print(messege_war)
         if Stor.judge_cmd_result_suc(str(result)):
             return True
         elif Stor.judge_cmd_result_err(str(result)):
@@ -635,6 +635,7 @@ class Stor():
 
     # 删除node
     def delete_node(self,node):
+        print('2')
         cmd = 'linstor node delete %s' % node
         return self.print_execute_result(cmd)
 

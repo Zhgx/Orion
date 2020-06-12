@@ -144,29 +144,28 @@ class NodeCommands():
 
         node_parser.set_defaults(func=self.print_node_help)
 
+    @sd.record_exception
     def create(self, args):
-        try:
-            if args.gui:
-                result = self.actuator.create_node(args.node, args.ip, args.nodetype)
-                result_pickled = pickle.dumps(result)
-                sd.send_via_socket(result_pickled)
-                return ExitCode.OK
-            elif args.node and args.nodetype and args.ip:
-                self.actuator.create_node(args.node, args.ip, args.nodetype)
-                return ExitCode.OK
-            else:
-                self.p_create_node.print_help()
-                self.logger.write_to_log('result_to_show','','','ARGPARSE_ERROR')
-                return ExitCode.ARGPARSE_ERROR
-        except Exception as e:
-            self.logger.write_to_log('result_to_show','','',str(traceback.format_exc()))
-            raise e
+        if args.gui:
+            result = self.actuator.create_node(args.node, args.ip, args.nodetype)
+            result_pickled = pickle.dumps(result)
+            sd.send_via_socket(result_pickled)
+            return ExitCode.OK
+        elif args.node and args.nodetype and args.ip:
+            self.actuator.create_node(args.node, args.ip, args.nodetype)
+            return ExitCode.OK
+        else:
+            self.p_create_node.print_help()
+            self.logger.write_to_log('result_to_show','','','ARGPARSE_ERROR')
+            return ExitCode.ARGPARSE_ERROR
 
 
     @sd.comfirm_del('node')
+    @sd.record_exception
     def delete(self, args):
         self.actuator.delete_node(args.node)
 
+    @sd.record_exception
     def show(self, args):
         tb = linstordb.OutputData(self.logger)
         if args.nocolor:
@@ -184,6 +183,7 @@ class NodeCommands():
                 result = tb.node_all_color()
                 self.logger.write_to_log('result_to_show', '', '', result)
                 return ExitCode.OK
+
 
     def print_node_help(self, *args):
         self.node_parser.print_help()

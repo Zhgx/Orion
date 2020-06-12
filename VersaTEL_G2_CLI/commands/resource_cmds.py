@@ -10,6 +10,11 @@ import execute as ex
 import linstordb
 
 
+
+
+
+
+
 class usage():
     resource = '''
     resource(r) {create(c)/modify(m)/delete(d)/show(s)}'''
@@ -216,6 +221,7 @@ class ResourceCommands():
         if not re_size.match(size):
             raise InvalidSizeError('Invalid Size')
 
+    @sd.record_exception
     def create(self, args):
         """
         Create a LINSTOR resource. There are three types of creation based on different parameters:
@@ -293,7 +299,7 @@ class ResourceCommands():
         elif args.diskless:
             # 创建resource的diskless资源条件判断，符合则执行
             if args.node and not any(list_diskless_forbid):
-                ex.Stor.create_res_diskless(args.node, args.resource)
+                self.actuator.create_res_diskless(args.node, args.resource)
             else:
                 self.p_create_res.print_help()
 
@@ -301,11 +307,16 @@ class ResourceCommands():
             # 手动添加mirror条件判断，符合则执行
             if all([args.node, args.storagepool]) and not any(
                     [args.auto, args.num]):
-                if self.is_args_correct(args.node, args.storagepool):
-                    ex.Stor.add_mirror_manual(
+                try:
+                    self.is_args_correct(args.node, args.storagepool)
+                    self.actuator.add_mirror_manual(
                         args.resource, args.node, args.storagepool)
-                else:
-                    self.p_create_res.print_help()
+                except NodeAndSPNumError:
+                    print('The number of nodes does not meet the requirements')
+                    self.logger.write_to_log('result_to_show', '', '', str(traceback.format_exc()))
+                    sys.exit()
+                # else:
+                #     self.p_create_res.print_help()
             # 自动添加mirror条件判断，符合则执行
             elif all([args.auto, args.num]) and not any([args.node, args.storagepool]):
                 self.actuator.add_mirror_auto(args.resource, args.num)
@@ -315,6 +326,7 @@ class ResourceCommands():
         else:
             self.p_create_res.print_help()
 
+    @sd.record_exception
     @sd.comfirm_del('resource')
     def delete(self, args):
         if args.node:
@@ -322,6 +334,7 @@ class ResourceCommands():
         elif not args.node:
             self.actuator.delete_resource_all(args.resource)
 
+    @sd.record_exception
     def show(self, args):
         tb = linstordb.OutputData(self.logger)
         if args.nocolor:

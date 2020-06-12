@@ -70,6 +70,7 @@ class MapCommands():
 
         map_parser.set_defaults(func=self.print_map_help)
 
+    @sd.record_exception
     def create(self, args):
         obj_iscsi = ex.Iscsi(self.logger)
         if args.gui == 'gui':
@@ -78,10 +79,12 @@ class MapCommands():
         else:
             obj_iscsi.create_map(args.map, args.hg, args.dg)
 
+    @sd.record_exception
     def show(self, args):
         obj_iscsi = ex.Iscsi(self.logger)
         obj_iscsi.show_map(args.map)
 
+    @sd.record_exception
     def delete(self, args):
         obj_iscsi = ex.Iscsi(self.logger)
         obj_iscsi.delete_map(args.map)

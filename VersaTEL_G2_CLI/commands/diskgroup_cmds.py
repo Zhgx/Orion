@@ -82,6 +82,7 @@ class DiskGroupCommands():
 
         dg_parser.set_defaults(func=self.print_dg_help)
 
+    @sd.record_exception
     def create(self, args):
         if args.gui == 'gui':
             data = pickle.dumps(self.actuator.create_diskgroup(args.diskgroup, args.disk))
@@ -89,9 +90,11 @@ class DiskGroupCommands():
         else:
             self.actuator.create_diskgroup(args.diskgroup, args.disk)
 
+    @sd.record_exception
     def show(self, args):
         self.actuator.show_diskgroup(args.diskgroup)
 
+    @sd.record_exception
     def delete(self, args):
         self.actuator.delete_diskgroup(args.diskgroup)
 
