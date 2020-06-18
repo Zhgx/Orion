@@ -196,13 +196,11 @@ class StoragePoolCommands():
     def modify(self):
         pass
 
+    @sd.record_exception
     @sd.comfirm_del('storage pool')
     def delete(self, args):
-        try:
-            self.actuator.delete_storagepool(args.node, args.storagepool)
-        except Exception as e:
-            self.logger.write_to_log('result_to_show','','',str(traceback.format_exc()))
-            raise e
+        self.actuator.delete_storagepool(args.node, args.storagepool)
+
 
     @sd.record_exception
     def show(self, args):

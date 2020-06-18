@@ -234,7 +234,7 @@ class LINSTORDB():
         for i in range(len(list_data)):
             list_data[i].insert(0, i + 1)
             self.cur.execute(sql, list_data[i])
-            self.logger.write_to_log('LISNTORDB_insert_data', 'sql_insert_data', '', list_data[i])
+            self.logger.write_to_log('LISNTORDB Insert Data', 'sql_insert_data', '', list_data[i])
 
 
     def data_base_dump(self):
@@ -261,7 +261,7 @@ class DataProcess():
     def sql_fetch_one(self, sql):
         self.cur.execute(sql)
         date_set = self.cur.fetchone()
-        self.logger.write_to_log('sql_fetch_one',sql,'',date_set)
+        self.logger.write_to_log('LINSTORDB Select One',sql,'',(date_set[0] if (len(date_set) == 1) else date_set))
         return date_set
 
     # 获取表全部数据的通用方法
@@ -269,7 +269,7 @@ class DataProcess():
         cur = self.cur
         cur.execute(sql)
         date_set = cur.fetchall()
-        self.logger.write_to_log('sql_fetch_all', sql, '', list(date_set))
+        self.logger.write_to_log('LINSTORDB Select All', sql, '', list(date_set))
         return list(date_set)
 
     # Return all data of node table
@@ -298,7 +298,8 @@ class DataProcess():
 
     # resource
     def _get_resource(self):
-        res = []
+        res_used = []
+        result = []
         sql_res_all = "SELECT DISTINCT Resource,Allocated,DeviceName,InUse FROM resourcetb"
         res_all = self.sql_fetch_all(sql_res_all)
 
@@ -306,15 +307,17 @@ class DataProcess():
         in_use = self.sql_fetch_all(sql_res_inuse)
 
 
+
         for i in in_use:
-            res.append(i[0])
+            res_used.append(i[0])
 
+        for res in res_all:
+            if res[3] == 'InUse':
+                result.append(res)
+            if res[0] not in res_used and res[3] == 'Unused':
+                result.append(res)
 
-        for i in res_all:
-            if i[0] in res and i[3] == 'Unused':
-                res_all.remove(i)
-            print(res_all)
-        return res_all
+        return result
 
     def _get_mirro_way(self, res):
         select_sql = "SELECT COUNT(Resource) FROM resourcetb WHERE Resource = \'%s\'" % res
@@ -327,17 +330,7 @@ class DataProcess():
     # storagepool
     # 查询storagepooltb全部信息
     def _select_storagepooltb(self):
-        select_sql = '''SELECT
-            StoragePool,
-            Node,
-            Driver,
-            PoolName,
-            FreeCapacity,
-            TotalCapacity,
-            SupportsSnapshots,
-            State
-            FROM storagepooltb
-            '''
+        select_sql = "SELECT StoragePool,Node,Driver,PoolName,FreeCapacity,TotalCapacity,SupportsSnapshots,State FROM storagepooltb"
         return self.sql_fetch_all(select_sql)
 
     def _res_sum(self, node, stp):
@@ -598,8 +591,10 @@ class OutputData(DataProcess):
             self.logger.write_to_log('result_to_show','','',result)
         except TypeError:
             info_err = str(traceback.format_exc())
-            self.logger.write_to_log('result_to_show','','',info_err)
+            self.logger.write_to_log('Error','TypeError','',info_err)
             print('Node %s does not exist.' % node)
+            self.logger.write_to_log('result_to_show','','',('Node %s does not exist.' % node))
+
 
     def show_node_one(self, node):
         # node = args[0]
@@ -613,8 +608,9 @@ class OutputData(DataProcess):
             result = '\n'.join([info_first, str(info_second), str(info_third)])
             self.logger.write_to_log('result_to_show','','',result)
         except TypeError:
-            self.logger.write_to_log('result_to_show','','',str(traceback.format_exc()))
+            self.logger.write_to_log('Error','TypeError','',str(traceback.format_exc()))
             print('Node %s does not exist.' % node)
+            self.logger.write_to_log('result_to_show','','',('Node %s does not exist.' % node))
 
     """Resource视图
     """
@@ -652,17 +648,23 @@ class OutputData(DataProcess):
             result = '\n'.join([info_first, str(info_second)])
             self.logger.write_to_log('result_to_show','','',result)
         except TypeError:
-            self.logger.write_to_log('result_to_show','','',str(traceback.format_exc()))
+            self.logger.write_to_log('Error','TypeError','',str(traceback.format_exc()))
             print('Resource %s does not exist.' % res)
+            self.logger.write_to_log('result_to_show','','',('Resource %s does not exist.' % res))
 
     def show_res_one(self, res):
         try:
-            print(
+            info_first = (
                 "resource:%s\nmirror_way:%s\nsize:%s\ndevice_name:%s\nused:%s" %
                 self.process_data_resource_one(res))
-            self.res_one(res)
+            print(info_first)
+            info_second = self.res_one(res)
+            result = '\n'.join([info_first, str(info_second)])
+            self.logger.write_to_log('result_to_show','','',result)
         except TypeError:
+            self.logger.write_to_log('Error', 'TypeError', '', str(traceback.format_exc()))
             print('Resource %s does not exist.' % res)
+            self.logger.write_to_log('result_to_show', '', '', ('Resource %s does not exist.' % res))
 
     """stp视图
     """
@@ -741,7 +743,7 @@ class OutputData(DataProcess):
             self.logger.write_to_log('result_to_show', '', '', 'The storagepool does not exist')
         elif node_num == 1:
             info_first = (
-                'Only one node (%s) exists in the storage pool named %s' %
+                'Only onesql_insert_data node (%s) exists in the storage pool named %s' %
                 (node_name, sp))
             info_second = self.sp_one(sp)
             result = '\n'.join([info_first, str(info_second)])

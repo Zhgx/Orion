@@ -1,5 +1,9 @@
 {
     "HostGroup": {
+        "HostGroup1": [
+            "HostA",
+            "HostB"
+        ],
         "paulhost": [
             "HostA",
             "HostB"
@@ -7,11 +11,23 @@
         "test": [
             "htest1",
             "htest2"
-        ],
-        "HostGroup1": [
-            "HostA",
-            "HostB"
         ]
+    },
+    "crm": {
+        "resource": [],
+        "vip": [],
+        "target": []
+    },
+    "Host": {
+        "HostB": "iqn.xxxx:bb",
+        "host_test1": "iqn1",
+        "host1": "iqn1",
+        "HostA": "iqn.xxxx:aa",
+        "htest1": "iqn.1993-08.org.debian:01:bc429d5fc3b",
+        "host_test": "iqn1",
+        "host2": "iqn2",
+        "host": "1",
+        "htest2": "iqn.2020-02.org.debian:02:bc333iscs3b"
     },
     "DiskGroup": {
         "DiskGroup1": [
@@ -29,31 +45,12 @@
             "DiskGroup1"
         ]
     },
-    "crm": {
-        "resource": [],
-        "target": [],
-        "vip": []
-    },
     "Disk": {
-        "res_test3": "/dev/drbd1003",
-        "res_test1": "/dev/drbd1001",
-        "res_test2": "/dev/drbd1002",
         "res_test": "/dev/drbd1000"
     },
-    "Host": {
-        "host2": "iqn2",
-        "host_test1": "iqn1",
-        "htest2": "iqn.2020-02.org.debian:02:bc333iscs3b",
-        "HostA": "iqn.xxxx:aa",
-        "host_test": "iqn1",
-        "htest1": "iqn.1993-08.org.debian:01:bc429d5fc3b",
-        "host": "1",
-        "HostB": "iqn.xxxx:bb",
-        "host1": "iqn1"
-    },
     "Target": {
-        "Target1": "iqn.xxx",
         "Target2": "iqn.xxx",
+        "Target1": "iqn.xxx",
         "Target3": "iqn.xxx"
     }
 }

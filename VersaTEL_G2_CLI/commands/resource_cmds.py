@@ -329,10 +329,15 @@ class ResourceCommands():
     @sd.record_exception
     @sd.comfirm_del('resource')
     def delete(self, args):
-        if args.node:
-            self.actuator.delete_resource_des(args.node, args.resource)
-        elif not args.node:
-            self.actuator.delete_resource_all(args.resource)
+        try:
+            if args.node:
+                self.actuator.delete_resource_des(args.node, args.resource)
+            elif not args.node:
+                self.actuator.delete_resource_all(args.resource)
+        except Exception as e:
+            self.logger.write_to_log('result_to_show', 'ERR', '', str(traceback.format_exc()))
+            raise e
+
 
     @sd.record_exception
     def show(self, args):

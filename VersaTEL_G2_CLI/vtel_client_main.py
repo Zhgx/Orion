@@ -30,6 +30,32 @@ class MyArgumentParser(argparse.ArgumentParser):
             self.error(msg % ' '.join(argv))
         return args
 
+    def print_usage(self, file=None):
+        username = sundry.get_username()
+        transaction_id = sundry.get_transaction_id()
+        logger = log.Log(username, transaction_id)
+        logger.write_to_log('result_to_show', '', '', 'print usage')
+        if file is None:
+            file = sys.stdout
+        self._print_message(self.format_usage(), file)
+
+    def print_help(self, file=None):
+        username = sundry.get_username()
+        transaction_id = sundry.get_transaction_id()
+        logger = log.Log(username, transaction_id)
+        logger.write_to_log('result_to_show', '', '', 'print help')
+        if file is None:
+            file = sys.stdout
+        self._print_message(self.format_help(), file)
+
+    def _print_message(self, message, file=None):
+        if message:
+            if file is None:
+                file = sys.stderr
+            file.write(message)
+
+
+
 
 class VtelCLI(object):
     """
@@ -152,7 +178,7 @@ class VtelCLI(object):
     # When using the parameter '-gui', send the database through the socket
     def send_database(self, args):
         if args.gui:
-            db = linstordb.LINSTORDB(self.username,self.transaction_id)
+            db = linstordb.LINSTORDB(self.logger)
             data = pickle.dumps(db.data_base_dump())
             sundry.send_via_socket(data)
         else:
@@ -160,7 +186,7 @@ class VtelCLI(object):
 
     # When using the parameter '-gui', send the json through the socket
     def send_json(self, args):
-        js = iscsi_json.JSON_OPERATION()
+        js = iscsi_json.JSON_OPERATION(self.logger)
         if args.gui:
             data = js.read_data_json()
             data_pickled = pickle.dumps(data)
@@ -169,7 +195,9 @@ class VtelCLI(object):
             self.parser_iscsi.print_help()
 
     def replay(self,args):
-        self.parser_replay.print_help()
+        pass
+        # import replay_test
+        # replay_test.get_input(args.date,args.transactionid)
 
 
     def run(self):
@@ -192,7 +220,6 @@ def main():
     try:
         cmd = VtelCLI()
         cmd.parse()
-        print(sqlite3.version_info)
     except KeyboardInterrupt:
         sys.stderr.write("\nClient exiting (received SIGINT)\n")
 

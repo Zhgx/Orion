@@ -1,7 +1,7 @@
 import json
 
 
-class JSON_OPERATION:
+class JSON_OPERATION():
 
     def __init__(self,logger):
         self.logger = logger

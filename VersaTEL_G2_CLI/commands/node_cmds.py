@@ -160,8 +160,8 @@ class NodeCommands():
             return ExitCode.ARGPARSE_ERROR
 
 
-    @sd.comfirm_del('node')
     @sd.record_exception
+    @sd.comfirm_del('node')
     def delete(self, args):
         self.actuator.delete_node(args.node)
 

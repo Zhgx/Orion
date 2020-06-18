@@ -203,13 +203,14 @@ class LINSTOR():
         self.logger = logger
 
     def get_linstor(self,cmd):
+        self.logger.write_to_log('Execute LINSTOR CMD','','',cmd)
         Popen_linstor = subprocess.Popen(
             cmd,
             shell=True,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT)
         str_result = Popen_linstor.stdout.read().decode('utf-8')
-        self.logger.write_to_log('LINSTORDB',cmd,'',str_result)
+        self.logger.write_to_log('Result LINSTORDB CMD','',cmd,str_result)
         return str_result
 
     # def get_node(self):
@@ -353,6 +354,7 @@ class Stor():
         cmd - Command to be executed
         timeout - The longest waiting time(unit:second)
         """
+        self.logger.write_to_log('Execute LINSTOR CMD','','',cmd)
         p = subprocess.Popen(cmd, stderr=subprocess.STDOUT, stdout=subprocess.PIPE, shell=True)
         t_beginning = time.time()
         seconds_passed = 0
@@ -362,11 +364,11 @@ class Stor():
             seconds_passed = time.time() - t_beginning
             if timeout and seconds_passed > timeout:
                 p.terminate()
-                self.logger.write_to_log('LINSTOR',cmd,'','TimeoutError')
+                self.logger.write_to_log('Result LINSTOR CMD','','','TimeoutError')
                 raise TimeoutError(cmd, timeout)
             time.sleep(0.1)
         result = p.stdout.read()
-        self.logger.write_to_log('LINSTOR', cmd, '', result)
+        self.logger.write_to_log('Result LINSTOR CMD', '', '', result)
         return result
 
 
@@ -389,8 +391,9 @@ class Stor():
     # 创建resource相关 -- ok
     def linstor_delete_rd(self,res):
         cmd = 'linstor rd d %s' % res
+        self.logger.write_to_log('Execute LINSTOR CMD','delete rd','',cmd)
         result = subprocess.check_output(cmd, shell=True)
-        self.logger.write_to_log('LINSTOR',cmd,'',result)
+        self.logger.write_to_log('Result LINSTOR CMD','delete rd','',result)
 
 
     def linstor_delete_vd(self,res):
@@ -433,7 +436,7 @@ class Stor():
                 return result
         else:
             print('The resource already exists')
-            # cls.logger.add_log(username, 'result_to_show', transaction_id, '', '', 'The resource already exists')
+            self.logger.write_to_log('result_to_show','','','The resource already exists')
             return ('The resource already exists')
 
 
@@ -441,7 +444,7 @@ class Stor():
         flag = OrderedDict()
 
         # Actions needed to create a resource
-        def excute_(cmd):
+        def execute_(cmd):
             try:
                 # Undo the decorator @result_cmd, and execute execute_cmd function
                 ex_cmd = self.execute_cmd.__wrapped__
@@ -458,8 +461,9 @@ class Stor():
                     flag.update(dict_fail)
             except TimeoutError as e:
                 flag.update({node_one: 'Execution creation timeout'})
-                # logger
-                print('%s created timeout on node %s, the operation has been cancelled' % (res, node_one))
+                result = '%s created timeout on node %s, the operation has been cancelled' % (res, node_one)
+                self.logger.write_to_log('result_to_show','','',result)
+                print(result)
 
         if self.linstor_create_rd(res) is True and self.linstor_create_vd(res, size) is True:
             pass
@@ -472,7 +476,7 @@ class Stor():
         if len(sp) == 1:
             for node_one in node:
                 cmd = 'linstor resource create %s %s --storage-pool %s' % (node_one, res, sp[0])
-                excute_(cmd)
+                execute_(cmd)
             if len(flag.keys()) == len(node):
                 self.linstor_delete_rd(res)
             if len(flag.keys()):
@@ -488,7 +492,7 @@ class Stor():
         else:
             for node_one, sp_one in zip(node, sp):
                 cmd = 'linstor resource create %s %s --storage-pool %s' % (node_one, res, sp_one)
-                excute_(cmd)
+                execute_(cmd)
             if len(flag.keys()) == len(node):
                 self.linstor_delete_rd(res)
             # whether_delete_rd()
@@ -509,7 +513,7 @@ class Stor():
 
     def add_mirror_manual(self,res, node, sp):
         flag = OrderedDict()
-        def excute_(cmd):
+        def execute_(cmd):
             try:
                 # Undo the decorator @result_cmd, and execute execute_cmd function
                 ex_cmd = self.execute_cmd.__wrapped__
@@ -541,13 +545,13 @@ class Stor():
             for node_one in node:
                 cmd = 'linstor resource create %s %s --storage-pool %s' % (
                     node_one, res, sp[0])
-                excute_(cmd)
+                execute_(cmd)
             return print_fail_node()
         elif len(node) == len(sp):
             for node_one, stp_one in zip(node, sp):
                 cmd = 'linstor resource create %s %s --storage-pool %s' % (
                     node_one, res, stp_one)
-                excute_(cmd)
+                execute_(cmd)
             return print_fail_node()
         else:
             print('The number of storage pools does not meet the requirements.')

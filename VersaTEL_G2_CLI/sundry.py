@@ -44,19 +44,20 @@ def comfirm_del(type):
     :param func: Function to delete linstor resource
     """
     def decorate(func):
-        @wraps(func)
-        def wrapper(*args):
-            cli_args = args[1]
+        def wrapper(self,*args):
+            cli_args = args[0]
             if cli_args.yes:
-                func(*args)
+                func(self,*args)
             else:
                 print(
                     'Are you sure you want to delete this %s? If yes, enter \'y/yes\'' %
                     type)
                 answer = input()
                 if answer in ['y', 'yes']:
-                    func(*args)
+                    self.logger.write_to_log('Delete Comfirm', '', '', 'y/yes')
+                    func(self,*args)
                 else:
+                    self.logger.write_to_log('result_to_show','','','Delete canceled')
                     print('Delete canceled')
         return wrapper
     return decorate
