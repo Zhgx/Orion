@@ -3,7 +3,9 @@ import sys
 import os
 import pickle
 
+import subprocess
 import linstordb
+import replay
 import log
 import sundry
 import iscsi_json
@@ -144,6 +146,7 @@ class VtelCLI(object):
             '--date',
             dest='date',
             metavar='',
+            nargs=2,
             help='date')
 
         self.parser_stor = parser_stor
@@ -195,6 +198,30 @@ class VtelCLI(object):
             self.parser_iscsi.print_help()
 
     def replay(self,args):
+        logdb = replay.LogDB()
+        logdb.produce_logdb()
+        if args.transactionid and args.date:
+            print('1')
+        elif args.transactionid:
+            cmd = logdb.get_userinput_from_tid(args.transactionid)
+            result = logdb.get_result_from_tid(args.transactionid)
+            print('CMD:%s'%cmd)
+            subprocess.run('python3 %s'%cmd,shell=True)
+            print('--------------------Output comparison--------------------')
+            print(result[0])
+        elif args.date:
+            # python3 vtel_client_main.py re -d '2020/06/16 16:08:00' '2020/06/16 16:08:10'
+            cmds = logdb.get_userinput_from_time(args.date[0],args.date[1])
+            result_all = logdb.get_result_from_time(args.date[0],args.date[1])
+            for cmd,res in zip(cmds,result_all):
+                print('CMD:%s' % cmd)
+                subprocess.run('python3 %s'%cmd,shell=True)
+                print('--------------------Output comparison--------------------')
+                print(res[0])
+                print('========================= next ==========================')
+        else:
+            print('replay help')
+
         pass
         # import replay_test
         # replay_test.get_input(args.date,args.transactionid)
