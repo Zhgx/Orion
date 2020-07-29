@@ -1,10 +1,10 @@
 import json
+import consts
 
 
 class JSON_OPERATION():
-
-    def __init__(self,logger):
-        self.logger = logger
+    def __init__(self):
+        self.logger = consts.get_glo_log()
         self.read_data = self.read_data_json()
 
     # 读取json文档

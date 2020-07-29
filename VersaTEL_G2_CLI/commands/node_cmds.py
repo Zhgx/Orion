@@ -1,12 +1,9 @@
 import argparse
 import pickle
-import sys
-import traceback
-
-import log
 import sundry as sd
 import execute as ex
 import linstordb
+import consts
 from consts import ExitCode
 
 
@@ -31,9 +28,9 @@ class usage():
 
 
 class NodeCommands():
-    def __init__(self,logger):
-        self.logger = logger
-        self.actuator = ex.Stor(logger)
+    def __init__(self):
+        self.logger = consts.get_glo_log()
+        self.actuator = ex.Stor()
 
     def setup_commands(self, parser):
         """

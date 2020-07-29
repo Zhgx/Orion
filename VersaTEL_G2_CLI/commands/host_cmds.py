@@ -1,14 +1,12 @@
 import pickle
 import execute as ex
-
-import iscsi_json
 import sundry as sd
-
+import consts
 
 class HostCommands():
-    def __init__(self,logger):
-        self.logger = logger
-        self.actuator = ex.Iscsi(logger)
+    def __init__(self):
+        self.logger = consts.get_glo_log()
+        self.actuator = ex.Iscsi()
 
     def setup_commands(self, parser):
         """

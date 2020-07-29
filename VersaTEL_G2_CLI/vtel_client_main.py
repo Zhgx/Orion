@@ -8,6 +8,7 @@ import linstordb
 import replay
 import log
 import sundry
+import consts
 import iscsi_json
 from commands import (
     NodeCommands,
@@ -22,29 +23,23 @@ from commands import (
 
 class MyArgumentParser(argparse.ArgumentParser):
     def parse_args(self, args=None, namespace=None):
+        logger = consts.get_glo_log()
         args, argv = self.parse_known_args(args, namespace)
         if argv:
             msg = ('unrecognized arguments: %s')
-            username = sundry.get_username()
-            transaction_id = sundry.get_transaction_id()
-            logger = log.Log(username,transaction_id)
             logger.write_to_log('args_error','','',(msg % ' '.join(argv)))
             self.error(msg % ' '.join(argv))
         return args
 
     def print_usage(self, file=None):
-        username = sundry.get_username()
-        transaction_id = sundry.get_transaction_id()
-        logger = log.Log(username, transaction_id)
+        logger = consts.get_glo_log()
         logger.write_to_log('result_to_show', '', '', 'print usage')
         if file is None:
             file = sys.stdout
         self._print_message(self.format_usage(), file)
 
     def print_help(self, file=None):
-        username = sundry.get_username()
-        transaction_id = sundry.get_transaction_id()
-        logger = log.Log(username, transaction_id)
+        logger = consts.get_glo_log()
         logger.write_to_log('result_to_show', '', '', 'print help')
         if file is None:
             file = sys.stdout
@@ -66,25 +61,22 @@ class VtelCLI(object):
 
 
     def __init__(self):
+        consts._init()
         self.username = sundry.get_username()
         self.transaction_id = sundry.get_transaction_id()
         self.logger = log.Log(self.username,self.transaction_id)
+        consts.set_glo_log(self.logger)
 
-        self._node_commands = NodeCommands(self.logger)
-        self._resource_commands = ResourceCommands(self.logger)
-        self._storagepool_commands = StoragePoolCommands(self.logger)
-        self._disk_commands = DiskCommands(self.logger)
-        self._diskgroup_commands = DiskGroupCommands(self.logger)
-        self._host_commands = HostCommands(self.logger)
-        self._hostgroup_commands = HostGroupCommands(self.logger)
-        self._map_commands = MapCommands(self.logger)
+        self._node_commands = NodeCommands()
+        self._resource_commands = ResourceCommands()
+        self._storagepool_commands = StoragePoolCommands()
+        self._disk_commands = DiskCommands()
+        self._diskgroup_commands = DiskGroupCommands()
+        self._host_commands = HostCommands()
+        self._hostgroup_commands = HostGroupCommands()
+        self._map_commands = MapCommands()
         self._parser = self.setup_parser()
 
-    # def write_to_log(self,type,description1,description2,data):
-    #     logger = log.Log()
-    #     username = self.username
-    #     transaction_id = self.transaction_id
-    #     logger.add_log(username, type, transaction_id, description1, description2, data)
 
     def setup_parser(self):
         parser = MyArgumentParser(prog="vtel")
@@ -189,7 +181,7 @@ class VtelCLI(object):
 
     # When using the parameter '-gui', send the json through the socket
     def send_json(self, args):
-        js = iscsi_json.JSON_OPERATION(self.logger)
+        js = iscsi_json.JSON_OPERATION()
         if args.gui:
             data = js.read_data_json()
             data_pickled = pickle.dumps(data)
@@ -201,7 +193,8 @@ class VtelCLI(object):
         logdb = replay.LogDB()
         logdb.produce_logdb()
         if args.transactionid and args.date:
-            print('1')
+            print('Please specify only one type of data for replay')
+            return
         elif args.transactionid:
             cmd = logdb.get_userinput_from_tid(args.transactionid)
             result = logdb.get_result_from_tid(args.transactionid)

@@ -163,11 +163,11 @@ class LINSTORDB():
         cmds = ['linstor --no-color --no-utf8 n l',
          'linstor --no-color --no-utf8 r lv',
          'linstor --no-color --no-utf8 sp l']
-        sql = [self.replace_ntb_sql,
+        sqls = [self.replace_ntb_sql,
                self.replace_rtb_sql,
                self.replace_stb_sql]
 
-        for cmd,sql in zip(cmds,sql):
+        for cmd,sql in zip(cmds,sqls):
             thread_ins_data = threading.Thread(target=self.thread_get_linstor,args=(cmd,sql))
             thread_all.append(thread_ins_data)
 
@@ -184,18 +184,18 @@ class LINSTORDB():
             thread_all[i].join()
 
     def exc_get_vg(self):
-        obj_lvm = ex.LVM(self.logger)
+        obj_lvm = ex.LVM()
         vg = obj_lvm.refine_vg(obj_lvm.get_vg())
         self.insert_data(self.replace_vgtb_sql, vg)
 
     def exc_get_thinlv(self):
-        obj_lvm = ex.LVM(self.logger)
+        obj_lvm = ex.LVM()
         thinlv = obj_lvm.refine_thinlv(obj_lvm.get_thinlv())
         self.insert_data(self.replace_thinlvtb_sql, thinlv)
 
     def thread_get_linstor(self,cmd,sql):
-        actuator = ex.LINSTOR(self.logger)
-        linstor = actuator.refine_linstor(actuator.get_linstor(cmd))
+        actuator = ex.LINSTOR()
+        linstor = actuator.refine_linstor(ex.execute_cmd(cmd))
         self.insert_data(sql,linstor)
     #
     # def thread_get_node(self):
@@ -379,15 +379,12 @@ class DataProcess():
 
     def process_data_node_specific(self, node):
         date_list = []
-        for n in self._select_resourcetb(node):
-            res_name, stp_name, size, device_name, used, status = n
-            list_one = [res_name, stp_name, size, device_name, used, status]
-            date_list.append(list_one)
+        for res_data in self._select_resourcetb(node):
+            date_list.append(list(res_data))
         return date_list
 
     def process_data_resource_all(self):
         date_list = []
-        list_one = []
         for i in self._get_resource():
             if i[1]:  # 过滤size为空的resource
                 resource, size, device_name, used = i

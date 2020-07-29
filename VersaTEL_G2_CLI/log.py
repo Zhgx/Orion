@@ -95,7 +95,7 @@ class Log(object):
     # write to log file
     def write_to_log(self,type,describe1,describe2,data):
         InputLogger = self.logger_input()
-        InputLogger.logger.removeHandler(self.handler_input)
+        # InputLogger.logger.removeHandler(self.handler_input)
         InputLogger.debug(
             '',
             extra={

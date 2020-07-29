@@ -1,16 +1,14 @@
-import argparse
 import pickle
-import iscsi_json
-
 import execute as ex
 import sundry as sd
+import consts
 
 
 class DiskGroupCommands():
 
-    def __init__(self,logger):
-        self.logger = logger
-        self.actuator = ex.Iscsi(logger)
+    def __init__(self):
+        self.logger = consts.get_glo_log()
+        self.actuator = ex.Iscsi()
 
     def setup_commands(self, parser):
         """

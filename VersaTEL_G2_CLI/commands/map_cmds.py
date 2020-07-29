@@ -3,12 +3,13 @@ import iscsi_json
 
 import execute as ex
 import sundry as sd
+import consts
 
 
 class MapCommands():
 
-    def __init__(self,logger):
-        self.logger = logger
+    def __init__(self):
+        self.logger = consts.get_glo_log()
 
     def setup_commands(self, parser):
         """
@@ -72,7 +73,7 @@ class MapCommands():
 
     @sd.record_exception
     def create(self, args):
-        obj_iscsi = ex.Iscsi(self.logger)
+        obj_iscsi = ex.Iscsi()
         if args.gui == 'gui':
             data = pickle.dumps(obj_iscsi.create_map(args.map, args.hg, args.dg))
             sd.send_via_socket(data)
@@ -81,12 +82,12 @@ class MapCommands():
 
     @sd.record_exception
     def show(self, args):
-        obj_iscsi = ex.Iscsi(self.logger)
+        obj_iscsi = ex.Iscsi()
         obj_iscsi.show_map(args.map)
 
     @sd.record_exception
     def delete(self, args):
-        obj_iscsi = ex.Iscsi(self.logger)
+        obj_iscsi = ex.Iscsi()
         obj_iscsi.delete_map(args.map)
 
     def print_map_help(self, *args):

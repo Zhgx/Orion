@@ -1,11 +1,7 @@
-import argparse
-import pickle
-
-import sundry as sd
-import iscsi_json
-import execute as ex
-from functools import wraps
 import traceback
+import execute as ex
+import consts
+
 
 
 def record_exception(func):
@@ -23,8 +19,8 @@ def record_exception(func):
 
 
 class DiskCommands():
-    def __init__(self,logger):
-        self.logger = logger
+    def __init__(self):
+        self.logger = consts.get_glo_log()
 
 
     def setup_commands(self, parser):
@@ -59,7 +55,7 @@ class DiskCommands():
 
     @record_exception
     def show(self, args):
-        obj_iscsi = ex.Iscsi(self.logger)
+        obj_iscsi = ex.Iscsi()
         obj_iscsi.show_disk(args.disk)
 
 

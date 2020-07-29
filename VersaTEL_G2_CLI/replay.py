@@ -1,8 +1,6 @@
 import re
 import os
-import subprocess
 import sqlite3
-import pprint
 
 list_cmd = []
 

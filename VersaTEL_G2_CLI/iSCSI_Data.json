@@ -46,6 +46,7 @@
         ]
     },
     "Disk": {
+        "res3": "/dev/drbd1001",
         "res_test": "/dev/drbd1000"
     },
     "Target": {

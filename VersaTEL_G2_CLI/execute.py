@@ -4,18 +4,49 @@ import subprocess
 import time
 import traceback
 import iscsi_json
-import log
-import sys
+import consts
 from functools import wraps
 from collections import OrderedDict
+
+
+def execute_cmd(cmd, timeout=60):
+    """
+    Execute the command cmd to return the content of the command output.
+        If it times out, a TimeoutError exception will be thrown.
+    cmd - Command to be executed
+    timeout - The longest waiting time(unit:second)
+    """
+    rpl = 'no'
+    if rpl == 'no':
+        # self.logger.write_to_log('Execute CMD','','',cmd)#记录操作的开始
+        p = subprocess.Popen(cmd, stderr=subprocess.STDOUT, stdout=subprocess.PIPE, shell=True)
+        t_beginning = time.time()
+        seconds_passed = 0
+        while True:
+            if p.poll() is not None:
+                break
+            seconds_passed = time.time() - t_beginning
+            if timeout and seconds_passed > timeout:
+                p.terminate()
+                # self.logger.write_to_log('Result LINSTOR CMD','','','TimeoutError')
+                raise TimeoutError(cmd, timeout)
+            time.sleep(0.1)
+        result = p.stdout.read().decode()
+        # self.logger.write_to_log('Result LINSTOR CMD', '', '', result)
+        return result
+
+    elif rpl == 'yes':
+        db = 'replay数据库'
+        result = '数据库获取到结果'
+        return result
 
 
 class TimeoutError(Exception):
     pass
 
 class CRM():
-    def __init__(self,logger):
-        self.logger = logger
+    def __init__(self):
+        self.logger = consts.get_glo_log()
 
     def re_data(self, crmdatas):
         crmdata = str(crmdatas)
@@ -34,14 +65,17 @@ class CRM():
         return redata
 
     def get_data_crm(self):
-        crmconfig = subprocess.getoutput('crm configure show')
+        cmd = 'crm configure show'
+        # crmconfig = subprocess.getoutput('crm configure show')
+        crmconfig = execute_cmd(cmd)
         self.logger.write_to_log('CRM_CMD','crm configure show','',crmconfig)
         print("do crm configure show")
-        # print("crmconfig:",crmconfig)
         return crmconfig
 
     def get_data_linstor(self):
-        linstorres = subprocess.getoutput('linstor --no-color --no-utf8 r lv')
+        cmd = 'linstor --no-color --no-utf8 r lv'
+        # linstorres = subprocess.getoutput('linstor --no-color --no-utf8 r lv')
+        linstorres = execute_cmd(cmd)
         print("do linstor r lv")
         return linstorres
 
@@ -59,7 +93,8 @@ class CRM():
                + "\" allowed_initiators=\"" + initiator + "\"" \
                + op + meta
         print(mstr)
-        createcrm = subprocess.call(mstr, shell=True)
+        # createcrm = subprocess.call(mstr, shell=True)
+        createcrm = execute_cmd(mstr)
         print("call", mstr)
         if createcrm == 0:
             print("create iSCSILogicalUnit success")
@@ -153,26 +188,29 @@ class CRM():
 
 
 class LVM():
-    def __init__(self,logger):
-        self.logger = logger
+    def __init__(self):
+        self.logger = consts.get_glo_log()
 
     def get_vg(self):
-        result_vg = subprocess.Popen(
-            'vgs',
-            shell=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT)
-        result = result_vg.stdout.read().decode()
+        # result_vg = subprocess.Popen(
+        #     'vgs',
+        #     shell=True,
+        #     stdout=subprocess.PIPE,
+        #     stderr=subprocess.STDOUT)
+        cmd = 'vgs'
+        result = execute_cmd(cmd)
         self.logger.write_to_log('LVM_CMD','vgs','',result)
         return result
 
     def get_thinlv(self):
-        result_thinlv = subprocess.Popen(
-            'lvs',
-            shell=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT)
-        result = result_thinlv.stdout.read().decode()
+        # result_thinlv = subprocess.Popen(
+        #     'lvs',
+        #     shell=True,
+        #     stdout=subprocess.PIPE,
+        #     stderr=subprocess.STDOUT)
+        # result = result_thinlv.stdout.read().decode()
+        cmd = 'lvs'
+        result = execute_cmd(cmd)
         self.logger.write_to_log('LVM_CMD','lvs','',result)
         return result
 
@@ -199,45 +237,20 @@ class LVM():
 
 
 class LINSTOR():
-    def __init__(self,logger):
-        self.logger = logger
+    def __init__(self):
+        self.logger = consts.get_glo_log()
 
-    def get_linstor(self,cmd):
-        self.logger.write_to_log('Execute LINSTOR CMD','','',cmd)
-        Popen_linstor = subprocess.Popen(
-            cmd,
-            shell=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT)
-        str_result = Popen_linstor.stdout.read().decode('utf-8')
-        self.logger.write_to_log('Result LINSTORDB CMD','',cmd,str_result)
-        return str_result
-
-    # def get_node(self):
-    #     result_node = subprocess.Popen(
-    #         'linstor --no-color --no-utf8 n l',
-    #         shell=True,
-    #         stdout=subprocess.PIPE,
-    #         stderr=subprocess.STDOUT)
-    #     return result_node.stdout.read().decode('utf-8')
-    #
-    # @staticmethod
-    # def get_res():
-    #     result_res = subprocess.Popen(
-    #         'linstor --no-color --no-utf8 r lv',
-    #         shell=True,
-    #         stdout=subprocess.PIPE,
-    #         stderr=subprocess.STDOUT)
-    #     return result_res.stdout.read().decode('utf-8')
-    #
-    # @staticmethod
-    # def get_sp():
-    #     result_sp = subprocess.Popen(
-    #         'linstor --no-color --no-utf8 sp l',
-    #         shell=True,
-    #         stdout=subprocess.PIPE,
-    #         stderr=subprocess.STDOUT)
-    #     return result_sp.stdout.read().decode('utf-8')
+    # def get_linstor(self,cmd):
+    #     self.logger.write_to_log('Execute LINSTOR CMD','','',cmd)
+    #     # Popen_linstor = subprocess.Popen(
+    #     #     cmd,
+    #     #     shell=True,
+    #     #     stdout=subprocess.PIPE,
+    #     #     stderr=subprocess.STDOUT)
+    #     str_result = execute_cmd(cmd)
+    #     # str_result = Popen_linstor.stdout.read().decode('utf-8')
+    #     self.logger.write_to_log('Result LINSTORDB CMD','',cmd,str_result)
+    #     return str_result
 
     @staticmethod
     def refine_linstor(table_data):
@@ -262,37 +275,56 @@ class LINSTOR():
         return list_data_all
 
 
-def result_cmd(func):
-    """
-    Decorator for post processing of execution commands.
-    Judge the output of the command.
-    :param result: command stdout
-    :return: True/Command output
-    """
-    @wraps(func)
-    def wrapper(*args):
-        result = func(*args)
-        if Stor.judge_cmd_result_war(str(result)):
-            messege_war = Stor.get_war_mes(result.decode('utf-8'))
-            # print(messege_war)
-        if Stor.judge_cmd_result_suc(str(result)):
-            return True
-        elif Stor.judge_cmd_result_err(str(result)):
-            return result.decode()
-        else:
-            return result.decode()
-    return wrapper
+# def result_cmd(func):
+#     """
+#     Decorator for post processing of execution commands.
+#     Judge the output of the command.
+#     :param result: command stdout
+#     :return: True/Command output
+#     """
+#     @wraps(func)
+#     def wrapper(*args):
+#         result = func(*args)
+#         jug_result = Stor.judge_cmd_result(str(result))
+#         if jug_result == 'WAR':
+#             messege_war = Stor.get_war_mes(result.decode())
+#             # print(messege_war)
+#         if jug_result == 'SUC':
+#             return True
+#         elif jug_result == 'ERR':
+#             return result.decode()
+#         else:
+#             return result.decode()
+#         # elif Stor.judge_cmd_result_err(str(result)):
+#         #     return result.decode()
+#         # else:
+#         #     return result.decode()
+#     return wrapper
 
 
 # 子命令stor调用的方法
 class Stor():
 
-    def __init__(self,logger):
-        self.logger = logger
+    def __init__(self):
+        self.logger = consts.get_glo_log()
+
+    def judge_result(self,result):
+        # 判断结果，对应进行返回
+        jug_result = Stor.re_sort(str(result))
+        if jug_result == 'WAR':
+            messege_war = Stor.get_war_mes(result.decode())
+            # print(messege_war)
+        if jug_result == 'SUC':
+            return True
+        elif jug_result == 'ERR':
+            return result.decode()
+        else:
+            return result.decode()
 
 
     @staticmethod
-    def judge_cmd_result(result):
+    def re_sort(result):
+        # 对命令进行结果根据正则匹配进行分类
         re_suc = re.compile('SUCCESS')
         re_war = re.compile('WARNING')
         re_err = re.compile('ERROR')
@@ -304,23 +336,23 @@ class Stor():
             return 'SUC'
 
 
-    @staticmethod
-    def judge_cmd_result_suc(cmd):
-        re_suc = re.compile('SUCCESS')
-        if re_suc.search(cmd):
-            return True
-
-    @staticmethod
-    def judge_cmd_result_err(cmd):
-        re_err = re.compile('ERROR')
-        if re_err.search(cmd):
-            return True
-
-    @staticmethod
-    def judge_cmd_result_war(cmd):
-        re_err = re.compile('WARNING')
-        if re_err.search(cmd):
-            return True
+    # @staticmethod
+    # def judge_cmd_result_suc(cmd):
+    #     re_suc = re.compile('SUCCESS')
+    #     if re_suc.search(cmd):
+    #         return True
+    #
+    # @staticmethod
+    # def judge_cmd_result_err(cmd):
+    #     re_err = re.compile('ERROR')
+    #     if re_err.search(cmd):
+    #         return True
+    #
+    # @staticmethod
+    # def judge_cmd_result_war(cmd):
+    #     re_err = re.compile('WARNING')
+    #     if re_err.search(cmd):
+    #         return True
 
     @staticmethod
     def judge_no_vg(result, node, vg):
@@ -346,49 +378,56 @@ class Stor():
             return (re_.search(result).group())
 
 
-    @result_cmd
-    def execute_cmd(self,cmd, timeout=60):
-        """
-        Execute the command cmd to return the content of the command output.
-        If it times out, a TimeoutError exception will be thrown.
-        cmd - Command to be executed
-        timeout - The longest waiting time(unit:second)
-        """
-        self.logger.write_to_log('Execute LINSTOR CMD','','',cmd)
-        p = subprocess.Popen(cmd, stderr=subprocess.STDOUT, stdout=subprocess.PIPE, shell=True)
-        t_beginning = time.time()
-        seconds_passed = 0
-        while True:
-            if p.poll() is not None:
-                break
-            seconds_passed = time.time() - t_beginning
-            if timeout and seconds_passed > timeout:
-                p.terminate()
-                self.logger.write_to_log('Result LINSTOR CMD','','','TimeoutError')
-                raise TimeoutError(cmd, timeout)
-            time.sleep(0.1)
-        result = p.stdout.read()
-        self.logger.write_to_log('Result LINSTOR CMD', '', '', result)
-        return result
+    # @result_cmd
+#     def execute_cmd(self,cmd, timeout=60):
+#         """
+#         Execute the command cmd to return the content of the command output.
+#         If it times out, a TimeoutError exception will be thrown.
+#         cmd - Command to be executed
+#         timeout - The longest waiting time(unit:second)
+#         """
+#         rpl = 'no'
+#         if rpl == 'no':
+#             self.logger.write_to_log('Execute LINSTOR CMD','','',cmd)#记录操作的开始
+#             p = subprocess.Popen(cmd, stderr=subprocess.STDOUT, stdout=subprocess.PIPE, shell=True)
+#             t_beginning = time.time()
+#             seconds_passed = 0
+#             while True:
+#                 if p.poll() is not None:
+#                     break
+#                 seconds_passed = time.time() - t_beginning
+#                 if timeout and seconds_passed > timeout:
+#                     p.terminate()
+#                     self.logger.write_to_log('Result LINSTOR CMD','','','TimeoutError')
+#                     raise TimeoutError(cmd, timeout)
+#                 time.sleep(0.1)
+#             result = p.stdout.read()
+#             self.logger.write_to_log('Result LINSTOR CMD', '', '', result)
+#             return result
+#
+#         elif rpl == 'yes':
+#             db = 'replay数据库'
+#             result = '数据库获取到结果'
+#             return result
 
 
     def print_execute_result(self,cmd):
-        result = self.execute_cmd(cmd)
+        cmd_result = execute_cmd(cmd)
+        result = self.judge_result(cmd_result)
         if not result:
-            self.logger.write_to_log('result_to_show','','',result)
+            self.logger.write_to_log('result_to_show','','',result)#finish
             return
         if result is True:
-            print('SUCCESS')
+            print('SUCCESS')#finish
             self.logger.write_to_log('result_to_show','','','SUCCESS')
             return True
         else:
-            print(result)
-            print('FAIL')
+            print('FAIL')#finish
             self.logger.write_to_log('result_to_show',result,'','FAIL')
             return result
 
 
-    # 创建resource相关 -- ok
+    # 创建resource相关
     def linstor_delete_rd(self,res):
         cmd = 'linstor rd d %s' % res
         self.logger.write_to_log('Execute LINSTOR CMD','delete rd','',cmd)
@@ -403,7 +442,8 @@ class Stor():
 
     def linstor_create_rd(self,res):
         cmd_rd = 'linstor rd c %s' % res
-        result = self.execute_cmd(cmd_rd)
+        output = execute_cmd(cmd_rd)
+        result = self.judge_result(output)
         if result is True:
             return True
         else:
@@ -412,7 +452,9 @@ class Stor():
 
     def linstor_create_vd(self,res, size):
         cmd_vd = 'linstor vd c %s %s' % (res, size)
-        result = self.execute_cmd(cmd_vd)
+        output = execute_cmd(cmd_vd)
+        result = self.judge_result(output)
+        print(result)
         if result is True:
             return True
         else:
@@ -424,19 +466,20 @@ class Stor():
     def create_res_auto(self,res, size, num):
         cmd = 'linstor r c %s --auto-place %d' % (res, num)
         if self.linstor_create_rd(res) is True and self.linstor_create_vd(res, size) is True:
-            result = self.execute_cmd(cmd)
+            output = execute_cmd(cmd)
+            result = self.judge_result(output)
             if result is True:
                 print('SUCCESS')
-                self.logger.write_to_log('result_to_show','','','SUCCESS')
+                # self.logger.write_to_log('result_to_show','','','SUCCESS')
                 return True
             else:
                 print('FAIL')
                 self.linstor_delete_rd(res)
-                self.logger.write_to_log('result_to_show','','','FAIL')
+                # self.logger.write_to_log('result_to_show','','','FAIL')
                 return result
         else:
             print('The resource already exists')
-            self.logger.write_to_log('result_to_show','','','The resource already exists')
+            # self.logger.write_to_log('result_to_show','','','The resource already exists')
             return ('The resource already exists')
 
 
@@ -447,22 +490,25 @@ class Stor():
         def execute_(cmd):
             try:
                 # Undo the decorator @result_cmd, and execute execute_cmd function
-                ex_cmd = self.execute_cmd.__wrapped__
-                result = ex_cmd(self, cmd)
-                if Stor.judge_cmd_result_war(str(result)):
-                    print(Stor.get_war_mes(result.decode('utf-8')))
-                if Stor.judge_cmd_result_suc(str(result)):
+                # ex_cmd = self.execute_cmd.__wrapped__
+                # result = ex_cmd(self, cmd)
+                result = execute_cmd(cmd)
+                jud_result = Stor.re_sort(str(result))
+                if jud_result == 'WAR':
+                    print(Stor.get_war_mes(result))
+                if jud_result == 'SUC':
                     result = ('Resource %s was successfully created on Node %s' % (res, node_one))
                     print(result)
-                    self.logger.write_to_log('result_to_show','','',result)
-                elif Stor.judge_cmd_result_err(str(result)):
-                    str_fail_cause = Stor.get_err_detailes(result.decode('utf-8'))
+                    # self.logger.write_to_log('result_to_show','','',result)
+                elif jud_result == 'ERR':
+                    str_fail_cause = Stor.get_err_detailes(result)
                     dict_fail = {node_one: str_fail_cause}
                     flag.update(dict_fail)
+
             except TimeoutError as e:
                 flag.update({node_one: 'Execution creation timeout'})
                 result = '%s created timeout on node %s, the operation has been cancelled' % (res, node_one)
-                self.logger.write_to_log('result_to_show','','',result)
+                # self.logger.write_to_log('result_to_show','','',result)
                 print(result)
 
         if self.linstor_create_rd(res) is True and self.linstor_create_vd(res, size) is True:
@@ -516,16 +562,18 @@ class Stor():
         def execute_(cmd):
             try:
                 # Undo the decorator @result_cmd, and execute execute_cmd function
-                ex_cmd = self.execute_cmd.__wrapped__
-                result = ex_cmd(self, cmd)
-                if Stor.judge_cmd_result_war(str(result)):
-                    print(Stor.get_war_mes(result.decode('utf-8')))
-                if Stor.judge_cmd_result_suc(str(result)):
+                # ex_cmd = self.execute_cmd.__wrapped__
+                # result = ex_cmd(self, cmd)
+                result = execute_cmd(cmd)
+                jud_result = Stor.re_sort(str(result))
+                if jud_result == 'WAR':
+                    print(Stor.get_war_mes(result))
+                if jud_result == 'SUC':
                     result = ('Resource %s was successfully created on Node %s' % (res, node_one))
                     print(result)
                     self.logger.write_to_log('result_to_show','','',result)
-                elif Stor.judge_cmd_result_err(str(result)):
-                    str_fail_cause = Stor.get_err_detailes(result.decode('utf-8'))
+                elif jud_result == 'ERR':
+                    str_fail_cause = Stor.get_err_detailes(result)
                     dict_fail = {node_one: str_fail_cause}
                     flag.update(dict_fail)
             except TimeoutError as e:
@@ -574,18 +622,14 @@ class Stor():
     # 创建storagepool
     def create_storagepool_lvm(self,node, stp, vg):
         cmd = 'linstor storage-pool create lvm %s %s %s' % (node, stp, vg)
-        action = subprocess.run(
-            cmd,
-            shell=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT)
-        result = action.stdout
-        self.logger.write_to_log('LINSTOR', cmd, '', result.decode())
-        if Stor.judge_cmd_result_war(str(result)):
-            print(result.decode('utf-8'))
-            self.logger.write_to_log('result_to_show','','',result.decode())
+        result = execute_cmd(cmd)
+        jud_result = Stor.re_sort(str(result))
+        # self.logger.write_to_log('LINSTOR', cmd, '', result.decode())
+        if jud_result == 'WAR':
+            print(result)
+            self.logger.write_to_log('result_to_show','','',result)
         # 发生ERROR的情况
-        if Stor.judge_cmd_result_err(str(result)):
+        if jud_result == 'ERR':
             # 使用不存的vg
             if Stor.judge_no_vg(str(result), node, vg):
                 # 获取和打印提示信息
@@ -598,12 +642,12 @@ class Stor():
                     (node, stp), shell=True)
                 self.logger.write_to_log('LINSTOR','linstor --no-color storage-pool delete %s %s'%(node, stp), 'post-processing', result_del.decode())
             else:
-                print(result.decode('utf-8'))
+                print(result)
                 print('FAIL')
                 self.logger.write_to_log('result_to_show',str(result),'','FAIL') # result为其他ERROR信息
-                return result.decode()
+                return result
         # 成功
-        elif Stor.judge_cmd_result_suc(str(result)):
+        elif jud_result == 'SUC':
             print('SUCCESS')
             self.logger.write_to_log('LINSTOR',cmd,'',str(result))
             self.logger.write_to_log('result_to_show','','','SUCCESS')
@@ -639,14 +683,13 @@ class Stor():
 
     # 删除node
     def delete_node(self,node):
-        print('2')
         cmd = 'linstor node delete %s' % node
         return self.print_execute_result(cmd)
 
 
 class Iscsi():
-    def __init__(self,logger):
-        self.logger = logger
+    def __init__(self):
+        self.logger = consts.get_glo_log()
 
     # 获取并更新crm信息
     def crm_up(self, js):
@@ -670,9 +713,9 @@ class Iscsi():
             hostiqn.append(iqn)
         mapdata.update({'host_iqn': hostiqn})
         disk = js.get_data('DiskGroup').get(dg)
-        linstor_obj = Stor(self.logger)
+        linstor_obj = Stor()
         data = linstor_obj
-        linstorlv = LINSTOR.refine_linstor(data)
+        linstorlv = LINSTOR.refine_linstor(LINSTOR,data)
         diskd = {}
         for d in linstorlv:
             for i in disk:
@@ -737,9 +780,8 @@ class Iscsi():
 
 
     def show_disk(self,disk):
-        js = iscsi_json.JSON_OPERATION(self.logger)
-
-        data = LINSTOR.get_linstor(LINSTOR(self.logger),'linstor --no-color --no-utf8 r lv')
+        js = iscsi_json.JSON_OPERATION()
+        data = execute_cmd('linstor --no-color --no-utf8 r lv')
         linstorlv = LINSTOR.refine_linstor(data)
         disks = {}
         for d in linstorlv:
@@ -764,7 +806,7 @@ class Iscsi():
 
 
     def create_host(self,host, iqn):
-        js = iscsi_json.JSON_OPERATION(self.logger)
+        js = iscsi_json.JSON_OPERATION()
         print("Host name:", host)
         print("iqn:", iqn)
         if js.check_key('Host', host):
@@ -777,7 +819,7 @@ class Iscsi():
             return True
 
     def show_host(self,host):
-        js = iscsi_json.JSON_OPERATION(self.logger)
+        js = iscsi_json.JSON_OPERATION()
         if host == 'all' or host is None:
             hosts = js.get_data("Host")
             print(" " + "{:<15}".format("Hostname") + "Iqn")
@@ -796,7 +838,7 @@ class Iscsi():
         return True
 
     def delete_host(self,host):
-        js = iscsi_json.JSON_OPERATION(self.logger)
+        js = iscsi_json.JSON_OPERATION()
         print("Delete the host <", host, "> ...")
         if js.check_key('Host', host):
             if js.check_value('HostGroup', host):
@@ -812,7 +854,7 @@ class Iscsi():
             return False
 
     def create_diskgroup(self,diskgroup, disk):
-        js = iscsi_json.JSON_OPERATION(self.logger)
+        js = iscsi_json.JSON_OPERATION()
         # print("Diskgroup name:", diskgroup)
         # print("Disk name:", disk)
         if js.check_key('DiskGroup', diskgroup):
@@ -843,7 +885,7 @@ class Iscsi():
                 return False
 
     def show_diskgroup(self,dg):
-        js = iscsi_json.JSON_OPERATION(self.logger)
+        js = iscsi_json.JSON_OPERATION()
         if dg == 'all' or dg is None:
             print("Diskgroup:")
             diskgroups = js.get_data("DiskGroup")
@@ -866,7 +908,7 @@ class Iscsi():
                 print("Fail! Can't find " + dg)
 
     def delete_diskgroup(self,dg):
-        js = iscsi_json.JSON_OPERATION(self.logger)
+        js = iscsi_json.JSON_OPERATION()
         print("Delete the diskgroup <", dg, "> ...")
         self.logger.write_to_log('result_to_show','','',("Delete the diskgroup <", dg, "> ..."))
         if js.check_key('DiskGroup', dg):
@@ -882,7 +924,7 @@ class Iscsi():
             self.logger.write_to_log('result_to_show', '', '',("Fail! Can't find " + dg))
 
     def create_hostgroup(self,hostgroup, host):
-        js = iscsi_json.JSON_OPERATION(self.logger)
+        js = iscsi_json.JSON_OPERATION()
         print("Hostgroup name:", hostgroup)
         print("Host name:", host)
         self.logger.write_to_log('result_to_show', '', '',("Hostgroup name:", hostgroup) )
@@ -915,7 +957,7 @@ class Iscsi():
                 return False
 
     def show_hostgroup(self,hg):
-        js = iscsi_json.JSON_OPERATION(self.logger)
+        js = iscsi_json.JSON_OPERATION()
         if hg == 'all' or hg is None:
             print("Hostgroup:")
             hostgroups = js.get_data("HostGroup")
@@ -938,7 +980,7 @@ class Iscsi():
                 self.logger.write_to_log('result_to_show', '', '', ("Fail! Can't find " + hg))
 
     def delete_hostgroup(self,hg):
-        js = iscsi_json.JSON_OPERATION(self.logger)
+        js = iscsi_json.JSON_OPERATION()
         print("Delete the hostgroup <", hg, "> ...")
         self.logger.write_to_log('result_to_show', '', '', ("Delete the hostgroup <", hg, "> ..."))
         if js.check_key('HostGroup', hg):
@@ -954,7 +996,7 @@ class Iscsi():
             self.logger.write_to_log('result_to_show', '', '', ("Fail! Can't find " + hg))
 
     def create_map(self, map, hg, dg):
-        js = iscsi_json.JSON_OPERATION(self.logger)
+        js = iscsi_json.JSON_OPERATION()
         print("Map name:", map)
         print("Hostgroup name:", hg)
         print("Diskgroup name:", dg)
@@ -995,7 +1037,7 @@ class Iscsi():
                     return False
 
     def show_map(self,map):
-        js = iscsi_json.JSON_OPERATION(self.logger)
+        js = iscsi_json.JSON_OPERATION()
         if map == 'all' or map is None:
             print("Map:")
             maps = js.get_data("Map")
@@ -1025,7 +1067,7 @@ class Iscsi():
                 self.logger.write_to_log('result_to_show', '', '', ("Fail! Can't find " + map))
 
     def delete_map(self,map):
-        js = iscsi_json.JSON_OPERATION(self.logger)
+        js = iscsi_json.JSON_OPERATION()
         print("Delete the map <", map, ">...")
         self.logger.write_to_log('result_to_show', '', '', ("Delete the map <", map, ">..."))
         if js.check_key('Map', map):
