@@ -2,43 +2,97 @@
 import re
 import subprocess
 import time
-import traceback
 import iscsi_json
 import consts
-from functools import wraps
 from collections import OrderedDict
 
 
-def execute_cmd(cmd, timeout=60):
+
+def re_findall(re_string, tgt_string):
+    re_login = re.compile(re_string)
+    re_result = re_login.findall(tgt_string)
+    return re_result
+
+def re_search(re_string,tgt_stirng):
+    re_ = re.compile(re_string)
+    re_result = re_.search(tgt_stirng).group()
+    return re_result
+
+
+def execute_linstor_cmd(cmd,timeout=60):
+    p = subprocess.Popen(cmd, stderr=subprocess.STDOUT, stdout=subprocess.PIPE, shell=True)
+    t_beginning = time.time()
+    seconds_passed = 0
+    while True:
+        if p.poll() is not None:
+            break
+        seconds_passed = time.time() - t_beginning
+        if timeout and seconds_passed > timeout:
+            p.terminate()
+            raise TimeoutError(cmd, timeout)
+        time.sleep(0.1)
+    output = p.stdout.read().decode()
+    result = Stor.re_sort(output)
+    return result
+
+
+
+def execute_crm_cmd(cmd, timeout=60):
     """
     Execute the command cmd to return the content of the command output.
-        If it times out, a TimeoutError exception will be thrown.
+    If it times out, a TimeoutError exception will be thrown.
     cmd - Command to be executed
     timeout - The longest waiting time(unit:second)
     """
-    rpl = 'no'
-    if rpl == 'no':
-        # self.logger.write_to_log('Execute CMD','','',cmd)#记录操作的开始
-        p = subprocess.Popen(cmd, stderr=subprocess.STDOUT, stdout=subprocess.PIPE, shell=True)
-        t_beginning = time.time()
-        seconds_passed = 0
-        while True:
-            if p.poll() is not None:
-                break
-            seconds_passed = time.time() - t_beginning
-            if timeout and seconds_passed > timeout:
-                p.terminate()
-                # self.logger.write_to_log('Result LINSTOR CMD','','','TimeoutError')
-                raise TimeoutError(cmd, timeout)
-            time.sleep(0.1)
-        result = p.stdout.read().decode()
-        # self.logger.write_to_log('Result LINSTOR CMD', '', '', result)
-        return result
+    p = subprocess.Popen(cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
+    t_beginning = time.time()
+    seconds_passed = 0
+    while True:
+        if p.poll() is not None:
+            break
+        seconds_passed = time.time() - t_beginning
+        if timeout and seconds_passed > timeout:
+            p.terminate()
+            raise TimeoutError(cmd, timeout)
+        time.sleep(0.1)
+    out,err = p.communicate()
+    # crm 命令，可以这样
+    if len(out) > 0:
+        out = out.decode()
+        output = {'sts': 1, 'rst': out}
+        return output
+    if len(err) > 0:
+        err = err.decode()
+        output = {'sts': 0, 'rst': err}
+        return output
+    if out == b'':# 需要再考虑一下
+        out = out.decode()
+        output = {'sts': 1, 'rst': out}
+        return output
 
-    elif rpl == 'yes':
-        db = 'replay数据库'
-        result = '数据库获取到结果'
-        return result
+    # if out:
+    #     out = out.decode()
+    #     return out
+    #
+    # elif err:
+    #     err = err.decode()
+    #     return err
+
+
+
+def get_cmd(ssh_obj, unique_str, cmd, oprt_id):
+    logger = consts.get_glo_log()
+    global RPL
+    RPL = 'no'
+    if RPL == 'no':
+        logger.write_to_log('F', 'DATA', 'STR', unique_str, '', oprt_id)
+        logger.write_to_log('T', 'OPRT', 'cmd', 'ssh', oprt_id, cmd)
+        result_cmd = ssh_obj.execute_command(cmd)
+        logger.write_to_log('F', 'DATA', 'cmd', 'ssh', oprt_id, result_cmd)
+        return result_cmd
+    elif RPL == 'yes':
+        pass
+
 
 
 class TimeoutError(Exception):
@@ -61,122 +115,176 @@ class CRM():
             pvip.findall(crmdata),
             ptarget.findall(crmdata)]
         print("get crm config data")
-        self.logger.write_to_log('CRM_Regular','Regular matching to get data','',redata)
         return redata
 
     def get_data_crm(self):
         cmd = 'crm configure show'
         # crmconfig = subprocess.getoutput('crm configure show')
-        crmconfig = execute_cmd(cmd)
-        self.logger.write_to_log('CRM_CMD','crm configure show','',crmconfig)
+        crmconfig = execute_crm_cmd(cmd)
         print("do crm configure show")
         return crmconfig
 
-    def get_data_linstor(self):
-        cmd = 'linstor --no-color --no-utf8 r lv'
-        # linstorres = subprocess.getoutput('linstor --no-color --no-utf8 r lv')
-        linstorres = execute_cmd(cmd)
-        print("do linstor r lv")
-        return linstorres
+    # def get_data_linstor(self):
+    #     cmd = 'linstor --no-color --no-utf8 r lv'
+    #     # linstorres = subprocess.getoutput('linstor --no-color --no-utf8 r lv')
+    #     linstorres = execute_cmd(cmd)
+    #     print("do linstor r lv")
+    #     return linstorres
 
-    def createres(self, res, hostiqn, targetiqn):
+    def create_res(self, res, hostiqn, targetiqn):
         initiator = " ".join(hostiqn)
         lunid = str(int(res[1][1:]))
-        op = " op start timeout=40 interval=0" \
-             " op stop timeout=40 interval=0" \
-             " op monitor timeout=40 interval=15"
-        meta = " meta target-role=Stopped"
-        mstr = "crm conf primitive " + res[0] \
-               + " iSCSILogicalUnit params target_iqn=\"" + targetiqn \
-               + "\" implementation=lio-t lun=" + lunid \
-               + " path=\"" + res[2] \
-               + "\" allowed_initiators=\"" + initiator + "\"" \
-               + op + meta
-        print(mstr)
+
+        script = f'crm conf primitive {res[0]}  iSCSILogicalUnit params ' \
+            f'target_iqn= "{targetiqn}" ' \
+            f'implementation=lio-t ' \
+            f'lun="{lunid}" ' \
+            f'path="{res[2]}" ' \
+            f'allowed_initiators="{initiator}"' \
+            f'op start timeout=40 interval=0 ' \
+            f'op stop timeout=40 interval=0 ' \
+            f'op monitor timeout=40 interval=15 ' \
+            f'meta target-role=Stopped'
+
+        print(script)
+
+        # op = " op start timeout=40 interval=0" \
+        #      " op stop timeout=40 interval=0" \
+        #      " op monitor timeout=40 interval=15"
+        # meta = " meta target-role=Stopped"
+        # mstr = "crm conf primitive " + res[0] \
+        #        + " iSCSILogicalUnit params target_iqn=\"" + targetiqn \
+        #        + "\" implementation=lio-t lun=" + lunid \
+        #        + " path=\"" + res[2] \
+        #        + "\" allowed_initiators=\"" + initiator + "\"" \
+        #        + op + meta
+        # print(mstr)
         # createcrm = subprocess.call(mstr, shell=True)
-        createcrm = execute_cmd(mstr)
-        print("call", mstr)
-        if createcrm == 0:
-            print("create iSCSILogicalUnit success")
+        result = execute_linstor_cmd(script)
+        print("call", script)
+        if result['sts']:
+            print("Create iSCSILogicalUnit success")
             return True
         else:
             return False
 
-    def delres(self, res):
-        # crm res stop <LUN_NAME>
-        stopsub = subprocess.call("crm res stop " + res, shell=True)
-        if stopsub == 0:
-            print("crm res stop " + res)
-            n = 0
-            while n < 10:
-                n += 1
-                if self.resstate(res):
-                    print(res + " is Started, Wait a moment...")
-                    time.sleep(1)
-                else:
-                    print(res + " is Stopped")
-                    break
-            else:
-                print("Stop ressource " + res + " fail, Please try again.")
-                return False
-
-            time.sleep(3)
-            # crm conf del <LUN_NAME>
-            delsub = subprocess.call("crm conf del " + res, shell=True)
-            if delsub == 0:
-                print("crm conf del " + res)
-                return True
-            else:
-                print("crm delete fail")
-                return False
+    # 停用res
+    def stop_res(self,res):
+        result = subprocess.call("crm res stop " + res, shell=True)
+        if result == 0:
+            return True
         else:
             print("crm res stop fail")
             return False
+    # 检查
+    def checkout_statu(self,res):
+        n = 0
+        while n < 10:
+            n += 1
+            if self.get_res_state(res):
+                print(res + " is Started, Wait a moment...")
+                time.sleep(1)
+            else:
+                print(res + " is Stopped")
+                break
+        else:
+            print("Stop ressource " + res + " fail, Please try again.")
+            return False
 
-    def createco(self, res, target):
+    def delres(self, res):
+        # crm res stop <LUN_NAME>
+        if self.stop_res(res):
+            if self.checkout_statu(res) is not False:
+                time.sleep(3)
+                # crm conf del <LUN_NAME>
+                delsub = subprocess.call("crm conf del " + res, shell=True)
+                if delsub == 0:
+                    print("crm conf del " + res)
+                    return True
+                else:
+                    print("crm delete fail")
+                    return False
+
+        # stopsub = subprocess.call("crm res stop " + res, shell=True)
+        # if stopsub == 0:
+        #     print("crm res stop " + res)
+        #     n = 0
+        #     while n < 10:
+        #         n += 1
+        #         if self.resstate(res):
+        #             print(res + " is Started, Wait a moment...")
+        #             time.sleep(1)
+        #         else:
+        #             print(res + " is Stopped")
+        #             break
+        #     else:
+        #         print("Stop ressource " + res + " fail, Please try again.")
+        #         return False
+        #
+        #     time.sleep(3)
+        #     # crm conf del <LUN_NAME>
+        #     delsub = subprocess.call("crm conf del " + res, shell=True)
+        #     if delsub == 0:
+        #         print("crm conf del " + res)
+        #         return True
+        #     else:
+        #         print("crm delete fail")
+        #         return False
+        # else:
+        #     print("crm res stop fail")
+        #     return False
+
+    def create_col(self, res, target):
         # crm conf colocation <COLOCATION_NAME> inf: <LUN_NAME> <TARGET_NAME>
         print("crm conf colocation co_" + res + " inf: " + res + " " + target)
-        coclocation = subprocess.call(
-            "crm conf colocation co_" +
-            res +
-            " inf: " +
-            res +
-            " " +
-            target,
-            shell=True)
-        if coclocation == 0:
+        cmd = f'crm conf colocation co_{res} inf: {res} {target}'
+        result = execute_crm_cmd(cmd)
+        # coclocation = subprocess.call(
+        #     "crm conf colocation co_" +
+        #     res +
+        #     " inf: " +
+        #     res +
+        #     " " +
+        #     target,
+        #     shell=True)
+        if result == 0:
             print("set coclocation")
             return True
         else:
             return False
 
-    def createor(self, res, target):
+    def create_order(self, res, target):
         # crm conf order <ORDER_NAME1> <TARGET_NAME> <LUN_NAME>
         print("crm conf order or_" + res + " " + target + " " + res)
-        order = subprocess.call(
-            "crm conf order or_" +
-            res +
-            " " +
-            target +
-            " " +
-            res,
-            shell=True)
-        if order == 0:
+
+        cmd = f'cmr conf order or_{res} {target} {res}'
+        result = execute_crm_cmd(cmd)
+        # order = subprocess.call(
+        #     "crm conf order or_" +
+        #     res +
+        #     " " +
+        #     target +
+        #     " " +
+        #     res,
+        #     shell=True)
+        if result == 0:
             print("set order")
             return True
         else:
             return False
 
-    def resstart(self, res):
+    def res_start(self, res):
         # crm res start <LUN_NAME>
         print("crm res start " + res)
-        start = subprocess.call("crm res start " + res, shell=True)
-        if start == 0:
+        cmd = f'crm res start {res}'
+        result = execute_crm_cmd(cmd)
+        # start = subprocess.call("crm res start " + res, shell=True)
+        if result == 0:
             return True
         else:
             return False
 
-    def resstate(self, res):
+    def get_res_state(self, res):
         crm_show = self.get_data_crm()
         redata = self.re_data(crm_show)
         for s in redata[0]:
@@ -192,46 +300,35 @@ class LVM():
         self.logger = consts.get_glo_log()
 
     def get_vg(self):
-        # result_vg = subprocess.Popen(
-        #     'vgs',
-        #     shell=True,
-        #     stdout=subprocess.PIPE,
-        #     stderr=subprocess.STDOUT)
         cmd = 'vgs'
-        result = execute_cmd(cmd)
-        self.logger.write_to_log('LVM_CMD','vgs','',result)
-        return result
+        result = execute_crm_cmd(cmd)
+        if result:
+            return result['rst']
 
     def get_thinlv(self):
-        # result_thinlv = subprocess.Popen(
-        #     'lvs',
-        #     shell=True,
-        #     stdout=subprocess.PIPE,
-        #     stderr=subprocess.STDOUT)
-        # result = result_thinlv.stdout.read().decode()
         cmd = 'lvs'
-        result = execute_cmd(cmd)
-        self.logger.write_to_log('LVM_CMD','lvs','',result)
-        return result
+        result = execute_crm_cmd(cmd)
+        if result:
+            return result['rst']
 
     def refine_thinlv(self,str):
-        list_tb = str.splitlines()
+        all_lv = str.splitlines()
         list_thinlv = []
         re_ = re.compile(
             r'\s*(\S*)\s*(\S*)\s*\S*\s*(\S*)\s*\S*\s*\S*\s*\S*\s*?')
-        for list_one in list_tb:
-            if 'twi' in list_one:
-                thinlv_one = re_.findall(list_one)
+        for one in all_lv:
+            if 'twi' in one:
+                thinlv_one = re_.findall(one)
                 list_thinlv.append(list(thinlv_one[0]))
         return list_thinlv
 
     def refine_vg(self,str):
-        list_tb = str.splitlines()
+        all_vg = str.splitlines()
         list_vg = []
         re_ = re.compile(
             r'\s*(\S*)\s*\S*\s*\S*\s*\S*\s*\S*\s*(\S*)\s*(\S*)\s*?')
-        for list_one in list_tb[1:]:
-            vg_one = re_.findall(list_one)
+        for one in all_vg[1:]:
+            vg_one = re_.findall(one)
             list_vg.append(list(vg_one[0]))
         return list_vg
 
@@ -239,18 +336,6 @@ class LVM():
 class LINSTOR():
     def __init__(self):
         self.logger = consts.get_glo_log()
-
-    # def get_linstor(self,cmd):
-    #     self.logger.write_to_log('Execute LINSTOR CMD','','',cmd)
-    #     # Popen_linstor = subprocess.Popen(
-    #     #     cmd,
-    #     #     shell=True,
-    #     #     stdout=subprocess.PIPE,
-    #     #     stderr=subprocess.STDOUT)
-    #     str_result = execute_cmd(cmd)
-    #     # str_result = Popen_linstor.stdout.read().decode('utf-8')
-    #     self.logger.write_to_log('Result LINSTORDB CMD','',cmd,str_result)
-    #     return str_result
 
     @staticmethod
     def refine_linstor(table_data):
@@ -275,31 +360,6 @@ class LINSTOR():
         return list_data_all
 
 
-# def result_cmd(func):
-#     """
-#     Decorator for post processing of execution commands.
-#     Judge the output of the command.
-#     :param result: command stdout
-#     :return: True/Command output
-#     """
-#     @wraps(func)
-#     def wrapper(*args):
-#         result = func(*args)
-#         jug_result = Stor.judge_cmd_result(str(result))
-#         if jug_result == 'WAR':
-#             messege_war = Stor.get_war_mes(result.decode())
-#             # print(messege_war)
-#         if jug_result == 'SUC':
-#             return True
-#         elif jug_result == 'ERR':
-#             return result.decode()
-#         else:
-#             return result.decode()
-#         # elif Stor.judge_cmd_result_err(str(result)):
-#         #     return result.decode()
-#         # else:
-#         #     return result.decode()
-#     return wrapper
 
 
 # 子命令stor调用的方法
@@ -310,13 +370,13 @@ class Stor():
 
     def judge_result(self,result):
         # 判断结果，对应进行返回
-        jug_result = Stor.re_sort(str(result))
-        if jug_result == 'WAR':
+        jug_result = result
+        if jug_result == 'war':
             messege_war = Stor.get_war_mes(result.decode())
             # print(messege_war)
-        if jug_result == 'SUC':
+        if jug_result == 'suc':
             return True
-        elif jug_result == 'ERR':
+        elif jug_result == 'err':
             return result.decode()
         else:
             return result.decode()
@@ -329,30 +389,11 @@ class Stor():
         re_war = re.compile('WARNING')
         re_err = re.compile('ERROR')
         if re_war.search(result):
-            return 'WAR'
+            return 'war'
         elif re_err.search(result):
-            return 'ERR'
+            return 'err'
         elif re_suc.search(result):
-            return 'SUC'
-
-
-    # @staticmethod
-    # def judge_cmd_result_suc(cmd):
-    #     re_suc = re.compile('SUCCESS')
-    #     if re_suc.search(cmd):
-    #         return True
-    #
-    # @staticmethod
-    # def judge_cmd_result_err(cmd):
-    #     re_err = re.compile('ERROR')
-    #     if re_err.search(cmd):
-    #         return True
-    #
-    # @staticmethod
-    # def judge_cmd_result_war(cmd):
-    #     re_err = re.compile('WARNING')
-    #     if re_err.search(cmd):
-    #         return True
+            return 'suc'
 
     @staticmethod
     def judge_no_vg(result, node, vg):
@@ -378,71 +419,32 @@ class Stor():
             return (re_.search(result).group())
 
 
-    # @result_cmd
-#     def execute_cmd(self,cmd, timeout=60):
-#         """
-#         Execute the command cmd to return the content of the command output.
-#         If it times out, a TimeoutError exception will be thrown.
-#         cmd - Command to be executed
-#         timeout - The longest waiting time(unit:second)
-#         """
-#         rpl = 'no'
-#         if rpl == 'no':
-#             self.logger.write_to_log('Execute LINSTOR CMD','','',cmd)#记录操作的开始
-#             p = subprocess.Popen(cmd, stderr=subprocess.STDOUT, stdout=subprocess.PIPE, shell=True)
-#             t_beginning = time.time()
-#             seconds_passed = 0
-#             while True:
-#                 if p.poll() is not None:
-#                     break
-#                 seconds_passed = time.time() - t_beginning
-#                 if timeout and seconds_passed > timeout:
-#                     p.terminate()
-#                     self.logger.write_to_log('Result LINSTOR CMD','','','TimeoutError')
-#                     raise TimeoutError(cmd, timeout)
-#                 time.sleep(0.1)
-#             result = p.stdout.read()
-#             self.logger.write_to_log('Result LINSTOR CMD', '', '', result)
-#             return result
-#
-#         elif rpl == 'yes':
-#             db = 'replay数据库'
-#             result = '数据库获取到结果'
-#             return result
-
-
     def print_execute_result(self,cmd):
-        cmd_result = execute_cmd(cmd)
+        cmd_result = execute_linstor_cmd(cmd)
         result = self.judge_result(cmd_result)
         if not result:
-            self.logger.write_to_log('result_to_show','','',result)#finish
             return
         if result is True:
-            print('SUCCESS')#finish
-            self.logger.write_to_log('result_to_show','','','SUCCESS')
+            print('SUCCESS')
             return True
         else:
-            print('FAIL')#finish
-            self.logger.write_to_log('result_to_show',result,'','FAIL')
+            print('FAIL')
             return result
 
 
     # 创建resource相关
     def linstor_delete_rd(self,res):
         cmd = 'linstor rd d %s' % res
-        self.logger.write_to_log('Execute LINSTOR CMD','delete rd','',cmd)
         result = subprocess.check_output(cmd, shell=True)
-        self.logger.write_to_log('Result LINSTOR CMD','delete rd','',result)
 
 
     def linstor_delete_vd(self,res):
         cmd = 'linstor vd d %s' % res
         result = subprocess.check_output(cmd, shell=True)
-        self.logger.write_to_log('LINSTOR',cmd,'',result)
 
     def linstor_create_rd(self,res):
         cmd_rd = 'linstor rd c %s' % res
-        output = execute_cmd(cmd_rd)
+        output = execute_linstor_cmd(cmd_rd)
         result = self.judge_result(output)
         if result is True:
             return True
@@ -452,7 +454,7 @@ class Stor():
 
     def linstor_create_vd(self,res, size):
         cmd_vd = 'linstor vd c %s %s' % (res, size)
-        output = execute_cmd(cmd_vd)
+        output = execute_linstor_cmd(cmd_vd)
         result = self.judge_result(output)
         print(result)
         if result is True:
@@ -466,20 +468,17 @@ class Stor():
     def create_res_auto(self,res, size, num):
         cmd = 'linstor r c %s --auto-place %d' % (res, num)
         if self.linstor_create_rd(res) is True and self.linstor_create_vd(res, size) is True:
-            output = execute_cmd(cmd)
+            output = execute_linstor_cmd(cmd)
             result = self.judge_result(output)
             if result is True:
                 print('SUCCESS')
-                # self.logger.write_to_log('result_to_show','','','SUCCESS')
                 return True
             else:
                 print('FAIL')
                 self.linstor_delete_rd(res)
-                # self.logger.write_to_log('result_to_show','','','FAIL')
                 return result
         else:
             print('The resource already exists')
-            # self.logger.write_to_log('result_to_show','','','The resource already exists')
             return ('The resource already exists')
 
 
@@ -492,14 +491,13 @@ class Stor():
                 # Undo the decorator @result_cmd, and execute execute_cmd function
                 # ex_cmd = self.execute_cmd.__wrapped__
                 # result = ex_cmd(self, cmd)
-                result = execute_cmd(cmd)
+                result = execute_linstor_cmd(cmd)
                 jud_result = Stor.re_sort(str(result))
                 if jud_result == 'WAR':
                     print(Stor.get_war_mes(result))
                 if jud_result == 'SUC':
                     result = ('Resource %s was successfully created on Node %s' % (res, node_one))
                     print(result)
-                    # self.logger.write_to_log('result_to_show','','',result)
                 elif jud_result == 'ERR':
                     str_fail_cause = Stor.get_err_detailes(result)
                     dict_fail = {node_one: str_fail_cause}
@@ -508,7 +506,6 @@ class Stor():
             except TimeoutError as e:
                 flag.update({node_one: 'Execution creation timeout'})
                 result = '%s created timeout on node %s, the operation has been cancelled' % (res, node_one)
-                # self.logger.write_to_log('result_to_show','','',result)
                 print(result)
 
         if self.linstor_create_rd(res) is True and self.linstor_create_vd(res, size) is True:
@@ -516,7 +513,6 @@ class Stor():
         else:
             # need to be prefect
             print('The resource already exists')
-            self.logger.write_to_log('result_to_show','','','The resource already exists')
             return ('The resource already exists')
 
         if len(sp) == 1:
@@ -527,7 +523,6 @@ class Stor():
                 self.linstor_delete_rd(res)
             if len(flag.keys()):
                 print('Creation failure on', *flag.keys(), sep=' ')
-                self.logger.write_to_log('result_to_show', '', '','Creation failure on %s'%' '.join(flag.keys()))
                 for node, cause in flag.items():
                     print(node, ':', cause)
                 return flag
@@ -544,7 +539,6 @@ class Stor():
             # whether_delete_rd()
             if len(flag.keys()):
                 print('Creation failure on', *flag.keys(), sep=' ')
-                self.logger.write_to_log('result_to_show', '', '','Creation failure on %s'%' '.join(flag.keys()))
                 for node, cause in flag.items():
                     print(node, ':', cause)
                 return flag
@@ -564,14 +558,13 @@ class Stor():
                 # Undo the decorator @result_cmd, and execute execute_cmd function
                 # ex_cmd = self.execute_cmd.__wrapped__
                 # result = ex_cmd(self, cmd)
-                result = execute_cmd(cmd)
+                result = execute_linstor_cmd(cmd)
                 jud_result = Stor.re_sort(str(result))
                 if jud_result == 'WAR':
                     print(Stor.get_war_mes(result))
                 if jud_result == 'SUC':
                     result = ('Resource %s was successfully created on Node %s' % (res, node_one))
                     print(result)
-                    self.logger.write_to_log('result_to_show','','',result)
                 elif jud_result == 'ERR':
                     str_fail_cause = Stor.get_err_detailes(result)
                     dict_fail = {node_one: str_fail_cause}
@@ -579,12 +572,10 @@ class Stor():
             except TimeoutError as e:
                 flag.update({node_one: 'Execution creation timeout'})
                 print('%s created timeout on node %s, the operation has been cancelled' % (res, node_one))
-                self.logger.write_to_log('result_to_show','','','%s created timeout on node %s, the operation has been cancelled' % (res, node_one))
 
         def print_fail_node():
             if len(flag.keys()):
                 print('Creation failure on', *flag.keys(), sep=' ')
-                self.logger.write_to_log('result_to_show','','','Creation failure on %s'%' '.join(flag.keys()))
                 return flag
             else:
                 return True
@@ -622,12 +613,10 @@ class Stor():
     # 创建storagepool
     def create_storagepool_lvm(self,node, stp, vg):
         cmd = 'linstor storage-pool create lvm %s %s %s' % (node, stp, vg)
-        result = execute_cmd(cmd)
+        result = execute_linstor_cmd(cmd)
         jud_result = Stor.re_sort(str(result))
-        # self.logger.write_to_log('LINSTOR', cmd, '', result.decode())
         if jud_result == 'WAR':
             print(result)
-            self.logger.write_to_log('result_to_show','','',result)
         # 发生ERROR的情况
         if jud_result == 'ERR':
             # 使用不存的vg
@@ -635,22 +624,17 @@ class Stor():
                 # 获取和打印提示信息
                 result = Stor.judge_no_vg(str(result), node, vg)
                 print(result)
-                self.logger.write_to_log('result_to_show','','',result) # result为vg相关的提示
                 # 删除掉已创建的sp
                 result_del = subprocess.check_output(
                     'linstor --no-color storage-pool delete %s %s' %
                     (node, stp), shell=True)
-                self.logger.write_to_log('LINSTOR','linstor --no-color storage-pool delete %s %s'%(node, stp), 'post-processing', result_del.decode())
             else:
                 print(result)
                 print('FAIL')
-                self.logger.write_to_log('result_to_show',str(result),'','FAIL') # result为其他ERROR信息
                 return result
         # 成功
         elif jud_result == 'SUC':
             print('SUCCESS')
-            self.logger.write_to_log('LINSTOR',cmd,'',str(result))
-            self.logger.write_to_log('result_to_show','','','SUCCESS')
             return True
 
     def create_storagepool_thinlv(self,node, stp, tlv):
@@ -663,7 +647,8 @@ class Stor():
         try:
             return self.print_execute_result(cmd)
         except Exception as e:
-            self.logger.write_to_log('result_to_show','','',str(traceback.format_exc()))
+            pass
+            # self.logger.write_to_log('result_to_show','','',str(traceback.format_exc()))
 
     # 创建集群节点
     def create_node(self,node, ip, nt):
@@ -677,7 +662,6 @@ class Stor():
         if nt not in nt_value:
             print('node type error,choose from ''Combined',
                   'Controller', 'Auxiliary', 'Satellite''')
-            self.logger.write_to_log('result_to_show','','','node type error,choose from Combined Controller Auxiliary Satellite')
         else:
             return self.print_execute_result(cmd)
 
@@ -687,17 +671,20 @@ class Stor():
         return self.print_execute_result(cmd)
 
 
+class StorRes(Stor):
+    def __init__(self):
+        self.logger = consts.get_glo_log()
+
 class Iscsi():
     def __init__(self):
         self.logger = consts.get_glo_log()
 
     # 获取并更新crm信息
     def crm_up(self, js):
-        cd = CRM(self.logger)
+        cd = CRM()
         crm_config_statu = cd.get_data_crm()
         if 'ERROR' in crm_config_statu:
             print("Could not perform requested operations, are you root?")
-            self.logger.write_to_log('result_to_show','','','Could not perform requested operations, are you root?')
             return False
         else:
             redata = cd.re_data(crm_config_statu)
@@ -723,19 +710,17 @@ class Iscsi():
                     diskd.update({d[1]: [d[4], d[5]]})
         mapdata.update({'disk': diskd})
         mapdata.update({'target': crmdata[2]})
-        self.logger.write_to_log('Map_data','get_map','',mapdata)
         return mapdata
 
     # 获取删除map所需的数据
     def map_data_d(self, js, mapname):
         dg = js.get_data('Map').get(mapname)[1]
         disk = js.get_data('DiskGroup').get(dg)
-        self.logger.write_to_log('Map_data','delete_map',dg,disk)
         return disk
 
     # 调用crm创建map
     def map_crm_c(self, mapdata):
-        cd = CRM(self.logger)
+        cd = CRM()
         for i in mapdata['target']:
             target = i[0]
             targetiqn = i[1]
@@ -744,36 +729,31 @@ class Iscsi():
                 disk,
                 mapdata['disk'].get(disk)[0],
                 mapdata['disk'].get(disk)[1]]
-            if cd.createres(res, mapdata['host_iqn'], targetiqn):
-                c = cd.createco(res[0],target)
-                o = cd.createor(res[0],target)
-                s = cd.resstart(res[0])
+            if cd.create_res(res, mapdata['host_iqn'], targetiqn):
+                c = cd.create_col(res[0],target)
+                o = cd.create_order(res[0],target)
+                s = cd.res_start(res[0])
                 if c and o and s:
                     print('create colocation and order success:', disk)
-                    self.logger.write_to_log('result_to_show','','',('create colocation and order success:', disk))
                 else:
                     print("create colocation and order fail")
-                    self.logger.write_to_log('result_to_show','','',("create colocation and order fail"))
                     return False
             else:
                 print('create resource Fail!')
-                self.logger.write_to_log('result_to_show','','',('create resource Fail!'))
                 return False
         return True
 
     # 调用crm删除map
     def map_crm_d(self, resname):
-        cd = CRM(self.logger)
+        cd = CRM()
         crm_config_statu = cd.get_data_crm()
         if 'ERROR' in crm_config_statu:
             print("Could not perform requested operations, are you root?")
-            self.logger.write_to_log('result_to_show','','',("Could not perform requested operations, are you root?"))
             return False
         else:
             for disk in resname:
                 if cd.delres(disk):
                     print("delete ", disk)
-                    self.logger.write_to_log('result_to_show','','',("delete ", disk))
                 else:
                     return False
             return True
@@ -781,7 +761,7 @@ class Iscsi():
 
     def show_disk(self,disk):
         js = iscsi_json.JSON_OPERATION()
-        data = execute_cmd('linstor --no-color --no-utf8 r lv')
+        data = execute_linstor_cmd('linstor --no-color --no-utf8 r lv')
         linstorlv = LINSTOR.refine_linstor(data)
         disks = {}
         for d in linstorlv:
@@ -790,19 +770,15 @@ class Iscsi():
         if disk == 'all' or disk is None:
             print(" " + "{:<15}".format("Diskname") + "Path")
             print(" " + "{:<15}".format("---------------") + "---------------")
-            self.logger.write_to_log('result_to_show','','',(" " + "{:<15}".format("Diskname") + "Path"))
             for k in disks:
                 output = (" " + "{:<15}".format(k) + disks[k])
                 print(output)
-                self.logger.write_to_log('result_to_show','','',output)
         else:
             if js.check_key('Disk', disk):
                 output = (disk, ":", js.get_data('Disk').get(disk))
                 print(output)
-                self.logger.write_to_log('result_to_show','','',output)
             else:
                 print("Fail! Can't find " + disk)
-                self.logger.write_to_log('result_to_show','','',"Fail! Can't find %s"%disk)
 
 
     def create_host(self,host, iqn):
@@ -815,7 +791,6 @@ class Iscsi():
         else:
             js.creat_data("Host", host, iqn)
             print("Create success!")
-            self.logger.write_to_log('result_to_show','','','Create success!')
             return True
 
     def show_host(self,host):
@@ -826,14 +801,11 @@ class Iscsi():
             print(" " + "{:<15}".format("---------------") + "---------------")
             for k in hosts:
                 print(" " + "{:<15}".format(k) + hosts[k])
-                self.logger.write_to_log('result_to_show','','',(" " + "{:<15}".format(k) + hosts[k]))
         else:
             if js.check_key('Host', host):
                 print(host, ":", js.get_data('Host').get(host))
-                self.logger.write_to_log('result_to_show','','',(host, ":", js.get_data('Host').get(host)))
             else:
                 print("Fail! Can't find " + host)
-                self.logger.write_to_log('result_to_show','','',("Fail! Can't find " + host))
                 return False
         return True
 
@@ -862,10 +834,6 @@ class Iscsi():
                 "Fail! The DiskGroup " +
                 diskgroup +
                 " already existed.")
-            self.logger.write_to_log('result_to_show','','',(
-                "Fail! The DiskGroup " +
-                diskgroup +
-                " already existed."))
             return False
         else:
             t = True
@@ -873,15 +841,12 @@ class Iscsi():
                 if js.check_key('Disk', i) == False:
                     t = False
                     print("Fail! Can't find " + i)
-                    self.logger.write_to_log('resutl_to_show','','',("Fail! Can't find " + i))
             if t:
                 js.creat_data('DiskGroup', diskgroup, disk)
                 print("Create success!")
-                self.logger.write_to_log('result_to_show','','','Create success!')
                 return True
             else:
                 print("Fail! Please give the true name.")
-                self.logger.write_to_log('result_to_show','','','Fail! Please give the true name.')
                 return False
 
     def show_diskgroup(self,dg):
@@ -892,29 +857,23 @@ class Iscsi():
             for k in diskgroups:
                 print(" " + "---------------")
                 print(" " + k + ":")
-                self.logger.write_to_log('result_to_show','','',k)
                 for v in diskgroups[k]:
                     print("     " + v)
-                    self.logger.write_to_log('result_to_show','','',v)
         else:
             if js.check_key('DiskGroup', dg):
                 print(dg + ":")
-                self.logger.write_to_log('result_to_show','','',(dg + ":"))
                 for k in js.get_data('DiskGroup').get(dg):
                     print(" " + k)
                     self.logger('result_to_show','','',k)
             else:
-                self.logger.write_to_log('result_to_show','','',("Fail! Can't find " + dg))
                 print("Fail! Can't find " + dg)
 
     def delete_diskgroup(self,dg):
         js = iscsi_json.JSON_OPERATION()
         print("Delete the diskgroup <", dg, "> ...")
-        self.logger.write_to_log('result_to_show','','',("Delete the diskgroup <", dg, "> ..."))
         if js.check_key('DiskGroup', dg):
             if js.check_value('Map', dg):
                 print("Fail! The diskgroup already map,Please delete the map")
-                self.logger.write_to_log('result_to_show', '', '',("Fail! The diskgroup already map,Please delete the map") )
             else:
                 js.delete_data('DiskGroup', dg)
                 print("Delete success!")

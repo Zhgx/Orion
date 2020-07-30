@@ -1,7 +1,6 @@
 """
 Global constants for vtel
 """
-
 VERSION = "1.1.0"
 
 
