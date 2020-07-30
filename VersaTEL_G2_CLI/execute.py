@@ -147,20 +147,7 @@ class CRM():
             f'meta target-role=Stopped'
 
         print(script)
-
-        # op = " op start timeout=40 interval=0" \
-        #      " op stop timeout=40 interval=0" \
-        #      " op monitor timeout=40 interval=15"
-        # meta = " meta target-role=Stopped"
-        # mstr = "crm conf primitive " + res[0] \
-        #        + " iSCSILogicalUnit params target_iqn=\"" + targetiqn \
-        #        + "\" implementation=lio-t lun=" + lunid \
-        #        + " path=\"" + res[2] \
-        #        + "\" allowed_initiators=\"" + initiator + "\"" \
-        #        + op + meta
-        # print(mstr)
-        # createcrm = subprocess.call(mstr, shell=True)
-        result = execute_linstor_cmd(script)
+        result = execute_crm_cmd(script)
         print("call", script)
         if result['sts']:
             print("Create iSCSILogicalUnit success")
@@ -170,8 +157,8 @@ class CRM():
 
     # 停用res
     def stop_res(self,res):
-        result = subprocess.call("crm res stop " + res, shell=True)
-        if result == 0:
+        result = execute_crm_cmd("crm res stop " + res, shell=True)
+        if result['sts']:
             return True
         else:
             print("crm res stop fail")
@@ -197,57 +184,20 @@ class CRM():
             if self.checkout_statu(res) is not False:
                 time.sleep(3)
                 # crm conf del <LUN_NAME>
-                delsub = subprocess.call("crm conf del " + res, shell=True)
-                if delsub == 0:
+                delsub = execute_crm_cmd("crm conf del " + res, shell=True)
+                if delsub['sts']:
                     print("crm conf del " + res)
                     return True
                 else:
                     print("crm delete fail")
                     return False
 
-        # stopsub = subprocess.call("crm res stop " + res, shell=True)
-        # if stopsub == 0:
-        #     print("crm res stop " + res)
-        #     n = 0
-        #     while n < 10:
-        #         n += 1
-        #         if self.resstate(res):
-        #             print(res + " is Started, Wait a moment...")
-        #             time.sleep(1)
-        #         else:
-        #             print(res + " is Stopped")
-        #             break
-        #     else:
-        #         print("Stop ressource " + res + " fail, Please try again.")
-        #         return False
-        #
-        #     time.sleep(3)
-        #     # crm conf del <LUN_NAME>
-        #     delsub = subprocess.call("crm conf del " + res, shell=True)
-        #     if delsub == 0:
-        #         print("crm conf del " + res)
-        #         return True
-        #     else:
-        #         print("crm delete fail")
-        #         return False
-        # else:
-        #     print("crm res stop fail")
-        #     return False
-
     def create_col(self, res, target):
         # crm conf colocation <COLOCATION_NAME> inf: <LUN_NAME> <TARGET_NAME>
         print("crm conf colocation co_" + res + " inf: " + res + " " + target)
         cmd = f'crm conf colocation co_{res} inf: {res} {target}'
         result = execute_crm_cmd(cmd)
-        # coclocation = subprocess.call(
-        #     "crm conf colocation co_" +
-        #     res +
-        #     " inf: " +
-        #     res +
-        #     " " +
-        #     target,
-        #     shell=True)
-        if result == 0:
+        if result['sts']:
             print("set coclocation")
             return True
         else:
@@ -259,15 +209,7 @@ class CRM():
 
         cmd = f'cmr conf order or_{res} {target} {res}'
         result = execute_crm_cmd(cmd)
-        # order = subprocess.call(
-        #     "crm conf order or_" +
-        #     res +
-        #     " " +
-        #     target +
-        #     " " +
-        #     res,
-        #     shell=True)
-        if result == 0:
+        if result['sts']:
             print("set order")
             return True
         else:
@@ -279,7 +221,7 @@ class CRM():
         cmd = f'crm res start {res}'
         result = execute_crm_cmd(cmd)
         # start = subprocess.call("crm res start " + res, shell=True)
-        if result == 0:
+        if result['sts']:
             return True
         else:
             return False
