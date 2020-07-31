@@ -32,8 +32,9 @@ def execute_linstor_cmd(cmd,timeout=60):
             raise TimeoutError(cmd, timeout)
         time.sleep(0.1)
     output = p.stdout.read().decode()
-    result = Stor.re_sort(output)
-    return result
+    return output
+    # result = Stor.re_sort(output)
+    # return result # resouce的创建需要原始结果，这里返回'SUC'/'WAR'/'ERR'
 
 
 
@@ -56,7 +57,6 @@ def execute_crm_cmd(cmd, timeout=60):
             raise TimeoutError(cmd, timeout)
         time.sleep(0.1)
     out,err = p.communicate()
-    # crm 命令，可以这样
     if len(out) > 0:
         out = out.decode()
         output = {'sts': 1, 'rst': out}
@@ -65,19 +65,10 @@ def execute_crm_cmd(cmd, timeout=60):
         err = err.decode()
         output = {'sts': 0, 'rst': err}
         return output
-    if out == b'':# 需要再考虑一下
+    if out == b'':# 需要再考虑一下 res stop 执行成功没有返回，stop失败也没有返回（无法判断stop成不成功）
         out = out.decode()
         output = {'sts': 1, 'rst': out}
         return output
-
-    # if out:
-    #     out = out.decode()
-    #     return out
-    #
-    # elif err:
-    #     err = err.decode()
-    #     return err
-
 
 
 def get_cmd(ssh_obj, unique_str, cmd, oprt_id):
@@ -102,7 +93,8 @@ class CRM():
     def __init__(self):
         self.logger = consts.get_glo_log()
 
-    def re_data(self, crmdatas):
+    # 正则匹配crm conf 数据
+    def re_crm_data(self, crmdatas):
         crmdata = str(crmdatas)
         plogical = re.compile(
             r'primitive\s(\w*)\s\w*\s\\\s*\w*\starget_iqn="([a-zA-Z0-9.:-]*)"\s[a-z=-]*\slun=(\d*)\spath="([a-zA-Z0-9/]*)"\sallowed_initiators="([a-zA-Z0-9.: -]+)"(?:.*\s*){2}meta target-role=(\w*)')
@@ -117,23 +109,17 @@ class CRM():
         print("get crm config data")
         return redata
 
-    def get_data_crm(self):
+    def get_crm_data(self):
         cmd = 'crm configure show'
-        # crmconfig = subprocess.getoutput('crm configure show')
-        crmconfig = execute_crm_cmd(cmd)
+        result = execute_crm_cmd(cmd)
         print("do crm configure show")
-        return crmconfig
+        if result:
+            return result['rts']
 
-    # def get_data_linstor(self):
-    #     cmd = 'linstor --no-color --no-utf8 r lv'
-    #     # linstorres = subprocess.getoutput('linstor --no-color --no-utf8 r lv')
-    #     linstorres = execute_cmd(cmd)
-    #     print("do linstor r lv")
-    #     return linstorres
 
     def create_res(self, res, hostiqn, targetiqn):
         initiator = " ".join(hostiqn)
-        lunid = str(int(res[1][1:]))
+        lunid = str(int(res[1][1:])) #根据disk后两位数作为lun id，从linstor lv l获取
 
         script = f'crm conf primitive {res[0]}  iSCSILogicalUnit params ' \
             f'target_iqn= "{targetiqn}" ' \
@@ -146,9 +132,7 @@ class CRM():
             f'op monitor timeout=40 interval=15 ' \
             f'meta target-role=Stopped'
 
-        print(script)
         result = execute_crm_cmd(script)
-        print("call", script)
         if result['sts']:
             print("Create iSCSILogicalUnit success")
             return True
@@ -157,14 +141,15 @@ class CRM():
 
     # 停用res
     def stop_res(self,res):
-        result = execute_crm_cmd("crm res stop " + res, shell=True)
+        cmd = f'cmr res stop {res}'
+        result = execute_crm_cmd(cmd)
         if result['sts']:
             return True
         else:
             print("crm res stop fail")
             return False
     # 检查
-    def checkout_statu(self,res):
+    def checkout_status(self,res):
         n = 0
         while n < 10:
             n += 1
@@ -178,14 +163,15 @@ class CRM():
             print("Stop ressource " + res + " fail, Please try again.")
             return False
 
-    def delres(self, res):
+    def del_res(self, res):
         # crm res stop <LUN_NAME>
         if self.stop_res(res):
-            if self.checkout_statu(res) is not False:
+            if self.checkout_status(res) is not False:
                 time.sleep(3)
                 # crm conf del <LUN_NAME>
-                delsub = execute_crm_cmd("crm conf del " + res, shell=True)
-                if delsub['sts']:
+                cmd = f'crm conf del {res}'
+                result = execute_crm_cmd(cmd)
+                if result['sts']:
                     print("crm conf del " + res)
                     return True
                 else:
@@ -215,21 +201,21 @@ class CRM():
         else:
             return False
 
-    def res_start(self, res):
+    def start_res(self, res):
         # crm res start <LUN_NAME>
         print("crm res start " + res)
         cmd = f'crm res start {res}'
         result = execute_crm_cmd(cmd)
-        # start = subprocess.call("crm res start " + res, shell=True)
         if result['sts']:
             return True
         else:
             return False
 
     def get_res_state(self, res):
-        crm_show = self.get_data_crm()
-        redata = self.re_data(crm_show)
-        for s in redata[0]:
+        crm_show = self.get_crm_data()
+        re_result = self.re_crm_data(crm_show)
+        for s in re_result[0]:
+            # [[], [], [('t_test', 'iqn.2020-06.com.example:test-max-lun', '10.203.1.199')]]
             if s[0] == res:
                 if s[-1] == 'Stopped':
                     return False
@@ -275,7 +261,7 @@ class LVM():
         return list_vg
 
 
-class LINSTOR():
+class Linstor():
     def __init__(self):
         self.logger = consts.get_glo_log()
 
@@ -300,7 +286,6 @@ class LINSTOR():
         except IndexError:
             print('The data cannot be read, please check whether LINSTOR is normal.')
         return list_data_all
-
 
 
 
@@ -330,12 +315,14 @@ class Stor():
         re_suc = re.compile('SUCCESS')
         re_war = re.compile('WARNING')
         re_err = re.compile('ERROR')
-        if re_war.search(result):
-            return 'war'
-        elif re_err.search(result):
+
+        if re_err.search(result):
             return 'err'
         elif re_suc.search(result):
             return 'suc'
+        elif re_war.search(result):
+            return 'war'
+
 
     @staticmethod
     def judge_no_vg(result, node, vg):
@@ -613,24 +600,22 @@ class Stor():
         return self.print_execute_result(cmd)
 
 
-class StorRes(Stor):
-    def __init__(self):
-        self.logger = consts.get_glo_log()
 
 class Iscsi():
     def __init__(self):
         self.logger = consts.get_glo_log()
 
     # 获取并更新crm信息
-    def crm_up(self, js):
-        cd = CRM()
-        crm_config_statu = cd.get_data_crm()
-        if 'ERROR' in crm_config_statu:
+    def get_lastest_crm(self):
+        obj_crm = CRM()
+        crm_config_status = obj_crm.get_crm_data()
+        if 'ERROR' in crm_config_status:
             print("Could not perform requested operations, are you root?")
             return False
         else:
-            redata = cd.re_data(crm_config_statu)
-            js.up_crmconfig(redata)
+            js = iscsi_json.JSON_OPERATION()
+            redata = obj_crm.re_crm_data(crm_config_status)
+            js.update_crm_conf(redata)
             return redata
 
     # 获取创建map所需的数据
@@ -642,9 +627,8 @@ class Iscsi():
             hostiqn.append(iqn)
         mapdata.update({'host_iqn': hostiqn})
         disk = js.get_data('DiskGroup').get(dg)
-        linstor_obj = Stor()
-        data = linstor_obj
-        linstorlv = LINSTOR.refine_linstor(LINSTOR,data)
+        linstor_cmd_result = execute_crm_cmd('linstor --no-color --no-utf8 r lv')
+        linstorlv = Linstor.refine_linstor(linstor_cmd_result)
         diskd = {}
         for d in linstorlv:
             for i in disk:
@@ -663,9 +647,8 @@ class Iscsi():
     # 调用crm创建map
     def map_crm_c(self, mapdata):
         cd = CRM()
-        for i in mapdata['target']:
-            target = i[0]
-            targetiqn = i[1]
+        target = mapdata['target'][0]
+        targetiqn = mapdata['target'][1]
         for disk in mapdata['disk']:
             res = [
                 disk,
@@ -674,7 +657,7 @@ class Iscsi():
             if cd.create_res(res, mapdata['host_iqn'], targetiqn):
                 c = cd.create_col(res[0],target)
                 o = cd.create_order(res[0],target)
-                s = cd.res_start(res[0])
+                s = cd.start_res(res[0])
                 if c and o and s:
                     print('create colocation and order success:', disk)
                 else:
@@ -688,13 +671,13 @@ class Iscsi():
     # 调用crm删除map
     def map_crm_d(self, resname):
         cd = CRM()
-        crm_config_statu = cd.get_data_crm()
+        crm_config_statu = cd.get_crm_data()
         if 'ERROR' in crm_config_statu:
             print("Could not perform requested operations, are you root?")
             return False
         else:
             for disk in resname:
-                if cd.delres(disk):
+                if cd.del_res(disk):
                     print("delete ", disk)
                 else:
                     return False
@@ -704,11 +687,11 @@ class Iscsi():
     def show_disk(self,disk):
         js = iscsi_json.JSON_OPERATION()
         data = execute_linstor_cmd('linstor --no-color --no-utf8 r lv')
-        linstorlv = LINSTOR.refine_linstor(data)
+        linstorlv = Linstor.refine_linstor(data)
         disks = {}
         for d in linstorlv:
             disks.update({d[1]: d[5]})
-        js.up_data('Disk', disks)
+        js.update_data('Disk', disks)
         if disk == 'all' or disk is None:
             print(" " + "{:<15}".format("Diskname") + "Path")
             print(" " + "{:<15}".format("---------------") + "---------------")
@@ -731,7 +714,7 @@ class Iscsi():
             print("Fail! The Host " + host + " already existed.")
             return False
         else:
-            js.creat_data("Host", host, iqn)
+            js.add_data("Host", host, iqn)
             print("Create success!")
             return True
 
@@ -784,7 +767,7 @@ class Iscsi():
                     t = False
                     print("Fail! Can't find " + i)
             if t:
-                js.creat_data('DiskGroup', diskgroup, disk)
+                js.add_data('DiskGroup', diskgroup, disk)
                 print("Create success!")
                 return True
             else:
@@ -806,7 +789,6 @@ class Iscsi():
                 print(dg + ":")
                 for k in js.get_data('DiskGroup').get(dg):
                     print(" " + k)
-                    self.logger('result_to_show','','',k)
             else:
                 print("Fail! Can't find " + dg)
 
@@ -819,26 +801,18 @@ class Iscsi():
             else:
                 js.delete_data('DiskGroup', dg)
                 print("Delete success!")
-                self.logger.write_to_log('result_to_show', '', '', ("Delete success!"))
         else:
             print("Fail! Can't find " + dg)
-            self.logger.write_to_log('result_to_show', '', '',("Fail! Can't find " + dg))
 
     def create_hostgroup(self,hostgroup, host):
         js = iscsi_json.JSON_OPERATION()
         print("Hostgroup name:", hostgroup)
         print("Host name:", host)
-        self.logger.write_to_log('result_to_show', '', '',("Hostgroup name:", hostgroup) )
-        self.logger.write_to_log('result_to_show', '', '', ("Host name:", host))
         if js.check_key('HostGroup', hostgroup):
             print(
                 "Fail! The HostGroup " +
                 hostgroup +
                 " already existed.")
-            self.logger.write_to_log('result_to_show', '', '', (
-                "Fail! The HostGroup " +
-                hostgroup +
-                " already existed."))
             return False
         else:
             t = True
@@ -846,15 +820,12 @@ class Iscsi():
                 if js.check_key('Host', i) == False:
                     t = False
                     print("Fail! Can't find " + i)
-                    self.logger.write_to_log('result_to_show', '', '', ("Fail! Can't find " + i))
             if t:
-                js.creat_data('HostGroup', hostgroup, host)
+                js.add_data('HostGroup', hostgroup, host)
                 print("Create success!")
-                self.logger.write_to_log('result_to_show', '', '', ("Create success!"))
                 return True
             else:
                 print("Fail! Please give the true name.")
-                self.logger.write_to_log('result_to_show', '', '', ("Fail! Please give the true name."))
                 return False
 
     def show_hostgroup(self,hg):
@@ -865,72 +836,55 @@ class Iscsi():
             for k in hostgroups:
                 print(" " + "---------------")
                 print(" " + k + ":")
-                self.logger.write_to_log('result_to_show', '', '', k)
                 for v in hostgroups[k]:
                     print("     " + v)
-                    self.logger.write_to_log('result_to_show', '', '',v )
         else:
             if js.check_key('HostGroup', hg):
                 print(hg + ":")
-                self.logger.write_to_log('result_to_show', '', '', hg)
                 for k in js.get_data('HostGroup').get(hg):
                     print(" " + k)
-                    self.logger.write_to_log('result_to_show', '', '', k)
             else:
                 print("Fail! Can't find " + hg)
-                self.logger.write_to_log('result_to_show', '', '', ("Fail! Can't find " + hg))
 
     def delete_hostgroup(self,hg):
         js = iscsi_json.JSON_OPERATION()
         print("Delete the hostgroup <", hg, "> ...")
-        self.logger.write_to_log('result_to_show', '', '', ("Delete the hostgroup <", hg, "> ..."))
         if js.check_key('HostGroup', hg):
             if js.check_value('Map', hg):
                 print("Fail! The hostgroup already map,Please delete the map")
-                self.logger.write_to_log('result_to_show', '', '', ("Fail! The hostgroup already map,Please delete the map"))
             else:
                 js.delete_data('HostGroup', hg)
                 print("Delete success!")
-                self.logger.write_to_log('result_to_show', '', '', ("Delete success!"))
         else:
             print("Fail! Can't find " + hg)
-            self.logger.write_to_log('result_to_show', '', '', ("Fail! Can't find " + hg))
 
     def create_map(self, map, hg, dg):
         js = iscsi_json.JSON_OPERATION()
         print("Map name:", map)
         print("Hostgroup name:", hg)
         print("Diskgroup name:", dg)
-        self.logger.write_to_log('result_to_show', '', '', ("Map name:", map))
-        self.logger.write_to_log('result_to_show', '', '', ("Hostgroup name:", hg))
-        self.logger.write_to_log('result_to_show', '', '', ("Diskgroup name:", dg))
-        
+
         if js.check_key('Map', map):
             print("The Map \"" + map + "\" already existed.")
-            self.logger.write_to_log('result_to_show', '', '', ("The Map \"" + map + "\" already existed."))
             return False
         elif js.check_key('HostGroup', hg) == False:
             print("Can't find " + hg)
-            self.logger.write_to_log('result_to_show', '', '', ("Can't find " + hg))
             return False
         elif js.check_key('DiskGroup', dg) == False:
             print("Can't find " + dg)
-            self.logger.write_to_log('result_to_show', '', '', ("Can't find " + dg))
             return False
         else:
             if js.check_value('Map', dg):
                 print("The diskgroup already map")
-                self.logger.write_to_log('result_to_show', '', '', ("The diskgroup already map"))
                 return False
             else:
-                crmdata = self.crm_up(js)
+                crmdata = self.get_lastest_crm()
                 if crmdata:
                     mapdata = self.map_data(
                         js, crmdata, hg, dg)
                     if self.map_crm_c(mapdata):
-                        js.creat_data('Map', map, [hg, dg])
+                        js.add_data('Map', map, [hg, dg])
                         print("Create success!")
-                        self.logger.write_to_log('result_to_show', '', '', ("Create success!"))
                         return True
                     else:
                         return False
@@ -945,46 +899,33 @@ class Iscsi():
             for k in maps:
                 print(" " + "---------------")
                 print(" " + k + ":")
-                self.logger.write_to_log('result_to_show', '', '', k)
                 for v in maps[k]:
                     print("     " + v)
-                    self.logger.write_to_log('result_to_show', '', '', v)
         else:
             if js.check_key('Map', map):
                 print(map + ":")
                 maplist = js.get_data('Map').get(map)
                 print(' ' + maplist[0] + ':')
-                self.logger.write_to_log('result_to_show', '', '', maplist[0])
                 for i in js.get_data('HostGroup').get(maplist[0]):
                     print('     ' + i + ': ' + js.get_data('Host').get(i))
-                    self.logger.write_to_log('result_to_show', '', '', ('     ' + i + ': ' + js.get_data('Host').get(i)))
                 print(' ' + maplist[1] + ':')
-                self.logger.write_to_log('result_to_show', '', '', (' ' + maplist[1] + ':'))
                 for i in js.get_data('DiskGroup').get(maplist[1]):
                     print('     ' + i + ': ' + js.get_data('Disk').get(i))
-                    self.logger.write_to_log('result_to_show', '', '', ('     ' + i + ': ' + js.get_data('Disk').get(i)))
             else:
                 print("Fail! Can't find " + map)
-                self.logger.write_to_log('result_to_show', '', '', ("Fail! Can't find " + map))
 
     def delete_map(self,map):
         js = iscsi_json.JSON_OPERATION()
+
         print("Delete the map <", map, ">...")
-        self.logger.write_to_log('result_to_show', '', '', ("Delete the map <", map, ">..."))
         if js.check_key('Map', map):
             print(
                 js.get_data('Map').get(
                     map),
                 "will probably be affected ")
-            self.logger.write_to_log('result_to_show', '', '', (
-                js.get_data('Map').get(
-                    map),
-                "will probably be affected "))
             resname = self.map_data_d(js, map)
             if self.map_crm_d(resname):
                 js.delete_data('Map', map)
                 print("Delete success!")
-                self.logger.write_to_log('result_to_show', '', '', ("Delete success!"))
         else:
             print("Fail! Can't find " + map)
-            self.logger.write_to_log('result_to_show', '', '', ("Fail! Can't find " + map))

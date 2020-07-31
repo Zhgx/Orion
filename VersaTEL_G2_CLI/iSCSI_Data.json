@@ -46,8 +46,8 @@
         ]
     },
     "Disk": {
-        "res3": "/dev/drbd1001",
-        "res_test": "/dev/drbd1000"
+        "apple": "/dev/drbd1001",
+        "cat": "/dev/drbd1000"
     },
     "Target": {
         "Target2": "iqn.xxx",

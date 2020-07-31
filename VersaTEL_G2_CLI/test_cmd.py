@@ -1,5 +1,6 @@
 import subprocess
 import time
+import re
 
 
 def execute_cmd(cmd, timeout=60):
@@ -38,15 +39,16 @@ def execute_cmd(cmd, timeout=60):
         err = err.decode()
         return err
 
-
 #
-cmd = 'linstor n l'
+# #
+# cmd = 'linstor n l'
+#
+# print(execute_cmd(cmd))
+#
+# cmd = 'linstor rd c res_test'
+#
+# print(execute_cmd(cmd))
+#
+# # cmd = 'linstor rd d res_test'
+# # ex_cmd(cmd)
 
-print(execute_cmd(cmd))
-
-cmd = 'linstor rd c res_test'
-
-print(execute_cmd(cmd))
-
-# cmd = 'linstor rd d res_test'
-# ex_cmd(cmd)
