@@ -75,7 +75,11 @@ class HostCommands():
 
     @sd.record_exception
     def show(self, args):
-        self.actuator.show_host(args.host)
+        obj_iscsi = ex.Iscsi()
+        if args.host == 'all' or args.host is None:
+            obj_iscsi.show_all_host()
+        else:
+            obj_iscsi.show_spe_host(args.host)
 
     @sd.record_exception
     def delete(self, args):

@@ -56,7 +56,10 @@ class DiskCommands():
     @record_exception
     def show(self, args):
         obj_iscsi = ex.Iscsi()
-        obj_iscsi.show_disk(args.disk)
+        if args.disk == 'all' or args.disk is None:
+            obj_iscsi.show_all_disk()
+        else:
+            obj_iscsi.show_spe_disk(args.disk)
 
 
 
