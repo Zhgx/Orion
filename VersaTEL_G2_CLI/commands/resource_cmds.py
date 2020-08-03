@@ -353,7 +353,6 @@ class ResourceCommands():
                 tb.show_res_one_color(args.resource)
             else:
                 result = tb.res_all_color()
-                self.logger.write_to_log('result_to_show','','',result)
 
     def print_resource_help(self, *args):
         self.res_parser.print_help()
