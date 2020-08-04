@@ -1,57 +1,26 @@
 {
-    "HostGroup": {
-        "HostGroup1": [
-            "HostA",
-            "HostB"
-        ],
-        "paulhost": [
-            "HostA",
-            "HostB"
-        ],
-        "test": [
-            "htest1",
-            "htest2"
-        ]
+    "Host": {},
+    "Disk": {
+        "res_test": "/dev/drbd1000"
     },
+    "HostGroup": {},
+    "DiskGroup": {},
+    "Map": {},
     "crm": {
         "resource": [],
-        "vip": [],
-        "target": []
-    },
-    "Host": {
-        "HostB": "iqn.xxxx:bb",
-        "host_test1": "iqn1",
-        "host1": "iqn1",
-        "HostA": "iqn.xxxx:aa",
-        "htest1": "iqn.1993-08.org.debian:01:bc429d5fc3b",
-        "host_test": "iqn1",
-        "host2": "iqn2",
-        "host": "1",
-        "htest2": "iqn.2020-02.org.debian:02:bc333iscs3b"
-    },
-    "DiskGroup": {
-        "DiskGroup1": [
-            "apple",
-            "banana"
+        "vip": [
+            [
+                "vip",
+                "10.203.1.75",
+                "24"
+            ]
         ],
-        "dgtest": [
-            "zane1",
-            "zane2"
+        "target": [
+            [
+                "t_test",
+                "iqn.2020-04.feixitek.com:versaplx00",
+                "10.203.1.75"
+            ]
         ]
-    },
-    "Map": {
-        "Map1": [
-            "HostGroup1",
-            "DiskGroup1"
-        ]
-    },
-    "Disk": {
-        "apple": "/dev/drbd1001",
-        "cat": "/dev/drbd1000"
-    },
-    "Target": {
-        "Target2": "iqn.xxx",
-        "Target1": "iqn.xxx",
-        "Target3": "iqn.xxx"
     }
 }

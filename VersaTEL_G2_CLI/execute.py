@@ -113,21 +113,19 @@ class CRM():
         result = execute_crm_cmd(cmd)
         print("do crm configure show")
         if result:
-            return result['rts']
+            return result['rst']
 
     def create_crm_res(self, res, target_iqn, lunid, path, initiator):
-
-        cmd = f'crm conf primitive {res}  iSCSILogicalUnit params ' \
-            f'target_iqn= "{target_iqn}" ' \
+        cmd = f'crm conf primitive {res} iSCSILogicalUnit params ' \
+            f'target_iqn="{target_iqn}" ' \
             f'implementation=lio-t ' \
-            f'lun="{lunid}" ' \
-            f'path="{path}" ' \
-            f'allowed_initiators="{initiator}"' \
+            f'lun={lunid} ' \
+            f'path={path} ' \
+            f'allowed_initiators="{initiator}" ' \
             f'op start timeout=40 interval=0 ' \
             f'op stop timeout=40 interval=0 ' \
             f'op monitor timeout=40 interval=15 ' \
             f'meta target-role=Stopped'
-
         result = execute_crm_cmd(cmd)
         if result['sts']:
             print("Create iSCSILogicalUnit success")
@@ -160,7 +158,7 @@ class CRM():
 
     # 停用res
     def stop_res(self, res):
-        cmd = f'cmr res stop {res}'
+        cmd = f'crm res stop {res}'
         result = execute_crm_cmd(cmd)
         if result['sts']:
             return True
@@ -190,8 +188,9 @@ class CRM():
                 time.sleep(3)
                 # crm conf del <LUN_NAME>
                 cmd = f'crm conf del {res}'
-                result = execute_crm_cmd(cmd)
-                if result['sts']:
+                # 使用execute_crm_cmd执行成功，stderr也可能会有输出，导致判断不正确
+                result = subprocess.call(cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+                if result == 0:
                     print("crm conf del " + res)
                     return True
                 else:
@@ -213,7 +212,7 @@ class CRM():
         # crm conf order <ORDER_NAME1> <TARGET_NAME> <LUN_NAME>
         print("crm conf order or_" + res + " " + target + " " + res)
 
-        cmd = f'cmr conf order or_{res} {target} {res}'
+        cmd = f'crm conf order or_{res} {target} {res}'
         result = execute_crm_cmd(cmd)
         if result['sts']:
             print("set order")
@@ -235,7 +234,6 @@ class CRM():
         crm_show = self.get_crm_data()
         re_result = self.re_crm_data(crm_show)
         for s in re_result[0]:
-            # [[], [], [('t_test', 'iqn.2020-06.com.example:test-max-lun', '10.203.1.199')]]
             if s[0] == res:
                 if s[-1] == 'Stopped':
                     return False
@@ -389,7 +387,6 @@ class Stor():
         cmd_rd = 'linstor rd c %s' % res
         output = execute_linstor_cmd(cmd_rd)
         result = self.judge_result(output)
-        print(result)
         if result is True:
             return True
         else:
@@ -417,6 +414,7 @@ class Stor():
                 print('SUCCESS')
                 return True
             else:
+                print(output)
                 print('FAIL')
                 self.linstor_delete_rd(res)
                 return result
@@ -558,10 +556,10 @@ class Stor():
         cmd = 'linstor storage-pool create lvm %s %s %s' % (node, stp, vg)
         result = execute_linstor_cmd(cmd)
         jud_result = Stor.re_sort(str(result))
-        if jud_result == 'WAR':
+        if jud_result == 'war':
             print(result)
         # 发生ERROR的情况
-        if jud_result == 'ERR':
+        if jud_result == 'err':
             # 使用不存的vg
             if Stor.judge_no_vg(str(result), node, vg):
                 # 获取和打印提示信息
@@ -576,7 +574,7 @@ class Stor():
                 print('FAIL')
                 return result
         # 成功
-        elif jud_result == 'SUC':
+        elif jud_result == 'suc':
             print('SUCCESS')
             return True
 
@@ -634,6 +632,7 @@ class Iscsi():
     """
     disk 操作
     """
+
     # 展示全部disk
     def show_all_disk(self):
         data = execute_linstor_cmd('linstor --no-color --no-utf8 r lv')
@@ -659,6 +658,7 @@ class Iscsi():
     """
     host 操作
     """
+
     def create_host(self, host, iqn):
         print("Host name:", host)
         print("iqn:", iqn)
@@ -704,6 +704,7 @@ class Iscsi():
     """
     diskgroup 操作
     """
+
     def create_diskgroup(self, diskgroup, disk):
         # print("Diskgroup name:", diskgroup)
         # print("Disk name:", disk)
@@ -767,6 +768,7 @@ class Iscsi():
     """
     hostgroup 操作
     """
+
     def create_hostgroup(self, hostgroup, host):
         print("Hostgroup name:", hostgroup)
         print("Host name:", host)
@@ -799,7 +801,7 @@ class Iscsi():
             for v in hostgroups[k]:
                 print("     " + v)
 
-    def show_spe_hostgroup(self,hg):
+    def show_spe_hostgroup(self, hg):
         if self.js.check_key('HostGroup', hg):
             print(hg + ":")
             for k in self.js.get_data('HostGroup').get(hg):
@@ -821,6 +823,7 @@ class Iscsi():
     """
     map操作
     """
+
     def pre_check_create_map(self, map, hg, dg):
         print("Map name:", map)
         print("Hostgroup name:", hg)
@@ -840,9 +843,12 @@ class Iscsi():
                 print("The diskgroup already map")
                 return False
             else:
-                self.create_map(hg, dg)
+                if self.create_map(hg, dg):
+                    self.js.add_data('Map', map, [hg, dg])
+                    print('Create success!')
+                    return True
 
-    def get_initiator(self,hg):
+    def get_initiator(self, hg):
         # 根据hg去获取hostiqn，返回由hostiqn组成的initiator
         hostiqn = []
         for h in self.js.get_data('HostGroup').get(hg):
@@ -856,12 +862,13 @@ class Iscsi():
         crmdata = self.get_lastest_crm()  # 格式：[[],[],[]]
         if not crmdata:
             return
-        tgt_all = crmdata[2]
+        # crmdata 为空时需要处理
+        tgt_all = crmdata[2][0]
         target = tgt_all[0]
         targetiqn = tgt_all[1]
         return target, targetiqn
 
-    def get_drbd_data(self,dg):
+    def get_drbd_data(self, dg):
         # 根据dg去收集drbdd的三项数据：resource name，minor number，device name
         disk_all = self.js.get_data('DiskGroup').get(dg)
         linstor_cmd_result = execute_linstor_cmd('linstor --no-color --no-utf8 r lv')
@@ -876,7 +883,7 @@ class Iscsi():
     def create_map(self, hg, dg):
         obj_crm = CRM()
         initiator = self.get_initiator(hg)
-        target,targetiqn = self.get_target()
+        target, targetiqn = self.get_target()
         drdb_list = self.get_drbd_data(dg)
 
         # 执行创建和启动
@@ -884,11 +891,11 @@ class Iscsi():
             res, minor_nr, path = i
             lunid = minor_nr[-2:]  # lun id 取自MinorNr的后两位数字
             if obj_crm.create_crm_res(res, targetiqn, lunid, path, initiator):
-                c = obj_crm.create_col(res[0], target)
-                o = obj_crm.create_order(res[0], target)
-                s = obj_crm.start_res(res[0])
-                if c and o and s:
+                c = obj_crm.create_col(res, target)
+                o = obj_crm.create_order(res, target)
+                if c and o:
                     print('create colocation and order success:', res)
+                    obj_crm.start_res(res)
                 else:
                     print("create colocation and order fail")
                     return False

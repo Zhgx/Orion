@@ -95,7 +95,7 @@ class HostGroupCommands():
 
     @sd.record_exception
     def show(self, args):
-        if args.hg == 'all' or args.hg is None:
+        if args.hostgroup == 'all' or args.hostgroup is None:
             self.obj_iscsi.show_all_hostgroup()
         else:
             self.obj_iscsi.show_spe_hostgroup(args.hostgroup)
