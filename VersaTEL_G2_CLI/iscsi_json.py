@@ -65,10 +65,10 @@ class JSON_OPERATION():
             json.dump(self.json_data, fw, indent=4, separators=(',', ': '))
 
     # 更新crm configure资源的信息
-    def update_crm_conf(self, data):
+    def update_crm_conf(self, resource,vip,target):
         self.json_data.update({'crm': {}})
-        self.json_data['crm'].update({'resource': data[0]})
-        self.json_data['crm'].update({'vip': data[1]})
-        self.json_data['crm'].update({'target': data[2]})
+        self.json_data['crm'].update({'resource': resource})
+        self.json_data['crm'].update({'vip': vip})
+        self.json_data['crm'].update({'target': target})
         with open('iSCSI_Data.json', "w") as fw:
             json.dump(self.json_data, fw, indent=4, separators=(',', ': '))

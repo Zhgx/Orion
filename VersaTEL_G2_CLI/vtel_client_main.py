@@ -173,7 +173,7 @@ class VtelCLI(object):
     # When using the parameter '-gui', send the database through the socket
     def send_database(self, args):
         if args.gui:
-            db = linstordb.LINSTORDB(self.logger)
+            db = linstordb.LinstorDB(self.logger)
             data = pickle.dumps(db.data_base_dump())
             sundry.send_via_socket(data)
         else:
@@ -183,7 +183,7 @@ class VtelCLI(object):
     def send_json(self, args):
         js = iscsi_json.JSON_OPERATION()
         if args.gui:
-            data = js.read_data_json()
+            data = js.read_json()
             data_pickled = pickle.dumps(data)
             sundry.send_via_socket(data_pickled)
         else:

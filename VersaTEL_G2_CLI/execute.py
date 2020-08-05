@@ -4,19 +4,7 @@ import subprocess
 import time
 import iscsi_json
 import consts
-from collections import OrderedDict
-
-
-def re_findall(re_string, tgt_string):
-    re_login = re.compile(re_string)
-    re_result = re_login.findall(tgt_string)
-    return re_result
-
-
-def re_search(re_string, tgt_stirng):
-    re_ = re.compile(re_string)
-    re_result = re_.search(tgt_stirng).group()
-    return re_result
+import sundry as s
 
 
 def execute_linstor_cmd(cmd, timeout=60):
@@ -33,8 +21,6 @@ def execute_linstor_cmd(cmd, timeout=60):
         time.sleep(0.1)
     output = p.stdout.read().decode()
     return output
-    # result = Stor.re_sort(output)
-    # return result # resouce的创建需要原始结果，这里返回'SUC'/'WAR'/'ERR'
 
 
 def execute_crm_cmd(cmd, timeout=60):
@@ -70,50 +56,71 @@ def execute_crm_cmd(cmd, timeout=60):
         return output
 
 
-def get_cmd(ssh_obj, unique_str, cmd, oprt_id):
-    logger = consts.get_glo_log()
-    global RPL
-    RPL = 'no'
-    if RPL == 'no':
-        logger.write_to_log('F', 'DATA', 'STR', unique_str, '', oprt_id)
-        logger.write_to_log('T', 'OPRT', 'cmd', 'ssh', oprt_id, cmd)
-        result_cmd = ssh_obj.execute_command(cmd)
-        logger.write_to_log('F', 'DATA', 'cmd', 'ssh', oprt_id, result_cmd)
-        return result_cmd
-    elif RPL == 'yes':
-        pass
+# def get_cmd(ssh_obj, unique_str, cmd, oprt_id):
+#     logger = consts.get_glo_log()
+#     global RPL
+#     RPL = 'no'
+#     if RPL == 'no':
+#         logger.write_to_log('F', 'DATA', 'STR', unique_str, '', oprt_id)
+#         logger.write_to_log('T', 'OPRT', 'cmd', 'ssh', oprt_id, cmd)
+#         result_cmd = ssh_obj.execute_command(cmd)
+#         logger.write_to_log('F', 'DATA', 'cmd', 'ssh', oprt_id, result_cmd)
+#         return result_cmd
+#     elif RPL == 'yes':
+#         pass
 
 
 class TimeoutError(Exception):
     pass
 
 
-class CRM():
+class CRMData():
     def __init__(self):
-        self.logger = consts.get_glo_log()
+        self.crm_conf_data = self.get_crm_conf()
 
-    # 正则匹配crm conf 数据
-    def re_crm_data(self, crmdatas):
-        crmdata = str(crmdatas)
-        plogical = re.compile(
-            r'primitive\s(\w*)\s\w*\s\\\s*\w*\starget_iqn="([a-zA-Z0-9.:-]*)"\s[a-z=-]*\slun=(\d*)\spath="([a-zA-Z0-9/]*)"\sallowed_initiators="([a-zA-Z0-9.: -]+)"(?:.*\s*){2}meta target-role=(\w*)')
-        pvip = re.compile(
-            r'primitive\s(\w*)\sIPaddr2\s\\\s*\w*\sip=([0-9.]*)\s\w*=(\d*)\s')
-        ptarget = re.compile(
-            r'primitive\s(\w*)\s\w*\s\\\s*params\siqn="([a-zA-Z0-9.:-]*)"\s[a-z=-]*\sportals="([0-9.]*):\d*"\s\\')
-        redata = [
-            plogical.findall(crmdata),
-            pvip.findall(crmdata),
-            ptarget.findall(crmdata)]
-        print("get crm config data")
-        return redata
-
-    def get_crm_data(self):
+    def get_crm_conf(self):
         cmd = 'crm configure show'
         result = execute_crm_cmd(cmd)
         print("do crm configure show")
         if result:
             return result['rst']
+
+    def get_resource_data(self):
+        re_logical = re.compile(
+            r'primitive\s(\w*)\s\w*\s\\\s*\w*\starget_iqn="([a-zA-Z0-9.:-]*)"\s[a-z=-]*\slun=(\d*)\spath="([a-zA-Z0-9/]*)"\sallowed_initiators="([a-zA-Z0-9.: -]+)"(?:.*\s*){2}meta target-role=(\w*)')
+        result = s.re_findall(re_logical, self.crm_conf_data)
+        return result
+
+    def get_vip_data(self):
+        re_vip = re.compile(
+            r'primitive\s(\w*)\sIPaddr2\s\\\s*\w*\sip=([0-9.]*)\s\w*=(\d*)\s')
+        result = s.re_findall(re_vip, self.crm_conf_data)
+        return result
+
+    def get_target_data(self):
+        re_target = re.compile(
+            r'primitive\s(\w*)\s\w*\s\\\s*params\siqn="([a-zA-Z0-9.:-]*)"\s[a-z=-]*\sportals="([0-9.]*):\d*"\s\\')
+        result = s.re_findall(re_target, self.crm_conf_data)
+        return result
+
+    # 获取并更新crm信息, 这部分不需要
+    def update_crm_conf(self):
+        # crm_config_status = obj_crm.get_crm_data()
+        if 'ERROR' in self.crm_conf_data:
+            print("Could not perform requested operations, are you root?")
+        else:
+            js = iscsi_json.JSON_OPERATION()
+            res = self.get_resource_data()
+            vip = self.get_vip_data()
+            target = self.get_target_data()
+            # redata = obj_crm.re_crm_data(crm_config_status)
+            js.update_crm_conf(res, vip, target)
+            return True
+
+
+class CRM():
+    def __init__(self):
+        self.logger = consts.get_glo_log()
 
     def create_crm_res(self, res, target_iqn, lunid, path, initiator):
         cmd = f'crm conf primitive {res} iSCSILogicalUnit params ' \
@@ -130,31 +137,14 @@ class CRM():
         if result['sts']:
             print("Create iSCSILogicalUnit success")
             return True
-        else:
-            return False
 
-    # def create_res(self, res, hostiqn, targetiqn):
-    #     initiator = " ".join(hostiqn)
-    #
-    #     lunid = str(int(res[1][1:])) #根据disk后两位数作为lun id，从linstor lv l获取
-    #
-    #     script = f'crm conf primitive {res[0]}  iSCSILogicalUnit params ' \
-    #         f'target_iqn= "{targetiqn}" ' \
-    #         f'implementation=lio-t ' \
-    #         f'lun="{lunid}" ' \
-    #         f'path="{res[2]}" ' \
-    #         f'allowed_initiators="{initiator}"' \
-    #         f'op start timeout=40 interval=0 ' \
-    #         f'op stop timeout=40 interval=0 ' \
-    #         f'op monitor timeout=40 interval=15 ' \
-    #         f'meta target-role=Stopped'
-    #
-    #     result = execute_crm_cmd(script)
-    #     if result['sts']:
-    #         print("Create iSCSILogicalUnit success")
-    #         return True
-    #     else:
-    #         return False
+    # 获取res的状态
+    def get_res_status(self, res):
+        crm_data = CRMData()
+        resource_data = crm_data.get_resource_data()
+        for s in resource_data:
+            if s[0] == res:
+                return s[-1]
 
     # 停用res
     def stop_res(self, res):
@@ -164,81 +154,69 @@ class CRM():
             return True
         else:
             print("crm res stop fail")
-            return False
+
+
 
     # 检查
-    def checkout_status(self, res):
+    def checkout_status(self, res, times, expect_value):
+        """
+        检查res的状态
+        :param res: 需要检查的资源
+        :param num: 需要检查的次数
+        :param expect_value: 预期值
+        :return: 返回True则说明是预期效果
+        """
         n = 0
-        while n < 10:
+        while n < times:
             n += 1
-            if self.get_res_state(res):
-                print(res + " is Started, Wait a moment...")
-                time.sleep(1)
+            if self.get_res_status(res) == expect_value:
+                return True
             else:
-                print(res + " is Stopped")
-                break
+                time.sleep(1)
         else:
-            print("Stop ressource " + res + " fail, Please try again.")
-            return False
+            print("Does not meet expectations, please try again.")
 
     def delete_crm_res(self, res):
         # crm res stop <LUN_NAME>
         if self.stop_res(res):
-            if self.checkout_status(res) is not False:
+            if self.checkout_status(res,10,'Stopped'):
                 time.sleep(3)
                 # crm conf del <LUN_NAME>
                 cmd = f'crm conf del {res}'
                 # 使用execute_crm_cmd执行成功，stderr也可能会有输出，导致判断不正确
-                result = subprocess.call(cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+                result = subprocess.call(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                 if result == 0:
                     print("crm conf del " + res)
                     return True
                 else:
                     print("crm delete fail")
-                    return False
 
     def create_col(self, res, target):
         # crm conf colocation <COLOCATION_NAME> inf: <LUN_NAME> <TARGET_NAME>
-        print("crm conf colocation co_" + res + " inf: " + res + " " + target)
+        print(f'crm conf colocation co_{res} inf: {res} {target}')
         cmd = f'crm conf colocation co_{res} inf: {res} {target}'
         result = execute_crm_cmd(cmd)
         if result['sts']:
             print("set coclocation")
             return True
-        else:
-            return False
 
     def create_order(self, res, target):
         # crm conf order <ORDER_NAME1> <TARGET_NAME> <LUN_NAME>
-        print("crm conf order or_" + res + " " + target + " " + res)
-
+        print(f'crm conf order or_{res} {target} {res}')
         cmd = f'crm conf order or_{res} {target} {res}'
         result = execute_crm_cmd(cmd)
         if result['sts']:
             print("set order")
             return True
-        else:
-            return False
 
     def start_res(self, res):
         # crm res start <LUN_NAME>
-        print("crm res start " + res)
+        print(f'crm res start {res}')
         cmd = f'crm res start {res}'
         result = execute_crm_cmd(cmd)
         if result['sts']:
             return True
-        else:
-            return False
 
-    def get_res_state(self, res):
-        crm_show = self.get_crm_data()
-        re_result = self.re_crm_data(crm_show)
-        for s in re_result[0]:
-            if s[0] == res:
-                if s[-1] == 'Stopped':
-                    return False
-                else:
-                    return True
 
 
 class LVM():
@@ -423,7 +401,7 @@ class Stor():
             return ('The resource already exists')
 
     def create_res_manual(self, res, size, node, sp):
-        flag = OrderedDict()
+        dict_result = {}
 
         # Actions needed to create a resource
         def execute_(cmd):
@@ -441,10 +419,10 @@ class Stor():
                 elif jud_result == 'err':
                     str_fail_cause = Stor.get_err_detailes(result)
                     dict_fail = {node_one: str_fail_cause}
-                    flag.update(dict_fail)
+                    dict_result.update(dict_fail)
 
             except TimeoutError as e:
-                flag.update({node_one: 'Execution creation timeout'})
+                dict_result.update({node_one: 'Execution creation timeout'})
                 result = '%s created timeout on node %s, the operation has been cancelled' % (res, node_one)
                 print(result)
 
@@ -459,13 +437,13 @@ class Stor():
             for node_one in node:
                 cmd = 'linstor resource create %s %s --storage-pool %s' % (node_one, res, sp[0])
                 execute_(cmd)
-            if len(flag.keys()) == len(node):
+            if len(dict_result.keys()) == len(node):
                 self.linstor_delete_rd(res)
-            if len(flag.keys()):
-                print('Creation failure on', *flag.keys(), sep=' ')
-                for node, cause in flag.items():
+            if len(dict_result.keys()):
+                print('Creation failure on', *dict_result.keys(), sep=' ')
+                for node, cause in dict_result.items():
                     print(node, ':', cause)
-                return flag
+                return dict_result
             else:
                 return True
 
@@ -474,14 +452,14 @@ class Stor():
             for node_one, sp_one in zip(node, sp):
                 cmd = 'linstor resource create %s %s --storage-pool %s' % (node_one, res, sp_one)
                 execute_(cmd)
-            if len(flag.keys()) == len(node):
+            if len(dict_result.keys()) == len(node):
                 self.linstor_delete_rd(res)
             # whether_delete_rd()
-            if len(flag.keys()):
-                print('Creation failure on', *flag.keys(), sep=' ')
-                for node, cause in flag.items():
+            if len(dict_result.keys()):
+                print('Creation failure on', *dict_result.keys(), sep=' ')
+                for node, cause in dict_result.items():
                     print(node, ':', cause)
-                return flag
+                return dict_result
             else:
                 return True
             # return print_fail_node()
@@ -492,7 +470,7 @@ class Stor():
         return self.print_execute_result(cmd)
 
     def add_mirror_manual(self, res, node, sp):
-        flag = OrderedDict()
+        dict_result = {}
 
         def execute_(cmd):
             try:
@@ -509,15 +487,15 @@ class Stor():
                 elif jud_result == 'ERR':
                     str_fail_cause = Stor.get_err_detailes(result)
                     dict_fail = {node_one: str_fail_cause}
-                    flag.update(dict_fail)
+                    dict_result.update(dict_fail)
             except TimeoutError as e:
-                flag.update({node_one: 'Execution creation timeout'})
+                dict_result.update({node_one: 'Execution creation timeout'})
                 print('%s created timeout on node %s, the operation has been cancelled' % (res, node_one))
 
         def print_fail_node():
-            if len(flag.keys()):
-                print('Creation failure on', *flag.keys(), sep=' ')
-                return flag
+            if len(dict_result.keys()):
+                print('Creation failure on', *dict_result.keys(), sep=' ')
+                return dict_result
             else:
                 return True
 
@@ -617,18 +595,6 @@ class Iscsi():
         self.logger = consts.get_glo_log()
         self.js = iscsi_json.JSON_OPERATION()
 
-    # 获取并更新crm信息
-    def get_lastest_crm(self):
-        obj_crm = CRM()
-        crm_config_status = obj_crm.get_crm_data()
-        if 'ERROR' in crm_config_status:
-            print("Could not perform requested operations, are you root?")
-            return False
-        else:
-            redata = obj_crm.re_crm_data(crm_config_status)
-            self.js.update_crm_conf(redata)
-            return redata
-
     """
     disk 操作
     """
@@ -664,7 +630,6 @@ class Iscsi():
         print("iqn:", iqn)
         if self.js.check_key('Host', host):
             print("Fail! The Host " + host + " already existed.")
-            return False
         else:
             self.js.add_data("Host", host, iqn)
             print("Create success!")
@@ -684,7 +649,6 @@ class Iscsi():
             return True
         else:
             print("Fail! Can't find " + host)
-            return False
 
     def delete_host(self, host):
         print("Delete the host <", host, "> ...")
@@ -692,14 +656,12 @@ class Iscsi():
             if self.js.check_value('HostGroup', host):
                 print(
                     "Fail! The host in ... hostgroup, Please delete the hostgroup first.")
-                return False
             else:
                 self.js.delete_data('Host', host)
                 print("Delete success!")
                 return True
         else:
             print("Fail! Can't find " + host)
-            return False
 
     """
     diskgroup 操作
@@ -713,7 +675,6 @@ class Iscsi():
                 "Fail! The DiskGroup " +
                 diskgroup +
                 " already existed.")
-            return False
         else:
             t = True
             for i in disk:
@@ -726,7 +687,6 @@ class Iscsi():
                 return True
             else:
                 print("Fail! Please give the true name.")
-                return False
 
     def show_all_diskgroup(self):
         print("Diskgroup:")
@@ -777,7 +737,6 @@ class Iscsi():
                 "Fail! The HostGroup " +
                 hostgroup +
                 " already existed.")
-            return False
         else:
             t = True
             for i in host:
@@ -790,7 +749,6 @@ class Iscsi():
                 return True
             else:
                 print("Fail! Please give the true name.")
-                return False
 
     def show_all_hostgroup(self):
         print("Hostgroup:")
@@ -831,17 +789,13 @@ class Iscsi():
 
         if self.js.check_key('Map', map):
             print("The Map \"" + map + "\" already existed.")
-            return False
         elif self.js.check_key('HostGroup', hg) == False:
             print("Can't find " + hg)
-            return False
         elif self.js.check_key('DiskGroup', dg) == False:
             print("Can't find " + dg)
-            return False
         else:
             if self.js.check_value('Map', dg):
                 print("The diskgroup already map")
-                return False
             else:
                 if self.create_map(hg, dg):
                     self.js.add_data('Map', map, [hg, dg])
@@ -859,14 +813,12 @@ class Iscsi():
 
     def get_target(self):
         # 获取target
-        crmdata = self.get_lastest_crm()  # 格式：[[],[],[]]
-        if not crmdata:
-            return
-        # crmdata 为空时需要处理
-        tgt_all = crmdata[2][0]
-        target = tgt_all[0]
-        targetiqn = tgt_all[1]
-        return target, targetiqn
+        crm_data = CRMData()
+        if crm_data.update_crm_conf():
+            crm_data_dict = self.js.get_data('crm')
+            print(crm_data_dict)
+            target_all = crm_data_dict['target'][0] # 目前的设计只有一个target，所以取列表的第一个
+            return target_all[0], target_all[1]  # 返回target_name, target_iqn
 
     def get_drbd_data(self, dg):
         # 根据dg去收集drbdd的三项数据：resource name，minor number，device name
@@ -883,25 +835,23 @@ class Iscsi():
     def create_map(self, hg, dg):
         obj_crm = CRM()
         initiator = self.get_initiator(hg)
-        target, targetiqn = self.get_target()
+        target_name, target_iqn = self.get_target()
         drdb_list = self.get_drbd_data(dg)
 
         # 执行创建和启动
         for i in drdb_list:
             res, minor_nr, path = i
             lunid = minor_nr[-2:]  # lun id 取自MinorNr的后两位数字
-            if obj_crm.create_crm_res(res, targetiqn, lunid, path, initiator):
-                c = obj_crm.create_col(res, target)
-                o = obj_crm.create_order(res, target)
+            if obj_crm.create_crm_res(res, target_iqn, lunid, path, initiator):
+                c = obj_crm.create_col(res, target_name)
+                o = obj_crm.create_order(res, target_name)
                 if c and o:
                     print('create colocation and order success:', res)
                     obj_crm.start_res(res)
                 else:
                     print("create colocation and order fail")
-                    return False
             else:
                 print('create resource Fail!')
-                return False
         return True
 
     def show_all_map(self):
@@ -945,10 +895,10 @@ class Iscsi():
     # 调用crm删除map
     def delete_map(self, resname):
         obj_crm = CRM()
-        crm_config_statu = obj_crm.get_crm_data()
+        crm_data = CRMData()
+        crm_config_statu = crm_data.crm_conf_data
         if 'ERROR' in crm_config_statu:
             print("Could not perform requested operations, are you root?")
-            return False
         else:
             for disk in resname:
                 if obj_crm.delete_crm_res(disk):

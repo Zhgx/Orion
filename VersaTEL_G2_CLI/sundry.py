@@ -1,11 +1,11 @@
 # coding:utf-8
 import socket
-from functools import wraps
 import signal
 import time
 import os
 import getpass
 import traceback
+import re
 
 # Connect to the socket server and transfer data, and finally close the
 # connection.
@@ -97,3 +97,14 @@ def get_hostname():
 def get_path():
     return os.getcwd()
 
+
+def re_findall(re_string, tgt_string):
+    re_ = re.compile(re_string)
+    re_result = re_.findall(tgt_string)
+    return re_result
+
+
+def re_search(re_string, tgt_stirng):
+    re_ = re.compile(re_string)
+    re_result = re_.search(tgt_stirng).group()
+    return re_result

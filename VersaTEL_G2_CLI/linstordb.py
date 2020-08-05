@@ -154,10 +154,25 @@ class LinstorDB():
         self.create_tb()
         self.exc_get_vg()
         self.exc_get_thinlv()
-        self.get_output()
+        # self.get_output()
+        self.get_output_thread()
         self.con.commit()
 
-    def get_output(self):
+
+    def thread_get_linstor(self,cmd,sql):
+        actuator = ex.Linstor()
+        linstor_data = actuator.refine_linstor(ex.execute_linstor_cmd(cmd))
+        cur = self.con.cursor()
+        for i in range(len(linstor_data)):
+            linstor_data[i].insert(0, i + 1)
+            cur.execute(sql, linstor_data[i])
+
+    def get_output_thread(self):
+        """
+        通过多线程来执行linstor show命令，并插入数据库，但是会出现：sqlite3.ProgrammingError: Recursive use of cursors not allowed.的问题
+        暂时不使用多线程
+        """
+
         thread_all = []
         cmds = ['linstor --no-color --no-utf8 n l',
          'linstor --no-color --no-utf8 r lv',
@@ -170,17 +185,15 @@ class LinstorDB():
             thread_ins_data = threading.Thread(target=self.thread_get_linstor,args=(cmd,sql))
             thread_all.append(thread_ins_data)
 
-        # threading
-        # thread_ins_node = threading.Thread(target=self.thread_get_linstor,args=(cmds[0]))
-        # thread_ins_res = threading.Thread(target=self.thread_get_res())
-        # thread_ins_sp = threading.Thread(target=self.thread_get_sp())
-        #
-        # threads = [thread_ins_node,thread_ins_res,thread_ins_sp]
-
         for i in range(len(thread_all)):
             thread_all[i].start()
         for i in range(len(thread_all)):
             thread_all[i].join()
+
+    def get_output(self):
+        self.thread_get_node()
+        self.thread_get_res()
+        self.thread_get_sp()
 
     def exc_get_vg(self):
         obj_lvm = ex.LVM()
@@ -192,22 +205,22 @@ class LinstorDB():
         thinlv = obj_lvm.refine_thinlv(obj_lvm.get_thinlv())
         self.insert_data(self.replace_thinlvtb_sql, thinlv)
 
-    def thread_get_linstor(self,cmd,sql):
-        actuator = ex.Linstor()
-        linstor = actuator.refine_linstor(ex.execute_linstor_cmd(cmd))
-        self.insert_data(sql,linstor)
-    #
-    # def thread_get_node(self):
-    #     node = ex.LINSTOR.refine_linstor(ex.LINSTOR.get_linstor('linstor --no-color --no-utf8 n l'))
-    #     self.insert_data(self.replace_ntb_sql, node)
-    #
-    # def thread_get_res(self):
-    #     res = ex.LINSTOR.refine_linstor(ex.LINSTOR.get_res())
-    #     self.insert_data(self.replace_rtb_sql, res)
-    #
-    # def thread_get_sp(self):
-    #     sp = ex.LINSTOR.refine_linstor(ex.LINSTOR.get_sp())
-    #     self.insert_data(self.replace_stb_sql, sp)
+    # def thread_get_linstor(self,cmd,sql):
+    #     actuator = ex.Linstor()
+    #     linstor = actuator.refine_linstor(ex.execute_linstor_cmd(cmd))
+    #     self.insert_data(sql,linstor)
+
+    def thread_get_node(self):
+        node = ex.Linstor.refine_linstor(ex.execute_linstor_cmd('linstor --no-color --no-utf8 n l'))
+        self.insert_data(self.replace_ntb_sql, node)
+
+    def thread_get_res(self):
+        res = ex.Linstor.refine_linstor(ex.execute_linstor_cmd('linstor --no-color --no-utf8 r lv'))
+        self.insert_data(self.replace_rtb_sql, res)
+
+    def thread_get_sp(self):
+        sp = ex.Linstor.refine_linstor(ex.execute_linstor_cmd('linstor --no-color --no-utf8 sp l'))
+        self.insert_data(self.replace_stb_sql, sp)
 
     # 创建表
 
