@@ -160,6 +160,7 @@ class StoragePoolCommands():
 
         p_show_sp.set_defaults(func=self.show)
 
+        sp_parser.set_defaults(func=self.print_sp_help)
 
     @sd.record_exception
     def create(self, args):
@@ -221,5 +222,5 @@ class StoragePoolCommands():
                 self.logger.write_to_log('result_to_show','','',result)
 
 
-    def print_resource_help(self, *args):
+    def print_sp_help(self, *args):
         self.sp_parser.print_help()

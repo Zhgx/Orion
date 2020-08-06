@@ -5,6 +5,7 @@ import time
 import iscsi_json
 import consts
 import sundry as s
+import sys
 
 
 def execute_cmd(cmd, timeout=60):
@@ -274,10 +275,9 @@ class Linstor():
     def __init__(self):
         self.logger = consts.get_glo_log()
 
-    @staticmethod
-    def refine_linstor(table_data):
+    def refine_linstor(self,data):
         reSeparate = re.compile(r'(.*?\s\|)')
-        list_table = table_data.split('\n')
+        list_table = data.split('\n')
         list_data_all = []
 
         def clear_symbol(list_data):
@@ -290,11 +290,18 @@ class Linstor():
                 valid_data = reSeparate.findall(list_table[i])
                 clear_symbol(valid_data)
                 list_data_all.append(valid_data)
+
         try:
             list_data_all.pop(0)
         except IndexError:
             print('The data cannot be read, please check whether LINSTOR is normal.')
         return list_data_all
+
+    def get_linstor_data(self,cmd):
+        cmd_result = execute_cmd(cmd)
+        return self.refine_linstor(cmd_result)
+
+
 
 
 
@@ -431,8 +438,7 @@ class LinstorResource(Stor):
             if jud_result == 'war':
                 print(Stor.get_war_mes(result))
             if jud_result == 'suc':
-                result = ('Resource %s was successfully created on Node %s' % (res, node))
-                print(result)
+                print(f'Resource {res} was successfully created on Node {node}')
                 return {}
             elif jud_result == 'err':
                 fail_cause = Stor.get_err_detailes(result)

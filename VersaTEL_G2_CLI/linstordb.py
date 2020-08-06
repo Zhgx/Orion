@@ -137,31 +137,32 @@ class LinstorDB():
 
     def __init__(self):
         # linstor.db
-        self.con = sqlite3.connect(":memory:", check_same_thread=False)
+        self.con = sqlite3.connect(":memory:", check_same_thread=False, isolation_level=None)
         self.cur = self.con.cursor()
 
     # 执行获取数据，删除表，创建表，插入数据
     def rebuild_linstor_tb(self):
+        self.cur.execute("BEGIN TRANSACTION")
         self.cur.execute(self.crt_sptb_sql)  # 检查是否存在表，如不存在，则新创建表
         self.cur.execute(self.crt_rtb_sql)
         self.cur.execute(self.crt_ntb_sql)
-        self.con.commit()
-        self.get_output()
-        self.con.commit()
+        self.get_output_thread()
+        self.cur.execute("COMMIT")
 
     def rebuild_all_tb(self):
         # self.drop_tb()
+        self.cur.execute("BEGIN TRANSACTION")
         self.create_tb()
         self.exc_get_vg()
         self.exc_get_thinlv()
-        # self.get_output()
         self.get_output_thread()
-        self.con.commit()
+        self.cur.execute("COMMIT")
 
 
     def thread_get_linstor(self,cmd,sql):
-        actuator = ex.Linstor()
-        linstor_data = actuator.refine_linstor(ex.execute_cmd(cmd))
+        linstor = ex.Linstor()
+        linstor_data = linstor.get_linstor_data(cmd)
+        # self.insert_data(sql,linstor_data)
         cur = self.con.cursor()
         for i in range(len(linstor_data)):
             linstor_data[i].insert(0, i + 1)
@@ -190,10 +191,10 @@ class LinstorDB():
         for i in range(len(thread_all)):
             thread_all[i].join()
 
-    def get_output(self):
-        self.thread_get_node()
-        self.thread_get_res()
-        self.thread_get_sp()
+    # def get_output(self):
+    #     self.thread_get_node()
+    #     self.thread_get_res()
+    #     self.thread_get_sp()
 
     def exc_get_vg(self):
         obj_lvm = ex.LVM()
@@ -210,17 +211,17 @@ class LinstorDB():
     #     linstor = actuator.refine_linstor(ex.execute_linstor_cmd(cmd))
     #     self.insert_data(sql,linstor)
 
-    def thread_get_node(self):
-        node = ex.Linstor.refine_linstor(ex.execute_cmd('linstor --no-color --no-utf8 n l'))
-        self.insert_data(self.replace_ntb_sql, node)
-
-    def thread_get_res(self):
-        res = ex.Linstor.refine_linstor(ex.execute_cmd('linstor --no-color --no-utf8 r lv'))
-        self.insert_data(self.replace_rtb_sql, res)
-
-    def thread_get_sp(self):
-        sp = ex.Linstor.refine_linstor(ex.execute_cmd('linstor --no-color --no-utf8 sp l'))
-        self.insert_data(self.replace_stb_sql, sp)
+    # def thread_get_node(self):
+    #     node = ex.Linstor.refine_linstor(ex.execute_cmd('linstor --no-color --no-utf8 n l'))
+    #     self.insert_data(self.replace_ntb_sql, node)
+    #
+    # def thread_get_res(self):
+    #     res = ex.Linstor.refine_linstor(ex.execute_cmd('linstor --no-color --no-utf8 r lv'))
+    #     self.insert_data(self.replace_rtb_sql, res)
+    #
+    # def thread_get_sp(self):
+    #     sp = ex.Linstor.refine_linstor(ex.execute_cmd('linstor --no-color --no-utf8 sp l'))
+    #     self.insert_data(self.replace_stb_sql, sp)
 
     # 创建表
 

@@ -208,6 +208,8 @@ class ResourceCommands():
 
         p_show_res.set_defaults(func=self.show)
 
+        res_parser.set_defaults(func=self.print_resource_help)
+
     @staticmethod
     def is_args_correct(node, storagepool):
         if len(node) < len(storagepool):
