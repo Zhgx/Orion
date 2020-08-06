@@ -7,7 +7,7 @@ import consts
 import sundry as s
 
 
-def execute_linstor_cmd(cmd, timeout=60):
+def execute_cmd(cmd, timeout=60):
     p = subprocess.Popen(cmd, stderr=subprocess.STDOUT, stdout=subprocess.PIPE, shell=True)
     t_beginning = time.time()
     seconds_passed = 0
@@ -103,7 +103,7 @@ class CRMData():
         result = s.re_findall(re_target, self.crm_conf_data)
         return result
 
-    # 获取并更新crm信息, 这部分不需要
+    # 获取并更新crm信息
     def update_crm_conf(self):
         # crm_config_status = obj_crm.get_crm_data()
         if 'ERROR' in self.crm_conf_data:
@@ -222,6 +222,8 @@ class CRM():
 class LVM():
     def __init__(self):
         self.logger = consts.get_glo_log()
+        self.data_vg = self.get_vg()
+        self.data_lv = self.get_thinlv()
 
     def get_vg(self):
         cmd = 'vgs'
@@ -235,8 +237,8 @@ class LVM():
         if result:
             return result['rst']
 
-    def refine_thinlv(self, str):
-        all_lv = str.splitlines()
+    def refine_thinlv(self):
+        all_lv = self.data_vg.splitlines()
         list_thinlv = []
         re_ = re.compile(
             r'\s*(\S*)\s*(\S*)\s*\S*\s*(\S*)\s*\S*\s*\S*\s*\S*\s*?')
@@ -246,8 +248,8 @@ class LVM():
                 list_thinlv.append(list(thinlv_one[0]))
         return list_thinlv
 
-    def refine_vg(self, str):
-        all_vg = str.splitlines()
+    def refine_vg(self):
+        all_vg = self.data_lv.splitlines()
         list_vg = []
         re_ = re.compile(
             r'\s*(\S*)\s*\S*\s*\S*\s*\S*\s*\S*\s*(\S*)\s*(\S*)\s*?')
@@ -255,6 +257,17 @@ class LVM():
             vg_one = re_.findall(one)
             list_vg.append(list(vg_one[0]))
         return list_vg
+
+    def is_vg_exists(self,vg):
+        if vg in self.data_vg:
+            return True
+
+    def is_thinlv_exists(self,thinlv):
+        all_lv_list = self.data_lv.splitlines()[1:]
+        for one in all_lv_list:
+            if 'twi' and thinlv in one:
+                return True
+
 
 
 class Linstor():
@@ -284,6 +297,7 @@ class Linstor():
         return list_data_all
 
 
+
 # 子命令stor调用的方法
 class Stor():
 
@@ -292,19 +306,21 @@ class Stor():
 
     def judge_result(self, result):
         # 判断结果，对应进行返回
-        jug_result = Stor.re_sort(result)
-        if jug_result == 'war':
+        jug_result = Stor.re_result_sort(result)
+        if 'war' in jug_result:
             messege_war = Stor.get_war_mes(result.decode())
-            # print(messege_war)
+            print(messege_war)
         if jug_result == 'suc':
             return True
         elif jug_result == 'err':
             return result
+        elif jug_result == 'suc with war':
+            return True
         else:
             return result
 
     @staticmethod
-    def re_sort(result):
+    def re_result_sort(result):
         # 对命令进行结果根据正则匹配进行分类
         re_suc = re.compile('SUCCESS')
         re_war = re.compile('WARNING')
@@ -312,21 +328,12 @@ class Stor():
 
         if re_err.search(result):
             return 'err'
+        elif re_suc.search(result) and re_war.search(result):
+            return 'suc with war'
         elif re_suc.search(result):
             return 'suc'
         elif re_war.search(result):
             return 'war'
-
-    @staticmethod
-    def judge_no_vg(result, node, vg):
-        re_ = re.compile(
-            r'\(Node: \'' +
-            node +
-            r'\'\) Volume group \'' +
-            vg +
-            '\' not found')
-        if re_.search(result):
-            return (re_.search(result).group())
 
     @staticmethod
     def get_err_detailes(result):
@@ -340,8 +347,8 @@ class Stor():
         if re_.search(result):
             return (re_.search(result).group())
 
-    def print_execute_result(self, cmd):
-        cmd_result = execute_linstor_cmd(cmd)
+    def execute_and_print_result(self, cmd):
+        cmd_result = execute_cmd(cmd)
         result = self.judge_result(cmd_result)
         if not result:
             return
@@ -349,21 +356,103 @@ class Stor():
             print('SUCCESS')
             return True
         else:
+            print(result)
             print('FAIL')
             return result
+    # 创建storagepool
+    def create_storagepool_lvm(self, node, stp, vg):
+        obj_lvm = LVM()
+        if not obj_lvm.is_vg_exists(vg):
+            print(f'Volume group:"{vg}" does not exist')
+            return
+        cmd = f'linstor storage-pool create lvm {node} {stp} {vg}'
+        return self.execute_and_print_result(cmd)
+
+    def create_storagepool_thinlv(self, node, stp, tlv):
+        obj_lvm = LVM()
+        if not obj_lvm.is_thinlv_exists(tlv):
+            print(f'Thin logical volume:"{tlv}" does not exist')
+            return
+        cmd = f'linstor storage-pool create lvmthin {node} {stp} {tlv}'
+        return self.execute_and_print_result(cmd)
+
+    # 删除storagepool -- ok
+    def delete_storagepool(self, node, stp):
+        cmd = f'linstor storage-pool delete {node} {stp}'
+        try:
+            return self.execute_and_print_result(cmd)
+        except Exception as e:
+            pass
+            # self.logger.write_to_log('result_to_show','','',str(traceback.format_exc()))
+
+    # 创建集群节点
+    def create_node(self, node, ip, nt):
+        cmd = f'linstor node create {node} {ip}  --node-type {nt}'
+        nt_value = [
+            'Combined',
+            'combined',
+            'Controller',
+            'Auxiliary',
+            'Satellite']
+        if nt not in nt_value:
+            print('node type error,choose from ''Combined',
+                  'Controller', 'Auxiliary', 'Satellite''')
+        else:
+            return self.execute_and_print_result(cmd)
+
+    # 删除node
+    def delete_node(self, node):
+        cmd = f'linstor node delete {node}'
+        return self.execute_and_print_result(cmd)
+
+
+class LinstorResource(Stor):
+    def __init__(self):
+        Stor.__init__(self)
+
+    def collect_args(self,node,sp):
+        dict_args = {}
+        if len(sp) == 1:
+            for node_one in node:
+                dict_args.update({node_one:sp[0]})
+        else:
+            for node_one,sp_one in zip(node,sp):
+                dict_args.update({node_one:sp_one})
+        return dict_args
+
+
+    def execute_create_res(self,res,node,sp):
+        # 执行在指定节点和存储池上创建resource
+        # 成功返回空字典，失败返回 {节点：错误原因}
+        cmd = f'linstor resource create {node} {res} --storage-pool {sp}'
+        try:
+            result = execute_cmd(cmd)
+            jud_result = Stor.re_result_sort(str(result))
+            if jud_result == 'war':
+                print(Stor.get_war_mes(result))
+            if jud_result == 'suc':
+                result = ('Resource %s was successfully created on Node %s' % (res, node))
+                print(result)
+                return {}
+            elif jud_result == 'err':
+                fail_cause = Stor.get_err_detailes(result)
+                dict_fail = {node: fail_cause}
+                return dict_fail
+
+        except TimeoutError:
+            result = f'{res} created timeout on node {node}, the operation has been cancelled'
+            print(result)
+            return {node:'Execution creation timeout'}
+
 
     # 创建resource相关
     def linstor_delete_rd(self, res):
-        cmd = 'linstor rd d %s' % res
-        result = subprocess.check_output(cmd, shell=True)
-
-    def linstor_delete_vd(self, res):
-        cmd = 'linstor vd d %s' % res
-        result = subprocess.check_output(cmd, shell=True)
+        cmd = f'linstor rd d {res}'
+        execute_cmd(cmd)
 
     def linstor_create_rd(self, res):
-        cmd_rd = 'linstor rd c %s' % res
-        output = execute_linstor_cmd(cmd_rd)
+        cmd_rd = f'linstor rd c {res}'
+        output = execute_cmd(cmd_rd)
         result = self.judge_result(output)
         if result is True:
             return True
@@ -372,8 +461,8 @@ class Stor():
             return result
 
     def linstor_create_vd(self, res, size):
-        cmd_vd = 'linstor vd c %s %s' % (res, size)
-        output = execute_linstor_cmd(cmd_vd)
+        cmd_vd = f'linstor vd c {res} {size}'
+        output = execute_cmd(cmd_vd)
         result = self.judge_result(output)
         if result is True:
             return True
@@ -382,11 +471,12 @@ class Stor():
             self.linstor_delete_rd(res)
             return result
 
+
     # 创建resource 自动
     def create_res_auto(self, res, size, num):
-        cmd = 'linstor r c %s --auto-place %d' % (res, num)
+        cmd = f'linstor r c {res} --auto-place {num}'
         if self.linstor_create_rd(res) is True and self.linstor_create_vd(res, size) is True:
-            output = execute_linstor_cmd(cmd)
+            output = execute_cmd(cmd)
             result = self.judge_result(output)
             if result is True:
                 print('SUCCESS')
@@ -400,194 +490,64 @@ class Stor():
             print('The resource already exists')
             return ('The resource already exists')
 
+
     def create_res_manual(self, res, size, node, sp):
-        dict_result = {}
-
-        # Actions needed to create a resource
-        def execute_(cmd):
-            try:
-                # Undo the decorator @result_cmd, and execute execute_cmd function
-                # ex_cmd = self.execute_cmd.__wrapped__
-                # result = ex_cmd(self, cmd)
-                result = execute_linstor_cmd(cmd)
-                jud_result = Stor.re_sort(str(result))
-                if jud_result == 'war':
-                    print(Stor.get_war_mes(result))
-                if jud_result == 'suc':
-                    result = ('Resource %s was successfully created on Node %s' % (res, node_one))
-                    print(result)
-                elif jud_result == 'err':
-                    str_fail_cause = Stor.get_err_detailes(result)
-                    dict_fail = {node_one: str_fail_cause}
-                    dict_result.update(dict_fail)
-
-            except TimeoutError as e:
-                dict_result.update({node_one: 'Execution creation timeout'})
-                result = '%s created timeout on node %s, the operation has been cancelled' % (res, node_one)
-                print(result)
+        dict_all_fail = {}
+        dict_args = self.collect_args(node,sp)
 
         if self.linstor_create_rd(res) is True and self.linstor_create_vd(res, size) is True:
             pass
         else:
-            # need to be prefect
             print('The resource already exists')
             return ('The resource already exists')
 
-        if len(sp) == 1:
-            for node_one in node:
-                cmd = 'linstor resource create %s %s --storage-pool %s' % (node_one, res, sp[0])
-                execute_(cmd)
-            if len(dict_result.keys()) == len(node):
-                self.linstor_delete_rd(res)
-            if len(dict_result.keys()):
-                print('Creation failure on', *dict_result.keys(), sep=' ')
-                for node, cause in dict_result.items():
-                    print(node, ':', cause)
-                return dict_result
-            else:
-                return True
+        for node_one,sp_one in dict_args.items():
+            dict_one_result = self.execute_create_res(res,node_one,sp_one)
+            dict_all_fail.update(dict_one_result)
 
-        # When sp is not one, it is equal to the number of nodes
+        if len(dict_all_fail.keys()) == len(node):
+            self.linstor_delete_rd(res)
+        if len(dict_all_fail.keys()):
+            print('Creation failure on', *dict_all_fail.keys(), sep=' ')
+            for node, cause in dict_all_fail.items():
+                print(node, ':', cause)
+            return dict_all_fail
         else:
-            for node_one, sp_one in zip(node, sp):
-                cmd = 'linstor resource create %s %s --storage-pool %s' % (node_one, res, sp_one)
-                execute_(cmd)
-            if len(dict_result.keys()) == len(node):
-                self.linstor_delete_rd(res)
-            # whether_delete_rd()
-            if len(dict_result.keys()):
-                print('Creation failure on', *dict_result.keys(), sep=' ')
-                for node, cause in dict_result.items():
-                    print(node, ':', cause)
-                return dict_result
-            else:
-                return True
-            # return print_fail_node()
+            return True
 
     # 添加mirror（自动）
     def add_mirror_auto(self, res, num):
-        cmd = 'linstor r c %s --auto-place %d' % (res, num)
-        return self.print_execute_result(cmd)
+        cmd = f'linstor r c {res} --auto-place {num}'
+        return self.execute_and_print_result(cmd)
 
     def add_mirror_manual(self, res, node, sp):
-        dict_result = {}
+        dict_all_fail = {}
+        dict_args = self.collect_args(node,sp)
 
-        def execute_(cmd):
-            try:
-                # Undo the decorator @result_cmd, and execute execute_cmd function
-                # ex_cmd = self.execute_cmd.__wrapped__
-                # result = ex_cmd(self, cmd)
-                result = execute_linstor_cmd(cmd)
-                jud_result = Stor.re_sort(str(result))
-                if jud_result == 'WAR':
-                    print(Stor.get_war_mes(result))
-                if jud_result == 'SUC':
-                    result = ('Resource %s was successfully created on Node %s' % (res, node_one))
-                    print(result)
-                elif jud_result == 'ERR':
-                    str_fail_cause = Stor.get_err_detailes(result)
-                    dict_fail = {node_one: str_fail_cause}
-                    dict_result.update(dict_fail)
-            except TimeoutError as e:
-                dict_result.update({node_one: 'Execution creation timeout'})
-                print('%s created timeout on node %s, the operation has been cancelled' % (res, node_one))
+        for node_one,sp_one in dict_args.items():
+            dict_one_result = self.execute_create_res(res,node_one,sp_one)
+            dict_all_fail.update(dict_one_result)
 
-        def print_fail_node():
-            if len(dict_result.keys()):
-                print('Creation failure on', *dict_result.keys(), sep=' ')
-                return dict_result
-            else:
-                return True
-
-        if len(sp) == 1:
-            for node_one in node:
-                cmd = 'linstor resource create %s %s --storage-pool %s' % (
-                    node_one, res, sp[0])
-                execute_(cmd)
-            return print_fail_node()
-        elif len(node) == len(sp):
-            for node_one, stp_one in zip(node, sp):
-                cmd = 'linstor resource create %s %s --storage-pool %s' % (
-                    node_one, res, stp_one)
-                execute_(cmd)
-            return print_fail_node()
+        if len(dict_all_fail.keys()):
+            print('Creation failure on', *dict_all_fail.keys(), sep=' ')
+            return dict_all_fail
         else:
-            print('The number of storage pools does not meet the requirements.')
+            return True
 
     # 创建resource --diskless
     def create_res_diskless(self, node, res):
-        cmd = 'linstor r c %s %s --diskless' % (node, res)
-        return self.print_execute_result(cmd)
+        cmd = f'linstor r c {node} {res} --diskless'
+        return self.execute_and_print_result(cmd)
 
     # 删除resource,指定节点
     def delete_resource_des(self, node, res):
-        cmd = 'linstor resource delete %s %s' % (node, res)
-        return self.print_execute_result(cmd)
+        cmd = f'linstor resource delete {node} {res}'
+        return self.execute_and_print_result(cmd)
 
     # 删除resource，全部节点
     def delete_resource_all(self, res):
-        cmd = 'linstor resource-definition delete %s' % res
-        return self.print_execute_result(cmd)
-
-    # 创建storagepool
-    def create_storagepool_lvm(self, node, stp, vg):
-        cmd = 'linstor storage-pool create lvm %s %s %s' % (node, stp, vg)
-        result = execute_linstor_cmd(cmd)
-        jud_result = Stor.re_sort(str(result))
-        if jud_result == 'war':
-            print(result)
-        # 发生ERROR的情况
-        if jud_result == 'err':
-            # 使用不存的vg
-            if Stor.judge_no_vg(str(result), node, vg):
-                # 获取和打印提示信息
-                result = Stor.judge_no_vg(str(result), node, vg)
-                print(result)
-                # 删除掉已创建的sp
-                result_del = subprocess.check_output(
-                    'linstor --no-color storage-pool delete %s %s' %
-                    (node, stp), shell=True)
-            else:
-                print(result)
-                print('FAIL')
-                return result
-        # 成功
-        elif jud_result == 'suc':
-            print('SUCCESS')
-            return True
-
-    def create_storagepool_thinlv(self, node, stp, tlv):
-        cmd = 'linstor storage-pool create lvmthin %s %s %s' % (node, stp, tlv)
-        return self.print_execute_result(cmd)
-
-    # 删除storagepool -- ok
-    def delete_storagepool(self, node, stp):
-        cmd = 'linstor storage-pool delete %s %s' % (node, stp)
-        try:
-            return self.print_execute_result(cmd)
-        except Exception as e:
-            pass
-            # self.logger.write_to_log('result_to_show','','',str(traceback.format_exc()))
-
-    # 创建集群节点
-    def create_node(self, node, ip, nt):
-        cmd = 'linstor node create %s %s  --node-type %s' % (node, ip, nt)
-        nt_value = [
-            'Combined',
-            'combined',
-            'Controller',
-            'Auxiliary',
-            'Satellite']
-        if nt not in nt_value:
-            print('node type error,choose from ''Combined',
-                  'Controller', 'Auxiliary', 'Satellite''')
-        else:
-            return self.print_execute_result(cmd)
-
-    # 删除node
-    def delete_node(self, node):
-        cmd = 'linstor node delete %s' % node
-        return self.print_execute_result(cmd)
+        cmd = f'linstor resource-definition delete {res}'
+        return self.execute_and_print_result(cmd)
 
 
 class Iscsi():
@@ -601,7 +561,7 @@ class Iscsi():
 
     # 展示全部disk
     def show_all_disk(self):
-        data = execute_linstor_cmd('linstor --no-color --no-utf8 r lv')
+        data = execute_cmd('linstor --no-color --no-utf8 r lv')
         linstorlv = Linstor.refine_linstor(data)
         disks = {}
         for d in linstorlv:
@@ -823,7 +783,7 @@ class Iscsi():
     def get_drbd_data(self, dg):
         # 根据dg去收集drbdd的三项数据：resource name，minor number，device name
         disk_all = self.js.get_data('DiskGroup').get(dg)
-        linstor_cmd_result = execute_linstor_cmd('linstor --no-color --no-utf8 r lv')
+        linstor_cmd_result = execute_cmd('linstor --no-color --no-utf8 r lv')
         linstorlv = Linstor.refine_linstor(linstor_cmd_result)
         drdb_list = []
         for res in linstorlv:

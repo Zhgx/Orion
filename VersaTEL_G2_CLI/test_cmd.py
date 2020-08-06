@@ -52,3 +52,58 @@ def execute_cmd(cmd, timeout=60):
 # # cmd = 'linstor rd d res_test'
 # # ex_cmd(cmd)
 
+class LVM():
+    def __init__(self):
+        self.data_vg = self.get_vg()
+        self.data_lv = self.get_thinlv()
+
+    def get_vg(self):
+        cmd = 'vgs'
+        result = subprocess.check_output(cmd,shell=True)
+        if result:
+            return result.decode()
+
+    def get_thinlv(self):
+        cmd = 'lvs'
+        result = subprocess.check_output(cmd,shell=True)
+        if result:
+            return result.decode()
+
+    def refine_thinlv(self):
+        all_lv = self.data_vg.splitlines()
+        list_thinlv = []
+        re_ = re.compile(
+            r'\s*(\S*)\s*(\S*)\s*\S*\s*(\S*)\s*\S*\s*\S*\s*\S*\s*?')
+        for one in all_lv:
+            if 'twi' in one:
+                thinlv_one = re_.findall(one)
+                list_thinlv.append(list(thinlv_one[0]))
+        return list_thinlv
+
+    def refine_vg(self):
+        all_vg = self.data_lv.splitlines()
+        list_vg = []
+        re_ = re.compile(
+            r'\s*(\S*)\s*\S*\s*\S*\s*\S*\s*\S*\s*(\S*)\s*(\S*)\s*?')
+        for one in all_vg[1:]:
+            vg_one = re_.findall(one)
+            list_vg.append(list(vg_one[0]))
+        return list_vg
+
+    def thinlv_exists(self):
+        all_lv_list = self.data_lv.splitlines()[1:]
+        print(all_lv_list)
+        for one in all_lv_list:
+            print(one)
+            if 'drbdpool' and 'wi' in one:
+                print(one)
+
+
+
+import pprint
+
+lvm  = LVM()
+print(lvm.data_vg)
+pprint.pprint(lvm.data_vg)
+print(lvm.data_lv)
+lvm.thinlv_exists()

@@ -164,7 +164,7 @@ class NodeCommands():
 
     @sd.record_exception
     def show(self, args):
-        tb = linstordb.OutputData(self.logger)
+        tb = linstordb.OutputData()
         if args.nocolor:
             if args.node:
                 tb.show_node_one(args.node)

@@ -161,7 +161,7 @@ class LinstorDB():
 
     def thread_get_linstor(self,cmd,sql):
         actuator = ex.Linstor()
-        linstor_data = actuator.refine_linstor(ex.execute_linstor_cmd(cmd))
+        linstor_data = actuator.refine_linstor(ex.execute_cmd(cmd))
         cur = self.con.cursor()
         for i in range(len(linstor_data)):
             linstor_data[i].insert(0, i + 1)
@@ -197,12 +197,12 @@ class LinstorDB():
 
     def exc_get_vg(self):
         obj_lvm = ex.LVM()
-        vg = obj_lvm.refine_vg(obj_lvm.get_vg())
+        vg = obj_lvm.refine_vg()
         self.insert_data(self.replace_vgtb_sql, vg)
 
     def exc_get_thinlv(self):
         obj_lvm = ex.LVM()
-        thinlv = obj_lvm.refine_thinlv(obj_lvm.get_thinlv())
+        thinlv = obj_lvm.refine_thinlv()
         self.insert_data(self.replace_thinlvtb_sql, thinlv)
 
     # def thread_get_linstor(self,cmd,sql):
@@ -211,15 +211,15 @@ class LinstorDB():
     #     self.insert_data(sql,linstor)
 
     def thread_get_node(self):
-        node = ex.Linstor.refine_linstor(ex.execute_linstor_cmd('linstor --no-color --no-utf8 n l'))
+        node = ex.Linstor.refine_linstor(ex.execute_cmd('linstor --no-color --no-utf8 n l'))
         self.insert_data(self.replace_ntb_sql, node)
 
     def thread_get_res(self):
-        res = ex.Linstor.refine_linstor(ex.execute_linstor_cmd('linstor --no-color --no-utf8 r lv'))
+        res = ex.Linstor.refine_linstor(ex.execute_cmd('linstor --no-color --no-utf8 r lv'))
         self.insert_data(self.replace_rtb_sql, res)
 
     def thread_get_sp(self):
-        sp = ex.Linstor.refine_linstor(ex.execute_linstor_cmd('linstor --no-color --no-utf8 sp l'))
+        sp = ex.Linstor.refine_linstor(ex.execute_cmd('linstor --no-color --no-utf8 sp l'))
         self.insert_data(self.replace_stb_sql, sp)
 
     # 创建表
@@ -238,7 +238,7 @@ class LinstorDB():
         self.cur.execute(tables_sql)
         tables = self.cur.fetchall()
         for table in tables:
-            drp_sql = "drop table if exists %s" % table
+            drp_sql = f'drop table if exists {table}'
             self.cur.execute(drp_sql)
         self.con.commit()
 
@@ -289,19 +289,19 @@ class DataProcess():
     # The node name of the incoming data, and return its information in the
     # node table
     def _select_nodetb_one(self, node):
-        select_sql = "SELECT Node,NodeType,Addresses,State FROM nodetb WHERE  Node = \'%s\'" % node
+        select_sql = f"SELECT Node,NodeType,Addresses,State FROM nodetb WHERE  Node = '{node}'"
         return self.sql_fetch_one(select_sql)
 
     def _select_res_num(self, node):
-        select_sql = "SELECT COUNT(Resource) FROM resourcetb WHERE  Node = \'%s\'" % node
+        select_sql = f"SELECT COUNT(Resource) FROM resourcetb WHERE  Node = '{node}'"
         return self.sql_fetch_one(select_sql)
 
     def _select_stp_num(self, node):
-        select_sql = "SELECT COUNT(Node) FROM storagepooltb WHERE Node = \'%s\'" % node
+        select_sql = f"SELECT COUNT(Node) FROM storagepooltb WHERE Node = '{node}'"
         return self.sql_fetch_one(select_sql)
 
     def _select_resourcetb(self, node):
-        select_sql = "SELECT DISTINCT Resource,StoragePool,Allocated,DeviceName,InUse,State FROM resourcetb WHERE Node = \'%s\'" % node
+        select_sql = f"SELECT DISTINCT Resource,StoragePool,Allocated,DeviceName,InUse,State FROM resourcetb WHERE Node = '{node}'"
         return self.sql_fetch_all(select_sql)
 
     # resource
@@ -328,11 +328,11 @@ class DataProcess():
         return result
 
     def _get_mirro_way(self, res):
-        select_sql = "SELECT COUNT(Resource) FROM resourcetb WHERE Resource = \'%s\'" % res
+        select_sql = f"SELECT COUNT(Resource) FROM resourcetb WHERE Resource = '{res}'"
         return self.sql_fetch_one(select_sql)
 
     def _get_mirror_way_son(self, res):
-        select_sql = "SELECT Node,StoragePool,InUse,State FROM resourcetb WHERE Resource = \'%s\'" % res
+        select_sql = f"SELECT Node,StoragePool,InUse,State FROM resourcetb WHERE Resource = '{res}'"
         return self.sql_fetch_all(select_sql)
 
     # storagepool
@@ -342,22 +342,21 @@ class DataProcess():
         return self.sql_fetch_all(select_sql)
 
     def _res_sum(self, node, stp):
-        select_sql = "SELECT COUNT(DISTINCT Resource) FROM resourcetb WHERE Node = '{}' AND StoragePool = '{}'".format(
-            node, stp)
+        select_sql = f"SELECT COUNT(DISTINCT Resource) FROM resourcetb WHERE Node = '{node}' AND StoragePool = '{stp}'"
         num = self.sql_fetch_one(select_sql)
         return num[0]
 
     def _res(self, stp):
-        select_sql = "SELECT Resource,Allocated,DeviceName,InUse,State FROM resourcetb WHERE StoragePool = \'%s\'" % stp
+        select_sql = f"SELECT Resource,Allocated,DeviceName,InUse,State FROM resourcetb WHERE StoragePool = '{stp}'"
         return self.sql_fetch_all(select_sql)
 
     def _node_num_of_storagepool(self, stp):
-        select_sql = "SELECT COUNT(Node) FROM storagepooltb WHERE StoragePool = \'%s\'" % stp
+        select_sql = f"SELECT COUNT(Node) FROM storagepooltb WHERE StoragePool = '{stp}'"
         num = self.sql_fetch_one(select_sql)
         return num[0]
 
     def _node_name_of_storagepool(self, stp):
-        select_sql = "SELECT Node FROM storagepooltb WHERE StoragePool = \'%s\'" % stp
+        select_sql = f"SELECT Node FROM storagepooltb WHERE StoragePool = '{stp}'"
         date_set = self.sql_fetch_all(select_sql)
         if len(date_set) == 1:
             names = date_set[0][0]
@@ -509,7 +508,7 @@ def table(func):
 
 
 class OutputData(DataProcess):
-    def __init__(self,logger):
+    def __init__(self):
         DataProcess.__init__(self)
 
 
