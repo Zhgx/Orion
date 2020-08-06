@@ -29,7 +29,7 @@ class usage():
 
 class NodeCommands():
     def __init__(self):
-        self.logger = consts.get_glo_log()
+        self.logger = consts.glo_log()
         self.actuator = ex.Stor()
 
     def setup_commands(self, parser):

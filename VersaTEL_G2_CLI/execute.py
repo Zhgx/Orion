@@ -121,7 +121,7 @@ class CRMData():
 
 class CRM():
     def __init__(self):
-        self.logger = consts.get_glo_log()
+        self.logger = consts.glo_log()
 
     def create_crm_res(self, res, target_iqn, lunid, path, initiator):
         cmd = f'crm conf primitive {res} iSCSILogicalUnit params ' \
@@ -222,7 +222,7 @@ class CRM():
 
 class LVM():
     def __init__(self):
-        self.logger = consts.get_glo_log()
+        self.logger = consts.glo_log()
         self.data_vg = self.get_vg()
         self.data_lv = self.get_thinlv()
 
@@ -273,7 +273,7 @@ class LVM():
 
 class Linstor():
     def __init__(self):
-        self.logger = consts.get_glo_log()
+        self.logger = consts.glo_log()
 
     def refine_linstor(self,data):
         reSeparate = re.compile(r'(.*?\s\|)')
@@ -309,7 +309,7 @@ class Linstor():
 class Stor():
 
     def __init__(self):
-        self.logger = consts.get_glo_log()
+        self.logger = consts.glo_log()
 
     def judge_result(self, result):
         # 判断结果，对应进行返回
@@ -558,7 +558,7 @@ class LinstorResource(Stor):
 
 class Iscsi():
     def __init__(self):
-        self.logger = consts.get_glo_log()
+        self.logger = consts.glo_log()
         self.js = iscsi_json.JSON_OPERATION()
 
     """
@@ -567,8 +567,8 @@ class Iscsi():
 
     # 展示全部disk
     def show_all_disk(self):
-        data = execute_cmd('linstor --no-color --no-utf8 r lv')
-        linstorlv = Linstor.refine_linstor(data)
+        linstor = Linstor()
+        linstorlv = linstor.get_linstor_data('linstor --no-color --no-utf8 r lv')
         disks = {}
         for d in linstorlv:
             disks.update({d[1]: d[5]})
@@ -789,8 +789,8 @@ class Iscsi():
     def get_drbd_data(self, dg):
         # 根据dg去收集drbdd的三项数据：resource name，minor number，device name
         disk_all = self.js.get_data('DiskGroup').get(dg)
-        linstor_cmd_result = execute_cmd('linstor --no-color --no-utf8 r lv')
-        linstorlv = Linstor.refine_linstor(linstor_cmd_result)
+        linstor = Linstor()
+        linstorlv = linstor.get_linstor_data('linstor --no-color --no-utf8 r lv')
         drdb_list = []
         for res in linstorlv:
             for disk_one in disk_all:

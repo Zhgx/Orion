@@ -47,7 +47,50 @@ def set_glo_log(value):
     set_value('LOG', value)
 
 
-def get_glo_log():
+def set_glo_db(value):
+    set_value('LOG_DB', value)
+
+
+def set_glo_rpl(value):
+    set_value('RPL', value)
+
+
+def set_glo_tsc_id(value):
+    set_value('TSC_ID', value)
+
+
+def set_glo_log_id(value):
+    set_value('LOG_ID', value)
+
+
+def set_glo_log_switch(value):
+    set_value('LOG_SWITCH', value)
+
+
+def glo_log():
     return get_value('LOG')
 
+
+def glo_db():
+    return get_value('LOG_DB')
+
+
+def glo_str():
+    return get_value('STR')
+
+
+def glo_rpl():
+    return get_value('RPL')
+
+
+def glo_tsc_id():
+    return get_value('TSC_ID')
+
+
+def glo_log_id():
+    return get_value('LOG_ID')
+
+
+def glo_log_switch():
+    return get_value('LOG_SWITCH')
 

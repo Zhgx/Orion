@@ -25,21 +25,12 @@ class MyLoggerAdapter(logging.LoggerAdapter):
 
 
 class Log(object):
-    fmt = logging.Formatter("%(asctime)s [%(username)s] [%(type)s] [%(transaction_id)s] [%(describe1)s] [%(describe2)s] [%(data)s]",datefmt = '[%Y/%m/%d%H:%M:%S]')
+    fmt = logging.Formatter("%(asctime)s [%(username)s] [%(type)s] [%(transaction_id)s] [%(describe1)s] [%(describe2)s] [%(data)s]",datefmt = '[%Y/%m/%d %H:%M:%S]')
     handler_input = logging.handlers.RotatingFileHandler(filename='VersaTEL_G2_CLI.log',mode='a',maxBytes=10*1024*1024,backupCount=5)
     handler_input.setFormatter(fmt)
     def __init__(self,username,transaction_id):
-        # log_dir = 'logs'
-        # os.makedirs(log_dir, exist_ok=True)
-        # self._log_dir = log_dir
-        # self._log_name = log_name
-        # logging.config.fileConfig('logging_CLI.conf')
         self.username = username
         self.transaction_id = transaction_id
-        # self.InputLogger = self.logger_input()
-        # self.OutputLogger = self.logger_output()
-        # self.LocalLogger = self.logger_local()
-        # self.GUILogger = self.logger_gui() # GUI only, temporarily stored
 
 
     def logger_input(self):

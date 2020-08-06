@@ -36,7 +36,7 @@ class usage():
 
 class StoragePoolCommands():
     def __init__(self):
-        self.logger = consts.get_glo_log()
+        self.logger = consts.glo_log()
         self.actuator = ex.Stor()
 
 

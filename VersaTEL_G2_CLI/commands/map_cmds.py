@@ -9,7 +9,7 @@ import consts
 class MapCommands():
 
     def __init__(self):
-        self.logger = consts.get_glo_log()
+        self.logger = consts.glo_log()
 
     def setup_commands(self, parser):
         """

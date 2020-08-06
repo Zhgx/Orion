@@ -117,7 +117,6 @@ class LogDB():
                 self.insert(data)
 
             f.close()
-
         self.con.commit()
 
 

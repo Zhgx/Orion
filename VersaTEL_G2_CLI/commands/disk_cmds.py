@@ -20,7 +20,7 @@ def record_exception(func):
 
 class DiskCommands():
     def __init__(self):
-        self.logger = consts.get_glo_log()
+        self.logger = consts.glo_log()
 
 
     def setup_commands(self, parser):

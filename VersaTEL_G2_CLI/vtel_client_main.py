@@ -23,7 +23,7 @@ from commands import (
 
 class MyArgumentParser(argparse.ArgumentParser):
     def parse_args(self, args=None, namespace=None):
-        logger = consts.get_glo_log()
+        logger = consts.glo_log()
         args, argv = self.parse_known_args(args, namespace)
         if argv:
             msg = ('unrecognized arguments: %s')
@@ -32,14 +32,14 @@ class MyArgumentParser(argparse.ArgumentParser):
         return args
 
     def print_usage(self, file=None):
-        logger = consts.get_glo_log()
+        logger = consts.glo_log()
         logger.write_to_log('result_to_show', '', '', 'print usage')
         if file is None:
             file = sys.stdout
         self._print_message(self.format_usage(), file)
 
     def print_help(self, file=None):
-        logger = consts.get_glo_log()
+        logger = consts.glo_log()
         logger.write_to_log('result_to_show', '', '', 'print help')
         if file is None:
             file = sys.stdout
@@ -58,8 +58,6 @@ class VtelCLI(object):
     """
     Vtel command line client
     """
-
-
     def __init__(self):
         consts._init()
         self.username = sundry.get_username()
@@ -173,7 +171,7 @@ class VtelCLI(object):
     # When using the parameter '-gui', send the database through the socket
     def send_database(self, args):
         if args.gui:
-            db = linstordb.LinstorDB(self.logger)
+            db = linstordb.LinstorDB()
             data = pickle.dumps(db.data_base_dump())
             sundry.send_via_socket(data)
         else:
@@ -192,46 +190,55 @@ class VtelCLI(object):
     def replay(self,args):
         logdb = replay.LogDB()
         logdb.produce_logdb()
+        # 全局
         if args.transactionid and args.date:
             print('Please specify only one type of data for replay')
             return
         elif args.transactionid:
             cmd = logdb.get_userinput_from_tid(args.transactionid)
-            result = logdb.get_result_from_tid(args.transactionid)
-            print('CMD:%s'%cmd)
-            subprocess.run('python3 %s'%cmd,shell=True)
-            print('--------------------Output comparison--------------------')
-            print(result[0])
+            self.replay_args = self._parser.parse_args(cmd.split())
+            print(self.replay_args)
+
+
+            #  传递这个命令
         elif args.date:
             # python3 vtel_client_main.py re -d '2020/06/16 16:08:00' '2020/06/16 16:08:10'
             cmds = logdb.get_userinput_from_time(args.date[0],args.date[1])
             result_all = logdb.get_result_from_time(args.date[0],args.date[1])
-            for cmd,res in zip(cmds,result_all):
-                print('CMD:%s' % cmd)
-                subprocess.run('python3 %s'%cmd,shell=True)
-                print('--------------------Output comparison--------------------')
-                print(res[0])
-                print('========================= next ==========================')
+            # for cmd,res in zip(cmds,result_all):
+            #     print('CMD:%s' % cmd)
+            #     subprocess.run('python3 %s'%cmd,shell=True)
+            #     print('--------------------Output comparison--------------------')
+            #     print(res[0])
+            #     print('========================= next ==========================')
         else:
-            print('replay help')
-
-        pass
-        # import replay_test
-        # replay_test.get_input(args.date,args.transactionid)
+            pass
+            # 获取log的全部tid，从而后去命令，进行循环执行
 
 
-    def run(self):
-        pass
+    def run(self,args):
+        rpl = consts.glo_rpl()
+        if rpl == 'yes':
+            args.func(self.replay_args)
+        else:
+            args.func(args)
 
 
     def parse(self):
+        args = self._parser.parse_args()
+        if args.subargs_vtel == 'replay':
+            print('replay')
+            consts.set_glo_log_switch('no')
+            pass
+            # 设置全局变量
+            # 获取要执行的命令？
         if sys.argv:
             path = sundry.get_path()
             cmd = ' '.join(sys.argv)
             self.logger.write_to_log('user_input',path,'',cmd)
-        args = self._parser.parse_args()
+
         if args.subargs_vtel:
-            args.func(args) # try expect
+            self.run(args)
         else:
             self._parser.print_help()
 
