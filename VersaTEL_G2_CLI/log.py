@@ -2,12 +2,7 @@
 import logging
 import logging.handlers
 import logging.config
-from functools import wraps
-import traceback
-import sys
-import os
-import getpass
-import socket
+import consts
 
 
 
@@ -34,9 +29,9 @@ class Log(object):
 
 
     def logger_input(self):
-        Logger_cli = logging.getLogger('cli_input')
-        Logger_cli.addHandler(self.handler_input)
-        Logger_cli.setLevel(logging.DEBUG)
+        logger_cli = logging.getLogger('vtel_cli')
+        logger_cli.addHandler(self.handler_input)
+        logger_cli.setLevel(logging.DEBUG)
         # %(asctime)s - [%(username)s] - [%(type)s] - [%(describe1)s] - [%(describe2)s] - [%(data)s]
         extra_dict = {
             "username": "USERNAME",
@@ -46,48 +41,18 @@ class Log(object):
             "describe2": "",
             "data": ""}
         # 获取一个自定义LoggerAdapter类的实例
-        logger = MyLoggerAdapter(Logger_cli, extra_dict)
-        return logger
-
-    def logger_output(self):
-        Logger_Output = logging.getLogger('cli_output')
-        # %(asctime)s - [%(username)s] - [%(type)s] - [%(describe1)s] - [%(describe2)s] - [%(data)s]
-        extra_dict = {
-            "username": "USERNAME",
-            "type": "TYPE",
-            "transaction_id": "",
-            "describe1": "",
-            "describe2": "",
-            "data": ""}
-        # 获取一个自定义LoggerAdapter类的实例
-        logger = MyLoggerAdapter(Logger_Output, extra_dict)
-        return logger
-
-    def logger_local(self):
-        logger_local = logging.getLogger('localmessage')
-        extra_dict = {"path": "PATH", "RES": "RES"}
-        logger = MyLoggerAdapter(logger_local, extra_dict)
-        return logger
-
-    # GUI only, temporarily stored here
-    def logger_gui(self):
-        logger_gui = logging.getLogger('gui')
-        extra_dict = {
-            "username": "USERNAME",
-            "type": "TYPE",
-            "transaction_id": "",
-            "describe1": "",
-            "describe2": "",
-            "data": "DATA"}
-        logger = MyLoggerAdapter(logger_gui, extra_dict)
+        logger = MyLoggerAdapter(logger_cli, extra_dict)
         return logger
 
 
     # write to log file
     def write_to_log(self,type,describe1,describe2,data):
-        InputLogger = self.logger_input()
+        logger_cli = self.logger_input()
+
+        if consts.glo_log_switch() == 'no':
+            logger_cli.logger.removeHandler(self.handler_input)
         # InputLogger.logger.removeHandler(self.handler_input)
-        InputLogger.debug(
+        logger_cli.debug(
             '',
             extra={
                 'username': self.username,
@@ -96,26 +61,3 @@ class Log(object):
                 'describe1': describe1,
                 'describe2': describe2,
                 'data': data})
-
-
-
-# 放置到sundry模块中去了
-# class Collector(object):
-#     linstor_conf_path = '/etc/linstor/linstor-client.conf'
-#
-#     def get_username(self):
-#         return getpass.getuser()
-#
-#     def get_hostname(self):
-#         return socket.gethostname()
-#
-#     # Get the path of the program
-#     def get_path(self):
-#         return os.getcwd()
-#
-#     # Get LISNTOR controller configuration file information
-#     def get_linstor_controller(self, path):
-#         path = self.linstor_conf_path
-#         with open(path, 'r') as f:
-#             data = f.read()
-#             return data

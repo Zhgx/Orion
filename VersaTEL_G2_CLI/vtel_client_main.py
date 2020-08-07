@@ -33,6 +33,9 @@ class MyArgumentParser(argparse.ArgumentParser):
 
     def print_usage(self, file=None):
         logger = consts.glo_log()
+        path = sundry.get_path()
+        cmd = ' '.join(sys.argv[1:])
+        logger.write_to_log('user_input',path,'',cmd)
         logger.write_to_log('result_to_show', '', '', 'print usage')
         if file is None:
             file = sys.stdout
@@ -64,6 +67,9 @@ class VtelCLI(object):
         self.transaction_id = sundry.get_transaction_id()
         self.logger = log.Log(self.username,self.transaction_id)
         consts.set_glo_log(self.logger)
+        self.logdb = consts
+
+        self.replay_args_list = []
 
         self._node_commands = NodeCommands()
         self._resource_commands = ResourceCommands()
@@ -148,7 +154,9 @@ class VtelCLI(object):
         # Set the binding function of iscsi
         parser_iscsi.set_defaults(func=self.send_json)
 
-        parser_replay.set_defaults(func=self.replay)
+
+        # 绑定replay有问题
+        # parser_replay.set_defaults(func=self.replay)
 
         subp_stor = parser_stor.add_subparsers(dest='subargs_stor',metavar='')
         subp_iscsi = parser_iscsi.add_subparsers(dest='subargs_iscsi',metavar='')
@@ -191,26 +199,43 @@ class VtelCLI(object):
         logdb = replay.LogDB()
         logdb.produce_logdb()
         # 全局
+
+
+    def replay2(self,args):
+        logdb = consts.glo_db()
+        consts.set_glo_log('no')
         if args.transactionid and args.date:
             print('Please specify only one type of data for replay')
             return
         elif args.transactionid:
-            cmd = logdb.get_userinput_from_tid(args.transactionid)
-            self.replay_args = self._parser.parse_args(cmd.split())
-            print(self.replay_args)
+            # 根据transactionid获取user_input
+            # 如果为空，打印该事务不符合replay 或不存在
+            replay_cmd = logdb.get_userinput_via_tid(args.transactionid)
+            if replay_cmd:
+                replay_args = self._parser.parse_args(replay_cmd.split())
+                # replay_args.func(replay_args)
+                print(replay_args)
+            else:
+                print('该事务id不存在或者不符合replay条件（python vtel_client_main）')
 
+            # self.replay_args.func(self.replay_args)
 
             #  传递这个命令
         elif args.date:
-            # python3 vtel_client_main.py re -d '2020/06/16 16:08:00' '2020/06/16 16:08:10'
-            cmds = logdb.get_userinput_from_time(args.date[0],args.date[1])
-            result_all = logdb.get_result_from_time(args.date[0],args.date[1])
-            # for cmd,res in zip(cmds,result_all):
-            #     print('CMD:%s' % cmd)
-            #     subprocess.run('python3 %s'%cmd,shell=True)
-            #     print('--------------------Output comparison--------------------')
-            #     print(res[0])
-            #     print('========================= next ==========================')
+            replay_cmd_list = logdb.get_userinput_via_time(args.date[0],args.date[1])
+            replay_args_list = []
+            for replay_cmd in replay_cmd_list:
+                if replay_cmd[0]:
+                    replay_args = self._parser.parse_args(replay_cmd[0].split())
+                    print(replay_cmd[0])
+                    replay_args_list.append(replay_args)
+                else:
+                    print('该事务id:不存在或者不符合replay条件（python vtel_client_main）')
+
+            for replay_args in replay_args_list:
+                replay_args.func(replay_args)
+
+
         else:
             pass
             # 获取log的全部tid，从而后去命令，进行循环执行
@@ -219,27 +244,38 @@ class VtelCLI(object):
     def run(self,args):
         rpl = consts.glo_rpl()
         if rpl == 'yes':
-            args.func(self.replay_args)
+            print('2')
+            args.func(args)
         else:
             args.func(args)
 
 
     def parse(self):
         args = self._parser.parse_args()
-        if args.subargs_vtel == 'replay':
-            print('replay')
-            consts.set_glo_log_switch('no')
-            pass
-            # 设置全局变量
-            # 获取要执行的命令？
-        if sys.argv:
-            path = sundry.get_path()
-            cmd = ' '.join(sys.argv)
-            self.logger.write_to_log('user_input',path,'',cmd)
+        path = sundry.get_path()
+        cmd = ' '.join(sys.argv[1:])
+
+        #
+        # if sys.argv:
+        #     print(sys.argv)
+        #     if args.subargs_vtel:
+        #         if args.subargs_vtel == 're' or 'replay':
+        #             consts.set_glo_rpl('yes')
+        #     else:
+        #         path = sundry.get_path()
+        #         cmd = ' '.join(sys.argv)
+        #         self.logger.write_to_log('user_input',path,'',cmd)
 
         if args.subargs_vtel:
-            self.run(args)
+            if args.subargs_vtel == 're' or 'replay':
+                consts.set_glo_rpl('yes')
+                replay.prepare_db()
+                self.replay2(args)
+            else:
+                self.logger.write_to_log('user_input',path,'',cmd)
+                self.run(args)
         else:
+            self.logger.write_to_log('user_input', path, '', cmd)
             self._parser.print_help()
 
 
