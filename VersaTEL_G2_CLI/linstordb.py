@@ -170,8 +170,7 @@ class LinstorDB():
 
     def get_output_thread(self):
         """
-        通过多线程来执行linstor show命令，并插入数据库，但是会出现：sqlite3.ProgrammingError: Recursive use of cursors not allowed.的问题
-        暂时不使用多线程
+        通过多线程来执行linstor show命令，并插入数据库
         """
 
         thread_all = []

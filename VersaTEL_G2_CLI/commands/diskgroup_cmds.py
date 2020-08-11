@@ -90,7 +90,11 @@ class DiskGroupCommands():
 
     @sd.record_exception
     def show(self, args):
-        self.obj_iscsi.show_diskgroup(args.diskgroup)
+        obj_iscsi = ex.Iscsi()
+        if args.diskgroup == 'all' or args.diskgroup is None:
+            obj_iscsi.show_all_diskgroup()
+        else:
+            obj_iscsi.show_spe_diskgroup(args.diskgroup)
 
     @sd.record_exception
     def delete(self, args):

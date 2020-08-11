@@ -3,19 +3,30 @@
         "host1": "iqn.2020-04.feixitek.com:test1"
     },
     "Disk": {
-        "res_test": "/dev/drbd1000"
+        "res_a": "/dev/drbd1000"
     },
     "HostGroup": {
         "hg1": [
+            "host1"
+        ],
+        "hg2": [
+            "host1"
+        ],
+        "hg3": [
             "host1"
         ]
     },
     "DiskGroup": {
         "dg1": [
-            "res_test"
+            "res_a"
         ]
     },
-    "Map": {},
+    "Map": {
+        "map1": [
+            "hg1",
+            "dg1"
+        ]
+    },
     "crm": {
         "resource": [],
         "vip": [

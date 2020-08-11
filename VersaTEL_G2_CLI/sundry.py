@@ -6,6 +6,7 @@ import os
 import getpass
 import traceback
 import re
+import prettytable
 
 # Connect to the socket server and transfer data, and finally close the
 # connection.
@@ -108,3 +109,17 @@ def re_search(re_string, tgt_stirng):
     re_ = re.compile(re_string)
     re_result = re_.search(tgt_stirng).group()
     return re_result
+
+
+
+def show_data(list_header,dict_data):
+    table = prettytable.PrettyTable()
+    table.field_names = list_header
+    if dict_data:
+        for i,j in dict_data.items():
+            data_one = [i,(' '.join(j) if isinstance(j,list) == True else j)]
+            table.add_row(data_one)
+    else:
+        pass
+    print(table)
+    return table

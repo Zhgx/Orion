@@ -23,19 +23,23 @@ from commands import (
 
 class MyArgumentParser(argparse.ArgumentParser):
     def parse_args(self, args=None, namespace=None):
-        logger = consts.glo_log()
-        args, argv = self.parse_known_args(args, namespace)
-        if argv:
-            msg = ('unrecognized arguments: %s')
-            logger.write_to_log('args_error','','',(msg % ' '.join(argv)))
-            self.error(msg % ' '.join(argv))
-        return args
+        try:
+            logger = consts.glo_log()
+            args, argv = self.parse_known_args(args, namespace)
+            if argv:
+                msg = ('unrecognized arguments: %s')
+                logger.write_to_log('args_error','','',(msg % ' '.join(argv)))
+                self.error(msg % ' '.join(argv))
+            return args
+
+        except Exception as e:
+            pass
 
     def print_usage(self, file=None):
         logger = consts.glo_log()
         path = sundry.get_path()
         cmd = ' '.join(sys.argv[1:])
-        logger.write_to_log('user_input',path,'',cmd)
+        logger.write_to_log('user_input',path,'err',cmd)
         logger.write_to_log('result_to_show', '', '', 'print usage')
         if file is None:
             file = sys.stdout
@@ -67,8 +71,6 @@ class VtelCLI(object):
         self.transaction_id = sundry.get_transaction_id()
         self.logger = log.Log(self.username,self.transaction_id)
         consts.set_glo_log(self.logger)
-        self.logdb = consts
-
         self.replay_args_list = []
 
         self._node_commands = NodeCommands()
@@ -198,12 +200,11 @@ class VtelCLI(object):
     def replay(self,args):
         logdb = replay.LogDB()
         logdb.produce_logdb()
-        # 全局
 
 
     def replay2(self,args):
         logdb = consts.glo_db()
-        consts.set_glo_log('no')
+        consts.set_glo_log_switch('no')
         if args.transactionid and args.date:
             print('Please specify only one type of data for replay')
             return
@@ -223,17 +224,20 @@ class VtelCLI(object):
             #  传递这个命令
         elif args.date:
             replay_cmd_list = logdb.get_userinput_via_time(args.date[0],args.date[1])
-            replay_args_list = []
             for replay_cmd in replay_cmd_list:
-                if replay_cmd[0]:
-                    replay_args = self._parser.parse_args(replay_cmd[0].split())
-                    print(replay_cmd[0])
-                    replay_args_list.append(replay_args)
+                print(f"--------------transaction:{replay_cmd['tid']}--------------")
+                if replay_cmd['cmd']:
+                    if not replay_cmd['type'] == 'err': #
+                        print(replay_cmd)
+                        replay_args = self._parser.parse_args(replay_cmd['cmd'].split())
+                        replay_args.func(replay_args)
+                    else:
+                        print(replay_cmd)
+                        print(f"该命令{replay_cmd['cmd']}有误，无法执行")
                 else:
                     print('该事务id:不存在或者不符合replay条件（python vtel_client_main）')
 
-            for replay_args in replay_args_list:
-                replay_args.func(replay_args)
+
 
 
         else:
@@ -242,12 +246,7 @@ class VtelCLI(object):
 
 
     def run(self,args):
-        rpl = consts.glo_rpl()
-        if rpl == 'yes':
-            print('2')
-            args.func(args)
-        else:
-            args.func(args)
+        pass
 
 
     def parse(self):
@@ -267,13 +266,13 @@ class VtelCLI(object):
         #         self.logger.write_to_log('user_input',path,'',cmd)
 
         if args.subargs_vtel:
-            if args.subargs_vtel == 're' or 'replay':
+            if args.subargs_vtel in ['re', 'replay']:
                 consts.set_glo_rpl('yes')
                 replay.prepare_db()
                 self.replay2(args)
             else:
                 self.logger.write_to_log('user_input',path,'',cmd)
-                self.run(args)
+                args.func(args)
         else:
             self.logger.write_to_log('user_input', path, '', cmd)
             self._parser.print_help()
