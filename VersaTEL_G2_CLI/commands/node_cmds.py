@@ -153,7 +153,6 @@ class NodeCommands():
             return ExitCode.OK
         else:
             self.p_create_node.print_help()
-            self.logger.write_to_log('result_to_show','','','ARGPARSE_ERROR')
             return ExitCode.ARGPARSE_ERROR
 
 
@@ -178,7 +177,6 @@ class NodeCommands():
                 return ExitCode.OK
             else:
                 result = tb.node_all_color()
-                self.logger.write_to_log('result_to_show', '', '', result)
                 return ExitCode.OK
 
 

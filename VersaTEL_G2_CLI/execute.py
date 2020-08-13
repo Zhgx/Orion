@@ -8,67 +8,6 @@ import sundry as s
 import sys
 
 
-def execute_cmd(cmd, timeout=60):
-    p = subprocess.Popen(cmd, stderr=subprocess.STDOUT, stdout=subprocess.PIPE, shell=True)
-    t_beginning = time.time()
-    seconds_passed = 0
-    while True:
-        if p.poll() is not None:
-            break
-        seconds_passed = time.time() - t_beginning
-        if timeout and seconds_passed > timeout:
-            p.terminate()
-            raise TimeoutError(cmd, timeout)
-        time.sleep(0.1)
-    output = p.stdout.read().decode()
-    return output
-
-
-def execute_crm_cmd(cmd, timeout=60):
-    """
-    Execute the command cmd to return the content of the command output.
-    If it times out, a TimeoutError exception will be thrown.
-    cmd - Command to be executed
-    timeout - The longest waiting time(unit:second)
-    """
-    p = subprocess.Popen(cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
-    t_beginning = time.time()
-    seconds_passed = 0
-    while True:
-        if p.poll() is not None:
-            break
-        seconds_passed = time.time() - t_beginning
-        if timeout and seconds_passed > timeout:
-            p.terminate()
-            raise TimeoutError(cmd, timeout)
-        time.sleep(0.1)
-    out, err = p.communicate()
-    if len(out) > 0:
-        out = out.decode()
-        output = {'sts': 1, 'rst': out}
-        return output
-    if len(err) > 0:
-        err = err.decode()
-        output = {'sts': 0, 'rst': err}
-        return output
-    if out == b'':  # 需要再考虑一下 res stop 执行成功没有返回，stop失败也没有返回（无法判断stop成不成功）
-        out = out.decode()
-        output = {'sts': 1, 'rst': out}
-        return output
-
-
-# def get_cmd(ssh_obj, unique_str, cmd, oprt_id):
-#     logger = consts.get_glo_log()
-#     global RPL
-#     RPL = 'no'
-#     if RPL == 'no':
-#         logger.write_to_log('F', 'DATA', 'STR', unique_str, '', oprt_id)
-#         logger.write_to_log('T', 'OPRT', 'cmd', 'ssh', oprt_id, cmd)
-#         result_cmd = ssh_obj.execute_command(cmd)
-#         logger.write_to_log('F', 'DATA', 'cmd', 'ssh', oprt_id, result_cmd)
-#         return result_cmd
-#     elif RPL == 'yes':
-#         pass
 
 
 class TimeoutError(Exception):
@@ -81,7 +20,7 @@ class CRMData():
 
     def get_crm_conf(self):
         cmd = 'crm configure show'
-        result = execute_crm_cmd(cmd)
+        result = s.get_crm_cmd_result(sys._getframe().f_code.co_name, cmd, s.create_oprt_id())
         print("do crm configure show")
         if result:
             return result['rst']
@@ -112,7 +51,6 @@ class CRMData():
         else:
             js = iscsi_json.JSON_OPERATION()
             res = self.get_resource_data()
-            print(res)
             vip = self.get_vip_data()
             target = self.get_target_data()
             js.update_crm_conf(res, vip, target)
@@ -134,7 +72,7 @@ class CRMConfig():
             f'op stop timeout=40 interval=0 ' \
             f'op monitor timeout=40 interval=15 ' \
             f'meta target-role=Stopped'
-        result = execute_crm_cmd(cmd)
+        result = s.get_crm_cmd_result(sys._getframe().f_code.co_name, cmd, s.create_oprt_id())
         if result['sts']:
             print("Create iSCSILogicalUnit success")
             return True
@@ -150,7 +88,7 @@ class CRMConfig():
     # 停用res
     def stop_res(self, res):
         cmd = f'crm res stop {res}'
-        result = execute_crm_cmd(cmd)
+        result = s.get_crm_cmd_result(sys._getframe().f_code.co_name, cmd, s.create_oprt_id())
         if result['sts']:
             return True
         else:
@@ -181,21 +119,22 @@ class CRMConfig():
         if self.stop_res(res):
             if self.checkout_status(res,10,'Stopped'):
                 time.sleep(3)
-                # crm conf del <LUN_NAME>
                 cmd = f'crm conf del {res}'
-                # 使用execute_crm_cmd执行成功，stderr也可能会有输出，导致判断不正确
-                result = subprocess.call(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                if result == 0:
-                    print("crm conf del " + res)
-                    return True
-                else:
-                    print("crm delete fail")
+                result = s.get_crm_cmd_result(sys._getframe().f_code.co_name, cmd, s.create_oprt_id())
+                if result:
+                    output = result['rst']
+                    re_str = re.compile(rf'INFO: hanging colocation:co_{res} deleted\nINFO: hanging order:or_{res} deleted\n')
+                    if s.re_search(re_str,output):
+                        print("crm conf del " + res)
+                        return True
+                    else:
+                        print("crm delete fail")
 
     def create_col(self, res, target):
         # crm conf colocation <COLOCATION_NAME> inf: <LUN_NAME> <TARGET_NAME>
         print(f'crm conf colocation co_{res} inf: {res} {target}')
         cmd = f'crm conf colocation co_{res} inf: {res} {target}'
-        result = execute_crm_cmd(cmd)
+        result = s.get_crm_cmd_result(sys._getframe().f_code.co_name, cmd, s.create_oprt_id())
         if result['sts']:
             print("set coclocation")
             return True
@@ -204,7 +143,7 @@ class CRMConfig():
         # crm conf order <ORDER_NAME1> <TARGET_NAME> <LUN_NAME>
         print(f'crm conf order or_{res} {target} {res}')
         cmd = f'crm conf order or_{res} {target} {res}'
-        result = execute_crm_cmd(cmd)
+        result = s.get_crm_cmd_result(sys._getframe().f_code.co_name, cmd, s.create_oprt_id())
         if result['sts']:
             print("set order")
             return True
@@ -213,7 +152,7 @@ class CRMConfig():
         # crm res start <LUN_NAME>
         print(f'crm res start {res}')
         cmd = f'crm res start {res}'
-        result = execute_crm_cmd(cmd)
+        result = s.get_crm_cmd_result(sys._getframe().f_code.co_name, cmd, s.create_oprt_id())
         if result['sts']:
             return True
 
@@ -227,12 +166,12 @@ class LVM():
 
     def get_vg(self):
         cmd = 'vgs'
-        result = execute_cmd(cmd)
+        result = s.get_cmd_result(sys._getframe().f_code.co_name, cmd, s.create_oprt_id())
         return result
 
     def get_thinlv(self):
         cmd = 'lvs'
-        result = execute_cmd(cmd)
+        result = s.get_cmd_result(sys._getframe().f_code.co_name, cmd, s.create_oprt_id())
         return result
 
     def refine_thinlv(self):
@@ -295,7 +234,7 @@ class Linstor():
         return list_data_all
 
     def get_linstor_data(self,cmd):
-        cmd_result = execute_cmd(cmd)
+        cmd_result = s.get_cmd_result(sys._getframe().f_code.co_name, cmd, s.create_oprt_id())
         return self.refine_linstor(cmd_result)
 
 
@@ -352,7 +291,7 @@ class Stor():
             print(f'Volume group:"{vg}" does not exist')
             return
         cmd = f'linstor storage-pool create lvm {node} {stp} {vg}'
-        output = execute_cmd(cmd)
+        output = s.get_cmd_result(sys._getframe().f_code.co_name, cmd, s.create_oprt_id())
         result = self.judge_result(output)
         if result:
             if result['sts'] == 0:
@@ -372,7 +311,7 @@ class Stor():
                 print(f'Thin logical volume:"{tlv}" does not exist')
                 return
         cmd = f'linstor storage-pool create lvmthin {node} {stp} {tlv}'
-        output = execute_cmd(cmd)
+        output = s.get_cmd_result(sys._getframe().f_code.co_name, cmd, s.create_oprt_id())
         result = self.judge_result(output)
         if result:
             if result['sts'] == 0:
@@ -387,7 +326,7 @@ class Stor():
     # 删除storagepool -- ok
     def delete_storagepool(self, node, stp):
         cmd = f'linstor storage-pool delete {node} {stp}'
-        output = execute_cmd(cmd)
+        output = s.get_cmd_result(sys._getframe().f_code.co_name, cmd, s.create_oprt_id())
         result = self.judge_result(output)
         if result:
             if result['sts'] == 0:
@@ -412,7 +351,7 @@ class Stor():
             print('node type error,choose from ''Combined',
                   'Controller', 'Auxiliary', 'Satellite''')
         else:
-            output = execute_cmd(cmd)
+            output = s.get_cmd_result(sys._getframe().f_code.co_name, cmd, s.create_oprt_id())
             result = self.judge_result(output)
             if result:
                 if result['sts'] == 0:
@@ -427,7 +366,7 @@ class Stor():
     # 删除node
     def delete_node(self, node):
         cmd = f'linstor node delete {node}'
-        output = execute_cmd(cmd)
+        output = s.get_cmd_result(sys._getframe().f_code.co_name, cmd, s.create_oprt_id())
         result = self.judge_result(output)
         if result:
             if result['sts'] == 0:
@@ -460,7 +399,7 @@ class LinstorResource(Stor):
         # 成功返回空字典，失败返回 {节点：错误原因}
         cmd = f'linstor resource create {node} {res} --storage-pool {sp}'
         try:
-            output = execute_cmd(cmd)
+            output = s.get_cmd_result(sys._getframe().f_code.co_name,cmd,s.create_oprt_id())
             result = self.judge_result(output)
             if result:
                 if result['sts'] == 2:
@@ -485,11 +424,11 @@ class LinstorResource(Stor):
     # 创建resource相关
     def linstor_delete_rd(self, res):
         cmd = f'linstor rd d {res}'
-        execute_cmd(cmd)
+        s.get_cmd_result(sys._getframe().f_code.co_name, cmd, s.create_oprt_id())
 
     def linstor_create_rd(self, res):
-        cmd_rd = f'linstor rd c {res}'
-        output = execute_cmd(cmd_rd)
+        cmd = f'linstor rd c {res}'
+        output = s.get_cmd_result(sys._getframe().f_code.co_name, cmd, s.create_oprt_id())
         result = self.judge_result(output)
         if result:
             if result['sts'] == 0:
@@ -498,9 +437,10 @@ class LinstorResource(Stor):
                 print('FAIL')
                 return result
 
+
     def linstor_create_vd(self, res, size):
-        cmd_vd = f'linstor vd c {res} {size}'
-        output = execute_cmd(cmd_vd)
+        cmd = f'linstor vd c {res} {size}'
+        output = s.get_cmd_result(sys._getframe().f_code.co_name, cmd, s.create_oprt_id())
         result = self.judge_result(output)
         if result:
             if result['sts'] == 0:
@@ -515,7 +455,7 @@ class LinstorResource(Stor):
     def create_res_auto(self, res, size, num):
         cmd = f'linstor r c {res} --auto-place {num}'
         if self.linstor_create_rd(res) is True and self.linstor_create_vd(res, size) is True:
-            output = execute_cmd(cmd)
+            output = s.get_cmd_result(sys._getframe().f_code.co_name, cmd, s.create_oprt_id())
             result = self.judge_result(output)
             if result:
                 if result['sts'] == 0:
@@ -558,7 +498,7 @@ class LinstorResource(Stor):
     # 添加mirror（自动）
     def add_mirror_auto(self, res, num):
         cmd = f'linstor r c {res} --auto-place {num}'
-        output = execute_cmd(cmd)
+        output = s.get_cmd_result(sys._getframe().f_code.co_name, cmd, s.create_oprt_id())
         result = self.judge_result(output)
         if result:
             if result['sts'] == 0:
@@ -587,7 +527,7 @@ class LinstorResource(Stor):
     # 创建resource --diskless
     def create_res_diskless(self, node, res):
         cmd = f'linstor r c {node} {res} --diskless'
-        output = execute_cmd(cmd)
+        output = s.get_cmd_result(sys._getframe().f_code.co_name, cmd, s.create_oprt_id())
         result = self.judge_result(output)
         if result:
             if result['sts'] == 0:
@@ -602,7 +542,7 @@ class LinstorResource(Stor):
     # 删除resource,指定节点
     def delete_resource_des(self, node, res):
         cmd = f'linstor resource delete {node} {res}'
-        output = execute_cmd(cmd)
+        output = s.get_cmd_result(sys._getframe().f_code.co_name, cmd, s.create_oprt_id())
         result = self.judge_result(output)
         if result:
             if result['sts'] == 0:
@@ -617,7 +557,7 @@ class LinstorResource(Stor):
     # 删除resource，全部节点
     def delete_resource_all(self, res):
         cmd = f'linstor resource-definition delete {res}'
-        output = execute_cmd(cmd)
+        output = s.get_cmd_result(sys._getframe().f_code.co_name, cmd, s.create_oprt_id())
         result = self.judge_result(output)
         if result:
             if result['sts'] == 0:
@@ -655,13 +595,13 @@ class Iscsi():
     # 展示全部disk
     def show_all_disk(self):
         print("All Disk:")
-        list_header = ["Resource Name", "Path"]
+        list_header = ["ResourceName", "Path"]
         dict_data = self.get_all_disk()
         return s.show_data(list_header,dict_data)
 
     # 展示指定的disk
     def show_spe_disk(self, disk):
-        list_header = ["Resource Name", "Path"]
+        list_header = ["ResourceName", "Path"]
         dict_data = self.get_spe_disk(disk)
         return s.show_data(list_header,dict_data)
 
@@ -689,12 +629,12 @@ class Iscsi():
 
     def show_all_host(self):
         print("All Host:")
-        list_header = ["Host Name", "IQN"]
+        list_header = ["HostName", "IQN"]
         dict_data = self.get_all_host()
         return s.show_data(list_header, dict_data)
 
     def show_spe_host(self, host):
-        list_header = ["Host Name", "IQN"]
+        list_header = ["HostName", "IQN"]
         dict_data = self.get_spe_host(host)
         return s.show_data(list_header, dict_data)
 
@@ -740,13 +680,13 @@ class Iscsi():
             return {dg:self.js.get_data('DiskGroup').get(dg)}
 
     def show_all_diskgroup(self):
-        print("All Disk Group:")
-        list_header = ["Diskgroup Name", "Disk Name"]
+        print("All disk group:")
+        list_header = ["DiskgroupName", "DiskName"]
         dict_data = self.get_all_diskgroup()
         return s.show_data(list_header, dict_data)
 
     def show_spe_diskgroup(self,dg):
-        list_header = ["Diskgroup Name", "Disk Name"]
+        list_header = ["DiskgroupName", "DiskName"]
         dict_data = self.get_spe_diskgroup(dg)
         return s.show_data(list_header, dict_data)
 
@@ -793,12 +733,12 @@ class Iscsi():
 
     def show_all_hostgroup(self):
         print("All Host Group:")
-        list_header = ["Host Group Name", "Host Name"]
+        list_header = ["HostGroupName", "HostName"]
         dict_data = self.get_all_hostgroup()
         return s.show_data(list_header, dict_data)
 
     def show_spe_hostgroup(self,hg):
-        list_header = ["Host Group Name", "Host Name"]
+        list_header = ["HostGroupName", "HostName"]
         dict_data = self.get_spe_hostgroup(hg)
         return s.show_data(list_header, dict_data)
 
@@ -893,7 +833,6 @@ class Iscsi():
     def get_all_map(self):
         return self.js.get_data("Map")
 
-
     def get_spe_map(self,map):
         dict_hg = {}
         dict_dg = {}
@@ -916,19 +855,20 @@ class Iscsi():
 
     def show_all_map(self):
         print("All Map:")
-        list_header = ["Map Name", "Host Group And Disk Group"]
+        list_header = ["MapName", "HostGroup","DiskGroup"]
         dict_data = self.get_all_map()
-        return s.show_data(list_header, dict_data)
+        return s.show_data_map(list_header,dict_data)
+
 
 
     def show_spe_map(self, map):
         list_data = self.get_spe_map(map)
         hg, dg = self.js.get_data('Map').get(map)
-        header_map = ["Map Name", "Host Group And Disk Group"]
-        header_host = ["Host Name", "IQN"]
-        header_disk = ["Disk Name", "Disk"]
+        header_map = ["MapName", "HostGroup","DiskGroup"]
+        header_host = ["HostName", "IQN"]
+        header_disk = ["DiskName", "Disk"]
         print(f'Map:{map}')
-        s.show_data(header_map, list_data[0])
+        s.show_data_map(header_map, list_data[0])
         print(f'Host Group:{hg}')
         s.show_data(header_host, list_data[1])
         print(f'Disk Group:{dg}')
@@ -962,4 +902,3 @@ class Iscsi():
                 else:
                     return False
             return True
-

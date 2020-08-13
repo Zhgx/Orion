@@ -283,7 +283,7 @@ class ResourceCommands():
                     self.is_args_correct(args.node, args.storagepool)
                 except NodeAndSPNumError:
                     print('The number of nodes does not meet the requirements')
-                    self.logger.write_to_log('result_to_show','','',str(traceback.format_exc()))
+                    self.logger.write_to_log('DATA','debug','exception','',str(traceback.format_exc()))
                     sys.exit()
                 else:
                     if args.gui:
@@ -316,7 +316,7 @@ class ResourceCommands():
                         args.resource, args.node, args.storagepool)
                 except NodeAndSPNumError:
                     print('The number of nodes does not meet the requirements')
-                    self.logger.write_to_log('result_to_show', '', '', str(traceback.format_exc()))
+                    self.logger.write_to_log('DATA', 'debug', 'exception', '', str(traceback.format_exc()))
                     sys.exit()
                 # else:
                 #     self.p_create_res.print_help()
@@ -332,14 +332,10 @@ class ResourceCommands():
     @sd.record_exception
     @sd.comfirm_del('resource')
     def delete(self, args):
-        try:
-            if args.node:
-                self.actuator.delete_resource_des(args.node, args.resource)
-            elif not args.node:
-                self.actuator.delete_resource_all(args.resource)
-        except Exception as e:
-            self.logger.write_to_log('result_to_show', 'ERR', '', str(traceback.format_exc()))
-            raise e
+        if args.node:
+            self.actuator.delete_resource_des(args.node, args.resource)
+        elif not args.node:
+            self.actuator.delete_resource_all(args.resource)
 
 
     @sd.record_exception

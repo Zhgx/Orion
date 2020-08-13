@@ -7,6 +7,13 @@ import getpass
 import traceback
 import re
 import prettytable
+import sys
+from random import shuffle
+import subprocess
+
+import consts
+import execute
+
 
 # Connect to the socket server and transfer data, and finally close the
 # connection.
@@ -35,7 +42,7 @@ def record_exception(func):
         try:
             return func(self,*args)
         except Exception as e:
-            self.logger.write_to_log('result_to_show', 'ERR', '', str(traceback.format_exc()))
+            self.logger.write_to_log('DATA','debug','exception','', str(traceback.format_exc()))
             raise e
     return wrapper
 
@@ -85,8 +92,14 @@ def timeout(seconds,error_message = 'Funtion call timed out'):
     return decorated
 
 
-def get_transaction_id():
+def create_transaction_id():
     return int(time.time())
+
+def create_oprt_id():
+    time_stamp = str(create_transaction_id())
+    str_list = list(time_stamp)
+    shuffle(str_list)
+    return ''.join(str_list)
 
 def get_username():
     return getpass.getuser()
@@ -123,3 +136,152 @@ def show_data(list_header,dict_data):
         pass
     print(table)
     return table
+
+def show_data_map(list_header,dict_data):
+    table = prettytable.PrettyTable()
+    table.field_names = list_header
+    if dict_data:
+        # {map1:[hg1,dg1] => [map1,hg1,dg1]}
+        for i, j in dict_data.items():
+            j.insert(0,i)
+            table.add_row(j)
+    else:
+        pass
+    print(table)
+    return table
+
+
+def change_pointer(new_id):
+    consts.set_glo_log_id(new_id)
+
+
+def execute_cmd(cmd, timeout=60):
+    p = subprocess.Popen(cmd, stderr=subprocess.STDOUT, stdout=subprocess.PIPE, shell=True)
+    t_beginning = time.time()
+    seconds_passed = 0
+    while True:
+        if p.poll() is not None:
+            break
+        seconds_passed = time.time() - t_beginning
+        if timeout and seconds_passed > timeout:
+            p.terminate()
+            raise TimeoutError(cmd, timeout)
+        time.sleep(0.1)
+    output = p.stdout.read().decode()
+    return output
+
+
+def execute_crm_cmd(cmd, timeout=60):
+    """
+    Execute the command cmd to return the content of the command output.
+    If it times out, a TimeoutError exception will be thrown.
+    cmd - Command to be executed
+    timeout - The longest waiting time(unit:second)
+    """
+    p = subprocess.Popen(cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
+    t_beginning = time.time()
+    seconds_passed = 0
+    while True:
+        if p.poll() is not None:
+            break
+        seconds_passed = time.time() - t_beginning
+        if timeout and seconds_passed > timeout:
+            p.terminate()
+            raise TimeoutError(cmd, timeout)
+        time.sleep(0.1)
+    out, err = p.communicate()
+    if len(out) > 0:
+        out = out.decode()
+        output = {'sts': 1, 'rst': out}
+        return output
+    if len(err) > 0:
+        err = err.decode()
+        output = {'sts': 0, 'rst': err}
+        return output
+    if out == b'':  # 需要再考虑一下 res stop 执行成功没有返回，stop失败也没有返回（无法判断stop成不成功）
+        out = out.decode()
+        output = {'sts': 1, 'rst': out}
+        return output
+
+
+def get_cmd_result(unique_str, cmd, oprt_id):
+    logger = consts.glo_log()
+    RPL = consts.glo_rpl()
+    if RPL == 'no':
+        logger.write_to_log('DATA', 'STR', unique_str, '', oprt_id)
+        logger.write_to_log('OPRT', 'cmd', '', oprt_id, cmd)
+        result_cmd = execute_cmd(cmd)
+        logger.write_to_log('DATA', 'cmd', '', oprt_id, result_cmd)
+        return result_cmd
+    elif RPL == 'yes':
+        logdb = consts.glo_db()
+        db_id, oprt_id = logdb.get_oprt_id(consts.glo_tsc_id(), unique_str)
+
+        result_cmd = logdb.get_cmd_result(oprt_id)
+        if db_id:
+            change_pointer(db_id)
+        return result_cmd
+
+
+def get_crm_cmd_result(unique_str, cmd, oprt_id):
+    logger = consts.glo_log()
+    RPL = consts.glo_rpl()
+    if RPL == 'no':
+        logger.write_to_log('DATA', 'STR', unique_str, '', oprt_id)
+        logger.write_to_log('OPRT', 'cmd', 'iscsi', oprt_id, cmd)
+        result_cmd = execute_crm_cmd(cmd)
+        logger.write_to_log('DATA', 'cmd', 'iscsi', oprt_id, result_cmd)
+        return result_cmd
+    elif RPL == 'yes':
+        logdb = consts.glo_db()
+        db_id, oprt_id = logdb.get_oprt_id(consts.glo_tsc_id(), unique_str)
+        result_cmd = logdb.get_cmd_result(oprt_id)
+        if result_cmd:
+            result = eval(result_cmd)
+        else:
+            result = None
+        if db_id:
+            change_pointer(db_id)
+        return result
+
+
+def prt(str, level=0, warning_level=0):
+    if isinstance(warning_level, int):
+        warning_str = '*' * warning_level
+    else:
+        warning_str = ''
+    rpl = consts.glo_rpl()
+
+    if rpl == 'no':
+        print(str)
+
+    else:
+        if warning_level == 'exception':
+            print(' exception infomation '.center(105, '*'))
+            print(str)
+            print(f'{" exception infomation ":*^105}', '\n')
+            return
+
+        db = consts.glo_db()
+        time = db.get_time_via_str(consts.glo_tsc_id(), str)
+        if not time:
+            time = ''
+
+        print(f'{warning_str:<4}Re:{time:<20}{warning_str:>4}')
+
+        if level == 0:
+            print(str)
+        else:
+            print(f'RE:{time:<20}{warning_str:<4}'
+                  f'{str}')
+
+
+def pwe(str, level, warning_level):
+    rpl = consts.glo_rpl()
+    prt(str, level, warning_level)
+
+    if warning_level == 2:
+        if rpl == 'no':
+            sys.exit()
+        else:
+            raise consts.ReplayExit

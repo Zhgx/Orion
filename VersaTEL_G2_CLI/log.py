@@ -20,7 +20,7 @@ class MyLoggerAdapter(logging.LoggerAdapter):
 
 
 class Log(object):
-    fmt = logging.Formatter("%(asctime)s [%(username)s] [%(type)s] [%(transaction_id)s] [%(describe1)s] [%(describe2)s] [%(data)s]",datefmt = '[%Y/%m/%d %H:%M:%S]')
+    fmt = logging.Formatter("%(asctime)s [%(transaction_id)s] [%(username)s] [%(type1)s] [%(type2)s] [%(describe1)s] [%(describe2)s] [%(data)s]",datefmt = '[%Y/%m/%d %H:%M:%S]')
     handler_input = logging.handlers.RotatingFileHandler(filename='VersaTEL_G2_CLI.log',mode='a',maxBytes=10*1024*1024,backupCount=5)
     handler_input.setFormatter(fmt)
     def __init__(self,username,transaction_id):
@@ -35,8 +35,9 @@ class Log(object):
         # %(asctime)s - [%(username)s] - [%(type)s] - [%(describe1)s] - [%(describe2)s] - [%(data)s]
         extra_dict = {
             "username": "USERNAME",
-            "type": "TYPE",
-            "transaction_id":"",
+            "transaction_id": "",
+            "type1": "TYPE1",
+            "type2": "TYPE2",
             "describe1": "",
             "describe2": "",
             "data": ""}
@@ -46,7 +47,7 @@ class Log(object):
 
 
     # write to log file
-    def write_to_log(self,type,describe1,describe2,data):
+    def write_to_log(self,type1,type2,describe1,describe2,data):
         logger_cli = self.logger_input()
 
         if consts.glo_log_switch() == 'no':
@@ -56,8 +57,9 @@ class Log(object):
             '',
             extra={
                 'username': self.username,
-                'type': type,
                 'transaction_id': self.transaction_id,
+                'type1':type1,
+                'type2': type2,
                 'describe1': describe1,
                 'describe2': describe2,
                 'data': data})

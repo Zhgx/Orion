@@ -6,7 +6,8 @@ from functools import wraps
 import sqlite3
 import threading
 import execute as ex
-import log
+
+import consts
 
 
 class LinstorDB():
@@ -137,93 +138,56 @@ class LinstorDB():
 
     def __init__(self):
         # linstor.db
-        self.con = sqlite3.connect(":memory:", check_same_thread=False, isolation_level=None)
+        self.con = sqlite3.connect(":memory:", check_same_thread=False)
         self.cur = self.con.cursor()
 
     # 执行获取数据，删除表，创建表，插入数据
     def rebuild_linstor_tb(self):
-        self.cur.execute("BEGIN TRANSACTION")
-        self.cur.execute(self.crt_sptb_sql)  # 检查是否存在表，如不存在，则新创建表
-        self.cur.execute(self.crt_rtb_sql)
         self.cur.execute(self.crt_ntb_sql)
-        self.get_output_thread()
-        self.cur.execute("COMMIT")
+        self.cur.execute(self.crt_rtb_sql)
+        self.cur.execute(self.crt_sptb_sql)
+        self.insert_linstor_node()
+        self.insert_linstor_res()
+        self.insert_linstor_sp()
+        self.con.commit()
 
     def rebuild_all_tb(self):
-        # self.drop_tb()
-        self.cur.execute("BEGIN TRANSACTION")
         self.create_tb()
-        self.exc_get_vg()
-        self.exc_get_thinlv()
-        self.get_output_thread()
-        self.cur.execute("COMMIT")
+        self.insert_vg()
+        self.insert_thinlv()
+        self.insert_linstor_node()
+        self.insert_linstor_res()
+        self.insert_linstor_sp()
+        self.con.commit()
 
 
-    def thread_get_linstor(self,cmd,sql):
-        linstor = ex.Linstor()
-        linstor_data = linstor.get_linstor_data(cmd)
-        # self.insert_data(sql,linstor_data)
-        cur = self.con.cursor()
-        for i in range(len(linstor_data)):
-            linstor_data[i].insert(0, i + 1)
-            cur.execute(sql, linstor_data[i])
-
-    def get_output_thread(self):
-        """
-        通过多线程来执行linstor show命令，并插入数据库
-        """
-
-        thread_all = []
-        cmds = ['linstor --no-color --no-utf8 n l',
-         'linstor --no-color --no-utf8 r lv',
-         'linstor --no-color --no-utf8 sp l']
-        sqls = [self.replace_ntb_sql,
-               self.replace_rtb_sql,
-               self.replace_stb_sql]
-
-        for cmd,sql in zip(cmds,sqls):
-            thread_ins_data = threading.Thread(target=self.thread_get_linstor,args=(cmd,sql))
-            thread_all.append(thread_ins_data)
-
-        for i in range(len(thread_all)):
-            thread_all[i].start()
-        for i in range(len(thread_all)):
-            thread_all[i].join()
-
-    # def get_output(self):
-    #     self.thread_get_node()
-    #     self.thread_get_res()
-    #     self.thread_get_sp()
-
-    def exc_get_vg(self):
+    def insert_vg(self):
         obj_lvm = ex.LVM()
         vg = obj_lvm.refine_vg()
         self.insert_data(self.replace_vgtb_sql, vg)
 
-    def exc_get_thinlv(self):
+    def insert_thinlv(self):
         obj_lvm = ex.LVM()
         thinlv = obj_lvm.refine_thinlv()
         self.insert_data(self.replace_thinlvtb_sql, thinlv)
 
-    # def thread_get_linstor(self,cmd,sql):
-    #     actuator = ex.Linstor()
-    #     linstor = actuator.refine_linstor(ex.execute_linstor_cmd(cmd))
-    #     self.insert_data(sql,linstor)
 
-    # def thread_get_node(self):
-    #     node = ex.Linstor.refine_linstor(ex.execute_cmd('linstor --no-color --no-utf8 n l'))
-    #     self.insert_data(self.replace_ntb_sql, node)
-    #
-    # def thread_get_res(self):
-    #     res = ex.Linstor.refine_linstor(ex.execute_cmd('linstor --no-color --no-utf8 r lv'))
-    #     self.insert_data(self.replace_rtb_sql, res)
-    #
-    # def thread_get_sp(self):
-    #     sp = ex.Linstor.refine_linstor(ex.execute_cmd('linstor --no-color --no-utf8 sp l'))
-    #     self.insert_data(self.replace_stb_sql, sp)
+    def insert_linstor_node(self):
+        linstor = ex.Linstor()
+        node = linstor.get_linstor_data('linstor --no-color --no-utf8 n l')
+        self.insert_data(self.replace_ntb_sql, node)
+
+    def insert_linstor_res(self):
+        linstor = ex.Linstor()
+        res = linstor.get_linstor_data('linstor --no-color --no-utf8 r lv')
+        self.insert_data(self.replace_rtb_sql, res)
+
+    def insert_linstor_sp(self):
+        linstor = ex.Linstor()
+        sp = linstor.get_linstor_data('linstor --no-color --no-utf8 sp l')
+        self.insert_data(self.replace_stb_sql, sp)
 
     # 创建表
-
     def create_tb(self):
         self.cur.execute(self.crt_vgtb_sql)
         self.cur.execute(self.crt_thinlvtb_sql)
@@ -242,6 +206,7 @@ class LinstorDB():
             self.cur.execute(drp_sql)
         self.con.commit()
 
+    # 插入数据
     def insert_data(self, sql, list_data):
         for i in range(len(list_data)):
             list_data[i].insert(0, i + 1)
@@ -266,6 +231,7 @@ class DataProcess():
         self.linstor_db = LinstorDB()
         self.linstor_db.rebuild_linstor_tb()
         self.cur = self.linstor_db.cur
+        self.logger = consts.glo_log()
 
     # 获取表单行数据的通用方法
     def sql_fetch_one(self, sql):

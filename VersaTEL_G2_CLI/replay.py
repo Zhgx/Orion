@@ -34,9 +34,10 @@ class LogDB():
     create table if not exists logtable(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         time DATE(30),
-        user varchar(20),
-        type varchar(20),
         transaction_id varchar(20),
+        username varchar(20),
+        type1 TEXT,
+        type2 TEXT,
         describe1 TEXT,
         describe2 TEXT,
         data TEXT
@@ -47,14 +48,15 @@ class LogDB():
     (
         id,
         time,
-        user,
-        type,
         transaction_id,
+        username,
+        type1,
+        type2,
         describe1,
         describe2,
         data
         )
-    values(?,?,?,?,?,?,?,?)
+    values(?,?,?,?,?,?,?,?,?)
     '''
 
 
@@ -95,26 +97,50 @@ class LogDB():
 
 
     def get_userinput_via_tid(self, transaction_id):
-        sql = f"SELECT data FROM logtable WHERE type = 'user_input' and transaction_id = '{transaction_id}'"
-        return self.sql_fetch_one(sql)
+        sql = f"SELECT describe2,data FROM logtable WHERE describe1 = 'user_input' and transaction_id = '{transaction_id}'"
+        args_type, cmd = self.sql_fetch_one(sql)
+        return [{'tid':transaction_id,'type':args_type,'cmd':cmd}]
 
     def get_userinput_via_time(self, start_time, end_time):
-        sql = f"SELECT data,transaction_id FROM logtable WHERE type = 'user_input' and time >= '{start_time}' and time <= '{end_time}'"
-        return self.sql_fetch_all(sql)
+        sql = f"SELECT transaction_id,describe2,data FROM logtable WHERE describe1 = 'user_input' and time >= '{start_time}' and time <= '{end_time}'"
+        all_data = self.sql_fetch_all(sql)
+        result_list = []
+        for i in all_data:
+            tid, args_type, cmd = i
+            dict_one = {'tid':tid, 'type':args_type, 'cmd':cmd}
+            result_list.append(dict_one)
+        return result_list
 
-    def get_result_from_tid(self, transaction_id):
-        sql = f"SELECT data FROM logtable WHERE type = 'result_to_show' and transaction_id = '{transaction_id}'"
-        return self.sql_fetch_all(sql)[0]
+    def get_all_transaction(self):
+        sql = "SELECT transaction_id,describe2,data FROM logtable WHERE describe1 = 'user_input'"
+        all_data = self.sql_fetch_all(sql)
+        result_list = []
+        for i in all_data:
+            tid, args_type, cmd = i
+            dict_one = {'tid':tid, 'type':args_type, 'cmd':cmd}
+            result_list.append(dict_one)
+        return result_list
 
-    def get_result_from_time(self,start_time,end_time):
-        sql = f"SELECT data FROM logtable WHERE type = 'result_to_show' and time >= '{start_time}' and time <= '{end_time}'"
-        return self.sql_fetch_all(sql)
+
+    def get_cmd_result(self, oprt_id):
+        sql = f"SELECT data FROM logtable WHERE type1 = 'DATA' and type2 = 'cmd' and describe2 = '{oprt_id}'"
+        return self.sql_fetch_one(sql)
+
+    def get_oprt_id(self, transaction_id, string):
+        id_now = consts.glo_log_id()
+        sql = f"SELECT id,data FROM logtable WHERE describe1 = '{string}' and id > {id_now} and transaction_id = '{transaction_id}'"
+        id_and_oprt_id = self.sql_fetch_one(sql)
+        if id_and_oprt_id:
+            return id_and_oprt_id
+        else:
+            return ('','')
+
 
     def produce_logdb(self):
         log_path = "./VersaTEL_G2_CLI.log"
         logfilename = 'VersaTEL_G2_CLI.log'
         id = (None,)
-        re_ = re.compile(r'\[(.*?)\] \[(.*?)\] \[(.*?)\] \[(.*?)\] \[(.*?)\] \[(.*?)\] \[(.*?\]?)\]', re.DOTALL)
+        re_ = re.compile(r'\[(.*?)\] \[(.*?)\] \[(.*?)\] \[(.*?)\] \[(.*?)\] \[(.*?)\] \[(.*?)\] \[(.*?\]?)\]', re.DOTALL)
         if not isFileExists(log_path):
             print('no file')
             return
@@ -137,10 +163,10 @@ class LogDB():
 #
 # logdb.produce_logdb()
 # # print(logdb.get_userinput_via_tid('1596779465'))
-# all_list = logdb.get_userinput_via_time('2020/08/07 10:57:57','2020/08/07 13:51:05')
+# all_list = logdb.get_all_transaction()
 #
 # for i in all_list:
 #     if i[0]:
-#
+#         print(i)
 #     else:
 #         print('不符合条件')

@@ -164,36 +164,32 @@ class StoragePoolCommands():
 
     @sd.record_exception
     def create(self, args):
-        try:
-            if args.storagepool and args.node:
-                # The judgment of the lvm module to create a storage pool
-                if args.lvm:
-                    if args.gui:
-                        result = self.actuator.create_storagepool_lvm(
-                            args.node, args.storagepool, args.lvm)
-                        result_pickled = pickle.dumps(result)
-                        sd.send_via_socket(result_pickled)
-                    else:
-                        self.actuator.create_storagepool_lvm(
-                            args.node, args.storagepool, args.lvm)
-                # The judgment of the thin-lv module to create a storage pool
-                elif args.tlv:
-                    if args.gui:
-                        result = self.actuator.create_storagepool_thinlv(
-                            args.node, args.storagepool, args.tlv)
-                        result_pickled = pickle.dumps(result)
-                        sd.send_via_socket(result_pickled)
-                    else:
-                        self.actuator.create_storagepool_thinlv(
-                            args.node, args.storagepool, args.tlv)
+        if args.storagepool and args.node:
+            # The judgment of the lvm module to create a storage pool
+            if args.lvm:
+                if args.gui:
+                    result = self.actuator.create_storagepool_lvm(
+                        args.node, args.storagepool, args.lvm)
+                    result_pickled = pickle.dumps(result)
+                    sd.send_via_socket(result_pickled)
                 else:
-                    self.p_create_sp.print_help()
+                    self.actuator.create_storagepool_lvm(
+                        args.node, args.storagepool, args.lvm)
+            # The judgment of the thin-lv module to create a storage pool
+            elif args.tlv:
+                if args.gui:
+                    result = self.actuator.create_storagepool_thinlv(
+                        args.node, args.storagepool, args.tlv)
+                    result_pickled = pickle.dumps(result)
+                    sd.send_via_socket(result_pickled)
+                else:
+                    self.actuator.create_storagepool_thinlv(
+                        args.node, args.storagepool, args.tlv)
             else:
                 self.p_create_sp.print_help()
+        else:
+            self.p_create_sp.print_help()
 
-        except Exception as e:
-            self.logger.write_to_log('ERR','','',str(traceback.format_exc()))
-            raise e
 
     def modify(self):
         pass
@@ -212,7 +208,7 @@ class StoragePoolCommands():
                 tb.show_sp_one(args.storagepool)
             else:
                 result = tb.sp_all()
-                self.logger.write_to_log('result_to_show','','','',result)
+                self.logger.write_to_log('DATA','result_to_show','','','',result)
 
         else:
             if args.storagepool:

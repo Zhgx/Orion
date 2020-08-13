@@ -1,21 +1,22 @@
 import traceback
 import execute as ex
 import consts
+import sundry as sd
 
 
 
-def record_exception(func):
-    """
-    Decorator providing confirmation of deletion function.
-    :param func: Function to delete linstor resource
-    """
-    def wrapper(self,*args):
-        try:
-            return func(self,*args)
-        except Exception as e:
-            self.logger.write_to_log('result_to_show', 'ERR', '', str(traceback.format_exc()))
-            raise e
-    return wrapper
+# def record_exception(func):
+#     """
+#     Decorator providing confirmation of deletion function.
+#     :param func: Function to delete linstor resource
+#     """
+#     def wrapper(self,*args):
+#         try:
+#             return func(self,*args)
+#         except Exception as e:
+#             self.logger.write_to_log('result_to_show', 'ERR', '', str(traceback.format_exc()))
+#             raise e
+#     return wrapper
 
 
 class DiskCommands():
@@ -53,7 +54,7 @@ class DiskCommands():
 
 
 
-    @record_exception
+    @sd.record_exception
     def show(self, args):
         obj_iscsi = ex.Iscsi()
         if args.disk == 'all' or args.disk is None:
