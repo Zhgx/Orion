@@ -6,6 +6,7 @@ import iscsi_json
 import consts
 import sundry as s
 import sys
+import linstordb
 
 
 
@@ -284,6 +285,8 @@ class Stor():
         if re_.search(result):
             return (re_.search(result).group())
 
+
+    """storagepool操作"""
     # 创建storagepool
     def create_storagepool_lvm(self, node, stp, vg):
         obj_lvm = LVM()
@@ -338,6 +341,38 @@ class Stor():
                 print('FAIL')
                 print(result['rst'])
 
+
+    def show_all_sp(self,no_color='no'):
+        collector = linstordb.CollectData()
+        if no_color == 'no':
+            data = s.color_data(collector.process_data_stp_all)()
+        else:
+            data = collector.process_data_stp_all()
+        header = ['stp_name','node_name','res_num','driver','pool_name','free_size','total_size','snapshots','status']
+        table = s.show_linstor_data(header, data)
+        self.logger.write_to_log('INFO', 'info', 'finish', '', table)
+
+
+    def show_one_sp(self,sp,no_color='no'):
+        collector = linstordb.CollectData()
+        node_num = collector._node_num_of_storagepool(sp)
+        node_name = collector._node_name_of_storagepool(sp)
+        if node_num == 0:
+            s.prt_log('The storagepool does not exist',1,0)
+        else:
+            info = f'The storagepool name for {node_num} nodes is {sp},they are {node_name}.'
+            print(info)
+            if no_color == 'no':
+                data = s.color_data(collector.process_data_stp_specific)(sp)
+            else:
+                data = collector.process_data_stp_specific(sp)
+            header = ['res_name', 'size', 'device_name', 'used', 'status']
+            table = s.show_linstor_data(header, data)
+            result = '\n'.join([info, str(table)])
+            self.logger.write_to_log('INFO', 'info', 'finish', '', result)
+
+
+    """node操作"""
     # 创建集群节点
     def create_node(self, node, ip, nt):
         cmd = f'linstor node create {node} {ip}  --node-type {nt}'
@@ -377,6 +412,36 @@ class Stor():
             else:
                 print('FAIL')
                 print(result['rst'])
+
+    def show_all_node(self, no_color='no'):
+        collecter = linstordb.CollectData()
+        if no_color == 'no':
+            data = s.color_data(collecter.process_data_node_all)()
+        else:
+            data = collecter.process_data_node_all()
+        header = ["node", "node type", "res num", "stp num", "addr", "status"]
+        return s.show_linstor_data(header, data)
+
+    def show_one_node(self, node, no_color='yes'):
+        collecter = linstordb.CollectData()
+        info = "node:%s\nnodetype:%s\nresource num:%s\nstoragepool num:%s\naddr:%s\nstatus:%s" % collecter.process_data_node_one(
+            node)
+        print(info)
+        if no_color == 'no':
+            data_node = s.color_data(collecter.process_data_node_specific)(node)
+            data_stp = s.color_data(collecter.process_data_stp_all_of_node)(node)
+        else:
+            data_node = collecter.process_data_node_specific(node)
+            data_stp = collecter.process_data_stp_all_of_node(node)
+
+        header_node = ['res_name', 'stp_name', 'size', 'device_name', 'used', 'status']
+        header_stp = ['stp_name', 'node_name', 'res_num', 'driver', 'pool_name', 'free_size', 'total_size', 'snapshots',
+                      'status']
+        table_node = s.show_linstor_data(header_node, data_node)
+        table_stp = s.show_linstor_data(header_stp, data_stp)
+        result = '\n'.join([info, str(table_node), str(table_stp)])
+        self.logger.write_to_log('INFO', 'info', 'finish', 'show node', result)
+
 
 
 class LinstorResource(Stor):
@@ -568,6 +633,31 @@ class LinstorResource(Stor):
             else:
                 print('FAIL')
                 print(result['rst'])
+
+    def show_all_res(self,no_color='no'):
+        collecter = linstordb.CollectData()
+        if no_color == 'no':
+            data = s.color_data(collecter.process_data_resource_all)()
+        else:
+            data = collecter.process_data_resource_all()
+
+        header = ["resource", "mirror_way", "size", "device_name", "used"]
+        table = s.show_linstor_data(header,data)
+        self.logger.write_to_log('INFO','info','finish','',table)
+
+
+    def show_one_res(self,res,no_color='no'):
+        collecter = linstordb.CollectData()
+        info = ("resource:%s\nmirror_way:%s\nsize:%s\ndevice_name:%s\nused:%s" %collecter.process_data_resource_one(res))
+        print(info)
+        if no_color == 'no':
+            data = s.color_data(collecter.process_data_resource_specific)(res)
+        else:
+            data = collecter.process_data_resource_specific(res)
+        header = ['node_name', 'stp_name', 'drbd_role', 'status']
+        table = s.show_linstor_data(header,data)
+        result = '\n'.join([info, str(table)])
+        self.logger.write_to_log('INFO', 'info', 'finish', '', result)
 
 
 class Iscsi():

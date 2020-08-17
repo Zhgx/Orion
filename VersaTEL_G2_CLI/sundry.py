@@ -10,6 +10,8 @@ import prettytable
 import sys
 from random import shuffle
 import subprocess
+from functools import wraps
+import colorama as ca
 
 import consts
 import execute
@@ -151,6 +153,18 @@ def show_data_map(list_header,dict_data):
     return table
 
 
+def show_linstor_data(list_header,list_data):
+    table = prettytable.PrettyTable()
+    table.field_names = list_header
+    if list_data:
+        for i in list_data:
+            table.add_row(i)
+    else:
+        pass
+    print(table)
+    return table
+
+
 def change_pointer(new_id):
     consts.set_glo_log_id(new_id)
 
@@ -276,12 +290,57 @@ def prt(str, level=0, warning_level=0):
                   f'{str}')
 
 
+def prt_log(str, level, warning_level):
+    """
+    print, write to log and exit.
+    :param logger: Logger object for logging
+    :param print_str: Strings to be printed and recorded
+    """
+    logger = consts.glo_log()
+    rpl = consts.glo_rpl()
+    if rpl == 'yes':
+        db = consts.glo_db()
+        oprt_id = db.get_oprt_id_via_db_id(consts.glo_tsc_id(), consts.glo_log_id())
+        prt(str + f'.oprt_id:{oprt_id}', level, warning_level)
+    elif rpl == 'no':
+        prt(str, level, warning_level)
+
+    if warning_level == 0:
+        logger.write_to_log('INFO', 'info', 'finish','',str)
+    elif warning_level == 1:
+        logger.write_to_log('INFO', 'warning', 'fail', '', str)
+    elif warning_level == 2:
+        logger.write_to_log('INFO', 'error', 'exit', '', str)
+        # print(f'{"":-^{format_width}}','\n')
+        # sys.exit()
+
+
 def pwe(str, level, warning_level):
     rpl = consts.glo_rpl()
-    prt(str, level, warning_level)
+    prt_log(str, level, warning_level)
 
     if warning_level == 2:
         if rpl == 'no':
             sys.exit()
         else:
             raise consts.ReplayExit
+
+
+
+def color_data(func):
+    """
+    装饰器，给特定的linstor数据进行着色
+    :param func:
+    :return:
+    """
+    @wraps(func)
+    def wrapper(*args):
+        status_true = ['UpToDate', 'Online', 'Ok', 'InUse']
+        data = func(*args)
+        for lst in data:
+            if lst[-1] in status_true:
+                lst[-1] = ca.Fore.GREEN + lst[-1] + ca.Style.RESET_ALL
+            else:
+                lst[-1] = ca.Fore.RED + lst[-1] + ca.Style.RESET_ALL
+        return data
+    return wrapper

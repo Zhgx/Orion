@@ -1,13 +1,13 @@
 # coding:utf-8
 import traceback
-import colorama as ca
-import prettytable as pt
+
 from functools import wraps
 import sqlite3
 import threading
 import execute as ex
 
 import consts
+import sundry as s
 
 
 class LinstorDB():
@@ -222,7 +222,7 @@ class LinstorDB():
         return "\n".join(SQL_script)
 
 
-class DataProcess():
+class CollectData():
     """
     Provide a data interface to retrieve specific data in the LINSTOR database.
     """
@@ -279,8 +279,6 @@ class DataProcess():
 
         sql_res_inuse = "SELECT DISTINCT Resource,Allocated,DeviceName,InUse FROM resourcetb WHERE InUse = 'InUse'"
         in_use = self.sql_fetch_all(sql_res_inuse)
-
-
 
         for i in in_use:
             res_used.append(i[0])
@@ -438,273 +436,3 @@ class DataProcess():
             date_list.append(list_one)
         self.cur.close()
         return date_list
-
-
-# 有颜色输出表格装饰器
-def table_color(func):
-    @wraps(func)
-    def wrapper(*args):
-        table = pt.PrettyTable()
-        status_true = ['UpToDate', 'Online', 'Ok', 'InUse']
-        data, table.field_names = func(*args)
-        for lst in data:
-            if lst[-1] in status_true:
-                lst[-1] = ca.Fore.GREEN + lst[-1] + ca.Style.RESET_ALL
-            else:
-                lst[-1] = ca.Fore.RED + lst[-1] + ca.Style.RESET_ALL
-        for i in data:
-            table.add_row(i)
-        print(table)
-        return table
-    return wrapper
-
-# 无颜色输出表格装饰器
-
-
-def table(func):
-    @wraps(func)
-    def wrapper(*args):
-        table = pt.PrettyTable()
-        data, table.field_names = func(*args)
-        for i in data:
-            table.add_row(i)
-        print(table)
-        return table
-    return wrapper
-
-
-class OutputData(DataProcess):
-    def __init__(self):
-        DataProcess.__init__(self)
-
-
-    """Node视图
-    """
-    @table_color
-    def node_all_color(self):
-        data = super().process_data_node_all()
-        header = ["node", "node type", "res num", "stp num", "addr", "status"]
-        return data, header
-
-    @table
-    def node_all(self):
-        data = super().process_data_node_all()
-        header = ["node", "node type", "res num", "stp num", "addr", "status"]
-        return data, header
-
-    @table_color
-    def node_one_color(self, node):
-        data = super().process_data_node_specific(node)
-        header = [
-            'res_name',
-            'stp_name',
-            'size',
-            'device_name',
-            'used',
-            'status']
-        return data, header
-
-    @table_color
-    def node_stp_one_color(self, node):
-        data = super().process_data_stp_all_of_node(node)
-        header = [
-            'stp_name',
-            'node_name',
-            'res_num',
-            'driver',
-            'pool_name',
-            'free_size',
-            'total_size',
-            'snapshots',
-            'status']
-        return data, header
-
-    @table
-    def node_one(self, node):
-        data = super().process_data_node_specific(node)
-        header = [
-            'res_name',
-            'stp_name',
-            'size',
-            'device_name',
-            'used',
-            'status']
-        return data, header
-
-    @table
-    def node_stp_one(self, node):
-        data = super().process_data_stp_all_of_node(node)
-        header = [
-            'stp_name',
-            'node_name',
-            'res_num',
-            'driver',
-            'pool_name',
-            'free_size',
-            'total_size',
-            'snapshots',
-            'status']
-        return data, header
-
-    # 指定的node视图
-
-    def show_node_one_color(self, node):
-
-        try:
-            info_first = (
-                    "node:%s\nnodetype:%s\nresource num:%s\nstoragepool num:%s\naddr:%s\nstatus:%s" %
-                    self.process_data_node_one(node))
-            print(info_first)
-            info_second = self.node_one_color(node)
-            info_third = self.node_stp_one_color(node)
-            result = '\n'.join([info_first, str(info_second), str(info_third)])
-        except TypeError:
-            info_err = str(traceback.format_exc())
-            print('Node %s does not exist.' % node)
-
-
-    def show_node_one(self, node):
-        # node = args[0]
-        try:
-            info_first = (
-                    "node:%s\nnodetype:%s\nresource num:%s\nstoragepool num:%s\naddr:%s\nstatus:%s" %
-                    self.process_data_node_one(node))
-            print(info_first)
-            info_second = self.node_one(node)
-            info_third = self.node_stp_one(node)
-            result = '\n'.join([info_first, str(info_second), str(info_third)])
-        except TypeError:
-            print('Node %s does not exist.' % node)
-
-    """Resource视图
-    """
-    @table_color
-    def res_all_color(self):
-        data = super().process_data_resource_all()
-        header = ["resource", "mirror_way", "size", "device_name", "used"]
-        return data, header
-
-    @table
-    def res_all(self):
-        data = super().process_data_resource_all()
-        header = ["resource", "mirror_way", "size", "device_name", "used"]
-        return data, header
-
-    @table_color
-    def res_one_color(self, res):
-        data = super().process_data_resource_specific(res)
-        header = ['node_name', 'stp_name', 'drbd_role', 'status']
-        return data, header
-
-    @table
-    def res_one(self, res):
-        data = super().process_data_resource_specific(res)
-        header = ['node_name', 'stp_name', 'drbd_role', 'status']
-        return data, header
-
-    def show_res_one_color(self, res):
-        try:
-            info_first = (
-                "resource:%s\nmirror_way:%s\nsize:%s\ndevice_name:%s\nused:%s" %
-                self.process_data_resource_one(res))
-            print(info_first)
-            info_second = self.res_one_color(res)
-            result = '\n'.join([info_first, str(info_second)])
-        except TypeError:
-            print('Resource %s does not exist.' % res)
-
-    def show_res_one(self, res):
-        try:
-            info_first = (
-                "resource:%s\nmirror_way:%s\nsize:%s\ndevice_name:%s\nused:%s" %
-                self.process_data_resource_one(res))
-            print(info_first)
-            info_second = self.res_one(res)
-            result = '\n'.join([info_first, str(info_second)])
-        except TypeError:
-            print('Resource %s does not exist.' % res)
-
-    """stp视图
-    """
-
-    @table_color
-    def sp_all_color(self):
-        data = super().process_data_stp_all()
-        header = [
-            'stp_name',
-            'node_name',
-            'res_num',
-            'driver',
-            'pool_name',
-            'free_size',
-            'total_size',
-            'snapshots',
-            'status']
-        return data, header
-
-    @table
-    def sp_all(self):
-        data = super().process_data_stp_all()
-        header = [
-            'stp_name',
-            'node_name',
-            'res_num',
-            'driver',
-            'pool_name',
-            'free_size',
-            'total_size',
-            'snapshots',
-            'status']
-        return data, header
-
-    @table_color
-    def sp_one_color(self, sp):
-        data = super().process_data_stp_specific(sp)
-        header = ['res_name', 'size', 'device_name', 'used', 'status']
-        return data, header
-
-    @table
-    def sp_one(self, sp):
-        data = super().process_data_stp_specific(sp)
-        header = ['res_name', 'size', 'device_name', 'used', 'status']
-        return data, header
-
-    def show_sp_one_color(self, sp):
-        node_num = self._node_num_of_storagepool(sp)
-        node_name = self._node_name_of_storagepool(sp)
-        if node_num == 0:
-            print('The storagepool does not exist')
-        elif node_num == 1:
-            info_first = (
-                'Only one node (%s) exists in the storage pool named %s' %
-                (node_name, sp))
-            print(info_first)
-            info_second = self.sp_one_color(sp)
-            result = '\n'.join([info_first, str(info_second)])
-        else:
-            node_name = ' and '.join(node_name)
-            info_first = (
-                'The storagepool name for %s nodes is %s,they are %s.' %
-                (node_num, sp, node_name))
-            print(info_first)
-            info_second = self.sp_one_color(sp)
-            result = '\n'.join([info_first, str(info_second)])
-
-    def show_sp_one(self, sp):
-        node_num = self._node_num_of_storagepool(sp)
-        node_name = self._node_name_of_storagepool(sp)
-        if node_num == 0:
-            print('The storagepool does not exist')
-        elif node_num == 1:
-            info_first = (
-                'Only onesql_insert_data node (%s) exists in the storage pool named %s' %
-                (node_name, sp))
-            info_second = self.sp_one(sp)
-            result = '\n'.join([info_first, str(info_second)])
-        else:
-            node_name = ' and '.join(node_name)
-            info_first = (
-                'The storagepool name for %s nodes is %s,they are %s.' %
-                (node_num, sp, node_name))
-            info_second = self.sp_one(sp)
-            result = '\n'.join([info_first, str(info_second)])

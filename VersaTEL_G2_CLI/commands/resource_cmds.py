@@ -340,17 +340,17 @@ class ResourceCommands():
 
     @sd.record_exception
     def show(self, args):
-        tb = linstordb.OutputData()
+        res = ex.LinstorResource()
         if args.nocolor:
             if args.resource:
-                tb.show_res_one(args.resource)
+                res.show_one_res(args.resource)
             else:
-                tb.res_all()
+                res.show_all_res(no_color='yes')
         else:
             if args.resource:
-                tb.show_res_one_color(args.resource)
+                res.show_one_res(args.resource)
             else:
-                result = tb.res_all_color()
+                res.show_all_res()
 
     def print_resource_help(self, *args):
         self.res_parser.print_help()

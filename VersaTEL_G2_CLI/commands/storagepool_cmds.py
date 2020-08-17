@@ -202,20 +202,18 @@ class StoragePoolCommands():
 
     @sd.record_exception
     def show(self, args):
-        tb = linstordb.OutputData()
+        sp = ex.Stor()
         if args.nocolor:
             if args.storagepool:
-                tb.show_sp_one(args.storagepool)
+                sp.show_one_sp(args.storagepool,'yes')
             else:
-                result = tb.sp_all()
-                self.logger.write_to_log('DATA','result_to_show','','','',result)
+                sp.show_all_sp('yes')
 
         else:
             if args.storagepool:
-                tb.show_sp_one_color(args.storagepool)
+                sp.show_one_sp(args.storagepool)
             else:
-                result = tb.sp_all_color()
-                self.logger.write_to_log('result_to_show','','',result)
+                sp.show_all_sp()
 
 
     def print_sp_help(self, *args):

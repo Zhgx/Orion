@@ -198,7 +198,7 @@ class VtelCLI(object):
             self.parser_iscsi.print_help()
 
 
-    def run_replay(self,cmd_list):
+    def replay_run(self,cmd_list):
         if not cmd_list:
             print('不存在命令去进行replay')
             return
@@ -216,7 +216,7 @@ class VtelCLI(object):
                 print('该事务id:不存在或者不符合replay条件（python vtel_client_main）')
 
 
-    def replay(self,args):
+    def replay_collect(self,args):
         logdb = consts.glo_db()
         consts.set_glo_log_switch('no')
         if args.transactionid and args.date:
@@ -229,7 +229,8 @@ class VtelCLI(object):
         else:
             cmd_list = logdb.get_all_transaction()
 
-        self.run_replay(cmd_list)
+        return cmd_list
+
 
 
 
@@ -246,7 +247,8 @@ class VtelCLI(object):
             if args.subargs_vtel in ['re', 'replay']:
                 consts.set_glo_rpl('yes')
                 replay.prepare_db()
-                self.replay(args)
+                cmd = self.replay_collect(args)
+                self.replay_run(cmd)
             else:
                 self.logger.write_to_log('DATA','input','user_input',path,cmd)
                 args.func(args)

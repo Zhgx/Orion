@@ -166,17 +166,17 @@ class NodeCommands():
         tb = linstordb.OutputData()
         if args.nocolor:
             if args.node:
-                tb.show_node_one(args.node)
+                tb.show_one_node(args.node)
                 return ExitCode.OK
             else:
-                tb.node_all()
+                tb.show_all_node()
                 return ExitCode.OK
         else:
             if args.node:
-                tb.show_node_one_color(args.node)
+                tb.show_one_node(args.node,'no')
                 return ExitCode.OK
             else:
-                result = tb.node_all_color()
+                tb.show_all_node()
                 return ExitCode.OK
 
 
