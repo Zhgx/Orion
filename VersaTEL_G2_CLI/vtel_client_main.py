@@ -1,9 +1,6 @@
 import argparse
 import sys
-import os
 import pickle
-
-import subprocess
 import linstordb
 import replay
 import log
@@ -23,23 +20,18 @@ from commands import (
 
 class MyArgumentParser(argparse.ArgumentParser):
     def parse_args(self, args=None, namespace=None):
-        try:
-            logger = consts.glo_log()
-            args, argv = self.parse_known_args(args, namespace)
-            if argv:
-                msg = ('unrecognized arguments: %s')
-                logger.write_to_log('INFO','error','exit','args error',(msg % ' '.join(argv)))
-                self.error(msg % ' '.join(argv))
-            return args
-
-        except Exception as e:
-            pass
+        logger = consts.glo_log()
+        args, argv = self.parse_known_args(args, namespace)
+        if argv:
+            msg = ('unrecognized arguments: %s')
+            logger.write_to_log('INFO','error','exit','args error',(msg % ' '.join(argv)))
+            self.error(msg % ' '.join(argv))
+        return args
 
     def print_usage(self, file=None):
         logger = consts.glo_log()
-        path = sundry.get_path()
         cmd = ' '.join(sys.argv[1:])
-        logger.write_to_log('user_input',path,'err',cmd)
+        logger.write_to_log('DATA', 'input', 'user_input', 'err', cmd)
         logger.write_to_log('INFO', 'info', 'finish','', 'print usage')
         if file is None:
             file = sys.stdout
@@ -189,8 +181,8 @@ class VtelCLI(object):
 
     # When using the parameter '-gui', send the json through the socket
     def send_json(self, args):
-        js = iscsi_json.JSON_OPERATION()
         if args.gui:
+            js = iscsi_json.JSON_OPERATION()
             data = js.read_json()
             data_pickled = pickle.dumps(data)
             sundry.send_via_socket(data_pickled)
@@ -209,6 +201,7 @@ class VtelCLI(object):
             if replay_cmd:
                 if not replay_cmd['type'] == 'err':
                     replay_args = self._parser.parse_args(replay_cmd['cmd'].split())
+                    print(f"* 执行命令：{replay_cmd['cmd']} *")
                     replay_args.func(replay_args)
                 else:
                     print(f"该命令{replay_cmd['cmd']}有误，无法执行")

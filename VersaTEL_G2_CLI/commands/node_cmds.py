@@ -30,7 +30,6 @@ class usage():
 class NodeCommands():
     def __init__(self):
         self.logger = consts.glo_log()
-        self.actuator = ex.Stor()
 
     def setup_commands(self, parser):
         """
@@ -143,13 +142,14 @@ class NodeCommands():
 
     @sd.record_exception
     def create(self, args):
+        node = ex.Stor()
         if args.gui:
-            result = self.actuator.create_node(args.node, args.ip, args.nodetype)
+            result = node.create_node(args.node, args.ip, args.nodetype)
             result_pickled = pickle.dumps(result)
             sd.send_via_socket(result_pickled)
             return ExitCode.OK
         elif args.node and args.nodetype and args.ip:
-            self.actuator.create_node(args.node, args.ip, args.nodetype)
+            node.create_node(args.node, args.ip, args.nodetype)
             return ExitCode.OK
         else:
             self.p_create_node.print_help()
@@ -159,24 +159,25 @@ class NodeCommands():
     @sd.record_exception
     @sd.comfirm_del('node')
     def delete(self, args):
-        self.actuator.delete_node(args.node)
+        node = ex.Stor()
+        node.delete_node(args.node)
 
     @sd.record_exception
     def show(self, args):
-        tb = linstordb.OutputData()
+        node = ex.Stor()
         if args.nocolor:
             if args.node:
-                tb.show_one_node(args.node)
+                node.show_one_node(args.node,no_color='yes')
                 return ExitCode.OK
             else:
-                tb.show_all_node()
+                node.show_all_node(no_color='yes')
                 return ExitCode.OK
         else:
             if args.node:
-                tb.show_one_node(args.node,'no')
+                node.show_one_node(args.node)
                 return ExitCode.OK
             else:
-                tb.show_all_node()
+                node.show_all_node()
                 return ExitCode.OK
 
 

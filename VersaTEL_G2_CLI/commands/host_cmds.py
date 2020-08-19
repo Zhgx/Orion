@@ -6,7 +6,6 @@ import consts
 class HostCommands():
     def __init__(self):
         self.logger = consts.glo_log()
-        self.actuator = ex.Iscsi()
 
     def setup_commands(self, parser):
         """
@@ -67,11 +66,12 @@ class HostCommands():
 
     @sd.record_exception
     def create(self, args):
+        obj_iscsi = ex.Iscsi()
         if args.gui == 'gui':
-            data = pickle.dumps(self.actuator.create_host(args.host, args.iqn))
+            data = pickle.dumps(obj_iscsi.create_host(args.host, args.iqn))
             sd.send_via_socket(data)
         else:
-            self.actuator.create_host(args.host, args.iqn)
+            obj_iscsi.create_host(args.host, args.iqn)
 
     @sd.record_exception
     def show(self, args):
@@ -83,7 +83,8 @@ class HostCommands():
 
     @sd.record_exception
     def delete(self, args):
-        self.actuator.delete_host(args.host)
+        obj_iscsi = ex.Iscsi()
+        obj_iscsi.delete_host(args.host)
 
     def print_host_help(self, *args):
         self.host_parser.print_help()

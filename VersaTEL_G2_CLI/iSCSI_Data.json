@@ -1,47 +1,7 @@
 {
-    "Host": {
-        "host1": "iqn.2020-04.feixitek.com:test1"
-    },
-    "Disk": {
-        "res_a": "/dev/drbd1000"
-    },
-    "HostGroup": {
-        "hg1": [
-            "host1"
-        ],
-        "hg2": [
-            "host1"
-        ],
-        "hg3": [
-            "host1"
-        ]
-    },
-    "DiskGroup": {
-        "dg1": [
-            "res_a"
-        ]
-    },
-    "Map": {
-        "map1": [
-            "hg1",
-            "dg1"
-        ]
-    },
-    "crm": {
-        "resource": [],
-        "vip": [
-            [
-                "vip",
-                "10.203.1.75",
-                "24"
-            ]
-        ],
-        "target": [
-            [
-                "t_test",
-                "iqn.2020-04.feixitek.com:versaplx00",
-                "10.203.1.75"
-            ]
-        ]
-    }
+    "Host": {},
+    "Disk": {},
+    "HostGroup": {},
+    "DiskGroup": {},
+    "Map": {}
 }

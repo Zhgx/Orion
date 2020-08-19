@@ -8,7 +8,6 @@ class HostGroupCommands():
 
     def __init__(self):
         self.logger = consts.glo_log()
-        self.obj_iscsi = ex.Iscsi()
 
     def setup_commands(self, parser):
         """
@@ -85,24 +84,27 @@ class HostGroupCommands():
 
     @sd.record_exception
     def create(self, args):
+        obj_iscsi = ex.Iscsi()
         if args.gui == 'gui':
             data = pickle.dumps(
-                self.obj_iscsi.create_hostgroup(
+                obj_iscsi.create_hostgroup(
                     args.hostgroup, args.host))
             sd.send_via_socket(data)
         else:
-            self.obj_iscsi.create_hostgroup(args.hostgroup, args.host)
+            obj_iscsi.create_hostgroup(args.hostgroup, args.host)
 
     @sd.record_exception
     def show(self, args):
+        obj_iscsi = ex.Iscsi()
         if args.hostgroup == 'all' or args.hostgroup is None:
-            self.obj_iscsi.show_all_hostgroup()
+            obj_iscsi.show_all_hostgroup()
         else:
-            self.obj_iscsi.show_spe_hostgroup(args.hostgroup)
+            obj_iscsi.show_spe_hostgroup(args.hostgroup)
 
     @sd.record_exception
     def delete(self, args):
-        self.obj_iscsi.delete_hostgroup(args.hostgroup)
+        obj_iscsi = ex.Iscsi()
+        obj_iscsi.delete_hostgroup(args.hostgroup)
 
     def print_hg_help(self, *args):
         self.hg_parser.print_help()

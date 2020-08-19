@@ -8,7 +8,6 @@ class DiskGroupCommands():
 
     def __init__(self):
         self.logger = consts.glo_log()
-        self.obj_iscsi = ex.Iscsi()
 
     def setup_commands(self, parser):
         """
@@ -82,11 +81,12 @@ class DiskGroupCommands():
 
     @sd.record_exception
     def create(self, args):
+        obj_iscsi = ex.Iscsi()
         if args.gui == 'gui':
-            data = pickle.dumps(self.obj_iscsi.create_diskgroup(args.diskgroup, args.disk))
+            data = pickle.dumps(obj_iscsi.create_diskgroup(args.diskgroup, args.disk))
             sd.send_via_socket(data)
         else:
-            self.obj_iscsi.create_diskgroup(args.diskgroup, args.disk)
+            obj_iscsi.create_diskgroup(args.diskgroup, args.disk)
 
     @sd.record_exception
     def show(self, args):
@@ -98,7 +98,8 @@ class DiskGroupCommands():
 
     @sd.record_exception
     def delete(self, args):
-        self.obj_iscsi.delete_diskgroup(args.diskgroup)
+        obj_iscsi = ex.Iscsi()
+        obj_iscsi.delete_diskgroup(args.diskgroup)
 
     def print_dg_help(self, *args):
         self.dg_parser.print_help()

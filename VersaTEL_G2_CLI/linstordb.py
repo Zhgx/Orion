@@ -3,9 +3,7 @@ import traceback
 
 from functools import wraps
 import sqlite3
-import threading
 import execute as ex
-
 import consts
 import sundry as s
 
@@ -140,61 +138,58 @@ class LinstorDB():
         # linstor.db
         self.con = sqlite3.connect(":memory:", check_same_thread=False)
         self.cur = self.con.cursor()
+        self.logger = consts.glo_log()
 
-    # 执行获取数据，删除表，创建表，插入数据
-    def rebuild_linstor_tb(self):
+
+    def build_table(self,type='linstor'):
         self.cur.execute(self.crt_ntb_sql)
         self.cur.execute(self.crt_rtb_sql)
         self.cur.execute(self.crt_sptb_sql)
-        self.insert_linstor_node()
-        self.insert_linstor_res()
-        self.insert_linstor_sp()
+        if type == 'all':
+            self.cur.execute(self.crt_vgtb_sql)
+            self.cur.execute(self.crt_thinlvtb_sql)
+            self.insert_lvm_data()
+        self.insert_linstor_data()
         self.con.commit()
 
-    def rebuild_all_tb(self):
-        self.create_tb()
-        self.insert_vg()
-        self.insert_thinlv()
-        self.insert_linstor_node()
-        self.insert_linstor_res()
-        self.insert_linstor_sp()
-        self.con.commit()
+    def insert_and_log(self,func_name,sql,data):
+        logger = consts.glo_log()
+        RPL = consts.glo_rpl()
+        oprt_id = s.create_oprt_id()
+        logger.write_to_log('DATA', 'STR', func_name, '', oprt_id)
+        logger.write_to_log('OPRT', 'SQL', 'insert', oprt_id, sql)
+        self.insert_data(sql,data)
+        logger.write_to_log('DATA','SQL','insert',oprt_id,data)
+        if RPL == 'yes':
+            logdb = consts.glo_db()
+            id_result = logdb.get_id(consts.glo_tsc_id(), 'insert_linstor_data')
+            cmd_result = logdb.get_oprt_result(id_result['oprt_id'])
+            print(f"RE:{id_result['time']} 数据库语句：\n{sql}")
+            print(f"RE:{id_result['time']} 数据库插入数据：\n{data}")
+            if id_result['db_id']:
+                s.change_pointer(id_result['db_id'])
+            return cmd_result['result']
+
+    def insert_lvm_data(self):
+        lvm = ex.LVM()
+        vg = lvm.refine_vg()
+        thinlv = lvm.refine_thinlv()
+        self.insert_and_log('insert_lvm_data',self.replace_vgtb_sql, vg)
+        self.insert_and_log('insert_lvm_data',self.replace_thinlvtb_sql, thinlv)
 
 
-    def insert_vg(self):
-        obj_lvm = ex.LVM()
-        vg = obj_lvm.refine_vg()
-        self.insert_data(self.replace_vgtb_sql, vg)
-
-    def insert_thinlv(self):
-        obj_lvm = ex.LVM()
-        thinlv = obj_lvm.refine_thinlv()
-        self.insert_data(self.replace_thinlvtb_sql, thinlv)
-
-
-    def insert_linstor_node(self):
+    def insert_linstor_data(self):
         linstor = ex.Linstor()
         node = linstor.get_linstor_data('linstor --no-color --no-utf8 n l')
-        self.insert_data(self.replace_ntb_sql, node)
-
-    def insert_linstor_res(self):
-        linstor = ex.Linstor()
         res = linstor.get_linstor_data('linstor --no-color --no-utf8 r lv')
-        self.insert_data(self.replace_rtb_sql, res)
-
-    def insert_linstor_sp(self):
-        linstor = ex.Linstor()
         sp = linstor.get_linstor_data('linstor --no-color --no-utf8 sp l')
-        self.insert_data(self.replace_stb_sql, sp)
+        self.insert_and_log('insert_linstor_data',self.replace_ntb_sql, node)
+        self.insert_and_log('insert_linstor_data',self.replace_rtb_sql, res)
+        self.insert_and_log('insert_linstor_data',self.replace_stb_sql, sp)
 
-    # 创建表
-    def create_tb(self):
-        self.cur.execute(self.crt_vgtb_sql)
-        self.cur.execute(self.crt_thinlvtb_sql)
-        self.cur.execute(self.crt_sptb_sql)  # 检查是否存在表，如不存在，则新创建表
-        self.cur.execute(self.crt_rtb_sql)
-        self.cur.execute(self.crt_ntb_sql)
-        self.con.commit()
+    def replay_log(self,args):
+        self.logger.write_to_log(args)
+
 
     # 删除表，现不使用
     def drop_tb(self):
@@ -216,7 +211,7 @@ class LinstorDB():
     def data_base_dump(self):
         cur = self.cur
         con = self.con
-        self.rebuild_all_tb()
+        self.build_table('all')
         SQL_script = con.iterdump()
         cur.close()
         return "\n".join(SQL_script)
@@ -229,7 +224,7 @@ class CollectData():
 
     def __init__(self):
         self.linstor_db = LinstorDB()
-        self.linstor_db.rebuild_linstor_tb()
+        self.linstor_db.build_table()
         self.cur = self.linstor_db.cur
         self.logger = consts.glo_log()
 
@@ -247,6 +242,12 @@ class CollectData():
         return list(date_set)
 
     # Return all data of node table
+
+    def select_data(self):
+        # sql = f'SELECT {",".join(data)} FROM {table} WHERE {limit}'
+        sql = f'SELECT * FROM nodetb inner join resourcetb on nodetb.Node = resourcetb.Node inner join storagepooltb on resourcetb.StoragePool = storagepooltb.StoragePool'
+        return self.sql_fetch_all(sql)
+
 
     def _select_nodetb_all(self):
         select_sql = "SELECT Node,NodeType,Addresses,State FROM nodetb"
@@ -436,3 +437,6 @@ class CollectData():
             date_list.append(list_one)
         self.cur.close()
         return date_list
+
+
+# coo = CollectData()

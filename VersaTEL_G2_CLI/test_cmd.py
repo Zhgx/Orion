@@ -98,12 +98,26 @@ class LVM():
             if 'drbdpool' and 'wi' in one:
                 print(one)
 
+import sqlite3
+
+class DBtest():
+    def __init__(self):
+        # linstor.db
+        self.con = sqlite3.connect("linstordb.db", check_same_thread=False)
+        self.cur = self.con.cursor()
 
 
-import pprint
+    def sql_fetch_all(self,sql):
+        self.cur.execute(sql)
+        date_set = self.cur.fetchall()
+        return list(date_set)
 
-lvm  = LVM()
-print(lvm.data_vg)
-pprint.pprint(lvm.data_vg)
-print(lvm.data_lv)
-lvm.thinlv_exists()
+    def select_data(self):
+        # sql = f'SELECT {",".join(data)} FROM {table} WHERE {limit}'
+        sql = f'SELECT nodetb.Node,storagepooltb.StoragePool,Resource,DeviceName FROM nodetb inner join resourcetb on nodetb.Node = resourcetb.Node inner join storagepooltb on resourcetb.StoragePool = storagepooltb.StoragePool'
+        return self.sql_fetch_all(sql)
+
+
+# import pprint
+# db = DBtest()
+# pprint.pprint(db.select_data())

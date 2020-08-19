@@ -50,7 +50,6 @@ class InvalidSizeError(Exception):
 class ResourceCommands():
     def __init__(self):
         self.logger = consts.glo_log()
-        self.actuator = ex.LinstorResource()
 
     def setup_commands(self, parser):
         """
@@ -235,6 +234,7 @@ class ResourceCommands():
 
         :param args: Namespace that has been parsed for CLI
         """
+        res = ex.LinstorResource()
 
         """对应创建模式必需输入的参数和禁止输入的参数"""
         # Parameters required for automatic resource creation
@@ -272,11 +272,11 @@ class ResourceCommands():
             # 自动创建条件判断，符合则执行
             if all(list_auto_required) and not any(list_auto_forbid):
                 if args.gui:
-                    result = self.actuator.create_res_auto(args.resource, args.size, args.num)
+                    result = res.create_res_auto(args.resource, args.size, args.num)
                     result_pickled = pickle.dumps(result)
                     sd.send_via_socket(result_pickled)
                 else:
-                    self.actuator.create_res_auto(args.resource, args.size, args.num)
+                    res.create_res_auto(args.resource, args.size, args.num)
             # 手动创建条件判断，符合则执行
             elif all(list_manual_required) and not any(list_manual_forbid):
                 try:
@@ -287,13 +287,13 @@ class ResourceCommands():
                     sys.exit()
                 else:
                     if args.gui:
-                        result = self.actuator.create_res_manual(
+                        result = res.create_res_manual(
                             args.resource, args.size, args.node, args.storagepool)
                         result_pickled = pickle.dumps(result)
                         sd.send_via_socket(result_pickled)
                         # CLI
                     else:
-                        self.actuator.create_res_manual(
+                        res.create_res_manual(
                             args.resource, args.size, args.node, args.storagepool)
             else:
                 # self.logger.add_log(username, 'cli_user_input', transaction_id, path, 'ARGPARSE_ERROR', cmd)
@@ -302,7 +302,7 @@ class ResourceCommands():
         elif args.diskless:
             # 创建resource的diskless资源条件判断，符合则执行
             if args.node and not any(list_diskless_forbid):
-                self.actuator.create_res_diskless(args.node, args.resource)
+                res.create_res_diskless(args.node, args.resource)
             else:
                 self.p_create_res.print_help()
 
@@ -312,7 +312,7 @@ class ResourceCommands():
                     [args.auto, args.num]):
                 try:
                     self.is_args_correct(args.node, args.storagepool)
-                    self.actuator.add_mirror_manual(
+                    res.add_mirror_manual(
                         args.resource, args.node, args.storagepool)
                 except NodeAndSPNumError:
                     print('The number of nodes does not meet the requirements')
@@ -322,7 +322,7 @@ class ResourceCommands():
                 #     self.p_create_res.print_help()
             # 自动添加mirror条件判断，符合则执行
             elif all([args.auto, args.num]) and not any([args.node, args.storagepool]):
-                self.actuator.add_mirror_auto(args.resource, args.num)
+                res.add_mirror_auto(args.resource, args.num)
             else:
                 self.p_create_res.print_help()
 
@@ -332,10 +332,11 @@ class ResourceCommands():
     @sd.record_exception
     @sd.comfirm_del('resource')
     def delete(self, args):
+        res = ex.LinstorResource()
         if args.node:
-            self.actuator.delete_resource_des(args.node, args.resource)
+            res.delete_resource_des(args.node, args.resource)
         elif not args.node:
-            self.actuator.delete_resource_all(args.resource)
+            res.delete_resource_all(args.resource)
 
 
     @sd.record_exception
@@ -343,7 +344,7 @@ class ResourceCommands():
         res = ex.LinstorResource()
         if args.nocolor:
             if args.resource:
-                res.show_one_res(args.resource)
+                res.show_one_res(args.resource,no_color='yes')
             else:
                 res.show_all_res(no_color='yes')
         else:

@@ -37,7 +37,6 @@ class usage():
 class StoragePoolCommands():
     def __init__(self):
         self.logger = consts.glo_log()
-        self.actuator = ex.Stor()
 
 
     def setup_commands(self, parser):
@@ -164,26 +163,27 @@ class StoragePoolCommands():
 
     @sd.record_exception
     def create(self, args):
+        sp = ex.Stor()
         if args.storagepool and args.node:
             # The judgment of the lvm module to create a storage pool
             if args.lvm:
                 if args.gui:
-                    result = self.actuator.create_storagepool_lvm(
+                    result = sp.create_storagepool_lvm(
                         args.node, args.storagepool, args.lvm)
                     result_pickled = pickle.dumps(result)
                     sd.send_via_socket(result_pickled)
                 else:
-                    self.actuator.create_storagepool_lvm(
+                    sp.create_storagepool_lvm(
                         args.node, args.storagepool, args.lvm)
             # The judgment of the thin-lv module to create a storage pool
             elif args.tlv:
                 if args.gui:
-                    result = self.actuator.create_storagepool_thinlv(
+                    result = sp.create_storagepool_thinlv(
                         args.node, args.storagepool, args.tlv)
                     result_pickled = pickle.dumps(result)
                     sd.send_via_socket(result_pickled)
                 else:
-                    self.actuator.create_storagepool_thinlv(
+                    sp.create_storagepool_thinlv(
                         args.node, args.storagepool, args.tlv)
             else:
                 self.p_create_sp.print_help()
@@ -197,7 +197,8 @@ class StoragePoolCommands():
     @sd.record_exception
     @sd.comfirm_del('storage pool')
     def delete(self, args):
-        self.actuator.delete_storagepool(args.node, args.storagepool)
+        sp = ex.Stor()
+        sp.delete_storagepool(args.node, args.storagepool)
 
 
     @sd.record_exception
@@ -205,9 +206,9 @@ class StoragePoolCommands():
         sp = ex.Stor()
         if args.nocolor:
             if args.storagepool:
-                sp.show_one_sp(args.storagepool,'yes')
+                sp.show_one_sp(args.storagepool,no_color='yes')
             else:
-                sp.show_all_sp('yes')
+                sp.show_all_sp(no_color='yes')
 
         else:
             if args.storagepool:

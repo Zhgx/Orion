@@ -98,8 +98,11 @@ class LogDB():
 
     def get_userinput_via_tid(self, transaction_id):
         sql = f"SELECT describe2,data FROM logtable WHERE describe1 = 'user_input' and transaction_id = '{transaction_id}'"
-        args_type, cmd = self.sql_fetch_one(sql)
-        return [{'tid':transaction_id,'type':args_type,'cmd':cmd}]
+        result = self.sql_fetch_one(sql)
+        if result:
+            args_type, cmd = self.sql_fetch_one(sql)
+            return [{'tid':transaction_id,'type':args_type,'cmd':cmd}]
+
 
     def get_userinput_via_time(self, start_time, end_time):
         sql = f"SELECT transaction_id,describe2,data FROM logtable WHERE describe1 = 'user_input' and time >= '{start_time}' and time <= '{end_time}'"
@@ -122,25 +125,48 @@ class LogDB():
         return result_list
 
 
-    def get_cmd_result(self, oprt_id):
-        sql = f"SELECT data FROM logtable WHERE type1 = 'DATA' and type2 = 'cmd' and describe2 = '{oprt_id}'"
-        return self.sql_fetch_one(sql)
+    def get_oprt_result(self, oprt_id):
+        sql = f"SELECT time,data FROM logtable WHERE type1 = 'DATA' and describe2 = '{oprt_id}'"
+        # sql = f"SELECT time,data FROM logtable WHERE type1 = 'DATA' and type2 = 'cmd' and describe2 = '{oprt_id}'"
+        result = self.sql_fetch_one(sql)
+        if result:
+            time, data = self.sql_fetch_one(sql)
+            return {'time': time, 'result': data}
+        else:
+            return {'time':'','result':''}
 
-    def get_oprt_id(self, transaction_id, string):
+    def get_id(self, transaction_id, string):
         id_now = consts.glo_log_id()
-        sql = f"SELECT id,data FROM logtable WHERE describe1 = '{string}' and id > {id_now} and transaction_id = '{transaction_id}'"
-        id_and_oprt_id = self.sql_fetch_one(sql)
-        if id_and_oprt_id:
-            return id_and_oprt_id
+        sql = f"SELECT time,id,data FROM logtable WHERE describe1 = '{string}' and type2 = 'STR' and id > {id_now} and transaction_id = '{transaction_id}'"
+        result = self.sql_fetch_one(sql)
+        if result:
+            time,db_id,oprt_id = result
+            return {'time':time,'db_id':db_id,'oprt_id':oprt_id}
+        else:
+            return {'time':'','db_id':'','oprt_id':''}
+
+    def get_anwser(self,transaction_id):
+        sql = f"SELECT time,data FROM logtable WHERE transaction_id = '{transaction_id}' and describe2 = 'confirm deletion'"
+        result = self.sql_fetch_one(sql)
+        if result:
+            return result
         else:
             return ('','')
 
+    def get_cmd_output(self,transaction_id):
+        id_now = consts.glo_log_id()
+        sql = f"SELECT time,data FROM logtable WHERE describe2 = 'output' and type1 = 'INFO' and transaction_id = '{transaction_id}' and id > {id_now}"
+        result = self.sql_fetch_one(sql)
+        if result:
+            return result
+        else:
+            return ('','')
 
     def produce_logdb(self):
         log_path = "./VersaTEL_G2_CLI.log"
         logfilename = 'VersaTEL_G2_CLI.log'
         id = (None,)
-        re_ = re.compile(r'\[(.*?)\] \[(.*?)\] \[(.*?)\] \[(.*?)\] \[(.*?)\] \[(.*?)\] \[(.*?)\] \[(.*?\]?)\]', re.DOTALL)
+        re_ = re.compile(r'\[(.*?)\] \[(.*?)\] \[(.*?)\] \[(.*?)\] \[(.*?)\] \[(.*?)\] \[(.*?)\] \[(.*?\]?)\]\|', re.DOTALL)
         if not isFileExists(log_path):
             print('no file')
             return

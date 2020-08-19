@@ -48,6 +48,7 @@ def record_exception(func):
             raise e
     return wrapper
 
+
 def comfirm_del(type):
     """
     Decorator providing confirmation of deletion function.
@@ -59,19 +60,31 @@ def comfirm_del(type):
             if cli_args.yes:
                 func(self,*args)
             else:
-                print(
-                    'Are you sure you want to delete this %s? If yes, enter \'y/yes\'' %
-                    type)
-                answer = input()
+                print(f"Are you sure you want to delete this {type}? If yes, enter 'y/yes'")
+                answer = get_answer()
                 if answer in ['y', 'yes']:
-                    self.logger.write_to_log('Delete Comfirm', '', '', 'y/yes')
                     func(self,*args)
                 else:
-                    self.logger.write_to_log('result_to_show','','','Delete canceled')
-                    print('Delete canceled')
+                    prt_log('Delete canceled',0)
         return wrapper
     return decorate
 
+
+def get_answer():
+    logger = consts.glo_log()
+    rpl = consts.glo_rpl()
+    logdb = consts.glo_db()
+    transaction_id = consts.glo_tsc_id()
+
+    if rpl == 'no':
+        answer = input()
+        logger.write_to_log('DATA', 'input', 'user_input', 'confirm deletion', answer)
+    else:
+        time,answer = logdb.get_anwser(transaction_id)
+        if not time:
+            time = ''
+        print(f'RE:{time:<20} 用户输入: {answer}')
+    return answer
 
 
 
@@ -115,19 +128,26 @@ def get_path():
 
 
 def re_findall(re_string, tgt_string):
+    logger = consts.glo_log()
     re_ = re.compile(re_string)
+    oprt_id = create_oprt_id()
+    logger.write_to_log('OPRT', 'regular', 'findall', oprt_id, {'re': re_, 'string': tgt_string})
     re_result = re_.findall(tgt_string)
+    logger.write_to_log('DATA', 'regular', 'findall', oprt_id, re_result)
     return re_result
 
 
 def re_search(re_string, tgt_stirng):
+    logger = consts.glo_log()
     re_ = re.compile(re_string)
+    oprt_id = create_oprt_id()
+    logger.write_to_log('OPRT','regular','search',oprt_id, {'re':re_,'string':tgt_stirng})
     re_result = re_.search(tgt_stirng).group()
+    logger.write_to_log('DATA', 'regular', 'search', oprt_id, re_result)
     return re_result
 
 
-
-def show_data(list_header,dict_data):
+def show_iscsi_data(list_header,dict_data):
     table = prettytable.PrettyTable()
     table.field_names = list_header
     if dict_data:
@@ -136,10 +156,9 @@ def show_data(list_header,dict_data):
             table.add_row(data_one)
     else:
         pass
-    print(table)
     return table
 
-def show_data_map(list_header,dict_data):
+def show_map_data(list_header,dict_data):
     table = prettytable.PrettyTable()
     table.field_names = list_header
     if dict_data:
@@ -149,7 +168,6 @@ def show_data_map(list_header,dict_data):
             table.add_row(j)
     else:
         pass
-    print(table)
     return table
 
 
@@ -161,7 +179,6 @@ def show_linstor_data(list_header,list_data):
             table.add_row(i)
     else:
         pass
-    print(table)
     return table
 
 
@@ -229,12 +246,14 @@ def get_cmd_result(unique_str, cmd, oprt_id):
         return result_cmd
     elif RPL == 'yes':
         logdb = consts.glo_db()
-        db_id, oprt_id = logdb.get_oprt_id(consts.glo_tsc_id(), unique_str)
-
-        result_cmd = logdb.get_cmd_result(oprt_id)
-        if db_id:
-            change_pointer(db_id)
-        return result_cmd
+        id_result = logdb.get_id(consts.glo_tsc_id(), unique_str)
+        cmd_result = logdb.get_cmd_result(id_result['oprt_id'])
+        print('*')
+        print(f"RE:{id_result['time']} 执行系统命令：\n{cmd}")
+        print(f"RE:{cmd_result['time']} 系统命令结果：\n{cmd_result['result']}")
+        if id_result['db_id']:
+            change_pointer(id_result['db_id'])
+        return cmd_result['result']
 
 
 def get_crm_cmd_result(unique_str, cmd, oprt_id):
@@ -248,18 +267,19 @@ def get_crm_cmd_result(unique_str, cmd, oprt_id):
         return result_cmd
     elif RPL == 'yes':
         logdb = consts.glo_db()
-        db_id, oprt_id = logdb.get_oprt_id(consts.glo_tsc_id(), unique_str)
-        result_cmd = logdb.get_cmd_result(oprt_id)
-        if result_cmd:
-            result = eval(result_cmd)
+        id_result = logdb.get_id(consts.glo_tsc_id(), unique_str)
+        cmd_result = logdb.get_cmd_result(oprt_id)
+        if cmd_result:
+            result = eval(cmd_result['rst'])
         else:
             result = None
-        if db_id:
-            change_pointer(db_id)
+        if id_result['db_id']:
+            change_pointer(id_result['db_id'])
         return result
 
 
-def prt(str, level=0, warning_level=0):
+
+def prt(str, warning_level=0):
     if isinstance(warning_level, int):
         warning_str = '*' * warning_level
     else:
@@ -277,20 +297,14 @@ def prt(str, level=0, warning_level=0):
             return
 
         db = consts.glo_db()
-        time = db.get_time_via_str(consts.glo_tsc_id(), str)
+        time,cmd_output = db.get_cmd_output(consts.glo_tsc_id())
         if not time:
             time = ''
-
-        print(f'{warning_str:<4}Re:{time:<20}{warning_str:>4}')
-
-        if level == 0:
-            print(str)
-        else:
-            print(f'RE:{time:<20}{warning_str:<4}'
-                  f'{str}')
+        print(f'RE:{time:<20} 日志记录输出：{warning_str:<4}\n{cmd_output}')
+        print(f'RE:{"":<20} 此次执行输出：{warning_str:<4}\n{str}')
 
 
-def prt_log(str, level, warning_level):
+def prt_log(str, warning_level):
     """
     print, write to log and exit.
     :param logger: Logger object for logging
@@ -299,25 +313,23 @@ def prt_log(str, level, warning_level):
     logger = consts.glo_log()
     rpl = consts.glo_rpl()
     if rpl == 'yes':
-        db = consts.glo_db()
-        oprt_id = db.get_oprt_id_via_db_id(consts.glo_tsc_id(), consts.glo_log_id())
-        prt(str + f'.oprt_id:{oprt_id}', level, warning_level)
+        prt(str, warning_level)
     elif rpl == 'no':
-        prt(str, level, warning_level)
+        prt(str, warning_level)
 
     if warning_level == 0:
-        logger.write_to_log('INFO', 'info', 'finish','',str)
+        logger.write_to_log('INFO', 'info', 'finish','output',str)
     elif warning_level == 1:
-        logger.write_to_log('INFO', 'warning', 'fail', '', str)
+        logger.write_to_log('INFO', 'warning', 'fail', 'output', str)
     elif warning_level == 2:
-        logger.write_to_log('INFO', 'error', 'exit', '', str)
+        logger.write_to_log('INFO', 'error', 'exit', 'output', str)
         # print(f'{"":-^{format_width}}','\n')
         # sys.exit()
 
 
-def pwe(str, level, warning_level):
+def pwe(str, warning_level):
     rpl = consts.glo_rpl()
-    prt_log(str, level, warning_level)
+    prt_log(str,warning_level)
 
     if warning_level == 2:
         if rpl == 'no':
@@ -344,3 +356,31 @@ def color_data(func):
                 lst[-1] = ca.Fore.RED + lst[-1] + ca.Style.RESET_ALL
         return data
     return wrapper
+
+
+def json_operate_decorator(str):
+    """
+    Decorator providing confirmation of deletion function.
+    :param func: Function to delete linstor resource
+    """
+    def decorate(func):
+        @wraps(func)
+        def wrapper(self, *args):
+            first, data = args
+            logger = consts.glo_log()
+            RPL = consts.glo_rpl()
+            oprt_id = create_oprt_id()
+            logger.write_to_log('DATA', 'STR', func.__name__, '', oprt_id)
+            logger.write_to_log('OPRT', 'JSON', func.__name__, oprt_id, first)
+            result = func(self,*args)
+            logger.write_to_log('DATA', 'JSON', func.__name__, oprt_id,data)
+            if RPL == 'yes':
+                logdb = consts.glo_db()
+                id_result = logdb.get_id(consts.glo_tsc_id(), func.__name__)
+                cmd_result = logdb.get_oprt_result(id_result['oprt_id'])
+                print(f"RE:{id_result['time']} {str}：\n{data}")
+                if id_result['db_id']:
+                    change_pointer(id_result['db_id'])
+            return result
+        return wrapper
+    return decorate
