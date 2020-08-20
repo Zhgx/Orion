@@ -33,5 +33,5 @@ class Linstor():
         return list_data_all
 
     def get_linstor_data(self,cmd):
-        cmd_result = s.get_cmd_result(sys._getframe().f_code.co_name, cmd, s.create_oprt_id())
+        cmd_result = s.execute_cmd(cmd)
         return self.refine_linstor(cmd_result)

@@ -1,5 +1,7 @@
 {
-    "Host": {},
+    "Host": {
+        "host1": "iqn-123213-12321"
+    },
     "Disk": {},
     "HostGroup": {},
     "DiskGroup": {},

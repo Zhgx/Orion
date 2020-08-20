@@ -185,7 +185,38 @@ def show_linstor_data(list_header,list_data):
 def change_pointer(new_id):
     consts.set_glo_log_id(new_id)
 
+def cmd_decorator(type):
+    def decorate(func):
+        @wraps(func)
+        def wrapper(cmd):
+            RPL = consts.glo_rpl()
+            oprt_id = create_oprt_id()
+            if RPL == 'no':
+                logger = consts.glo_log()
+                logger.write_to_log('DATA', 'STR', func.__name__, '', oprt_id)
+                logger.write_to_log('OPRT', 'cmd', type, oprt_id, cmd)
+                result_cmd = func(cmd)
+                logger.write_to_log('DATA', 'cmd', type, oprt_id, result_cmd)
+                return result_cmd
+            else:
+                logdb = consts.glo_db()
+                id_result = logdb.get_id(consts.glo_tsc_id(), func.__name__)
+                cmd_result = logdb.get_oprt_result(id_result['oprt_id'])
+                if type == 'crm':
+                    result = eval(cmd_result['result'])
+                else:
+                    result = cmd_result['result']
+                print('*')
+                print(f"RE:{id_result['time']} 执行系统命令：\n{cmd}")
+                print(f"RE:{cmd_result['time']} 系统命令结果：\n{cmd_result['result']}")
+                if id_result['db_id']:
+                    change_pointer(id_result['db_id'])
+            return result
+        return wrapper
+    return decorate
 
+
+@cmd_decorator('sys cmd')
 def execute_cmd(cmd, timeout=60):
     p = subprocess.Popen(cmd, stderr=subprocess.STDOUT, stdout=subprocess.PIPE, shell=True)
     t_beginning = time.time()
@@ -202,6 +233,7 @@ def execute_cmd(cmd, timeout=60):
     return output
 
 
+@cmd_decorator('crm')
 def execute_crm_cmd(cmd, timeout=60):
     """
     Execute the command cmd to return the content of the command output.
@@ -235,47 +267,51 @@ def execute_crm_cmd(cmd, timeout=60):
         return output
 
 
-def get_cmd_result(unique_str, cmd, oprt_id):
-    logger = consts.glo_log()
-    RPL = consts.glo_rpl()
-    if RPL == 'no':
-        logger.write_to_log('DATA', 'STR', unique_str, '', oprt_id)
-        logger.write_to_log('OPRT', 'cmd', '', oprt_id, cmd)
-        result_cmd = execute_cmd(cmd)
-        logger.write_to_log('DATA', 'cmd', '', oprt_id, result_cmd)
-        return result_cmd
-    elif RPL == 'yes':
-        logdb = consts.glo_db()
-        id_result = logdb.get_id(consts.glo_tsc_id(), unique_str)
-        cmd_result = logdb.get_cmd_result(id_result['oprt_id'])
-        print('*')
-        print(f"RE:{id_result['time']} 执行系统命令：\n{cmd}")
-        print(f"RE:{cmd_result['time']} 系统命令结果：\n{cmd_result['result']}")
-        if id_result['db_id']:
-            change_pointer(id_result['db_id'])
-        return cmd_result['result']
+# def get_cmd_result(unique_str, cmd, oprt_id):
+#     logger = consts.glo_log()
+#     RPL = consts.glo_rpl()
+#     if RPL == 'no':
+#         logger.write_to_log('DATA', 'STR', unique_str, '', oprt_id)
+#         logger.write_to_log('OPRT', 'cmd', '', oprt_id, cmd)
+#         result_cmd = execute_cmd(cmd)
+#         logger.write_to_log('DATA', 'cmd', '', oprt_id, result_cmd)
+#         return result_cmd
+#     elif RPL == 'yes':
+#         logdb = consts.glo_db()
+#         id_result = logdb.get_id(consts.glo_tsc_id(), unique_str)
+#         cmd_result = logdb.get_oprt_result(id_result['oprt_id'])
+#         print('*')
+#         print(f"RE:{id_result['time']} 执行系统命令：\n{cmd}")
+#         print(f"RE:{cmd_result['time']} 系统命令结果：\n{cmd_result['result']}")
+#         if id_result['db_id']:
+#             change_pointer(id_result['db_id'])
+#         return cmd_result['result']
 
 
-def get_crm_cmd_result(unique_str, cmd, oprt_id):
-    logger = consts.glo_log()
-    RPL = consts.glo_rpl()
-    if RPL == 'no':
-        logger.write_to_log('DATA', 'STR', unique_str, '', oprt_id)
-        logger.write_to_log('OPRT', 'cmd', 'iscsi', oprt_id, cmd)
-        result_cmd = execute_crm_cmd(cmd)
-        logger.write_to_log('DATA', 'cmd', 'iscsi', oprt_id, result_cmd)
-        return result_cmd
-    elif RPL == 'yes':
-        logdb = consts.glo_db()
-        id_result = logdb.get_id(consts.glo_tsc_id(), unique_str)
-        cmd_result = logdb.get_cmd_result(oprt_id)
-        if cmd_result:
-            result = eval(cmd_result['rst'])
-        else:
-            result = None
-        if id_result['db_id']:
-            change_pointer(id_result['db_id'])
-        return result
+# def get_crm_cmd_result(unique_str, cmd, oprt_id):
+#     logger = consts.glo_log()
+#     RPL = consts.glo_rpl()
+#     if RPL == 'no':
+#         logger.write_to_log('DATA', 'STR', unique_str, '', oprt_id)
+#         logger.write_to_log('OPRT', 'cmd', 'iscsi', oprt_id, cmd)
+#         result_cmd = execute_crm_cmd(cmd)
+#         logger.write_to_log('DATA', 'cmd', 'iscsi', oprt_id, result_cmd)
+#         return result_cmd
+#     elif RPL == 'yes':
+#         logdb = consts.glo_db()
+#         id_result = logdb.get_id(consts.glo_tsc_id(), unique_str)
+#         cmd_result = logdb.get_cmd_result(oprt_id)
+#         if cmd_result:
+#             result = eval(cmd_result['result'])
+#         else:
+#             result = None
+#         print('*')
+#         print(f"RE:{id_result['time']} 执行系统命令：\n{cmd}")
+#         print(f"RE:{cmd_result['time']} 系统命令结果：\n{cmd_result['result']}")
+#         if id_result['db_id']:
+#             change_pointer(id_result['db_id'])
+#         return result
+
 
 
 
@@ -358,6 +394,8 @@ def color_data(func):
     return wrapper
 
 
+
+
 def json_operate_decorator(str):
     """
     Decorator providing confirmation of deletion function.
@@ -366,21 +404,24 @@ def json_operate_decorator(str):
     def decorate(func):
         @wraps(func)
         def wrapper(self, *args):
-            first, data = args
-            logger = consts.glo_log()
             RPL = consts.glo_rpl()
-            oprt_id = create_oprt_id()
-            logger.write_to_log('DATA', 'STR', func.__name__, '', oprt_id)
-            logger.write_to_log('OPRT', 'JSON', func.__name__, oprt_id, first)
-            result = func(self,*args)
-            logger.write_to_log('DATA', 'JSON', func.__name__, oprt_id,data)
-            if RPL == 'yes':
+            if RPL == 'no':
+                logger = consts.glo_log()
+                oprt_id = create_oprt_id()
+                logger.write_to_log('DATA', 'STR', func.__name__, '', oprt_id)
+                logger.write_to_log('OPRT', 'JSON', func.__name__, oprt_id, args)
+                result = func(self,*args)
+                logger.write_to_log('DATA', 'JSON', func.__name__, oprt_id,result)
+            else:
                 logdb = consts.glo_db()
                 id_result = logdb.get_id(consts.glo_tsc_id(), func.__name__)
-                cmd_result = logdb.get_oprt_result(id_result['oprt_id'])
-                print(f"RE:{id_result['time']} {str}：\n{data}")
+                json_result = logdb.get_oprt_result(id_result['oprt_id'])
+                result = eval(json_result['result'])
+                print(f"RE:{id_result['time']} {str}：\n{result}")
                 if id_result['db_id']:
                     change_pointer(id_result['db_id'])
             return result
         return wrapper
     return decorate
+
+

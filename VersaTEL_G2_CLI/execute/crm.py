@@ -14,8 +14,7 @@ class CRMData():
 
     def get_crm_conf(self):
         cmd = 'crm configure show'
-        result = s.get_crm_cmd_result(sys._getframe().f_code.co_name, cmd, s.create_oprt_id())
-        print("do crm configure show")
+        result = s.execute_crm_cmd(cmd)
         if result:
             return result['rst']
 
@@ -41,7 +40,7 @@ class CRMData():
     def update_crm_conf(self):
         # crm_config_status = obj_crm.get_crm_data()
         if 'ERROR' in self.crm_conf_data:
-            print("Could not perform requested operations, are you root?")
+            s.prt_log("Could not perform requested operations, are you root?",1)
         else:
             js = iscsi_json.JSON_OPERATION()
             res = self.get_resource_data()
@@ -66,9 +65,9 @@ class CRMConfig():
             f'op stop timeout=40 interval=0 ' \
             f'op monitor timeout=40 interval=15 ' \
             f'meta target-role=Stopped'
-        result = s.get_crm_cmd_result(sys._getframe().f_code.co_name, cmd, s.create_oprt_id())
+        result = s.execute_crm_cmd(cmd)
         if result['sts']:
-            print("Create iSCSILogicalUnit success")
+            s.prt_log("Create iSCSILogicalUnit success",1)
             return True
 
     # 获取res的状态
@@ -82,11 +81,11 @@ class CRMConfig():
     # 停用res
     def stop_res(self, res):
         cmd = f'crm res stop {res}'
-        result = s.get_crm_cmd_result(sys._getframe().f_code.co_name, cmd, s.create_oprt_id())
+        result = s.execute_crm_cmd(cmd)
         if result['sts']:
             return True
         else:
-            print("crm res stop fail")
+            s.prt_log("crm res stop fail",1)
 
 
     # 检查
@@ -106,7 +105,7 @@ class CRMConfig():
             else:
                 time.sleep(1)
         else:
-            print("Does not meet expectations, please try again.")
+            s.prt_log("Does not meet expectations, please try again.",1)
 
     def delete_crm_res(self, res):
         # crm res stop <LUN_NAME>
@@ -114,38 +113,35 @@ class CRMConfig():
             if self.checkout_status(res,10,'Stopped'):
                 time.sleep(3)
                 cmd = f'crm conf del {res}'
-                result = s.get_crm_cmd_result(sys._getframe().f_code.co_name, cmd, s.create_oprt_id())
+                result = s.execute_crm_cmd(cmd)
                 if result:
                     output = result['rst']
                     re_str = re.compile(rf'INFO: hanging colocation:co_{res} deleted\nINFO: hanging order:or_{res} deleted\n')
                     if s.re_search(re_str,output):
-                        print("crm conf del " + res)
+                        s.prt_log(f"crm conf del {res}",0)
                         return True
                     else:
-                        print("crm delete fail")
+                        s.prt_log(f"crm delete fail",1)
 
     def create_col(self, res, target):
         # crm conf colocation <COLOCATION_NAME> inf: <LUN_NAME> <TARGET_NAME>
-        print(f'crm conf colocation co_{res} inf: {res} {target}')
         cmd = f'crm conf colocation co_{res} inf: {res} {target}'
-        result = s.get_crm_cmd_result(sys._getframe().f_code.co_name, cmd, s.create_oprt_id())
+        result = s.execute_crm_cmd(cmd)
         if result['sts']:
-            print("set coclocation")
+            s.prt_log("set coclocation success",0)
             return True
 
     def create_order(self, res, target):
         # crm conf order <ORDER_NAME1> <TARGET_NAME> <LUN_NAME>
-        print(f'crm conf order or_{res} {target} {res}')
         cmd = f'crm conf order or_{res} {target} {res}'
-        result = s.get_crm_cmd_result(sys._getframe().f_code.co_name, cmd, s.create_oprt_id())
+        result = s.execute_crm_cmd(cmd)
         if result['sts']:
-            print("set order")
+            s.prt_log("set order success",0)
             return True
 
     def start_res(self, res):
         # crm res start <LUN_NAME>
-        print(f'crm res start {res}')
         cmd = f'crm res start {res}'
-        result = s.get_crm_cmd_result(sys._getframe().f_code.co_name, cmd, s.create_oprt_id())
+        result = s.execute_crm_cmd(cmd)
         if result['sts']:
             return True

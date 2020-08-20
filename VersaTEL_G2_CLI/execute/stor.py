@@ -14,7 +14,6 @@ class Stor():
 
     def __init__(self):
         self.logger = consts.glo_log()
-        print('STOR')
 
     def judge_result(self,result):
         # 对命令进行结果根据正则匹配进行分类
@@ -58,11 +57,11 @@ class Stor():
     # 创建storagepool
     def create_storagepool_lvm(self, node, stp, vg):
         obj_lvm = LVM()
-        if vg not in obj_lvm.data_vg:
-            print(f'Volume group:"{vg}" does not exist')
+        if not obj_lvm.is_vg_exists(vg):
+            s.prt_log(f'Volume group:"{vg}" does not exist',1)
             return
         cmd = f'linstor storage-pool create lvm {node} {stp} {vg}'
-        output = s.get_cmd_result(sys._getframe().f_code.co_name, cmd, s.create_oprt_id())
+        output = s.execute_cmd(cmd)
         result = self.judge_result(output)
         if result:
             if result['sts'] == 0:
@@ -76,13 +75,11 @@ class Stor():
 
     def create_storagepool_thinlv(self, node, stp, tlv):
         obj_lvm = LVM()
-        all_lv_list = obj_lvm.data_lv.splitlines()[1:]
-        for one in all_lv_list:
-            if 'twi' and tlv not in one:
-                print(f'Thin logical volume:"{tlv}" does not exist')
-                return
+        if not obj_lvm.is_thinlv_exists(tlv):
+            s.prt_log(f'Thin logical volume:"{tlv}" does not exist',1)
+            return
         cmd = f'linstor storage-pool create lvmthin {node} {stp} {tlv}'
-        output = s.get_cmd_result(sys._getframe().f_code.co_name, cmd, s.create_oprt_id())
+        output = s.execute_cmd(cmd)
         result = self.judge_result(output)
         if result:
             if result['sts'] == 0:
@@ -97,7 +94,7 @@ class Stor():
     # 删除storagepool -- ok
     def delete_storagepool(self, node, stp):
         cmd = f'linstor storage-pool delete {node} {stp}'
-        output = s.get_cmd_result(sys._getframe().f_code.co_name, cmd, s.create_oprt_id())
+        output = s.execute_cmd(cmd)
         result = self.judge_result(output)
         if result:
             if result['sts'] == 0:
@@ -154,7 +151,7 @@ class Stor():
             print('node type error,choose from ''Combined',
                   'Controller', 'Auxiliary', 'Satellite''')
         else:
-            output = s.get_cmd_result(sys._getframe().f_code.co_name, cmd, s.create_oprt_id())
+            output = s.execute_cmd(cmd)
             result = self.judge_result(output)
             if result:
                 if result['sts'] == 0:
@@ -169,7 +166,7 @@ class Stor():
     # 删除node
     def delete_node(self, node):
         cmd = f'linstor node delete {node}'
-        output = s.get_cmd_result(sys._getframe().f_code.co_name, cmd, s.create_oprt_id())
+        output = s.execute_cmd(cmd)
         result = self.judge_result(output)
         if result:
             if result['sts'] == 0:
@@ -257,11 +254,11 @@ class LinstorResource(Stor):
     # 创建resource相关
     def linstor_delete_rd(self, res):
         cmd = f'linstor rd d {res}'
-        s.get_cmd_result(sys._getframe().f_code.co_name, cmd, s.create_oprt_id())
+        s.execute_cmd(cmd)
 
     def linstor_create_rd(self, res):
         cmd = f'linstor rd c {res}'
-        output = s.get_cmd_result(sys._getframe().f_code.co_name, cmd, s.create_oprt_id())
+        output = s.execute_cmd(cmd)
         result = self.judge_result(output)
         if result:
             if result['sts'] == 0:
@@ -273,7 +270,7 @@ class LinstorResource(Stor):
 
     def linstor_create_vd(self, res, size):
         cmd = f'linstor vd c {res} {size}'
-        output = s.get_cmd_result(sys._getframe().f_code.co_name, cmd, s.create_oprt_id())
+        output = s.execute_cmd(cmd)
         result = self.judge_result(output)
         if result:
             if result['sts'] == 0:
@@ -288,7 +285,7 @@ class LinstorResource(Stor):
     def create_res_auto(self, res, size, num):
         cmd = f'linstor r c {res} --auto-place {num}'
         if self.linstor_create_rd(res) is True and self.linstor_create_vd(res, size) is True:
-            output = s.get_cmd_result(sys._getframe().f_code.co_name, cmd, s.create_oprt_id())
+            output = s.execute_cmd(cmd)
             result = self.judge_result(output)
             if result:
                 if result['sts'] == 0:
@@ -340,7 +337,7 @@ class LinstorResource(Stor):
     # 添加mirror（自动）
     def add_mirror_auto(self, res, num):
         cmd = f'linstor r c {res} --auto-place {num}'
-        output = s.get_cmd_result(sys._getframe().f_code.co_name, cmd, s.create_oprt_id())
+        output = s.execute_cmd(cmd)
         result = self.judge_result(output)
         if result:
             if result['sts'] == 0:
@@ -373,7 +370,7 @@ class LinstorResource(Stor):
     # 创建resource --diskless
     def create_res_diskless(self, node, res):
         cmd = f'linstor r c {node} {res} --diskless'
-        output = s.get_cmd_result(sys._getframe().f_code.co_name, cmd, s.create_oprt_id())
+        output = s.execute_cmd(cmd)
         result = self.judge_result(output)
         if result:
             if result['sts'] == 0:
@@ -388,7 +385,7 @@ class LinstorResource(Stor):
     # 删除resource,指定节点
     def delete_resource_des(self, node, res):
         cmd = f'linstor resource delete {node} {res}'
-        output = s.get_cmd_result(sys._getframe().f_code.co_name, cmd, s.create_oprt_id())
+        output = s.execute_cmd(cmd)
         result = self.judge_result(output)
         if result:
             if result['sts'] == 0:
@@ -403,7 +400,7 @@ class LinstorResource(Stor):
     # 删除resource，全部节点
     def delete_resource_all(self, res):
         cmd = f'linstor resource-definition delete {res}'
-        output = s.get_cmd_result(sys._getframe().f_code.co_name, cmd, s.create_oprt_id())
+        output = s.execute_cmd(cmd)
         result = self.judge_result(output)
         if result:
             if result['sts'] == 0:

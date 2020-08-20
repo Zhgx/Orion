@@ -47,13 +47,11 @@ class Iscsi():
     """
 
     def create_host(self, host, iqn):
-        print("Host name:", host)
-        print("iqn:", iqn)
         if self.js.check_key('Host', host):
-            print(f"Fail! The Host {host} already existed.")
+            s.prt_log(f"Fail! The Host {host} already existed.",1)
         else:
             self.js.add_data("Host", host, iqn)
-            print("Create success!")
+            s.prt_log("Create success!",0)
             return True
 
     def get_all_host(self):
@@ -65,7 +63,6 @@ class Iscsi():
             return ({host:self.js.get_data('Host').get(host)})
 
     def show_all_host(self):
-        print("All Host:")
         list_header = ["HostName", "IQN"]
         dict_data = self.get_all_host()
         table =  s.show_iscsi_data(list_header, dict_data)
@@ -78,18 +75,16 @@ class Iscsi():
         s.prt_log(table,0)
 
     def delete_host(self, host):
-        print(f"Delete the host <{host}> ...")
         if self.js.check_key('Host', host):
             if self.js.check_value('HostGroup', host):
-                print(
-                    "Fail! The host in ... hostgroup, Please delete the hostgroup first.")
+                s.prt_log(
+                    "Fail! The host in ... hostgroup, Please delete the hostgroup first.",1)
             else:
-                print('2222')
                 self.js.delete_data('Host', host)
-                print("Delete success!")
+                s.prt_log("Dexlete success!",0)
                 return True
         else:
-            print(f"Fail! Can't find {host}")
+            s.prt_log(f"Fail! Can't find {host}",1)
 
     """
     diskgroup 操作
@@ -134,37 +129,34 @@ class Iscsi():
 
 
     def delete_diskgroup(self, dg):
-        print("Delete the diskgroup <", dg, "> ...")
         if self.js.check_key('DiskGroup', dg):
             if self.js.check_value('Map', dg):
-                print("Fail! The diskgroup already map,Please delete the map")
+                s.prt_log("Fail! The diskgroup already map,Please delete the map",1)
             else:
                 self.js.delete_data('DiskGroup', dg)
-                print("Delete success!")
+                s.prt_log("Delete success!",0)
         else:
-            print(f"Fail! Can't find {dg}")
+            s.prt_log(f"Fail! Can't find {dg}",1)
 
     """
     hostgroup 操作
     """
 
     def create_hostgroup(self, hostgroup, host):
-        print("Hostgroup name:", hostgroup)
-        print("Host name:", host)
         if self.js.check_key('HostGroup', hostgroup):
-            print(f'Fail! The HostGroup {hostgroup} already existed.')
+            s.prt_log(f'Fail! The HostGroup {hostgroup} already existed.',1)
         else:
             t = True
             for i in host:
                 if self.js.check_key('Host', i) == False:
                     t = False
-                    print(f"Fail! Can't find {i}")
+                    s.prt_log(f"Fail! Can't find {i}",1)
             if t:
                 self.js.add_data('HostGroup', hostgroup, host)
-                print("Create success!")
+                s.prt_log("Create success!",0)
                 return True
             else:
-                print("Fail! Please give the true name.")
+                s.prt_log("Fail! Please give the true name.",1)
 
     def get_all_hostgroup(self):
         return self.js.get_data("HostGroup")
@@ -174,7 +166,6 @@ class Iscsi():
             return {hg:self.js.get_data('HostGroup').get(hg)}
 
     def show_all_hostgroup(self):
-        print("All Host Group:")
         list_header = ["HostGroupName", "HostName"]
         dict_data = self.get_all_hostgroup()
         table = s.show_iscsi_data(list_header, dict_data)
@@ -188,38 +179,33 @@ class Iscsi():
 
 
     def delete_hostgroup(self, hg):
-        print("Delete the hostgroup <", hg, "> ...")
         if self.js.check_key('HostGroup', hg):
             if self.js.check_value('Map', hg):
-                print("Fail! The hostgroup already map,Please delete the map")
+                s.prt_log("Fail! The hostgroup already map,Please delete the map",1)
             else:
                 self.js.delete_data('HostGroup', hg)
-                print("Delete success!")
+                s.prt_log("Delete success!",0)
         else:
-            print("Fail! Can't find " + hg)
+            s.prt_log(f"Fail! Can't find {hg}",1)
 
     """
     map操作
     """
 
     def pre_check_create_map(self, map, hg, dg):
-        print("Map name:", map)
-        print("Hostgroup name:", hg)
-        print("Diskgroup name:", dg)
-
         if self.js.check_key('Map', map):
-            print(f'The Map "{map}" already existed.')
+            s.prt_log(f'The Map "{map}" already existed.',1)
         elif self.js.check_key('HostGroup', hg) == False:
-            print(f"Can't find {hg}")
+            s.prt_log(f"Can't find {hg}",1)
         elif self.js.check_key('DiskGroup', dg) == False:
-            print(f"Can't find {dg}")
+            s.prt_log(f"Can't find {dg}",1)
         else:
             if self.js.check_value('Map', dg):
-                print("The diskgroup already map")
+                s.prt_log("The diskgroup already map",1)
             else:
                 if self.create_map(hg, dg):
                     self.js.add_data('Map', map, [hg, dg])
-                    print('Create success!')
+                    s.prt_log('Create success!',0)
                     return True
 
     def get_initiator(self, hg):
@@ -265,12 +251,12 @@ class Iscsi():
                 c = obj_crm.create_col(res, target_name)
                 o = obj_crm.create_order(res, target_name)
                 if c and o:
-                    print(f'create colocation and order success:{res}')
+                    s.prt_log(f'create colocation and order success:{res}',0)
                     obj_crm.start_res(res)
                 else:
-                    print("create colocation and order fail")
+                    s.prt_log("create colocation and order fail",1)
             else:
-                print('create resource Fail!')
+                s.prt_log('Failde to create resource!',1)
         return True
 
 
@@ -281,7 +267,7 @@ class Iscsi():
         dict_hg = {}
         dict_dg = {}
         if not self.js.check_key('Map', map):
-            print('no data')
+            s.prt_log('No map data',1)
             return
 
         hg,dg = self.js.get_data('Map').get(map)
@@ -298,7 +284,6 @@ class Iscsi():
 
 
     def show_all_map(self):
-        print("All Map:")
         list_header = ["MapName", "HostGroup","DiskGroup"]
         dict_data = self.get_all_map()
         table = s.show_map_data(list_header,dict_data)
@@ -320,16 +305,15 @@ class Iscsi():
 
 
     def pre_check_delete_map(self, map):
-        print("Delete the map <", map, ">...")
         if self.js.check_key('Map', map):
             print(f"{self.js.get_data('Map').get(map)} probably be affected")
             dg = self.js.get_data('Map').get(map)[1]
             resname = self.js.get_data('DiskGroup').get(dg)
             if self.delete_map(resname):
                 self.js.delete_data('Map', map)
-                print("Delete success!")
+                s.prt("Delete success!",0)
         else:
-            print("Fail! Can't find " + map)
+            s.prt(f"Fail! Can't find {map}",1)
 
     # 调用crm删除map
     def delete_map(self, resname):
@@ -337,11 +321,11 @@ class Iscsi():
         crm_data = CRMData()
         crm_config_statu = crm_data.crm_conf_data
         if 'ERROR' in crm_config_statu:
-            print("Could not perform requested operations, are you root?")
+            s.prt_log("Could not perform requested operations, are you root?",1)
         else:
             for disk in resname:
                 if obj_crm.delete_crm_res(disk):
-                    print("delete ", disk)
+                    s.prt_log(f"delete {disk}",0)
                 else:
                     return False
             return True
