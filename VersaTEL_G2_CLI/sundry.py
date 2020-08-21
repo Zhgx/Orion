@@ -425,3 +425,23 @@ def json_operate_decorator(str):
     return decorate
 
 
+def sql_insert_decorator(func):
+    @wraps(func)
+    def wrapper(self, sql, data, tablename):
+        RPL = consts.glo_rpl()
+        if RPL == 'no':
+            logger = consts.glo_log()
+            oprt_id = create_oprt_id()
+            logger.write_to_log('DATA', 'STR', func.__name__, '', oprt_id)
+            logger.write_to_log('OPRT', 'SQL', func.__name__, oprt_id, sql)
+            func(self,sql, data, tablename)
+            logger.write_to_log('DATA', 'SQL', func.__name__, oprt_id, data)
+        else:
+            logdb = consts.glo_db()
+            id_result = logdb.get_id(consts.glo_tsc_id(), func.__name__)
+            cmd_result = logdb.get_oprt_result(id_result['oprt_id'])
+            print(f"RE:{id_result['time']} 插入数据表: {tablename}")
+            print(f"RE:{id_result['time']} 插入数据：\n{data}")
+            if id_result['db_id']:
+                change_pointer(id_result['db_id'])
+    return wrapper

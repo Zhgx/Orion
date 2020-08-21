@@ -126,7 +126,6 @@ class Stor():
             s.prt_log('The storagepool does not exist',1)
         else:
             info = f'The storagepool name for {node_num} nodes is {sp},they are {node_name}.'
-            print(info)
             if no_color == 'no':
                 data = s.color_data(collector.process_data_stp_specific)(sp)
             else:

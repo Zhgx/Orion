@@ -136,7 +136,7 @@ class LinstorDB():
 
     def __init__(self):
         # linstor.db
-        self.con = sqlite3.connect(":memory:", check_same_thread=False)
+        self.con = sqlite3.connect("linstordb.db", check_same_thread=False)
         self.cur = self.con.cursor()
         self.logger = consts.glo_log()
 
@@ -152,30 +152,14 @@ class LinstorDB():
         self.insert_linstor_data()
         self.con.commit()
 
-    def insert_and_log(self,func_name,sql,data):
-        logger = consts.glo_log()
-        RPL = consts.glo_rpl()
-        oprt_id = s.create_oprt_id()
-        logger.write_to_log('DATA', 'STR', func_name, '', oprt_id)
-        logger.write_to_log('OPRT', 'SQL', 'insert', oprt_id, sql)
-        self.insert_data(sql,data)
-        logger.write_to_log('DATA','SQL','insert',oprt_id,data)
-        if RPL == 'yes':
-            logdb = consts.glo_db()
-            id_result = logdb.get_id(consts.glo_tsc_id(), 'insert_linstor_data')
-            cmd_result = logdb.get_oprt_result(id_result['oprt_id'])
-            print(f"RE:{id_result['time']} 数据库语句：\n{sql}")
-            print(f"RE:{id_result['time']} 数据库插入数据：\n{data}")
-            if id_result['db_id']:
-                s.change_pointer(id_result['db_id'])
-            return cmd_result['result']
+
 
     def insert_lvm_data(self):
         lvm = ex.LVM()
         vg = lvm.refine_vg()
         thinlv = lvm.refine_thinlv()
-        self.insert_and_log('insert_lvm_data',self.replace_vgtb_sql, vg)
-        self.insert_and_log('insert_lvm_data',self.replace_thinlvtb_sql, thinlv)
+        self.insert_data(self.replace_vgtb_sql, vg,'vgtb')
+        self.insert_data(self.replace_thinlvtb_sql, thinlv,'thinlvtb')
 
 
     def insert_linstor_data(self):
@@ -183,9 +167,9 @@ class LinstorDB():
         node = linstor.get_linstor_data('linstor --no-color --no-utf8 n l')
         res = linstor.get_linstor_data('linstor --no-color --no-utf8 r lv')
         sp = linstor.get_linstor_data('linstor --no-color --no-utf8 sp l')
-        self.insert_and_log('insert_linstor_data',self.replace_ntb_sql, node)
-        self.insert_and_log('insert_linstor_data',self.replace_rtb_sql, res)
-        self.insert_and_log('insert_linstor_data',self.replace_stb_sql, sp)
+        self.insert_data(self.replace_ntb_sql, node, 'nodetb')
+        self.insert_data(self.replace_rtb_sql, res,'resourcetb')
+        self.insert_data(self.replace_stb_sql, sp, 'storagepooltb')
 
     def replay_log(self,args):
         self.logger.write_to_log(args)
@@ -202,7 +186,8 @@ class LinstorDB():
         self.con.commit()
 
     # 插入数据
-    def insert_data(self, sql, list_data):
+    @s.sql_insert_decorator
+    def insert_data(self, sql, list_data,table_name=None):
         for i in range(len(list_data)):
             list_data[i].insert(0, i + 1)
             self.cur.execute(sql, list_data[i])
