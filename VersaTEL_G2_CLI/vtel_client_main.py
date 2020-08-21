@@ -1,4 +1,5 @@
 import argparse
+import traceback
 import sys
 import pickle
 import linstordb
@@ -31,7 +32,7 @@ class MyArgumentParser(argparse.ArgumentParser):
     def print_usage(self, file=None):
         logger = consts.glo_log()
         cmd = ' '.join(sys.argv[1:])
-        logger.write_to_log('DATA', 'input', 'user_input', 'err', cmd)
+        logger.write_to_log('DATA', 'input', 'cmd_input', 'err', cmd)
         logger.write_to_log('INFO', 'info', 'finish','', 'print usage')
         if file is None:
             file = sys.stdout
@@ -202,7 +203,13 @@ class VtelCLI(object):
                 if not replay_cmd['type'] == 'err':
                     replay_args = self._parser.parse_args(replay_cmd['cmd'].split())
                     print(f"* 执行命令：{replay_cmd['cmd']} *")
-                    replay_args.func(replay_args)
+                    try:
+                        replay_args.func(replay_args)
+                    except consts.ReplayExit:
+                        print('该事务replay结束')
+                    except Exception:
+                        print(str(traceback.format_exc()))
+
                 else:
                     print(f"该命令{replay_cmd['cmd']}有误，无法执行")
             else:
@@ -221,7 +228,6 @@ class VtelCLI(object):
             cmd_list = logdb.get_userinput_via_time(args.date[0],args.date[1])
         else:
             cmd_list = logdb.get_all_transaction()
-
         return cmd_list
 
 
@@ -243,10 +249,10 @@ class VtelCLI(object):
                 cmd = self.replay_collect(args)
                 self.replay_run(cmd)
             else:
-                self.logger.write_to_log('DATA','input','user_input',path,cmd)
+                self.logger.write_to_log('DATA','input','cmd_input',path,cmd)
                 args.func(args)
         else:
-            self.logger.write_to_log('DATA','input','user_input', path, cmd)
+            self.logger.write_to_log('DATA','input','cmd_input', path, cmd)
             self._parser.print_help()
 
 

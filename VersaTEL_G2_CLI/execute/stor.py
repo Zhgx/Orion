@@ -13,7 +13,7 @@ class TimeoutError(Exception):
 class Stor():
 
     def __init__(self):
-        self.logger = consts.glo_log()
+        pass
 
     def judge_result(self,result):
         # 对命令进行结果根据正则匹配进行分类
@@ -29,15 +29,22 @@ class Stor():
         """
 
         if re_err.search(result):
-            return {'sts':3,'rst':result}
+            result = {'sts':3,'rst':result}
         elif re_suc.search(result) and re_war.search(result):
             messege_war = Stor.get_war_mes(result)
-            return {'sts':1,'rst':messege_war}
+            result = {'sts':1,'rst':messege_war}
         elif re_suc.search(result):
-            return {'sts':0,'rst:':result}
+            result = {'sts':0,'rst:':result}
         elif re_war.search(result):
             messege_war = Stor.get_war_mes(result)
-            return {'sts':2,'rst':messege_war}
+            result = {'sts':2,'rst':messege_war}
+
+        if result:
+            return result
+        else:
+            s.handle_exception()
+
+
 
 
     @staticmethod
@@ -63,15 +70,14 @@ class Stor():
         cmd = f'linstor storage-pool create lvm {node} {stp} {vg}'
         output = s.execute_cmd(cmd)
         result = self.judge_result(output)
-        if result:
-            if result['sts'] == 0:
-                s.prt_log('SUCCESS', 0)
-            elif result['sts'] == 1:
-                s.prt_log(f"SUCCESS\n{result['rst']}", 1)
-            elif result['sts'] == 2:
-                s.prt_log(f"FAIL\n{result['rst']}", 1)
-            else:
-                s.prt_log(f"FAIL\n{result['rst']}", 2)
+        if result['sts'] == 0:
+            s.prt_log('SUCCESS', 0)
+        elif result['sts'] == 1:
+            s.prt_log(f"SUCCESS\n{result['rst']}", 1)
+        elif result['sts'] == 2:
+            s.prt_log(f"FAIL\n{result['rst']}", 1)
+        else:
+            s.prt_log(f"FAIL\n{result['rst']}", 2)
 
     def create_storagepool_thinlv(self, node, stp, tlv):
         obj_lvm = LVM()
@@ -81,30 +87,28 @@ class Stor():
         cmd = f'linstor storage-pool create lvmthin {node} {stp} {tlv}'
         output = s.execute_cmd(cmd)
         result = self.judge_result(output)
-        if result:
-            if result['sts'] == 0:
-                s.prt_log('SUCCESS', 0)
-            elif result['sts'] == 1:
-                s.prt_log(f"SUCCESS\n{result['rst']}", 1)
-            elif result['sts'] == 2:
-                s.prt_log(f"FAIL\n{result['rst']}", 1)
-            else:
-                s.prt_log(f"FAIL\n{result['rst']}", 2)
+        if result['sts'] == 0:
+            s.prt_log('SUCCESS', 0)
+        elif result['sts'] == 1:
+            s.prt_log(f"SUCCESS\n{result['rst']}", 1)
+        elif result['sts'] == 2:
+            s.prt_log(f"FAIL\n{result['rst']}", 1)
+        else:
+            s.prt_log(f"FAIL\n{result['rst']}", 2)
 
     # 删除storagepool -- ok
     def delete_storagepool(self, node, stp):
         cmd = f'linstor storage-pool delete {node} {stp}'
         output = s.execute_cmd(cmd)
         result = self.judge_result(output)
-        if result:
-            if result['sts'] == 0:
-                s.prt_log('SUCCESS', 0)
-            elif result['sts'] == 1:
-                s.prt_log(f"SUCCESS\n{result['rst']}", 1)
-            elif result['sts'] == 2:
-                s.prt_log(f"FAIL\n{result['rst']}", 1)
-            else:
-                s.prt_log(f"FAIL\n{result['rst']}", 2)
+        if result['sts'] == 0:
+            s.prt_log('SUCCESS', 0)
+        elif result['sts'] == 1:
+            s.prt_log(f"SUCCESS\n{result['rst']}", 1)
+        elif result['sts'] == 2:
+            s.prt_log(f"FAIL\n{result['rst']}", 1)
+        else:
+            s.prt_log(f"FAIL\n{result['rst']}", 2)
 
 
     def show_all_sp(self,no_color='no'):
@@ -152,22 +156,6 @@ class Stor():
         else:
             output = s.execute_cmd(cmd)
             result = self.judge_result(output)
-            if result:
-                if result['sts'] == 0:
-                    s.prt_log('SUCCESS', 0)
-                elif result['sts'] == 1:
-                    s.prt_log(f"SUCCESS\n{result['rst']}", 1)
-                elif result['sts'] == 2:
-                    s.prt_log(f"FAIL\n{result['rst']}", 1)
-                else:
-                    s.prt_log(f"FAIL\n{result['rst']}", 2)
-
-    # 删除node
-    def delete_node(self, node):
-        cmd = f'linstor node delete {node}'
-        output = s.execute_cmd(cmd)
-        result = self.judge_result(output)
-        if result:
             if result['sts'] == 0:
                 s.prt_log('SUCCESS', 0)
             elif result['sts'] == 1:
@@ -176,6 +164,20 @@ class Stor():
                 s.prt_log(f"FAIL\n{result['rst']}", 1)
             else:
                 s.prt_log(f"FAIL\n{result['rst']}", 2)
+
+    # 删除node
+    def delete_node(self, node):
+        cmd = f'linstor node delete {node}'
+        output = s.execute_cmd(cmd)
+        result = self.judge_result(output)
+        if result['sts'] == 0:
+            s.prt_log('SUCCESS', 0)
+        elif result['sts'] == 1:
+            s.prt_log(f"SUCCESS\n{result['rst']}", 1)
+        elif result['sts'] == 2:
+            s.prt_log(f"FAIL\n{result['rst']}", 1)
+        else:
+            s.prt_log(f"FAIL\n{result['rst']}", 2)
 
     def show_all_node(self, no_color='no'):
         collecter = linstordb.CollectData()
@@ -228,21 +230,20 @@ class LinstorResource(Stor):
         # 成功返回空字典，失败返回 {节点：错误原因}
         cmd = f'linstor resource create {node} {res} --storage-pool {sp}'
         try:
-            output = s.get_cmd_result(sys._getframe().f_code.co_name,cmd,s.create_oprt_id())
+            output = s.execute_cmd(cmd)
             result = self.judge_result(output)
-            if result:
-                if result['sts'] == 2:
-                    s.prt_log(Stor.get_war_mes(result),1)
-                if result['sts'] == 0:
-                    s.prt_log(f'Resource {res} was successfully created on Node {node}',0)
-                    return {}
-                elif result['sts'] == 1:
-                    s.prt_log(f'Resource {res} was successfully created on Node {node}',0)
-                    return {}
-                elif result['sts'] == 3:
-                    fail_cause = Stor.get_err_detailes(result['rst'])
-                    dict_fail = {node: fail_cause}
-                    return dict_fail
+            if result['sts'] == 2:
+                s.prt_log(Stor.get_war_mes(result),1)
+            if result['sts'] == 0:
+                s.prt_log(f'Resource {res} was successfully created on Node {node}',0)
+                return {}
+            elif result['sts'] == 1:
+                s.prt_log(f'Resource {res} was successfully created on Node {node}',0)
+                return {}
+            elif result['sts'] == 3:
+                fail_cause = Stor.get_err_detailes(result['rst'])
+                dict_fail = {node: fail_cause}
+                return dict_fail
 
         except TimeoutError:
             result = f'{res} created timeout on node {node}, the operation has been cancelled'
@@ -259,25 +260,24 @@ class LinstorResource(Stor):
         cmd = f'linstor rd c {res}'
         output = s.execute_cmd(cmd)
         result = self.judge_result(output)
-        if result:
-            if result['sts'] == 0:
-                return True
-            else:
-                print('FAIL')
-                return result
+        if result['sts'] == 0:
+            return True
+        else:
+            print('FAIL')
+            return result
+
 
 
     def linstor_create_vd(self, res, size):
         cmd = f'linstor vd c {res} {size}'
         output = s.execute_cmd(cmd)
         result = self.judge_result(output)
-        if result:
-            if result['sts'] == 0:
-                return True
-            else:
-                print('FAIL')
-                self.linstor_delete_rd(res)
-                return result
+        if result['sts'] == 0:
+            return True
+        else:
+            print('FAIL')
+            self.linstor_delete_rd(res)
+            return result
 
 
     # 创建resource 自动
@@ -286,21 +286,20 @@ class LinstorResource(Stor):
         if self.linstor_create_rd(res) is True and self.linstor_create_vd(res, size) is True:
             output = s.execute_cmd(cmd)
             result = self.judge_result(output)
-            if result:
-                if result['sts'] == 0:
-                    s.prt_log('SUCCESS', 0)
-                    return True
-                elif result['sts'] == 1:
-                    s.prt_log(f"SUCCESS\n{result['rst']}", 1)
-                    return True
-                elif result['sts'] == 2:
-                    self.linstor_delete_rd(res)
-                    s.prt_log(f"FAIL\n{result['rst']}", 1)
-                    return result
-                else:
-                    self.linstor_delete_rd(res)
-                    s.prt_log(f"FAIL\n{result['rst']}", 2)
-                    return result
+            if result['sts'] == 0:
+                s.prt_log('SUCCESS', 0)
+                return True
+            elif result['sts'] == 1:
+                s.prt_log(f"SUCCESS\n{result['rst']}", 1)
+                return True
+            elif result['sts'] == 2:
+                self.linstor_delete_rd(res)
+                s.prt_log(f"FAIL\n{result['rst']}", 1)
+                return result
+            else:
+                self.linstor_delete_rd(res)
+                s.prt_log(f"FAIL\n{result['rst']}", 2)
+                return result
 
         else:
             s.prt_log('The resource already exists',0)
@@ -338,15 +337,14 @@ class LinstorResource(Stor):
         cmd = f'linstor r c {res} --auto-place {num}'
         output = s.execute_cmd(cmd)
         result = self.judge_result(output)
-        if result:
-            if result['sts'] == 0:
-                s.prt_log('SUCCESS', 0)
-            elif result['sts'] == 1:
-                s.prt_log(f"SUCCESS\n{result['rst']}", 1)
-            elif result['sts'] == 2:
-                s.prt_log(f"FAIL\n{result['rst']}", 1)
-            else:
-                s.prt_log(f"FAIL\n{result['rst']}", 2)
+        if result['sts'] == 0:
+            s.prt_log('SUCCESS', 0)
+        elif result['sts'] == 1:
+            s.prt_log(f"SUCCESS\n{result['rst']}", 1)
+        elif result['sts'] == 2:
+            s.prt_log(f"FAIL\n{result['rst']}", 1)
+        else:
+            s.prt_log(f"FAIL\n{result['rst']}", 2)
 
     def add_mirror_manual(self, res, node, sp):
         dict_all_fail = {}
@@ -371,45 +369,42 @@ class LinstorResource(Stor):
         cmd = f'linstor r c {node} {res} --diskless'
         output = s.execute_cmd(cmd)
         result = self.judge_result(output)
-        if result:
-            if result['sts'] == 0:
-                s.prt_log('SUCCESS', 0)
-            elif result['sts'] == 1:
-                s.prt_log(f"SUCCESS\n{result['rst']}", 1)
-            elif result['sts'] == 2:
-                s.prt_log(f"FAIL\n{result['rst']}", 1)
-            else:
-                s.prt_log(f"FAIL\n{result['rst']}", 2)
+        if result['sts'] == 0:
+            s.prt_log('SUCCESS', 0)
+        elif result['sts'] == 1:
+            s.prt_log(f"SUCCESS\n{result['rst']}", 1)
+        elif result['sts'] == 2:
+            s.prt_log(f"FAIL\n{result['rst']}", 1)
+        else:
+            s.prt_log(f"FAIL\n{result['rst']}", 2)
 
     # 删除resource,指定节点
     def delete_resource_des(self, node, res):
         cmd = f'linstor resource delete {node} {res}'
         output = s.execute_cmd(cmd)
         result = self.judge_result(output)
-        if result:
-            if result['sts'] == 0:
-                s.prt_log('SUCCESS', 0)
-            elif result['sts'] == 1:
-                s.prt_log(f"SUCCESS\n{result['rst']}", 1)
-            elif result['sts'] == 2:
-                s.prt_log(f"FAIL\n{result['rst']}", 1)
-            else:
-                s.prt_log(f"FAIL\n{result['rst']}", 2)
+        if result['sts'] == 0:
+            s.prt_log('SUCCESS', 0)
+        elif result['sts'] == 1:
+            s.prt_log(f"SUCCESS\n{result['rst']}", 1)
+        elif result['sts'] == 2:
+            s.prt_log(f"FAIL\n{result['rst']}", 1)
+        else:
+            s.prt_log(f"FAIL\n{result['rst']}", 2)
 
     # 删除resource，全部节点
     def delete_resource_all(self, res):
         cmd = f'linstor resource-definition delete {res}'
         output = s.execute_cmd(cmd)
         result = self.judge_result(output)
-        if result:
-            if result['sts'] == 0:
-                s.prt_log('SUCCESS', 0)
-            elif result['sts'] == 1:
-                s.prt_log(f"SUCCESS\n{result['rst']}", 1)
-            elif result['sts'] == 2:
-                s.prt_log(f"FAIL\n{result['rst']}", 1)
-            else:
-                s.prt_log(f"FAIL\n{result['rst']}", 2)
+        if result['sts'] == 0:
+            s.prt_log('SUCCESS', 0)
+        elif result['sts'] == 1:
+            s.prt_log(f"SUCCESS\n{result['rst']}", 1)
+        elif result['sts'] == 2:
+            s.prt_log(f"FAIL\n{result['rst']}", 1)
+        else:
+            s.prt_log(f"FAIL\n{result['rst']}", 2)
 
     def show_all_res(self,no_color='no'):
         collecter = linstordb.CollectData()

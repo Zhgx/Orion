@@ -6,20 +6,15 @@ from functools import wraps
 
 class JSON_OPERATION():
     def __init__(self):
-        self.logger = consts.glo_log()
         self.RPL = consts.glo_rpl()
         self.json_data = self.read_json()
 
     # 读取json文档
     @s.json_operate_decorator('读取到的JSON数据')
     def read_json(self):
-        oprt_id = s.create_oprt_id()
-        self.logger.write_to_log('DATA', 'STR', 'read_json', '', oprt_id)
-        self.logger.write_to_log('OPRT', 'JSON', 'read_json', oprt_id, 'read_json')
         try:
             json_data = open("iSCSI_Data.json", encoding='utf-8')
             json_dict = json.load(json_data)
-            self.logger.write_to_log('DATA', 'JSON', 'read_json', oprt_id, json_dict)
             json_data.close()
             return json_dict
 
@@ -32,7 +27,6 @@ class JSON_OPERATION():
                     "DiskGroup": {},
                     "Map": {}}
                 json.dump(json_dict, fw, indent=4, separators=(',', ': '))
-                self.logger.write_to_log('DATA', 'JSON', 'read_json', oprt_id, json_dict)
             return json_dict
 
 
@@ -62,11 +56,10 @@ class JSON_OPERATION():
     # 检查key值是否存在
     @s.json_operate_decorator('JSON检查key值的结果')
     def check_key(self,first_key,data_key):
-        print(self.json_data[first_key])
         if data_key in self.json_data[first_key]:
-            return True
+            return {'key':first_key,'value':data_key,'result':True}
         else:
-            return False
+            return {'key':first_key,'value':data_key,'result':False}
 
 
     # 检查value值是否存在
@@ -81,10 +74,6 @@ class JSON_OPERATION():
     # 更新disk 可能需要注意的地方：没有限制可以修改的key
     @s.json_operate_decorator(f'JSON更新资源信息')
     def update_data(self, first_key, data):
-        # oprt_id = s.create_oprt_id()
-        # RPL = consts.glo_rpl()
-        # self.logger.write_to_log('DATA', 'STR', 'update_data', '', oprt_id)
-        # self.logger.write_to_log('OPRT','json','update',oprt_id,first_key)
         self.json_data[first_key] = data
         with open('iSCSI_Data.json', "w") as fw:
             json.dump(self.json_data, fw, indent=4, separators=(',', ': '))

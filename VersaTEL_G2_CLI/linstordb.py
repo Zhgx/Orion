@@ -138,7 +138,6 @@ class LinstorDB():
         # linstor.db
         self.con = sqlite3.connect("linstordb.db", check_same_thread=False)
         self.cur = self.con.cursor()
-        self.logger = consts.glo_log()
 
 
     def build_table(self,type='linstor'):
@@ -170,10 +169,6 @@ class LinstorDB():
         self.insert_data(self.replace_ntb_sql, node, 'nodetb')
         self.insert_data(self.replace_rtb_sql, res,'resourcetb')
         self.insert_data(self.replace_stb_sql, sp, 'storagepooltb')
-
-    def replay_log(self,args):
-        self.logger.write_to_log(args)
-
 
     # 删除表，现不使用
     def drop_tb(self):
@@ -211,7 +206,6 @@ class CollectData():
         self.linstor_db = LinstorDB()
         self.linstor_db.build_table()
         self.cur = self.linstor_db.cur
-        self.logger = consts.glo_log()
 
     # 获取表单行数据的通用方法
     def sql_fetch_one(self, sql):

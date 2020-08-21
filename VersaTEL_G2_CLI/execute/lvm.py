@@ -5,19 +5,27 @@ import sys
 
 class LVM():
     def __init__(self):
-        self.logger = consts.glo_log()
         self.data_vg = self.get_vg()
         self.data_lv = self.get_thinlv()
 
     def get_vg(self):
         cmd = 'vgs'
-        result = s.get_cmd_result(sys._getframe().f_code.co_name, cmd, s.create_oprt_id())
-        return result
+        # 异常演示
+        # 1.result = s.get_cmd_result(sys._getframe().f_code.co_name, cmd, s.create_oprt_id())
+        # 2.result = s.execute_cmd(sys._getframe().f_code.co_name, cmd, s.create_oprt_id())
+        result = s.execute_cmd(cmd)
+        if result:
+            return result
+        else:
+            s.handle_exception()
 
     def get_thinlv(self):
         cmd = 'lvs'
-        result = s.get_cmd_result(sys._getframe().f_code.co_name, cmd, s.create_oprt_id())
-        return result
+        result = s.execute_cmd(cmd)
+        if result:
+            return result
+        else:
+            s.handle_exception()
 
     def refine_thinlv(self):
         all_lv = self.data_vg.splitlines()

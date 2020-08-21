@@ -5,20 +5,6 @@ import sundry as sd
 
 
 
-# def record_exception(func):
-#     """
-#     Decorator providing confirmation of deletion function.
-#     :param func: Function to delete linstor resource
-#     """
-#     def wrapper(self,*args):
-#         try:
-#             return func(self,*args)
-#         except Exception as e:
-#             self.logger.write_to_log('result_to_show', 'ERR', '', str(traceback.format_exc()))
-#             raise e
-#     return wrapper
-
-
 class DiskCommands():
     def __init__(self):
         self.logger = consts.glo_log()

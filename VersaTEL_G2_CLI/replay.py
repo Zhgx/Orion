@@ -97,7 +97,7 @@ class LogDB():
 
 
     def get_userinput_via_tid(self, transaction_id):
-        sql = f"SELECT describe2,data FROM logtable WHERE describe1 = 'user_input' and transaction_id = '{transaction_id}'"
+        sql = f"SELECT describe2,data FROM logtable WHERE describe1 = 'cmd_input' and transaction_id = '{transaction_id}'"
         result = self.sql_fetch_one(sql)
         if result:
             args_type, cmd = self.sql_fetch_one(sql)
@@ -105,7 +105,7 @@ class LogDB():
 
 
     def get_userinput_via_time(self, start_time, end_time):
-        sql = f"SELECT transaction_id,describe2,data FROM logtable WHERE describe1 = 'user_input' and time >= '{start_time}' and time <= '{end_time}'"
+        sql = f"SELECT transaction_id,describe2,data FROM logtable WHERE describe1 = 'cmd_input' and time >= '{start_time}' and time <= '{end_time}'"
         all_data = self.sql_fetch_all(sql)
         result_list = []
         for i in all_data:
@@ -115,7 +115,7 @@ class LogDB():
         return result_list
 
     def get_all_transaction(self):
-        sql = "SELECT transaction_id,describe2,data FROM logtable WHERE describe1 = 'user_input'"
+        sql = "SELECT transaction_id,describe2,data FROM logtable WHERE describe1 = 'cmd_input'"
         all_data = self.sql_fetch_all(sql)
         result_list = []
         for i in all_data:
@@ -128,12 +128,15 @@ class LogDB():
     def get_oprt_result(self, oprt_id):
         sql = f"SELECT time,data FROM logtable WHERE type1 = 'DATA' and describe2 = '{oprt_id}'"
         # sql = f"SELECT time,data FROM logtable WHERE type1 = 'DATA' and type2 = 'cmd' and describe2 = '{oprt_id}'"
-        result = self.sql_fetch_one(sql)
-        if result:
-            time, data = self.sql_fetch_one(sql)
-            return {'time': time, 'result': data}
+        if oprt_id:
+            result = self.sql_fetch_one(sql)
+            if result:
+                time, data = self.sql_fetch_one(sql)
+                return {'time': time, 'result': data}
+            else:
+                return {'time':'','result':''}
         else:
-            return {'time':'','result':''}
+            return {'time': '', 'result': ''}
 
     def get_id(self, transaction_id, string):
         id_now = consts.glo_log_id()

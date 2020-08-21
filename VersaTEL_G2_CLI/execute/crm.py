@@ -19,8 +19,9 @@ class CRMData():
             return result['rst']
 
     def get_resource_data(self):
+        # 用来匹配的原数据，allowed_initiators=""，有时有双引号，有时候没有，无法确定，然后多个iqn是怎么样的
         re_logical = re.compile(
-            r'primitive (\w*) iSCSILogicalUnit \\\s\tparams\starget_iqn="([a-zA-Z0-9.:-]*)"\simplementation=lio-t\slun=(\d*)\spath="([a-zA-Z0-9/]*)"\sallowed_initiators="([a-zA-Z0-9.: -]+)"[\s\S.]*?meta target-role=(\w*)')
+            r'primitive (\w*) iSCSILogicalUnit \\\s\tparams\starget_iqn="([a-zA-Z0-9.:-]*)"\simplementation=lio-t\slun=(\d*)\spath="([a-zA-Z0-9/]*)"\sallowed_initiators=([a-zA-Z0-9.: -]+)[\s\S.]*?meta target-role=(\w*)')
         result = s.re_findall(re_logical, self.crm_conf_data)
         return result
 
@@ -52,7 +53,7 @@ class CRMData():
 
 class CRMConfig():
     def __init__(self):
-        self.logger = consts.glo_log()
+        pass
 
     def create_crm_res(self, res, target_iqn, lunid, path, initiator):
         cmd = f'crm conf primitive {res} iSCSILogicalUnit params ' \
@@ -67,7 +68,7 @@ class CRMConfig():
             f'meta target-role=Stopped'
         result = s.execute_crm_cmd(cmd)
         if result['sts']:
-            s.prt_log("Create iSCSILogicalUnit success",1)
+            s.prt_log("Create iSCSILogicalUnit success",0)
             return True
 
     # 获取res的状态

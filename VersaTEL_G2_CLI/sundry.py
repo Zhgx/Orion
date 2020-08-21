@@ -78,7 +78,7 @@ def get_answer():
 
     if rpl == 'no':
         answer = input()
-        logger.write_to_log('DATA', 'input', 'user_input', 'confirm deletion', answer)
+        logger.write_to_log('DATA', 'input', 'confirm_input', 'confirm deletion', answer)
     else:
         time,answer = logdb.get_anwser(transaction_id)
         if not time:
@@ -201,14 +201,16 @@ def cmd_decorator(type):
             else:
                 logdb = consts.glo_db()
                 id_result = logdb.get_id(consts.glo_tsc_id(), func.__name__)
-                cmd_result = logdb.get_oprt_result(id_result['oprt_id'])
+                if id_result['oprt_id']:
+                    cmd_result = logdb.get_oprt_result(id_result['oprt_id'])
+                else:
+                    cmd_result = {'time':'','result':''}
                 if type == 'crm':
                     result = eval(cmd_result['result'])
                 else:
                     result = cmd_result['result']
-                print('*')
-                print(f"RE:{id_result['time']} 执行系统命令：\n{cmd}")
-                print(f"RE:{cmd_result['time']} 系统命令结果：\n{cmd_result['result']}")
+                print(f"RE:{id_result['time']:<20} 执行系统命令：\n{cmd}")
+                print(f"RE:{cmd_result['time']:<20} 系统命令结果：\n{cmd_result['result']}")
                 if id_result['db_id']:
                     change_pointer(id_result['db_id'])
             return result
@@ -256,63 +258,17 @@ def execute_crm_cmd(cmd, timeout=60):
     if len(out) > 0:
         out = out.decode()
         output = {'sts': 1, 'rst': out}
-        return output
-    if len(err) > 0:
+    elif len(err) > 0:
         err = err.decode()
         output = {'sts': 0, 'rst': err}
-        return output
-    if out == b'':  # 需要再考虑一下 res stop 执行成功没有返回，stop失败也没有返回（无法判断stop成不成功）
+    elif out == b'':  # 需要再考虑一下 res stop 执行成功没有返回，stop失败也没有返回（无法判断stop成不成功）
         out = out.decode()
         output = {'sts': 1, 'rst': out}
+
+    if output:
         return output
-
-
-# def get_cmd_result(unique_str, cmd, oprt_id):
-#     logger = consts.glo_log()
-#     RPL = consts.glo_rpl()
-#     if RPL == 'no':
-#         logger.write_to_log('DATA', 'STR', unique_str, '', oprt_id)
-#         logger.write_to_log('OPRT', 'cmd', '', oprt_id, cmd)
-#         result_cmd = execute_cmd(cmd)
-#         logger.write_to_log('DATA', 'cmd', '', oprt_id, result_cmd)
-#         return result_cmd
-#     elif RPL == 'yes':
-#         logdb = consts.glo_db()
-#         id_result = logdb.get_id(consts.glo_tsc_id(), unique_str)
-#         cmd_result = logdb.get_oprt_result(id_result['oprt_id'])
-#         print('*')
-#         print(f"RE:{id_result['time']} 执行系统命令：\n{cmd}")
-#         print(f"RE:{cmd_result['time']} 系统命令结果：\n{cmd_result['result']}")
-#         if id_result['db_id']:
-#             change_pointer(id_result['db_id'])
-#         return cmd_result['result']
-
-
-# def get_crm_cmd_result(unique_str, cmd, oprt_id):
-#     logger = consts.glo_log()
-#     RPL = consts.glo_rpl()
-#     if RPL == 'no':
-#         logger.write_to_log('DATA', 'STR', unique_str, '', oprt_id)
-#         logger.write_to_log('OPRT', 'cmd', 'iscsi', oprt_id, cmd)
-#         result_cmd = execute_crm_cmd(cmd)
-#         logger.write_to_log('DATA', 'cmd', 'iscsi', oprt_id, result_cmd)
-#         return result_cmd
-#     elif RPL == 'yes':
-#         logdb = consts.glo_db()
-#         id_result = logdb.get_id(consts.glo_tsc_id(), unique_str)
-#         cmd_result = logdb.get_cmd_result(oprt_id)
-#         if cmd_result:
-#             result = eval(cmd_result['result'])
-#         else:
-#             result = None
-#         print('*')
-#         print(f"RE:{id_result['time']} 执行系统命令：\n{cmd}")
-#         print(f"RE:{cmd_result['time']} 系统命令结果：\n{cmd_result['result']}")
-#         if id_result['db_id']:
-#             change_pointer(id_result['db_id'])
-#         return result
-
-
+    # else:
+    #     handle_exception()
 
 
 def prt(str, warning_level=0):
@@ -324,14 +280,7 @@ def prt(str, warning_level=0):
 
     if rpl == 'no':
         print(str)
-
     else:
-        if warning_level == 'exception':
-            print(' exception infomation '.center(105, '*'))
-            print(str)
-            print(f'{" exception infomation ":*^105}', '\n')
-            return
-
         db = consts.glo_db()
         time,cmd_output = db.get_cmd_output(consts.glo_tsc_id())
         if not time:
@@ -359,20 +308,6 @@ def prt_log(str, warning_level):
         logger.write_to_log('INFO', 'warning', 'fail', 'output', str)
     elif warning_level == 2:
         logger.write_to_log('INFO', 'error', 'exit', 'output', str)
-        # print(f'{"":-^{format_width}}','\n')
-        # sys.exit()
-
-
-def pwe(str, warning_level):
-    rpl = consts.glo_rpl()
-    prt_log(str,warning_level)
-
-    if warning_level == 2:
-        if rpl == 'no':
-            sys.exit()
-        else:
-            raise consts.ReplayExit
-
 
 
 def color_data(func):
@@ -416,7 +351,10 @@ def json_operate_decorator(str):
                 logdb = consts.glo_db()
                 id_result = logdb.get_id(consts.glo_tsc_id(), func.__name__)
                 json_result = logdb.get_oprt_result(id_result['oprt_id'])
-                result = eval(json_result['result'])
+                if json_result['result']:
+                    result = eval(json_result['result'])
+                else:
+                    result = ''
                 print(f"RE:{id_result['time']} {str}：\n{result}")
                 if id_result['db_id']:
                     change_pointer(id_result['db_id'])
@@ -439,9 +377,19 @@ def sql_insert_decorator(func):
         else:
             logdb = consts.glo_db()
             id_result = logdb.get_id(consts.glo_tsc_id(), func.__name__)
-            cmd_result = logdb.get_oprt_result(id_result['oprt_id'])
+            func(self, sql, data, tablename)
             print(f"RE:{id_result['time']} 插入数据表: {tablename}")
             print(f"RE:{id_result['time']} 插入数据：\n{data}")
             if id_result['db_id']:
                 change_pointer(id_result['db_id'])
     return wrapper
+
+
+def handle_exception():
+    rpl = consts.glo_rpl()
+    if rpl == 'yes':
+        print('日志中无法取得相关数据，程序无法继续正常执行')
+        raise consts.ReplayExit
+    else:
+        print('命令结果无法获取，请检查')
+        sys.exit()#在这里结束会屏蔽掉程序抛出的异常，再考虑要不要直接在这里中断程序
