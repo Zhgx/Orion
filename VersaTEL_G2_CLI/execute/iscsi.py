@@ -302,10 +302,9 @@ class Iscsi():
 
     def pre_check_delete_map(self, map):
         if self.js.check_key('Map', map)['result']:
-            print(f"{self.js.get_data('Map').get(map)} probably be affected")
             dg = self.js.get_data('Map').get(map)[1]
-            resname = self.js.get_data('DiskGroup').get(dg)
-            if self.delete_map(resname):
+            res_name = self.js.get_data('DiskGroup').get(dg)
+            if self.delete_map(res_name):
                 self.js.delete_data('Map', map)
                 s.prt_log("Delete success!",0)
         else:

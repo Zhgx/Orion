@@ -40,7 +40,7 @@ class JSON_OPERATION():
 
 
     # 删除Host、HostGroup、DiskGroup、Map
-    @s.json_operate_decorator('JSON删除资源信息')
+    @s.json_operate_decorator('JSON删除后的资源信息')
     def delete_data(self, first_key, data_key):
         self.json_data[first_key].pop(data_key)
         with open('iSCSI_Data.json', "w") as fw:

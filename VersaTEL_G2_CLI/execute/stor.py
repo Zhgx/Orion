@@ -68,7 +68,7 @@ class Stor():
             s.prt_log(f'Volume group:"{vg}" does not exist',1)
             return
         cmd = f'linstor storage-pool create lvm {node} {stp} {vg}'
-        output = s.execute_cmd(cmd)
+        output = s.execute_cmd(cmd,s.get_function_name())
         result = self.judge_result(output)
         if result['sts'] == 0:
             s.prt_log('SUCCESS', 0)
@@ -85,7 +85,7 @@ class Stor():
             s.prt_log(f'Thin logical volume:"{tlv}" does not exist',1)
             return
         cmd = f'linstor storage-pool create lvmthin {node} {stp} {tlv}'
-        output = s.execute_cmd(cmd)
+        output = s.execute_cmd(cmd,s.get_function_name())
         result = self.judge_result(output)
         if result['sts'] == 0:
             s.prt_log('SUCCESS', 0)
@@ -99,7 +99,7 @@ class Stor():
     # 删除storagepool -- ok
     def delete_storagepool(self, node, stp):
         cmd = f'linstor storage-pool delete {node} {stp}'
-        output = s.execute_cmd(cmd)
+        output = s.execute_cmd(cmd,s.get_function_name())
         result = self.judge_result(output)
         if result['sts'] == 0:
             s.prt_log('SUCCESS', 0)
@@ -154,7 +154,7 @@ class Stor():
             print('node type error,choose from ''Combined',
                   'Controller', 'Auxiliary', 'Satellite''')
         else:
-            output = s.execute_cmd(cmd)
+            output = s.execute_cmd(cmd,s.get_function_name())
             result = self.judge_result(output)
             if result['sts'] == 0:
                 s.prt_log('SUCCESS', 0)
@@ -168,7 +168,7 @@ class Stor():
     # 删除node
     def delete_node(self, node):
         cmd = f'linstor node delete {node}'
-        output = s.execute_cmd(cmd)
+        output = s.execute_cmd(cmd,s.get_function_name())
         result = self.judge_result(output)
         if result['sts'] == 0:
             s.prt_log('SUCCESS', 0)
@@ -191,22 +191,25 @@ class Stor():
 
     def show_one_node(self, node, no_color='no'):
         collecter = linstordb.CollectData()
-        info = "node:%s\nnodetype:%s\nresource num:%s\nstoragepool num:%s\naddr:%s\nstatus:%s" % collecter.process_data_node_one(
-            node)
-        if no_color == 'no':
-            data_node = s.color_data(collecter.process_data_node_specific)(node)
-            data_stp = s.color_data(collecter.process_data_stp_all_of_node)(node)
+        node_data = collecter.process_data_node_one(node)
+        if not node_data:
+            s.prt_log('The node does not exist',1)
         else:
-            data_node = collecter.process_data_node_specific(node)
-            data_stp = collecter.process_data_stp_all_of_node(node)
+            info = "node:%s\nnodetype:%s\nresource num:%s\nstoragepool num:%s\naddr:%s\nstatus:%s" % node_data
+            if no_color == 'no':
+                data_node = s.color_data(collecter.process_data_node_specific)(node)
+                data_stp = s.color_data(collecter.process_data_stp_all_of_node)(node)
+            else:
+                data_node = collecter.process_data_node_specific(node)
+                data_stp = collecter.process_data_stp_all_of_node(node)
 
-        header_node = ['res_name', 'stp_name', 'size', 'device_name', 'used', 'status']
-        header_stp = ['stp_name', 'node_name', 'res_num', 'driver', 'pool_name', 'free_size', 'total_size', 'snapshots',
-                      'status']
-        table_node = s.show_linstor_data(header_node, data_node)
-        table_stp = s.show_linstor_data(header_stp, data_stp)
-        result = '\n'.join([info, str(table_node), str(table_stp)])
-        s.prt_log(result,0)
+            header_node = ['res_name', 'stp_name', 'size', 'device_name', 'used', 'status']
+            header_stp = ['stp_name', 'node_name', 'res_num', 'driver', 'pool_name', 'free_size', 'total_size', 'snapshots',
+                          'status']
+            table_node = s.show_linstor_data(header_node, data_node)
+            table_stp = s.show_linstor_data(header_stp, data_stp)
+            result = '\n'.join([info, str(table_node), str(table_stp)])
+            s.prt_log(result,0)
 
 
 
@@ -230,7 +233,7 @@ class LinstorResource(Stor):
         # 成功返回空字典，失败返回 {节点：错误原因}
         cmd = f'linstor resource create {node} {res} --storage-pool {sp}'
         try:
-            output = s.execute_cmd(cmd)
+            output = s.execute_cmd(cmd,s.get_function_name())
             result = self.judge_result(output)
             if result['sts'] == 2:
                 s.prt_log(Stor.get_war_mes(result),1)
@@ -254,11 +257,11 @@ class LinstorResource(Stor):
     # 创建resource相关
     def linstor_delete_rd(self, res):
         cmd = f'linstor rd d {res}'
-        s.execute_cmd(cmd)
+        s.execute_cmd(cmd,s.get_function_name())
 
     def linstor_create_rd(self, res):
         cmd = f'linstor rd c {res}'
-        output = s.execute_cmd(cmd)
+        output = s.execute_cmd(cmd,s.get_function_name())
         result = self.judge_result(output)
         if result['sts'] == 0:
             return True
@@ -270,7 +273,7 @@ class LinstorResource(Stor):
 
     def linstor_create_vd(self, res, size):
         cmd = f'linstor vd c {res} {size}'
-        output = s.execute_cmd(cmd)
+        output = s.execute_cmd(cmd,s.get_function_name())
         result = self.judge_result(output)
         if result['sts'] == 0:
             return True
@@ -284,7 +287,7 @@ class LinstorResource(Stor):
     def create_res_auto(self, res, size, num):
         cmd = f'linstor r c {res} --auto-place {num}'
         if self.linstor_create_rd(res) is True and self.linstor_create_vd(res, size) is True:
-            output = s.execute_cmd(cmd)
+            output = s.execute_cmd(cmd,s.get_function_name())
             result = self.judge_result(output)
             if result['sts'] == 0:
                 s.prt_log('SUCCESS', 0)
@@ -335,7 +338,7 @@ class LinstorResource(Stor):
     # 添加mirror（自动）
     def add_mirror_auto(self, res, num):
         cmd = f'linstor r c {res} --auto-place {num}'
-        output = s.execute_cmd(cmd)
+        output = s.execute_cmd(cmd,s.get_function_name())
         result = self.judge_result(output)
         if result['sts'] == 0:
             s.prt_log('SUCCESS', 0)
@@ -367,7 +370,7 @@ class LinstorResource(Stor):
     # 创建resource --diskless
     def create_res_diskless(self, node, res):
         cmd = f'linstor r c {node} {res} --diskless'
-        output = s.execute_cmd(cmd)
+        output = s.execute_cmd(cmd,s.get_function_name())
         result = self.judge_result(output)
         if result['sts'] == 0:
             s.prt_log('SUCCESS', 0)
@@ -381,7 +384,7 @@ class LinstorResource(Stor):
     # 删除resource,指定节点
     def delete_resource_des(self, node, res):
         cmd = f'linstor resource delete {node} {res}'
-        output = s.execute_cmd(cmd)
+        output = s.execute_cmd(cmd,s.get_function_name())
         result = self.judge_result(output)
         if result['sts'] == 0:
             s.prt_log('SUCCESS', 0)
@@ -395,7 +398,7 @@ class LinstorResource(Stor):
     # 删除resource，全部节点
     def delete_resource_all(self, res):
         cmd = f'linstor resource-definition delete {res}'
-        output = s.execute_cmd(cmd)
+        output = s.execute_cmd(cmd,s.get_function_name())
         result = self.judge_result(output)
         if result['sts'] == 0:
             s.prt_log('SUCCESS', 0)
@@ -420,13 +423,16 @@ class LinstorResource(Stor):
 
     def show_one_res(self,res,no_color='no'):
         collecter = linstordb.CollectData()
-        info = ("resource:%s\nmirror_way:%s\nsize:%s\ndevice_name:%s\nused:%s" %collecter.process_data_resource_one(res))
-        print(info)
-        if no_color == 'no':
-            data = s.color_data(collecter.process_data_resource_specific)(res)
+        res_data = collecter.process_data_resource_one(res)
+        if not res_data:
+            s.prt_log('The resource does not exist',1)
         else:
-            data = collecter.process_data_resource_specific(res)
-        header = ['node_name', 'stp_name', 'drbd_role', 'status']
-        table = s.show_linstor_data(header,data)
-        result = '\n'.join([info, str(table)])
-        s.prt_log(result,0)
+            info = ("resource:%s\nmirror_way:%s\nsize:%s\ndevice_name:%s\nused:%s" %res_data)
+            if no_color == 'no':
+                data = s.color_data(collecter.process_data_resource_specific)(res)
+            else:
+                data = collecter.process_data_resource_specific(res)
+            header = ['node_name', 'stp_name', 'drbd_role', 'status']
+            table = s.show_linstor_data(header,data)
+            result = '\n'.join([info, str(table)])
+            s.prt_log(result,0)

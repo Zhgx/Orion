@@ -322,11 +322,14 @@ class CollectData():
     # 置顶文字
     def process_data_node_one(self, node):
         n = self._select_nodetb_one(node)
-        node, node_type, addr, status = n
-        res_num = self._select_res_num(node)[0]
-        stp_num = self._select_stp_num(node)[0]
-        list = [node, node_type, res_num, stp_num, addr, status]
-        return tuple(list)
+        if n:
+            node, node_type, addr, status = n
+            res_num = self._select_res_num(node)[0]
+            stp_num = self._select_stp_num(node)[0]
+            list = [node, node_type, res_num, stp_num, addr, status]
+            return tuple(list)
+        else:
+            return []
 
     def process_data_node_specific(self, node):
         date_list = []
@@ -355,6 +358,8 @@ class CollectData():
                     mirror_way = self._get_mirro_way(str(i[0]))[0]
                     list_one = [resource, mirror_way, size, device_name, used]
         return tuple(list_one)
+
+
 
     def process_data_resource_specific(self, resource):
         data_list = []

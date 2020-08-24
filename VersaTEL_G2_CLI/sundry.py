@@ -12,10 +12,14 @@ from random import shuffle
 import subprocess
 from functools import wraps
 import colorama as ca
-
+import inspect
 import consts
 import execute
 
+
+def get_function_name():
+    '''获取正在运行函数(或方法)名称'''
+    return inspect.stack()[1][3]
 
 # Connect to the socket server and transfer data, and finally close the
 # connection.
@@ -188,24 +192,24 @@ def change_pointer(new_id):
 def cmd_decorator(type):
     def decorate(func):
         @wraps(func)
-        def wrapper(cmd):
+        def wrapper(cmd,func_name):
             RPL = consts.glo_rpl()
             oprt_id = create_oprt_id()
             if RPL == 'no':
                 logger = consts.glo_log()
-                logger.write_to_log('DATA', 'STR', func.__name__, '', oprt_id)
+                logger.write_to_log('DATA', 'STR', func_name, '', oprt_id)
                 logger.write_to_log('OPRT', 'cmd', type, oprt_id, cmd)
-                result_cmd = func(cmd)
+                result_cmd = func(cmd,func_name)
                 logger.write_to_log('DATA', 'cmd', type, oprt_id, result_cmd)
                 return result_cmd
             else:
                 logdb = consts.glo_db()
-                id_result = logdb.get_id(consts.glo_tsc_id(), func.__name__)
+                id_result = logdb.get_id(consts.glo_tsc_id(), func_name)
                 if id_result['oprt_id']:
                     cmd_result = logdb.get_oprt_result(id_result['oprt_id'])
                 else:
                     cmd_result = {'time':'','result':''}
-                if type == 'crm':
+                if type == 'crm' and cmd_result['result']:
                     result = eval(cmd_result['result'])
                 else:
                     result = cmd_result['result']
@@ -219,7 +223,7 @@ def cmd_decorator(type):
 
 
 @cmd_decorator('sys cmd')
-def execute_cmd(cmd, timeout=60):
+def execute_cmd(cmd, func_name, timeout=60):
     p = subprocess.Popen(cmd, stderr=subprocess.STDOUT, stdout=subprocess.PIPE, shell=True)
     t_beginning = time.time()
     seconds_passed = 0
@@ -236,7 +240,7 @@ def execute_cmd(cmd, timeout=60):
 
 
 @cmd_decorator('crm')
-def execute_crm_cmd(cmd, timeout=60):
+def execute_crm_cmd(cmd, func_name, timeout=60):
     """
     Execute the command cmd to return the content of the command output.
     If it times out, a TimeoutError exception will be thrown.
@@ -246,6 +250,7 @@ def execute_crm_cmd(cmd, timeout=60):
     p = subprocess.Popen(cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
     t_beginning = time.time()
     seconds_passed = 0
+    output = None
     while True:
         if p.poll() is not None:
             break
@@ -267,8 +272,8 @@ def execute_crm_cmd(cmd, timeout=60):
 
     if output:
         return output
-    # else:
-    #     handle_exception()
+    else:
+        handle_exception()
 
 
 def prt(str, warning_level=0):

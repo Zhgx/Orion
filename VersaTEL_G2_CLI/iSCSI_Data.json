@@ -22,12 +22,7 @@
             "res_a"
         ]
     },
-    "Map": {
-        "map1": [
-            "hg1",
-            "dg1"
-        ]
-    },
+    "Map": {},
     "crm": {
         "resource": [],
         "vip": [

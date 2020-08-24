@@ -28,10 +28,11 @@ class Linstor():
             list_data_all.pop(0)
         except IndexError:
             s.prt_log('The data cannot be read, please check whether LINSTOR is normal.',2)
+            sys.exit()
 
         self.logger.write_to_log('DATA','value','list','refine_linstor',list_data_all)
         return list_data_all
 
     def get_linstor_data(self,cmd):
-        cmd_result = s.execute_cmd(cmd)
+        cmd_result = s.execute_cmd(cmd,s.get_function_name())
         return self.refine_linstor(cmd_result)

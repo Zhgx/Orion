@@ -12,11 +12,15 @@ class CRMData():
     def __init__(self):
         self.crm_conf_data = self.get_crm_conf()
 
+
+    # 打印出来的信息太过繁杂，考虑如何实现replay（log记录时）时打印出有效信息，
     def get_crm_conf(self):
         cmd = 'crm configure show'
-        result = s.execute_crm_cmd(cmd)
+        result = s.execute_crm_cmd(cmd,s.get_function_name())
         if result:
             return result['rst']
+        else:
+            s.handle_exception()
 
     def get_resource_data(self):
         # 用来匹配的原数据，allowed_initiators=""，有时有双引号，有时候没有，无法确定，然后多个iqn是怎么样的
@@ -66,7 +70,7 @@ class CRMConfig():
             f'op stop timeout=40 interval=0 ' \
             f'op monitor timeout=40 interval=15 ' \
             f'meta target-role=Stopped'
-        result = s.execute_crm_cmd(cmd)
+        result = s.execute_crm_cmd(cmd,s.get_function_name())
         if result['sts']:
             s.prt_log("Create iSCSILogicalUnit success",0)
             return True
@@ -82,7 +86,7 @@ class CRMConfig():
     # 停用res
     def stop_res(self, res):
         cmd = f'crm res stop {res}'
-        result = s.execute_crm_cmd(cmd)
+        result = s.execute_crm_cmd(cmd,s.get_function_name())
         if result['sts']:
             return True
         else:
@@ -109,12 +113,11 @@ class CRMConfig():
             s.prt_log("Does not meet expectations, please try again.",1)
 
     def delete_crm_res(self, res):
-        # crm res stop <LUN_NAME>
         if self.stop_res(res):
             if self.checkout_status(res,10,'Stopped'):
                 time.sleep(3)
                 cmd = f'crm conf del {res}'
-                result = s.execute_crm_cmd(cmd)
+                result = s.execute_crm_cmd(cmd,s.get_function_name())
                 if result:
                     output = result['rst']
                     re_str = re.compile(rf'INFO: hanging colocation:co_{res} deleted\nINFO: hanging order:or_{res} deleted\n')
@@ -123,26 +126,25 @@ class CRMConfig():
                         return True
                     else:
                         s.prt_log(f"crm delete fail",1)
+        else:
+            s.prt_log(f"crm delete fail",1)
 
     def create_col(self, res, target):
-        # crm conf colocation <COLOCATION_NAME> inf: <LUN_NAME> <TARGET_NAME>
         cmd = f'crm conf colocation co_{res} inf: {res} {target}'
-        result = s.execute_crm_cmd(cmd)
+        result = s.execute_crm_cmd(cmd,s.get_function_name())
         if result['sts']:
             s.prt_log("set coclocation success",0)
             return True
 
     def create_order(self, res, target):
-        # crm conf order <ORDER_NAME1> <TARGET_NAME> <LUN_NAME>
         cmd = f'crm conf order or_{res} {target} {res}'
-        result = s.execute_crm_cmd(cmd)
+        result = s.execute_crm_cmd(cmd,s.get_function_name())
         if result['sts']:
             s.prt_log("set order success",0)
             return True
 
     def start_res(self, res):
-        # crm res start <LUN_NAME>
         cmd = f'crm res start {res}'
-        result = s.execute_crm_cmd(cmd)
+        result = s.execute_crm_cmd(cmd,s.get_function_name())
         if result['sts']:
             return True
