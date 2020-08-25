@@ -45,8 +45,6 @@ class Stor():
             s.handle_exception()
 
 
-
-
     @staticmethod
     def get_err_detailes(result):
         re_ = re.compile(r'Description:\n[\t\s]*(.*)\n')
@@ -59,6 +57,88 @@ class Stor():
         if re_.search(result):
             return (re_.search(result).group())
 
+
+
+class Node(Stor):
+    def __init__(self):
+        Stor.__init__(self)
+
+    """node操作"""
+    # 创建集群节点
+    def create_node(self, node, ip, nt):
+        cmd = f'linstor node create {node} {ip}  --node-type {nt}'
+        nt_value = [
+            'Combined',
+            'combined',
+            'Controller',
+            'Auxiliary',
+            'Satellite']
+        if nt not in nt_value:
+            print('node type error,choose from ''Combined',
+                  'Controller', 'Auxiliary', 'Satellite''')
+        else:
+            output = s.execute_cmd(cmd,s.get_function_name())
+            result = self.judge_result(output)
+            if result['sts'] == 0:
+                s.prt_log('SUCCESS', 0)
+            elif result['sts'] == 1:
+                s.prt_log(f"SUCCESS\n{result['rst']}", 1)
+            elif result['sts'] == 2:
+                s.prt_log(f"FAIL\n{result['rst']}", 1)
+            else:
+                s.prt_log(f"FAIL\n{result['rst']}", 2)
+
+    # 删除node
+    def delete_node(self, node):
+        cmd = f'linstor node delete {node}'
+        output = s.execute_cmd(cmd,s.get_function_name())
+        result = self.judge_result(output)
+        if result['sts'] == 0:
+            s.prt_log('SUCCESS', 0)
+        elif result['sts'] == 1:
+            s.prt_log(f"SUCCESS\n{result['rst']}", 1)
+        elif result['sts'] == 2:
+            s.prt_log(f"FAIL\n{result['rst']}", 1)
+        else:
+            s.prt_log(f"FAIL\n{result['rst']}", 2)
+
+    def show_all_node(self, no_color='no'):
+        collecter = linstordb.CollectData()
+        if no_color == 'no':
+            data = s.color_data(collecter.process_data_node_all)()
+        else:
+            data = collecter.process_data_node_all()
+        header = ["node", "node type", "res num", "stp num", "addr", "status"]
+        table = s.show_linstor_data(header, data)
+        s.prt_log(table,0)
+
+    def show_one_node(self, node, no_color='no'):
+        collecter = linstordb.CollectData()
+        node_data = collecter.process_data_node_one(node)
+        if not node_data:
+            s.prt_log('The node does not exist',1)
+        else:
+            info = "node:%s\nnodetype:%s\nresource num:%s\nstoragepool num:%s\naddr:%s\nstatus:%s" % node_data
+            if no_color == 'no':
+                data_node = s.color_data(collecter.process_data_node_specific)(node)
+                data_stp = s.color_data(collecter.process_data_stp_all_of_node)(node)
+            else:
+                data_node = collecter.process_data_node_specific(node)
+                data_stp = collecter.process_data_stp_all_of_node(node)
+
+            header_node = ['res_name', 'stp_name', 'size', 'device_name', 'used', 'status']
+            header_stp = ['stp_name', 'node_name', 'res_num', 'driver', 'pool_name', 'free_size', 'total_size', 'snapshots',
+                          'status']
+            table_node = s.show_linstor_data(header_node, data_node)
+            table_stp = s.show_linstor_data(header_stp, data_stp)
+            result = '\n'.join([info, str(table_node), str(table_stp)])
+            s.prt_log(result,0)
+
+
+
+class StoragePool(Stor):
+    def __init__(self):
+        Stor.__init__(self)
 
     """storagepool操作"""
     # 创建storagepool
@@ -140,80 +220,8 @@ class Stor():
             s.prt_log(result,0)
 
 
-    """node操作"""
-    # 创建集群节点
-    def create_node(self, node, ip, nt):
-        cmd = f'linstor node create {node} {ip}  --node-type {nt}'
-        nt_value = [
-            'Combined',
-            'combined',
-            'Controller',
-            'Auxiliary',
-            'Satellite']
-        if nt not in nt_value:
-            print('node type error,choose from ''Combined',
-                  'Controller', 'Auxiliary', 'Satellite''')
-        else:
-            output = s.execute_cmd(cmd,s.get_function_name())
-            result = self.judge_result(output)
-            if result['sts'] == 0:
-                s.prt_log('SUCCESS', 0)
-            elif result['sts'] == 1:
-                s.prt_log(f"SUCCESS\n{result['rst']}", 1)
-            elif result['sts'] == 2:
-                s.prt_log(f"FAIL\n{result['rst']}", 1)
-            else:
-                s.prt_log(f"FAIL\n{result['rst']}", 2)
 
-    # 删除node
-    def delete_node(self, node):
-        cmd = f'linstor node delete {node}'
-        output = s.execute_cmd(cmd,s.get_function_name())
-        result = self.judge_result(output)
-        if result['sts'] == 0:
-            s.prt_log('SUCCESS', 0)
-        elif result['sts'] == 1:
-            s.prt_log(f"SUCCESS\n{result['rst']}", 1)
-        elif result['sts'] == 2:
-            s.prt_log(f"FAIL\n{result['rst']}", 1)
-        else:
-            s.prt_log(f"FAIL\n{result['rst']}", 2)
-
-    def show_all_node(self, no_color='no'):
-        collecter = linstordb.CollectData()
-        if no_color == 'no':
-            data = s.color_data(collecter.process_data_node_all)()
-        else:
-            data = collecter.process_data_node_all()
-        header = ["node", "node type", "res num", "stp num", "addr", "status"]
-        table = s.show_linstor_data(header, data)
-        s.prt_log(table,0)
-
-    def show_one_node(self, node, no_color='no'):
-        collecter = linstordb.CollectData()
-        node_data = collecter.process_data_node_one(node)
-        if not node_data:
-            s.prt_log('The node does not exist',1)
-        else:
-            info = "node:%s\nnodetype:%s\nresource num:%s\nstoragepool num:%s\naddr:%s\nstatus:%s" % node_data
-            if no_color == 'no':
-                data_node = s.color_data(collecter.process_data_node_specific)(node)
-                data_stp = s.color_data(collecter.process_data_stp_all_of_node)(node)
-            else:
-                data_node = collecter.process_data_node_specific(node)
-                data_stp = collecter.process_data_stp_all_of_node(node)
-
-            header_node = ['res_name', 'stp_name', 'size', 'device_name', 'used', 'status']
-            header_stp = ['stp_name', 'node_name', 'res_num', 'driver', 'pool_name', 'free_size', 'total_size', 'snapshots',
-                          'status']
-            table_node = s.show_linstor_data(header_node, data_node)
-            table_stp = s.show_linstor_data(header_stp, data_stp)
-            result = '\n'.join([info, str(table_node), str(table_stp)])
-            s.prt_log(result,0)
-
-
-
-class LinstorResource(Stor):
+class Resource(Stor):
     def __init__(self):
         Stor.__init__(self)
 

@@ -81,25 +81,25 @@ class DiskGroupCommands():
 
     @sd.record_exception
     def create(self, args):
-        obj_iscsi = ex.Iscsi()
+        diskgroup = ex.DiskGroup()
         if args.gui == 'gui':
-            data = pickle.dumps(obj_iscsi.create_diskgroup(args.diskgroup, args.disk))
+            data = pickle.dumps(diskgroup.create_diskgroup(args.diskgroup, args.disk))
             sd.send_via_socket(data)
         else:
-            obj_iscsi.create_diskgroup(args.diskgroup, args.disk)
+            diskgroup.create_diskgroup(args.diskgroup, args.disk)
 
     @sd.record_exception
     def show(self, args):
-        obj_iscsi = ex.Iscsi()
+        diskgroup = ex.DiskGroup()
         if args.diskgroup == 'all' or args.diskgroup is None:
-            obj_iscsi.show_all_diskgroup()
+            diskgroup.show_all_diskgroup()
         else:
-            obj_iscsi.show_spe_diskgroup(args.diskgroup)
+            diskgroup.show_spe_diskgroup(args.diskgroup)
 
     @sd.record_exception
     def delete(self, args):
-        obj_iscsi = ex.Iscsi()
-        obj_iscsi.delete_diskgroup(args.diskgroup)
+        diskgroup = ex.DiskGroup()
+        diskgroup.delete_diskgroup(args.diskgroup)
 
     def print_dg_help(self, *args):
         self.dg_parser.print_help()

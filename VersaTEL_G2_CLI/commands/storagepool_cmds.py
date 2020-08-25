@@ -163,7 +163,7 @@ class StoragePoolCommands():
 
     @sd.record_exception
     def create(self, args):
-        sp = ex.Stor()
+        sp = ex.StoragePool()
         if args.storagepool and args.node:
             # The judgment of the lvm module to create a storage pool
             if args.lvm:
@@ -197,13 +197,13 @@ class StoragePoolCommands():
     @sd.record_exception
     @sd.comfirm_del('storage pool')
     def delete(self, args):
-        sp = ex.Stor()
+        sp = ex.StoragePool()
         sp.delete_storagepool(args.node, args.storagepool)
 
 
     @sd.record_exception
     def show(self, args):
-        sp = ex.Stor()
+        sp = ex.StoragePool()
         if args.nocolor:
             if args.storagepool:
                 sp.show_one_sp(args.storagepool,no_color='yes')

@@ -42,11 +42,11 @@ class DiskCommands():
 
     @sd.record_exception
     def show(self, args):
-        obj_iscsi = ex.Iscsi()
+        disk = ex.Disk()
         if args.disk == 'all' or args.disk is None:
-            obj_iscsi.show_all_disk()
+            disk.show_all_disk()
         else:
-            obj_iscsi.show_spe_disk(args.disk)
+            disk.show_spe_disk(args.disk)
 
 
 

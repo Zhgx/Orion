@@ -66,25 +66,25 @@ class HostCommands():
 
     @sd.record_exception
     def create(self, args):
-        obj_iscsi = ex.Iscsi()
+        host = ex.Host()
         if args.gui == 'gui':
-            data = pickle.dumps(obj_iscsi.create_host(args.host, args.iqn))
+            data = pickle.dumps(host.create_host(args.host, args.iqn))
             sd.send_via_socket(data)
         else:
-            obj_iscsi.create_host(args.host, args.iqn)
+            host.create_host(args.host, args.iqn)
 
     @sd.record_exception
     def show(self, args):
-        obj_iscsi = ex.Iscsi()
+        host = ex.Host()
         if args.host == 'all' or args.host is None:
-            obj_iscsi.show_all_host()
+            host.show_all_host()
         else:
-            obj_iscsi.show_spe_host(args.host)
+            host.show_spe_host(args.host)
 
     @sd.record_exception
     def delete(self, args):
-        obj_iscsi = ex.Iscsi()
-        obj_iscsi.delete_host(args.host)
+        host = ex.Host()
+        host.delete_host(args.host)
 
     def print_host_help(self, *args):
         self.host_parser.print_help()

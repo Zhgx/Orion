@@ -332,7 +332,7 @@ class ResourceCommands():
     @sd.record_exception
     @sd.comfirm_del('resource')
     def delete(self, args):
-        res = ex.LinstorResource()
+        res = ex.Resource()
         if args.node:
             res.delete_resource_des(args.node, args.resource)
         elif not args.node:
@@ -341,7 +341,7 @@ class ResourceCommands():
 
     @sd.record_exception
     def show(self, args):
-        res = ex.LinstorResource()
+        res = ex.Resource()
         if args.nocolor:
             if args.resource:
                 res.show_one_res(args.resource,no_color='yes')

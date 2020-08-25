@@ -157,8 +157,8 @@ class LinstorDB():
         lvm = ex.LVM()
         vg = lvm.refine_vg()
         thinlv = lvm.refine_thinlv()
-        self.insert_data(self.replace_vgtb_sql, vg,'vgtb')
-        self.insert_data(self.replace_thinlvtb_sql, thinlv,'thinlvtb')
+        self.insert_data(self.replace_vgtb_sql, vg)
+        self.insert_data(self.replace_thinlvtb_sql, thinlv)
 
 
     def insert_linstor_data(self):
@@ -166,9 +166,9 @@ class LinstorDB():
         node = linstor.get_linstor_data('linstor --no-color --no-utf8 n l')
         res = linstor.get_linstor_data('linstor --no-color --no-utf8 r lv')
         sp = linstor.get_linstor_data('linstor --no-color --no-utf8 sp l')
-        self.insert_data(self.replace_ntb_sql, node, 'nodetb')
-        self.insert_data(self.replace_rtb_sql, res,'resourcetb')
-        self.insert_data(self.replace_stb_sql, sp, 'storagepooltb')
+        self.insert_data(self.replace_ntb_sql, node)
+        self.insert_data(self.replace_rtb_sql, res)
+        self.insert_data(self.replace_stb_sql, sp)
 
     # 删除表，现不使用
     def drop_tb(self):
@@ -182,7 +182,7 @@ class LinstorDB():
 
     # 插入数据
     @s.sql_insert_decorator
-    def insert_data(self, sql, list_data,table_name=None):
+    def insert_data(self, sql, list_data):
         for i in range(len(list_data)):
             list_data[i].insert(0, i + 1)
             self.cur.execute(sql, list_data[i])

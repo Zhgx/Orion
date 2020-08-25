@@ -73,25 +73,25 @@ class MapCommands():
 
     @sd.record_exception
     def create(self, args):
-        obj_iscsi = ex.Iscsi()
+        map = ex.Map()
         if args.gui == 'gui':
-            data = pickle.dumps(obj_iscsi.pre_check_create_map(args.map, args.hg, args.dg))
+            data = pickle.dumps(map.pre_check_create_map(args.map, args.hg, args.dg))
             sd.send_via_socket(data)
         else:
-            obj_iscsi.pre_check_create_map(args.map, args.hg, args.dg)
+            map.pre_check_create_map(args.map, args.hg, args.dg)
 
     @sd.record_exception
     def show(self, args):
-        obj_iscsi = ex.Iscsi()
+        map = ex.Map()
         if args.map == 'all' or args.map is None:
-            obj_iscsi.show_all_map()
+            map.show_all_map()
         else:
-            obj_iscsi.show_spe_map(args.map)
+            map.show_spe_map(args.map)
 
     @sd.record_exception
     def delete(self, args):
-        obj_iscsi = ex.Iscsi()
-        obj_iscsi.pre_check_delete_map(args.map)
+        map = ex.Map()
+        map.pre_check_delete_map(args.map)
 
     def print_map_help(self, *args):
         self.map_parser.print_help()

@@ -9,9 +9,10 @@ class Iscsi():
     def __init__(self):
         self.js = iscsi_json.JSON_OPERATION()
 
-    """
-    disk 操作
-    """
+
+class Disk():
+    def __init__(self):
+        self.js = iscsi_json.JSON_OPERATION()
 
     def get_all_disk(self):
         linstor = Linstor()
@@ -44,6 +45,10 @@ class Iscsi():
     host 操作
     """
 
+class Host():
+    def __init__(self):
+        self.js = iscsi_json.JSON_OPERATION()
+
     def create_host(self, host, iqn):
         if self.js.check_key('Host', host)['result']:
             s.prt_log(f"Fail! The Host {host} already existed.",1)
@@ -73,7 +78,7 @@ class Iscsi():
 
     def delete_host(self, host):
         if self.js.check_key('Host', host)['result']:
-            if self.js.check_value('HostGroup', host):
+            if self.js.check_value('HostGroup', host)['result']:
                 s.prt_log(
                     "Fail! The host in ... hostgroup, Please delete the hostgroup first.",1)
             else:
@@ -86,6 +91,10 @@ class Iscsi():
     """
     diskgroup 操作
     """
+
+class DiskGroup():
+    def __init__(self):
+        self.js = iscsi_json.JSON_OPERATION()
 
     def create_diskgroup(self, diskgroup, disk):
         if self.js.check_key('DiskGroup', diskgroup)['result']:
@@ -126,7 +135,7 @@ class Iscsi():
 
     def delete_diskgroup(self, dg):
         if self.js.check_key('DiskGroup', dg)['result']:
-            if self.js.check_value('Map', dg):
+            if self.js.check_value('Map', dg)['result']:
                 s.prt_log("Fail! The diskgroup already map,Please delete the map",1)
             else:
                 self.js.delete_data('DiskGroup', dg)
@@ -137,6 +146,10 @@ class Iscsi():
     """
     hostgroup 操作
     """
+
+class HostGroup():
+    def __init__(self):
+        self.js = iscsi_json.JSON_OPERATION()
 
     def create_hostgroup(self, hostgroup, host):
         if self.js.check_key('HostGroup', hostgroup)['result']:
@@ -176,7 +189,7 @@ class Iscsi():
 
     def delete_hostgroup(self, hg):
         if self.js.check_key('HostGroup', hg)['result']:
-            if self.js.check_value('Map', hg):
+            if self.js.check_value('Map', hg)['result']:
                 s.prt_log("Fail! The hostgroup already map,Please delete the map",1)
             else:
                 self.js.delete_data('HostGroup', hg)
@@ -188,6 +201,11 @@ class Iscsi():
     map操作
     """
 
+class Map():
+    def __init__(self):
+        self.js = iscsi_json.JSON_OPERATION()
+
+
     def pre_check_create_map(self, map, hg, dg):
         if self.js.check_key('Map', map)['result']:
             s.prt_log(f'The Map "{map}" already existed.',1)
@@ -196,7 +214,7 @@ class Iscsi():
         elif self.js.check_key('DiskGroup', dg)['result'] == False:
             s.prt_log(f"Can't find {dg}",1)
         else:
-            if self.js.check_value('Map', dg):
+            if self.js.check_value('Map', dg)['result']:
                 s.prt_log("The diskgroup already map",1)
             else:
                 if self.create_map(hg, dg):

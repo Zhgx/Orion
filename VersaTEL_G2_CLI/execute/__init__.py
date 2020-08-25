@@ -4,5 +4,11 @@ from .iscsi import Iscsi
 from .linstor import Linstor
 from .lvm import LVM
 from .stor import Stor
-from .stor import LinstorResource
-
+from .stor import Resource
+from .stor import Node
+from .stor import StoragePool
+from .iscsi import Disk
+from .iscsi import DiskGroup
+from .iscsi import Host
+from .iscsi import HostGroup
+from .iscsi import Map

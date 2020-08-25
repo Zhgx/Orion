@@ -142,7 +142,7 @@ class NodeCommands():
 
     @sd.record_exception
     def create(self, args):
-        node = ex.Stor()
+        node = ex.Node()
         if args.gui:
             result = node.create_node(args.node, args.ip, args.nodetype)
             result_pickled = pickle.dumps(result)
@@ -159,12 +159,12 @@ class NodeCommands():
     @sd.record_exception
     @sd.comfirm_del('node')
     def delete(self, args):
-        node = ex.Stor()
+        node = ex.Node()
         node.delete_node(args.node)
 
     @sd.record_exception
     def show(self, args):
-        node = ex.Stor()
+        node = ex.Node()
         if args.nocolor:
             if args.node:
                 node.show_one_node(args.node,no_color='yes')

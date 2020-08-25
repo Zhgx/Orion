@@ -84,27 +84,27 @@ class HostGroupCommands():
 
     @sd.record_exception
     def create(self, args):
-        obj_iscsi = ex.Iscsi()
+        hostgroup = ex.HostGroup()
         if args.gui == 'gui':
             data = pickle.dumps(
-                obj_iscsi.create_hostgroup(
+                hostgroup.create_hostgroup(
                     args.hostgroup, args.host))
             sd.send_via_socket(data)
         else:
-            obj_iscsi.create_hostgroup(args.hostgroup, args.host)
+            hostgroup.create_hostgroup(args.hostgroup, args.host)
 
     @sd.record_exception
     def show(self, args):
-        obj_iscsi = ex.Iscsi()
+        hostgroup = ex.HostGroup()
         if args.hostgroup == 'all' or args.hostgroup is None:
-            obj_iscsi.show_all_hostgroup()
+            hostgroup.show_all_hostgroup()
         else:
-            obj_iscsi.show_spe_hostgroup(args.hostgroup)
+            hostgroup.show_spe_hostgroup(args.hostgroup)
 
     @sd.record_exception
     def delete(self, args):
-        obj_iscsi = ex.Iscsi()
-        obj_iscsi.delete_hostgroup(args.hostgroup)
+        hostgroup = ex.HostGroup()
+        hostgroup.delete_hostgroup(args.hostgroup)
 
     def print_hg_help(self, *args):
         self.hg_parser.print_help()
