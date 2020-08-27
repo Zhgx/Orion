@@ -5,6 +5,7 @@ import sundry as s
 import sys
 import linstordb
 from execute.lvm import LVM
+import subprocess
 
 import time
 
@@ -12,12 +13,33 @@ class TimeoutError(Exception):
     pass
 
 
+@s.cmd_decorator('linstor')
+def execute_linstor_cmd(cmd,func_name,timeout=60):
+    p = subprocess.Popen(cmd, stderr=subprocess.STDOUT, stdout=subprocess.PIPE, shell=True)
+    t_beginning = time.time()
+    seconds_passed = 0
+    while True:
+        if p.poll() is not None:
+            break
+        seconds_passed = time.time() - t_beginning
+        if timeout and seconds_passed > timeout:
+            p.terminate()
+            raise TimeoutError(cmd, timeout)
+        time.sleep(0.1)
+    output = p.stdout.read().decode()
+    return Stor.judge_result(output)
+
+
+
+
 class Stor():
 
     def __init__(self):
         pass
-            
-    def judge_result(self,result):
+
+
+    @staticmethod
+    def judge_result(result):
         # 对命令进行结果根据正则匹配进行分类
         re_suc = re.compile('SUCCESS')
         re_war = re.compile('WARNING')
@@ -45,7 +67,6 @@ class Stor():
             return result
         else:
             s.handle_exception()
-
 
     @staticmethod
     def get_err_detailes(result):
@@ -79,7 +100,7 @@ class Node(Stor):
             print('node type error,choose from ''Combined',
                   'Controller', 'Auxiliary', 'Satellite''')
         else:
-            output = s.execute_cmd(cmd,s.get_function_name())
+            output = execute_linstor_cmd(cmd,s.get_function_name())
             result = self.judge_result(output)
             if result['sts'] == 0:
                 s.prt_log('SUCCESS', 0)
@@ -93,8 +114,7 @@ class Node(Stor):
     # 删除node
     def delete_node(self, node):
         cmd = f'linstor node delete {node}'
-        output = s.execute_cmd(cmd,s.get_function_name)
-        result = self.judge_result(output)
+        result = execute_linstor_cmd(cmd,s.get_function_name)
         if result['sts'] == 0:
             s.prt_log('SUCCESS', 0)
         elif result['sts'] == 1:
@@ -150,8 +170,7 @@ class StoragePool(Stor):
             s.prt_log(f'Volume group:"{vg}" does not exist',1)
             return
         cmd = f'linstor storage-pool create lvm {node} {stp} {vg}'
-        output = s.execute_cmd(cmd,s.get_function_name)
-        result = self.judge_result(output)
+        result = execute_linstor_cmd(cmd,s.get_function_name)
         if result['sts'] == 0:
             s.prt_log('SUCCESS', 0)
         elif result['sts'] == 1:
@@ -167,8 +186,7 @@ class StoragePool(Stor):
             s.prt_log(f'Thin logical volume:"{tlv}" does not exist',1)
             return
         cmd = f'linstor storage-pool create lvmthin {node} {stp} {tlv}'
-        output = s.execute_cmd(cmd,s.get_function_name)
-        result = self.judge_result(output)
+        result = execute_linstor_cmd(cmd,s.get_function_name)
         if result['sts'] == 0:
             s.prt_log('SUCCESS', 0)
         elif result['sts'] == 1:
@@ -181,8 +199,7 @@ class StoragePool(Stor):
     # 删除storagepool -- ok
     def delete_storagepool(self, node, stp):
         cmd = f'linstor storage-pool delete {node} {stp}'
-        output = s.execute_cmd(cmd,s.get_function_name)
-        result = self.judge_result(output)
+        result = execute_linstor_cmd(cmd,s.get_function_name)
         if result['sts'] == 0:
             s.prt_log('SUCCESS', 0)
         elif result['sts'] == 1:
@@ -242,8 +259,8 @@ class Resource(Stor):
         # 成功返回空字典，失败返回 {节点：错误原因}
         cmd = f'linstor resource create {node} {res} --storage-pool {sp}'
         try:
-            output = s.execute_cmd(cmd,s.get_function_name)
-            result = self.judge_result(output)
+            result = execute_linstor_cmd(cmd,s.get_function_name)
+            # result = self.judge_result(output)
             if result['sts'] == 2:
                 s.prt_log(Stor.get_war_mes(result),1)
             if result['sts'] == 0:
@@ -266,12 +283,12 @@ class Resource(Stor):
     # 创建resource相关
     def linstor_delete_rd(self, res):
         cmd = f'linstor rd d {res}'
-        s.execute_cmd(cmd,s.get_function_name())
+        execute_linstor_cmd(cmd,s.get_function_name())
 
     def linstor_create_rd(self, res):
         cmd = f'linstor rd c {res}'
-        output = s.execute_cmd(cmd,s.get_function_name())
-        result = self.judge_result(output)
+        result = execute_linstor_cmd(cmd,s.get_function_name())
+        # result = self.judge_result(output)
         if result['sts'] == 0:
             return True
         else:
@@ -282,8 +299,8 @@ class Resource(Stor):
 
     def linstor_create_vd(self, res, size):
         cmd = f'linstor vd c {res} {size}'
-        output = s.execute_cmd(cmd,s.get_function_name)
-        result = self.judge_result(output)
+        result = execute_linstor_cmd(cmd,s.get_function_name)
+        # result = self.judge_result(output)
         if result['sts'] == 0:
             return True
         else:
@@ -296,8 +313,8 @@ class Resource(Stor):
     def create_res_auto(self, res, size, num):
         cmd = f'linstor r c {res} --auto-place {num}'
         if self.linstor_create_rd(res) is True and self.linstor_create_vd(res, size) is True:
-            output = s.execute_cmd(cmd,s.get_function_name)
-            result = self.judge_result(output)
+            result = execute_linstor_cmd(cmd,s.get_function_name)
+            # result = self.judge_result(output)
             if result['sts'] == 0:
                 s.prt_log('SUCCESS', 0)
                 return True
@@ -347,8 +364,8 @@ class Resource(Stor):
     # 添加mirror（自动）
     def add_mirror_auto(self, res, num):
         cmd = f'linstor r c {res} --auto-place {num}'
-        output = s.execute_cmd(cmd,s.get_function_name)
-        result = self.judge_result(output)
+        result = execute_linstor_cmd(cmd,s.get_function_name)
+        # result = self.judge_result(output)
         if result['sts'] == 0:
             s.prt_log('SUCCESS', 0)
         elif result['sts'] == 1:
@@ -379,8 +396,8 @@ class Resource(Stor):
     # 创建resource --diskless
     def create_res_diskless(self, node, res):
         cmd = f'linstor r c {node} {res} --diskless'
-        output = s.execute_cmd(cmd,s.get_function_name)
-        result = self.judge_result(output)
+        result = execute_linstor_cmd(cmd,s.get_function_name)
+        # result = self.judge_result(output)
         if result['sts'] == 0:
             s.prt_log('SUCCESS', 0)
         elif result['sts'] == 1:
@@ -393,8 +410,8 @@ class Resource(Stor):
     # 删除resource,指定节点
     def delete_resource_des(self, node, res):
         cmd = f'linstor resource delete {node} {res}'
-        output = s.execute_cmd(cmd,s.get_function_name())
-        result = self.judge_result(output)
+        result = execute_linstor_cmd(cmd,s.get_function_name())
+        # result = self.judge_result(output)
         if result['sts'] == 0:
             s.prt_log('SUCCESS', 0)
         elif result['sts'] == 1:
@@ -407,8 +424,8 @@ class Resource(Stor):
     # 删除resource，全部节点
     def delete_resource_all(self, res):
         cmd = f'linstor resource-definition delete {res}'
-        output = s.execute_cmd(cmd,s.get_function_name())
-        result = self.judge_result(output)
+        result = execute_linstor_cmd(cmd,s.get_function_name())
+        # result = self.judge_result(output)
         if result['sts'] == 0:
             s.prt_log('SUCCESS', 0)
         elif result['sts'] == 1:

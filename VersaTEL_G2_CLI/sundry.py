@@ -239,6 +239,7 @@ def execute_cmd(cmd, func_name, timeout=60):
     return output
 
 
+
 @cmd_decorator('crm')
 def execute_crm_cmd(cmd, func_name, timeout=60):
     """
