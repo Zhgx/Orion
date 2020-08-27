@@ -6,6 +6,8 @@ import sys
 import linstordb
 from execute.lvm import LVM
 
+import time
+
 class TimeoutError(Exception):
     pass
 
@@ -14,7 +16,7 @@ class Stor():
 
     def __init__(self):
         pass
-
+            
     def judge_result(self,result):
         # 对命令进行结果根据正则匹配进行分类
         re_suc = re.compile('SUCCESS')
@@ -91,7 +93,7 @@ class Node(Stor):
     # 删除node
     def delete_node(self, node):
         cmd = f'linstor node delete {node}'
-        output = s.execute_cmd(cmd,s.get_function_name())
+        output = s.execute_cmd(cmd,s.get_function_name)
         result = self.judge_result(output)
         if result['sts'] == 0:
             s.prt_log('SUCCESS', 0)
@@ -114,7 +116,7 @@ class Node(Stor):
 
     def show_one_node(self, node, no_color='no'):
         collecter = linstordb.CollectData()
-        node_data = collecter.process_data_node_one(node)
+        node_data = collecter.get_node_info(node)
         if not node_data:
             s.prt_log('The node does not exist',1)
         else:
@@ -148,7 +150,7 @@ class StoragePool(Stor):
             s.prt_log(f'Volume group:"{vg}" does not exist',1)
             return
         cmd = f'linstor storage-pool create lvm {node} {stp} {vg}'
-        output = s.execute_cmd(cmd,s.get_function_name())
+        output = s.execute_cmd(cmd,s.get_function_name)
         result = self.judge_result(output)
         if result['sts'] == 0:
             s.prt_log('SUCCESS', 0)
@@ -165,7 +167,7 @@ class StoragePool(Stor):
             s.prt_log(f'Thin logical volume:"{tlv}" does not exist',1)
             return
         cmd = f'linstor storage-pool create lvmthin {node} {stp} {tlv}'
-        output = s.execute_cmd(cmd,s.get_function_name())
+        output = s.execute_cmd(cmd,s.get_function_name)
         result = self.judge_result(output)
         if result['sts'] == 0:
             s.prt_log('SUCCESS', 0)
@@ -179,7 +181,7 @@ class StoragePool(Stor):
     # 删除storagepool -- ok
     def delete_storagepool(self, node, stp):
         cmd = f'linstor storage-pool delete {node} {stp}'
-        output = s.execute_cmd(cmd,s.get_function_name())
+        output = s.execute_cmd(cmd,s.get_function_name)
         result = self.judge_result(output)
         if result['sts'] == 0:
             s.prt_log('SUCCESS', 0)
@@ -204,12 +206,11 @@ class StoragePool(Stor):
 
     def show_one_sp(self,sp,no_color='no'):
         collector = linstordb.CollectData()
-        node_num = collector._node_num_of_storagepool(sp)
-        node_name = collector._node_name_of_storagepool(sp)
-        if node_num == 0:
+        info_data = collector.get_sp_info(sp)
+        if info_data[0] == 0:
             s.prt_log('The storagepool does not exist',1)
         else:
-            info = f'The storagepool name for {node_num} nodes is {sp},they are {node_name}.'
+            info = 'The storagepool name for %s nodes is %s,they are %s.'%(info_data)
             if no_color == 'no':
                 data = s.color_data(collector.process_data_stp_specific)(sp)
             else:
@@ -241,7 +242,7 @@ class Resource(Stor):
         # 成功返回空字典，失败返回 {节点：错误原因}
         cmd = f'linstor resource create {node} {res} --storage-pool {sp}'
         try:
-            output = s.execute_cmd(cmd,s.get_function_name())
+            output = s.execute_cmd(cmd,s.get_function_name)
             result = self.judge_result(output)
             if result['sts'] == 2:
                 s.prt_log(Stor.get_war_mes(result),1)
@@ -281,7 +282,7 @@ class Resource(Stor):
 
     def linstor_create_vd(self, res, size):
         cmd = f'linstor vd c {res} {size}'
-        output = s.execute_cmd(cmd,s.get_function_name())
+        output = s.execute_cmd(cmd,s.get_function_name)
         result = self.judge_result(output)
         if result['sts'] == 0:
             return True
@@ -295,7 +296,7 @@ class Resource(Stor):
     def create_res_auto(self, res, size, num):
         cmd = f'linstor r c {res} --auto-place {num}'
         if self.linstor_create_rd(res) is True and self.linstor_create_vd(res, size) is True:
-            output = s.execute_cmd(cmd,s.get_function_name())
+            output = s.execute_cmd(cmd,s.get_function_name)
             result = self.judge_result(output)
             if result['sts'] == 0:
                 s.prt_log('SUCCESS', 0)
@@ -346,7 +347,7 @@ class Resource(Stor):
     # 添加mirror（自动）
     def add_mirror_auto(self, res, num):
         cmd = f'linstor r c {res} --auto-place {num}'
-        output = s.execute_cmd(cmd,s.get_function_name())
+        output = s.execute_cmd(cmd,s.get_function_name)
         result = self.judge_result(output)
         if result['sts'] == 0:
             s.prt_log('SUCCESS', 0)
@@ -378,7 +379,7 @@ class Resource(Stor):
     # 创建resource --diskless
     def create_res_diskless(self, node, res):
         cmd = f'linstor r c {node} {res} --diskless'
-        output = s.execute_cmd(cmd,s.get_function_name())
+        output = s.execute_cmd(cmd,s.get_function_name)
         result = self.judge_result(output)
         if result['sts'] == 0:
             s.prt_log('SUCCESS', 0)
@@ -423,7 +424,6 @@ class Resource(Stor):
             data = s.color_data(collecter.process_data_resource_all)()
         else:
             data = collecter.process_data_resource_all()
-
         header = ["resource", "mirror_way", "size", "device_name", "used"]
         table = s.show_linstor_data(header,data)
         s.prt_log(table,0)
@@ -431,7 +431,7 @@ class Resource(Stor):
 
     def show_one_res(self,res,no_color='no'):
         collecter = linstordb.CollectData()
-        res_data = collecter.process_data_resource_one(res)
+        res_data = collecter.get_res_info(res)
         if not res_data:
             s.prt_log('The resource does not exist',1)
         else:

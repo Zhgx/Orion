@@ -3,11 +3,8 @@ import pickle
 import sys
 import re
 import traceback
-
-import log
 import sundry as sd
 import execute as ex
-import linstordb
 import consts
 
 
@@ -234,7 +231,7 @@ class ResourceCommands():
 
         :param args: Namespace that has been parsed for CLI
         """
-        res = ex.LinstorResource()
+        res = ex.Resource()
 
         """对应创建模式必需输入的参数和禁止输入的参数"""
         # Parameters required for automatic resource creation

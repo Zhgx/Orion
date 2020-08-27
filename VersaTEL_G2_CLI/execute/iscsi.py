@@ -5,11 +5,6 @@ import sundry as s
 from execute.linstor import Linstor
 from execute.crm import CRMData,CRMConfig
 
-class Iscsi():
-    def __init__(self):
-        self.js = iscsi_json.JSON_OPERATION()
-
-
 class Disk():
     def __init__(self):
         self.js = iscsi_json.JSON_OPERATION()

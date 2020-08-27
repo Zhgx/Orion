@@ -2,11 +2,8 @@ import argparse
 import pickle
 import sundry as sd
 import execute as ex
-import linstordb
 import consts
 from consts import ExitCode
-
-
 
 class usage():
     # node部分使用手册

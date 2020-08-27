@@ -185,17 +185,3 @@ class LogDB():
 
             f.close()
         self.con.commit()
-
-
-#
-# logdb = LogDB()
-#
-# logdb.produce_logdb()
-# # print(logdb.get_userinput_via_tid('1596779465'))
-# all_list = logdb.get_all_transaction()
-#
-# for i in all_list:
-#     if i[0]:
-#         print(i)
-#     else:
-#         print('不符合条件')

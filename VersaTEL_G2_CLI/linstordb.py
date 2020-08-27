@@ -1,14 +1,114 @@
 # coding:utf-8
-import traceback
-
-from functools import wraps
-import sqlite3
 import execute as ex
-import consts
 import sundry as s
+import sqlite3
 
 
-class LinstorDB():
+queries = {
+    'SELECT': 'SELECT %s FROM %s WHERE %s',
+    'SELECT_ALL': 'SELECT %s FROM %s',
+    'SELECT_COUNT': 'SELECT COUNT(%s) FROM %s WHERE %s',
+    'INSERT': 'INSERT INTO %s VALUES(%s)',
+    'UPDATE': 'UPDATE %s SET %s WHERE %s',
+    'DELETE': 'DELETE FROM %s where %s',
+    'DELETE_ALL': 'DELETE FROM %s',
+    'CREATE_TABLE': 'CREATE TABLE IF NOT EXISTS %s(%s)',
+    'DROP_TABLE': 'DROP TABLE if exists %s'}
+
+class Database():
+
+    def __init__(self, data_file):
+        self.db = sqlite3.connect(data_file, check_same_thread=False)
+        self.data_file = data_file
+
+    def free(self, cursor):
+        cursor.close()
+
+    # def write(self, query, values=None):
+    #     cursor = self.db.cursor()
+    #     if values is not None:
+    #         cursor.execute(query, list(values))
+    #     else:
+    #         cursor.execute(query)
+    #     self.db.commit()
+    #     return cursor
+
+    def read(self, query, values=None):
+        cursor = self.db.cursor()
+        if values is not None:
+            cursor.execute(query, list(values))
+        else:
+            cursor.execute(query)
+        return cursor
+
+
+    def fet_all(self,cursor):
+        return cursor.fetchall()
+
+    def fet_one(self,cursor):
+        return cursor.fetchone()
+
+
+    def select(self, tables, *args, **kwargs):
+        vals = ','.join([l for l in args])
+        locs = ','.join(tables)
+        conds = ' and '.join(['%s=?' % k for k in kwargs])
+        subs = [kwargs[k] for k in kwargs]
+        query = queries['SELECT'] % (vals, locs, conds)
+        return self.read(query,subs)
+
+    def select_all(self, tables, *args):
+        vals = ','.join([l for l in args])
+        locs = ','.join(tables)
+        query = queries['SELECT_ALL'] % (vals, locs)
+        return self.read(query)
+
+    def select_count(self,tables,*args,**kwargs):
+        vals = ','.join([l for l in args])
+        locs = ','.join(tables)
+        conds = ' and '.join(['%s=?' % k for k in kwargs])
+        subs = [kwargs[k] for k in kwargs]
+        query = queries['SELECT_COUNT'] % (vals, locs, conds)
+        cursor = self.read(query, subs)
+        return cursor.fetchone()[0]
+
+
+    # def insert(self, table_name, *args):
+    #     values = ','.join(['?' for l in args])
+    #     query = queries['INSERT'] % (table_name, values)
+    #     return self.write(query, args)
+
+    # def update(self, table_name, set_args, **kwargs):
+    #     updates = ','.join(['%s=?' % k for k in set_args])
+    #     conds = ' and '.join(['%s=?' % k for k in kwargs])
+    #     vals = [set_args[k] for k in set_args]
+    #     subs = [kwargs[k] for k in kwargs]
+    #     query = queries['UPDATE'] % (table_name, updates, conds)
+    #     return self.write(query, vals + subs)
+    #
+    # def delete(self, table_name, **kwargs):
+    #     conds = ' and '.join(['%s=?' % k for k in kwargs])
+    #     subs = [kwargs[k] for k in kwargs]
+    #     query = queries['DELETE'] % (table_name, conds)
+    #     return self.write(query, subs)
+    #
+    # def delete_all(self, table_name):
+    #     query = queries['DELETE_ALL'] % table_name
+    #     return self.write(query)
+    #
+    #
+    # def drop_table(self, table_name):
+    #     query = queries['DROP_TABLE'] % table_name
+    #     self.free(self.write(query))
+
+
+    def disconnect(self):
+        self.db.close()
+
+
+
+
+class LinstorDB(Database):
     """
     Get the output of LINSTOR through the command, use regular expression to get and process it into a list,
     and insert it into the newly created memory database.
@@ -135,10 +235,8 @@ class LinstorDB():
     # 连接数据库,创建光标对象
 
     def __init__(self):
-        # linstor.db
-        self.con = sqlite3.connect("linstordb.db", check_same_thread=False)
-        self.cur = self.con.cursor()
-
+        super().__init__(':memory:')
+        self.cur = self.db.cursor()
 
     def build_table(self,type='linstor'):
         self.cur.execute(self.crt_ntb_sql)
@@ -149,16 +247,15 @@ class LinstorDB():
             self.cur.execute(self.crt_thinlvtb_sql)
             self.insert_lvm_data()
         self.insert_linstor_data()
-        self.con.commit()
-
+        self.db.commit()
 
 
     def insert_lvm_data(self):
         lvm = ex.LVM()
         vg = lvm.refine_vg()
         thinlv = lvm.refine_thinlv()
-        self.insert_data(self.replace_vgtb_sql, vg)
-        self.insert_data(self.replace_thinlvtb_sql, thinlv)
+        self.insert_data(self.replace_vgtb_sql, vg,'vgtb')
+        self.insert_data(self.replace_thinlvtb_sql, thinlv,'thinlvtb')
 
 
     def insert_linstor_data(self):
@@ -166,23 +263,13 @@ class LinstorDB():
         node = linstor.get_linstor_data('linstor --no-color --no-utf8 n l')
         res = linstor.get_linstor_data('linstor --no-color --no-utf8 r lv')
         sp = linstor.get_linstor_data('linstor --no-color --no-utf8 sp l')
-        self.insert_data(self.replace_ntb_sql, node)
-        self.insert_data(self.replace_rtb_sql, res)
-        self.insert_data(self.replace_stb_sql, sp)
-
-    # 删除表，现不使用
-    def drop_tb(self):
-        tables_sql = "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name"
-        self.cur.execute(tables_sql)
-        tables = self.cur.fetchall()
-        for table in tables:
-            drp_sql = f'drop table if exists {table}'
-            self.cur.execute(drp_sql)
-        self.con.commit()
+        self.insert_data(self.replace_ntb_sql, node,'nodetb')
+        self.insert_data(self.replace_rtb_sql, res,'resourcetb')
+        self.insert_data(self.replace_stb_sql, sp,'storagepooltb')
 
     # 插入数据
     @s.sql_insert_decorator
-    def insert_data(self, sql, list_data):
+    def insert_data(self, sql, list_data,tablename):
         for i in range(len(list_data)):
             list_data[i].insert(0, i + 1)
             self.cur.execute(sql, list_data[i])
@@ -190,75 +277,30 @@ class LinstorDB():
 
     def data_base_dump(self):
         cur = self.cur
-        con = self.con
+        con = self.db
         self.build_table('all')
         SQL_script = con.iterdump()
         cur.close()
         return "\n".join(SQL_script)
 
 
-class CollectData():
+class CollectData(LinstorDB):
     """
     Provide a data interface to retrieve specific data in the LINSTOR database.
     """
 
     def __init__(self):
-        self.linstor_db = LinstorDB()
-        self.linstor_db.build_table()
-        self.cur = self.linstor_db.cur
+        super().__init__()
+        self.build_table()
 
-    # 获取表单行数据的通用方法
-    def sql_fetch_one(self, sql):
-        self.cur.execute(sql)
-        date_set = self.cur.fetchone()
-        return date_set
-
-    # 获取表全部数据的通用方法
-    def sql_fetch_all(self, sql):
-        cur = self.cur
-        cur.execute(sql)
-        date_set = cur.fetchall()
-        return list(date_set)
-
-    # Return all data of node table
-
-    def select_data(self):
-        # sql = f'SELECT {",".join(data)} FROM {table} WHERE {limit}'
-        sql = f'SELECT * FROM nodetb inner join resourcetb on nodetb.Node = resourcetb.Node inner join storagepooltb on resourcetb.StoragePool = storagepooltb.StoragePool'
-        return self.sql_fetch_all(sql)
-
-
-    def _select_nodetb_all(self):
-        select_sql = "SELECT Node,NodeType,Addresses,State FROM nodetb"
-        return self.sql_fetch_all(select_sql)
-
-    # The node name of the incoming data, and return its information in the
-    # node table
-    def _select_nodetb_one(self, node):
-        select_sql = f"SELECT Node,NodeType,Addresses,State FROM nodetb WHERE  Node = '{node}'"
-        return self.sql_fetch_one(select_sql)
-
-    def _select_res_num(self, node):
-        select_sql = f"SELECT COUNT(Resource) FROM resourcetb WHERE  Node = '{node}'"
-        return self.sql_fetch_one(select_sql)
-
-    def _select_stp_num(self, node):
-        select_sql = f"SELECT COUNT(Node) FROM storagepooltb WHERE Node = '{node}'"
-        return self.sql_fetch_one(select_sql)
-
-    def _select_resourcetb(self, node):
-        select_sql = f"SELECT DISTINCT Resource,StoragePool,Allocated,DeviceName,InUse,State FROM resourcetb WHERE Node = '{node}'"
-        return self.sql_fetch_all(select_sql)
 
     # resource
     def _get_resource(self):
         res_used = []
         result = []
-        sql_res_all = "SELECT DISTINCT Resource,Allocated,DeviceName,InUse FROM resourcetb"
-        res_all = self.sql_fetch_all(sql_res_all)
 
-        sql_res_inuse = "SELECT DISTINCT Resource,Allocated,DeviceName,InUse FROM resourcetb WHERE InUse = 'InUse'"
-        in_use = self.sql_fetch_all(sql_res_inuse)
+        res_all = self.fet_all(self.select_all(['resourcetb'],'DISTINCT Resource','Allocated','DeviceName','InUse'))
+        in_use = self.fet_all(self.select(['resourcetb'],'DISTINCT Resource','Allocated','DeviceName','InUse',InUse='InUse'))
 
         for i in in_use:
             res_used.append(i[0])
@@ -268,94 +310,60 @@ class CollectData():
                 result.append(res)
             if res[0] not in res_used and res[3] == 'Unused':
                 result.append(res)
-
         return result
 
-    def _get_mirro_way(self, res):
-        select_sql = f"SELECT COUNT(Resource) FROM resourcetb WHERE Resource = '{res}'"
-        return self.sql_fetch_one(select_sql)
-
-    def _get_mirror_way_son(self, res):
-        select_sql = f"SELECT Node,StoragePool,InUse,State FROM resourcetb WHERE Resource = '{res}'"
-        return self.sql_fetch_all(select_sql)
-
-    # storagepool
-    # 查询storagepooltb全部信息
-    def _select_storagepooltb(self):
-        select_sql = "SELECT StoragePool,Node,Driver,PoolName,FreeCapacity,TotalCapacity,SupportsSnapshots,State FROM storagepooltb"
-        return self.sql_fetch_all(select_sql)
-
-    def _res_sum(self, node, stp):
-        select_sql = f"SELECT COUNT(DISTINCT Resource) FROM resourcetb WHERE Node = '{node}' AND StoragePool = '{stp}'"
-        num = self.sql_fetch_one(select_sql)
-        return num[0]
-
-    def _res(self, stp):
-        select_sql = f"SELECT Resource,Allocated,DeviceName,InUse,State FROM resourcetb WHERE StoragePool = '{stp}'"
-        return self.sql_fetch_all(select_sql)
-
-    def _node_num_of_storagepool(self, stp):
-        select_sql = f"SELECT COUNT(Node) FROM storagepooltb WHERE StoragePool = '{stp}'"
-        num = self.sql_fetch_one(select_sql)
-        return num[0]
-
-    def _node_name_of_storagepool(self, stp):
-        select_sql = f"SELECT Node FROM storagepooltb WHERE StoragePool = '{stp}'"
-        date_set = self.sql_fetch_all(select_sql)
-        if len(date_set) == 1:
-            names = date_set[0][0]
-        else:
-            names = [n[0] for n in date_set]
-        return names
 
     def process_data_node_all(self):
-        date_list = []
-        for i in self._select_nodetb_all():
+        data_list = []
+        node_data = self.fet_all(self.select_all(['nodetb'],'Node','NodeType','Addresses','State'))
+        for i in node_data:
             node, node_type, addr, status = i
-            res_num = self._select_res_num(node)[0]
-            stp_num = self._select_stp_num(node)[0]
+            res_num = self.select_count(['resourcetb'],'Resource',Node=node)
+            stp_num = self.select_count(['storagepooltb'],'Node',Node=node)
             list_one = [node, node_type, res_num, stp_num, addr, status]
-            date_list.append(list_one)
+            data_list.append(list_one)
         self.cur.close()
-        return date_list
+        return data_list
 
     # 置顶文字
-    def process_data_node_one(self, node):
-        n = self._select_nodetb_one(node)
+    def get_node_info(self, node):
+        n = self.fet_one(self.select(['nodetb'],'Node','NodeType','Addresses','State',Node=node))
         if n:
             node, node_type, addr, status = n
-            res_num = self._select_res_num(node)[0]
-            stp_num = self._select_stp_num(node)[0]
+            res_num = self.select_count(['resourcetb'],'Resource',Node=node)
+            stp_num = self.select_count(['storagepooltb'],'Node',Node=node)
             list = [node, node_type, res_num, stp_num, addr, status]
             return tuple(list)
         else:
             return []
 
+
     def process_data_node_specific(self, node):
         date_list = []
-        for res_data in self._select_resourcetb(node):
-            date_list.append(list(res_data))
+        res_data = self.fet_all(self.select(['resourcetb'],'Resource','StoragePool','Allocated','DeviceName','InUse','State',Node=node))
+        for res_data_one in res_data:
+            date_list.append(list(res_data_one))
         return date_list
 
     def process_data_resource_all(self):
-        date_list = []
+        data_list = []
         for i in self._get_resource():
             if i[1]:  # 过滤size为空的resource
                 resource, size, device_name, used = i
-                mirror_way = self._get_mirro_way(str(i[0]))[0]
+                mirror_way = self.select_count(['resourcetb'], 'Resource', Resource=resource)
                 list_one = [resource, mirror_way, size, device_name, used]
-                date_list.append(list_one)
+                data_list.append(list_one)
         self.cur.close()
-        return date_list
+        return data_list
 
     # 置顶文字
-    def process_data_resource_one(self, resource):
+    def get_res_info(self, resource):
         list_one = []
         for i in self._get_resource():
             if i[0] == resource:
                 if i[1]:
                     resource, size, device_name, used = i
-                    mirror_way = self._get_mirro_way(str(i[0]))[0]
+                    mirror_way = self.select_count(['resourcetb'],'Resource',Resource=resource)
                     list_one = [resource, mirror_way, size, device_name, used]
         return tuple(list_one)
 
@@ -363,7 +371,8 @@ class CollectData():
 
     def process_data_resource_specific(self, resource):
         data_list = []
-        for res_one in self._get_mirror_way_son(resource):
+        res_data = self.fet_all(self.select(['resourcetb'],'Node','StoragePool','InUse','State',Resource=resource))
+        for res_one in res_data:
             node_name, stp_name, drbd_role, status = list(res_one)
             if drbd_role == u'InUse':
                 drbd_role = u'primary'
@@ -376,9 +385,10 @@ class CollectData():
 
     def process_data_stp_all(self):
         date_list = []
-        for i in self._select_storagepooltb():
+        sp_data = self.fet_all(self.select_all(['storagepooltb'],'StoragePool','Node','Driver','PoolName','FreeCapacity','TotalCapacity','SupportsSnapshots','State'))
+        for i in sp_data:
             stp_name, node_name, driver, pool_name, free_size, total_size, snapshots, status = i
-            res_num = self._res_sum(str(node_name), str(stp_name))
+            res_num = self.select_count(['resourcetb'], 'Resource', Node=node_name, StoragePool=stp_name)
             list_one = [
                 stp_name,
                 node_name,
@@ -393,11 +403,22 @@ class CollectData():
         self.cur.close()
         return date_list
 
+
+    def get_sp_info(self,sp):
+        node_num = self.select_count(['storagepooltb'],'Node',StoragePool=sp)
+        node = self.fet_all(self.select(['storagepooltb'], 'Node', StoragePool=sp))
+        if len(node) == 1:
+            names = node[0][0]
+        else:
+            names = [n[0] for n in node]
+        return (node_num,sp,names)
+
     def process_data_stp_all_of_node(self, node):
-        date_list = []
-        for i in self._select_storagepooltb():
+        data_list = []
+        sp_data = self.fet_all(self.select_all(['storagepooltb'],'StoragePool','Node','Driver','PoolName','FreeCapacity','TotalCapacity','SupportsSnapshots','State'))
+        for i in sp_data:
             stp_name, node_name, driver, pool_name, free_size, total_size, snapshots, status = i
-            res_num = self._res_sum(str(node_name), str(stp_name))
+            res_num = self.select_count(['resourcetb'],'Resource',Node=node_name,StoragePool=stp_name)
             if node_name == node:
                 list_one = [
                     stp_name,
@@ -409,18 +430,16 @@ class CollectData():
                     total_size,
                     snapshots,
                     status]
-                date_list.append(list_one)
+                data_list.append(list_one)
         self.cur.close()
-        return date_list
+        return data_list
 
     def process_data_stp_specific(self, stp):
         date_list = []
-        for res in self._res(stp):
+        res_data = self.select(['resourcetb'], 'Resource', 'Allocated', 'DeviceName', 'InUse', 'State', StoragePool=stp)
+        for res in res_data:
             res_name, size, device_name, used, status = res
             list_one = [res_name, size, device_name, used, status]
             date_list.append(list_one)
         self.cur.close()
         return date_list
-
-
-# coo = CollectData()
