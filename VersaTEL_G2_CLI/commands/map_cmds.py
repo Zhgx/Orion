@@ -75,10 +75,10 @@ class MapCommands():
     def create(self, args):
         map = ex.Map()
         if args.gui == 'gui':
-            data = pickle.dumps(map.pre_check_create_map(args.map, args.hg, args.dg))
+            data = pickle.dumps(map.create_map(args.map, args.hg, args.dg))
             sd.send_via_socket(data)
         else:
-            map.pre_check_create_map(args.map, args.hg, args.dg)
+            map.create_map(args.map, args.hg, args.dg)
 
     @sd.record_exception
     def show(self, args):
@@ -91,7 +91,7 @@ class MapCommands():
     @sd.record_exception
     def delete(self, args):
         map = ex.Map()
-        map.pre_check_delete_map(args.map)
+        map.delete_map(args.map)
 
     def print_map_help(self, *args):
         self.map_parser.print_help()

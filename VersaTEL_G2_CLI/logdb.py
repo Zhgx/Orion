@@ -3,32 +3,60 @@ import os
 import sqlite3
 import consts
 
-list_cmd = []
-
+LOG_PATH = "./VersaTEL_G2_CLI.log"
+LOG_FILE_NAME = 'VersaTEL_G2_CLI.log'
 
 def prepare_db():
     db = LogDB()
-    db.produce_logdb()
     consts.set_glo_db(db)
+    _fill_db_with_log()
 
 
 def isFileExists(strfile):
     # 检查文件是否存在
     return os.path.isfile(strfile)
 
+def _fill_db_with_log():
+    id = (None,)
+    re_ = re.compile(r'\[(.*?)\] \[(.*?)\] \[(.*?)\] \[(.*?)\] \[(.*?)\] \[(.*?)\] \[(.*?)\] \[(.*?\]?)\]\|',
+                     re.DOTALL)
 
-def get_target_file(filename):
+    db = consts.glo_db()
+    all_log_data = _read_log_files()
+    all_data = re_.findall(all_log_data)
+
+    for data in all_data:
+        data = id + data
+        db.insert_data(data)
+
+    db.con.commit()
+
+
+
+def _read_log_files():
+    all_data = ''
+    if not isFileExists(LOG_PATH):
+        print('no log file')
+        return
+    for file in _get_log_files(LOG_FILE_NAME):
+        f = open('./' + file)
+        data = f.read()
+        all_data+=data
+        f.close()
+    return all_data
+
+
+def _get_log_files(base_log_file):
     list_file = []
-    file_last = None
     all_file = (os.listdir('.'))
     for file in all_file:
-        if filename in file:
+        if base_log_file in file:
             list_file.append(file)
     list_file.sort(reverse=True)
     return list_file
 
 
-#[2020/08/06 16:55:51] [vinceshen] [user_input] [1596704151] [/Users/vinceshen/Desktop/vt2_replay/VersaTEL_G3_Code/VersaTEL_G2_CLI] [] [vtel_client_main.py re -t 1596703839]
+
 class LogDB():
     create_table_sql = '''
     create table if not exists logtable(
@@ -65,14 +93,17 @@ class LogDB():
     def __init__(self):
         self.con = sqlite3.connect("logDB.db", check_same_thread=False)
         self.cur = self.con.cursor()
-        self.drop_tb()
+        self._drop_table()
+        self._create_table()
+
+    def insert_data(self, data):
+        self.cur.execute(self.insert_sql, data)
+
+    def _create_table(self):
         self.cur.execute(self.create_table_sql)
         self.con.commit()
 
-    def insert(self, data):
-        self.cur.execute(self.insert_sql, data)
-
-    def drop_tb(self):
+    def _drop_table(self):
         self.cur.execute(self.drop_table_sql)
         self.con.commit()
 
@@ -165,23 +196,3 @@ class LogDB():
         else:
             return ('','')
 
-    def produce_logdb(self):
-        log_path = "./VersaTEL_G2_CLI.log"
-        logfilename = 'VersaTEL_G2_CLI.log'
-        id = (None,)
-        re_ = re.compile(r'\[(.*?)\] \[(.*?)\] \[(.*?)\] \[(.*?)\] \[(.*?)\] \[(.*?)\] \[(.*?)\] \[(.*?\]?)\]\|', re.DOTALL)
-        if not isFileExists(log_path):
-            print('no file')
-            return
-
-        for file in get_target_file(logfilename):
-            f = open('./' + file)
-            content = f.read()
-            file_data = re_.findall(content)
-
-            for data_one in file_data:
-                data = id + data_one
-                self.insert(data)
-
-            f.close()
-        self.con.commit()

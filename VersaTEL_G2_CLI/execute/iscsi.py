@@ -75,7 +75,7 @@ class Host():
         if self.js.check_key('Host', host)['result']:
             if self.js.check_value('HostGroup', host)['result']:
                 s.prt_log(
-                    "Fail! The host in ... hostgroup, Please delete the hostgroup first.",1)
+                    "Fail! The host in ... hostgroup.Please delete the hostgroup first",1)
             else:
                 self.js.delete_data('Host', host)
                 s.prt_log("Dexlete success!",0)
@@ -93,19 +93,16 @@ class DiskGroup():
 
     def create_diskgroup(self, diskgroup, disk):
         if self.js.check_key('DiskGroup', diskgroup)['result']:
-            print(f'Fail! The Disk Group {diskgroup} already existed.')
+            s.prt_log(f'Fail! The Disk Group {diskgroup} already existed.',1)
         else:
-            t = True
             for i in disk:
                 if self.js.check_key('Disk', i)['result'] == False:
-                    t = False
-                    print(f"Fail! Can't find {i}")
-            if t:
-                self.js.add_data('DiskGroup', diskgroup, disk)
-                print("Create success!")
-                return True
-            else:
-                print("Fail! Please give the true name.")
+                    s.prt_log(f"Fail! Can't find {i}.Please give the true name.",1)
+                    return
+
+            self.js.add_data('DiskGroup', diskgroup, disk)
+            s.prt_log("Create success!",0)
+            return True
 
 
     def get_all_diskgroup(self):
@@ -150,17 +147,15 @@ class HostGroup():
         if self.js.check_key('HostGroup', hostgroup)['result']:
             s.prt_log(f'Fail! The HostGroup {hostgroup} already existed.',1)
         else:
-            t = True
             for i in host:
                 if self.js.check_key('Host', i)['result'] == False:
-                    t = False
-                    s.prt_log(f"Fail! Can't find {i}",1)
-            if t:
-                self.js.add_data('HostGroup', hostgroup, host)
-                s.prt_log("Create success!",0)
-                return True
-            else:
-                s.prt_log("Fail! Please give the true name.",1)
+                    s.prt_log(f"Fail! Can't find {i}.Please give the true name.",1)
+                    return
+
+            self.js.add_data('HostGroup', hostgroup, host)
+            s.prt_log("Create success!",0)
+            return True
+
 
     def get_all_hostgroup(self):
         return self.js.get_data("HostGroup")
@@ -212,10 +207,7 @@ class Map():
             if self.js.check_value('Map', dg)['result']:
                 s.prt_log("The diskgroup already map",1)
             else:
-                if self.create_map(hg, dg):
-                    self.js.add_data('Map', map, [hg, dg])
-                    s.prt_log('Create success!',0)
-                    return True
+                return True
 
     def get_initiator(self, hg):
         # 根据hg去获取hostiqn，返回由hostiqn组成的initiator
@@ -246,7 +238,11 @@ class Map():
                     drdb_list.append([res[1], res[4], res[5]])  # 取Resource,MinorNr,DeviceName
         return drdb_list
 
-    def create_map(self, hg, dg):
+    def create_map(self, map,hg, dg):
+        # 创建前的检查
+        if not self.pre_check_create_map(map,hg,dg):
+            return
+
         obj_crm = CRMConfig()
         initiator = self.get_initiator(hg)
         target_name, target_iqn = self.get_target()
@@ -264,10 +260,14 @@ class Map():
                     obj_crm.start_res(res)
                 else:
                     s.prt_log("create colocation and order fail",1)
+                    return False
             else:
                 s.prt_log('Failde to create resource!',1)
-        return True
+                return False
 
+        self.js.add_data('Map', map, [hg, dg])
+        s.prt_log('Create success!', 0)
+        return True
 
     def get_all_map(self):
         return self.js.get_data("Map")
@@ -315,19 +315,20 @@ class Map():
 
     def pre_check_delete_map(self, map):
         if self.js.check_key('Map', map)['result']:
-            dg = self.js.get_data('Map').get(map)[1]
-            res_name = self.js.get_data('DiskGroup').get(dg)
-            if self.delete_map(res_name):
-                self.js.delete_data('Map', map)
-                s.prt_log("Delete success!",0)
+            return True
         else:
             s.prt(f"Fail! Can't find {map}",1)
 
     # 调用crm删除map
-    def delete_map(self, resname):
+    def delete_map(self, map):
+        if not self.pre_check_delete_map(map):
+            return
         obj_crm = CRMConfig()
         crm_data = CRMData()
         crm_config_statu = crm_data.crm_conf_data
+        dg = self.js.get_data('Map').get(map)[1]
+        resname = self.js.get_data('DiskGroup').get(dg)
+
         if 'ERROR' in crm_config_statu:
             s.prt_log("Could not perform requested operations, are you root?",1)
         else:
@@ -336,4 +337,6 @@ class Map():
                     s.prt_log(f"delete {disk}",0)
                 else:
                     return False
+            self.js.delete_data('Map', map)
+            s.prt_log("Delete success!", 0)
             return True

@@ -2,7 +2,6 @@ from .crm import CRMData
 from .crm import CRMConfig
 from .linstor import Linstor
 from .lvm import LVM
-from .stor import Stor
 from .stor import Resource
 from .stor import Node
 from .stor import StoragePool

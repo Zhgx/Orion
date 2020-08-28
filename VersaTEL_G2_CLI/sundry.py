@@ -209,7 +209,7 @@ def cmd_decorator(type):
                     cmd_result = logdb.get_oprt_result(id_result['oprt_id'])
                 else:
                     cmd_result = {'time':'','result':''}
-                if type == 'crm' and cmd_result['result']:
+                if type != 'sys cmd' and cmd_result['result']:
                     result = eval(cmd_result['result'])
                 else:
                     result = cmd_result['result']

@@ -313,14 +313,14 @@ class CollectData(LinstorDB):
         return result
 
 
-    def process_data_node_all(self):
+    def get_all_node(self):
         data_list = []
         node_data = self.fet_all(self.select_all(['nodetb'],'Node','NodeType','Addresses','State'))
         for i in node_data:
             node, node_type, addr, status = i
             res_num = self.select_count(['resourcetb'],'Resource',Node=node)
-            stp_num = self.select_count(['storagepooltb'],'Node',Node=node)
-            list_one = [node, node_type, res_num, stp_num, addr, status]
+            sp_num = self.select_count(['storagepooltb'],'Node',Node=node)
+            list_one = [node, node_type, res_num, sp_num, addr, status]
             data_list.append(list_one)
         self.cur.close()
         return data_list
@@ -331,21 +331,44 @@ class CollectData(LinstorDB):
         if n:
             node, node_type, addr, status = n
             res_num = self.select_count(['resourcetb'],'Resource',Node=node)
-            stp_num = self.select_count(['storagepooltb'],'Node',Node=node)
-            list = [node, node_type, res_num, stp_num, addr, status]
+            sp_num = self.select_count(['storagepooltb'],'Node',Node=node)
+            list = [node, node_type, res_num, sp_num, addr, status]
             return tuple(list)
         else:
             return []
 
 
-    def process_data_node_specific(self, node):
+    def get_one_node(self, node):
         date_list = []
         res_data = self.fet_all(self.select(['resourcetb'],'Resource','StoragePool','Allocated','DeviceName','InUse','State',Node=node))
         for res_data_one in res_data:
             date_list.append(list(res_data_one))
         return date_list
 
-    def process_data_resource_all(self):
+
+    def get_sp_in_node(self, node):
+        data_list = []
+        sp_data = self.fet_all(self.select_all(['storagepooltb'],'StoragePool','Node','Driver','PoolName','FreeCapacity','TotalCapacity','SupportsSnapshots','State'))
+        for i in sp_data:
+            sp_name, node_name, driver, pool_name, free_size, total_size, snapshots, status = i
+            res_num = self.select_count(['resourcetb'],'Resource',Node=node_name,StoragePool=sp_name)
+            if node_name == node:
+                list_one = [
+                    sp_name,
+                    node_name,
+                    res_num,
+                    driver,
+                    pool_name,
+                    free_size,
+                    total_size,
+                    snapshots,
+                    status]
+                data_list.append(list_one)
+        self.cur.close()
+        return data_list
+
+
+    def get_all_res(self):
         data_list = []
         for i in self._get_resource():
             if i[1]:  # 过滤size为空的resource
@@ -369,28 +392,29 @@ class CollectData(LinstorDB):
 
 
 
-    def process_data_resource_specific(self, resource):
+    def get_one_res(self, resource):
         data_list = []
         res_data = self.fet_all(self.select(['resourcetb'],'Node','StoragePool','InUse','State',Resource=resource))
         for res_one in res_data:
-            node_name, stp_name, drbd_role, status = list(res_one)
+            node_name, sp_name, drbd_role, status = list(res_one)
             if drbd_role == u'InUse':
                 drbd_role = u'primary'
             elif drbd_role == u'Unused':
                 drbd_role = u'secondary'
-            list_one = [node_name, stp_name, drbd_role, status]
+            list_one = [node_name, sp_name, drbd_role, status]
             data_list.append(list_one)
         self.cur.close()
         return data_list
 
-    def process_data_stp_all(self):
+
+    def get_all_sp(self):
         date_list = []
         sp_data = self.fet_all(self.select_all(['storagepooltb'],'StoragePool','Node','Driver','PoolName','FreeCapacity','TotalCapacity','SupportsSnapshots','State'))
         for i in sp_data:
-            stp_name, node_name, driver, pool_name, free_size, total_size, snapshots, status = i
-            res_num = self.select_count(['resourcetb'], 'Resource', Node=node_name, StoragePool=stp_name)
+            sp_name, node_name, driver, pool_name, free_size, total_size, snapshots, status = i
+            res_num = self.select_count(['resourcetb'], 'Resource', Node=node_name, StoragePool=sp_name)
             list_one = [
-                stp_name,
+                sp_name,
                 node_name,
                 res_num,
                 driver,
@@ -413,30 +437,10 @@ class CollectData(LinstorDB):
             names = [n[0] for n in node]
         return (node_num,sp,names)
 
-    def process_data_stp_all_of_node(self, node):
-        data_list = []
-        sp_data = self.fet_all(self.select_all(['storagepooltb'],'StoragePool','Node','Driver','PoolName','FreeCapacity','TotalCapacity','SupportsSnapshots','State'))
-        for i in sp_data:
-            stp_name, node_name, driver, pool_name, free_size, total_size, snapshots, status = i
-            res_num = self.select_count(['resourcetb'],'Resource',Node=node_name,StoragePool=stp_name)
-            if node_name == node:
-                list_one = [
-                    stp_name,
-                    node_name,
-                    res_num,
-                    driver,
-                    pool_name,
-                    free_size,
-                    total_size,
-                    snapshots,
-                    status]
-                data_list.append(list_one)
-        self.cur.close()
-        return data_list
 
-    def process_data_stp_specific(self, stp):
+    def get_one_sp(self, sp):
         date_list = []
-        res_data = self.select(['resourcetb'], 'Resource', 'Allocated', 'DeviceName', 'InUse', 'State', StoragePool=stp)
+        res_data = self.select(['resourcetb'], 'Resource', 'Allocated', 'DeviceName', 'InUse', 'State', StoragePool=sp)
         for res in res_data:
             res_name, size, device_name, used, status = res
             list_one = [res_name, size, device_name, used, status]

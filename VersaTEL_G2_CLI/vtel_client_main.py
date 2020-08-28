@@ -3,7 +3,7 @@ import traceback
 import sys
 import pickle
 import linstordb
-import replay
+import logdb
 import log
 import sundry
 import consts
@@ -245,7 +245,7 @@ class VtelCLI(object):
         if args.subargs_vtel:
             if args.subargs_vtel in ['re', 'replay']:
                 consts.set_glo_rpl('yes')
-                replay.prepare_db()
+                logdb.prepare_db()
                 cmd = self.replay_collect(args)
                 self.replay_run(cmd)
             else:
