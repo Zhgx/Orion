@@ -30,7 +30,6 @@ class Linstor():
             s.prt_log('The data cannot be read, please check whether LINSTOR is normal.',2)
             sys.exit()
 
-        self.logger.write_to_log('DATA','value','list','refine_linstor',list_data_all)
         return list_data_all
 
     def get_linstor_data(self,cmd):

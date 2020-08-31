@@ -128,20 +128,24 @@ class LogDB():
 
 
     def get_userinput_via_tid(self, transaction_id):
-        sql = f"SELECT describe2,data FROM logtable WHERE describe1 = 'cmd_input' and transaction_id = '{transaction_id}'"
+        sql = f"SELECT data FROM logtable WHERE describe1 = 'cmd_input' and transaction_id = '{transaction_id}'"
         result = self.sql_fetch_one(sql)
         if result:
-            args_type, cmd = self.sql_fetch_one(sql)
-            return [{'tid':transaction_id,'type':args_type,'cmd':cmd}]
+            result = eval(result)
+            return {'tid':transaction_id, 'valid':result['valid'],'cmd':result['cmd']}
+        # if result:
+        #     args_type, cmd = self.sql_fetch_one(sql)
+        #     return [{'tid':transaction_id,'type':args_type,'cmd':cmd}]
 
 
     def get_userinput_via_time(self, start_time, end_time):
-        sql = f"SELECT transaction_id,describe2,data FROM logtable WHERE describe1 = 'cmd_input' and time >= '{start_time}' and time <= '{end_time}'"
+        sql = f"SELECT transaction_id,data FROM logtable WHERE describe1 = 'cmd_input' and time >= '{start_time}' and time <= '{end_time}'"
         all_data = self.sql_fetch_all(sql)
         result_list = []
         for i in all_data:
-            tid, args_type, cmd = i
-            dict_one = {'tid':tid, 'type':args_type, 'cmd':cmd}
+            tid, user_input = i
+            user_input = eval(user_input)
+            dict_one = {'tid':tid, 'valid':user_input['valid'], 'cmd':user_input['cmd']}
             result_list.append(dict_one)
         return result_list
 
@@ -151,7 +155,7 @@ class LogDB():
         result_list = []
         for i in all_data:
             tid, args_type, cmd = i
-            dict_one = {'tid':tid, 'type':args_type, 'cmd':cmd}
+            dict_one = {'tid':tid, 'valid':args_type, 'cmd':cmd}
             result_list.append(dict_one)
         return result_list
 

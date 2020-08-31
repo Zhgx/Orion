@@ -48,7 +48,7 @@ def record_exception(func):
         try:
             return func(self,*args)
         except Exception as e:
-            self.logger.write_to_log('DATA','debug','exception','', str(traceback.format_exc()))
+            self.logger.write_to_log('DATA','DEBUG','exception','', str(traceback.format_exc()))
             raise e
     return wrapper
 
@@ -82,7 +82,7 @@ def get_answer():
 
     if rpl == 'no':
         answer = input()
-        logger.write_to_log('DATA', 'input', 'confirm_input', 'confirm deletion', answer)
+        logger.write_to_log('DATA', 'INPUT', 'confirm_input', 'confirm deletion', answer)
     else:
         time,answer = logdb.get_anwser(transaction_id)
         if not time:
@@ -145,9 +145,9 @@ def re_search(re_string, tgt_stirng):
     logger = consts.glo_log()
     re_ = re.compile(re_string)
     oprt_id = create_oprt_id()
-    logger.write_to_log('OPRT','regular','search',oprt_id, {'re':re_,'string':tgt_stirng})
+    logger.write_to_log('OPRT','REGULAR','search',oprt_id, {'re':re_,'string':tgt_stirng})
     re_result = re_.search(tgt_stirng).group()
-    logger.write_to_log('DATA', 'regular', 'search', oprt_id, re_result)
+    logger.write_to_log('DATA', 'REGULAR', 'search', oprt_id, re_result)
     return re_result
 
 
@@ -198,9 +198,9 @@ def cmd_decorator(type):
             if RPL == 'no':
                 logger = consts.glo_log()
                 logger.write_to_log('DATA', 'STR', func_name, '', oprt_id)
-                logger.write_to_log('OPRT', 'cmd', type, oprt_id, cmd)
+                logger.write_to_log('OPRT', 'CMD', type, oprt_id, cmd)
                 result_cmd = func(cmd,func_name)
-                logger.write_to_log('DATA', 'cmd', type, oprt_id, result_cmd)
+                logger.write_to_log('DATA', 'CMD', type, oprt_id, result_cmd)
                 return result_cmd
             else:
                 logdb = consts.glo_db()
@@ -209,7 +209,7 @@ def cmd_decorator(type):
                     cmd_result = logdb.get_oprt_result(id_result['oprt_id'])
                 else:
                     cmd_result = {'time':'','result':''}
-                if type != 'sys cmd' and cmd_result['result']:
+                if type != 'sys' and cmd_result['result']:
                     result = eval(cmd_result['result'])
                 else:
                     result = cmd_result['result']
@@ -222,7 +222,7 @@ def cmd_decorator(type):
     return decorate
 
 
-@cmd_decorator('sys cmd')
+@cmd_decorator('sys')
 def execute_cmd(cmd, func_name, timeout=60):
     p = subprocess.Popen(cmd, stderr=subprocess.STDOUT, stdout=subprocess.PIPE, shell=True)
     t_beginning = time.time()
@@ -239,42 +239,6 @@ def execute_cmd(cmd, func_name, timeout=60):
     return output
 
 
-
-@cmd_decorator('crm')
-def execute_crm_cmd(cmd, func_name, timeout=60):
-    """
-    Execute the command cmd to return the content of the command output.
-    If it times out, a TimeoutError exception will be thrown.
-    cmd - Command to be executed
-    timeout - The longest waiting time(unit:second)
-    """
-    p = subprocess.Popen(cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
-    t_beginning = time.time()
-    seconds_passed = 0
-    output = None
-    while True:
-        if p.poll() is not None:
-            break
-        seconds_passed = time.time() - t_beginning
-        if timeout and seconds_passed > timeout:
-            p.terminate()
-            raise TimeoutError(cmd, timeout)
-        time.sleep(0.1)
-    out, err = p.communicate()
-    if len(out) > 0:
-        out = out.decode()
-        output = {'sts': 1, 'rst': out}
-    elif len(err) > 0:
-        err = err.decode()
-        output = {'sts': 0, 'rst': err}
-    elif out == b'':  # 需要再考虑一下 res stop 执行成功没有返回，stop失败也没有返回（无法判断stop成不成功）
-        out = out.decode()
-        output = {'sts': 1, 'rst': out}
-
-    if output:
-        return output
-    else:
-        handle_exception()
 
 
 def prt(str, warning_level=0):
@@ -309,11 +273,11 @@ def prt_log(str, warning_level):
         prt(str, warning_level)
 
     if warning_level == 0:
-        logger.write_to_log('INFO', 'info', 'finish','output',str)
+        logger.write_to_log('INFO', 'INFO', 'finish','output',str)
     elif warning_level == 1:
-        logger.write_to_log('INFO', 'warning', 'fail', 'output', str)
+        logger.write_to_log('INFO', 'WARNING', 'fail', 'output', str)
     elif warning_level == 2:
-        logger.write_to_log('INFO', 'error', 'exit', 'output', str)
+        logger.write_to_log('INFO', 'ERROR', 'exit', 'output', str)
 
 
 def color_data(func):

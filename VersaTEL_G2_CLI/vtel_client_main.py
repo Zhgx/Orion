@@ -21,26 +21,27 @@ from commands import (
 
 class MyArgumentParser(argparse.ArgumentParser):
     def parse_args(self, args=None, namespace=None):
-        logger = consts.glo_log()
+        # logger = consts.glo_log()
         args, argv = self.parse_known_args(args, namespace)
         if argv:
             msg = ('unrecognized arguments: %s')
-            logger.write_to_log('INFO','error','exit','args error',(msg % ' '.join(argv)))
+            # logger.write_to_log('INFO','error','exit','args error',(msg % ' '.join(argv)))
             self.error(msg % ' '.join(argv))
         return args
 
     def print_usage(self, file=None):
         logger = consts.glo_log()
         cmd = ' '.join(sys.argv[1:])
-        logger.write_to_log('DATA', 'input', 'cmd_input', 'err', cmd)
-        logger.write_to_log('INFO', 'info', 'finish','', 'print usage')
+        path = sundry.get_path()
+        logger.write_to_log('DATA', 'INFO', 'cmd_input', path, {'valid':'1','cmd':cmd})
+        logger.write_to_log('INFO', 'INFO', 'finish','', 'print usage')
         if file is None:
             file = sys.stdout
         self._print_message(self.format_usage(), file)
 
     def print_help(self, file=None):
         logger = consts.glo_log()
-        logger.write_to_log('INFO', 'info', 'finish','', 'print help')
+        logger.write_to_log('INFO', 'INFO', 'finish','', 'print help')
         if file is None:
             file = sys.stdout
         self._print_message(self.format_help(), file)
@@ -191,50 +192,107 @@ class VtelCLI(object):
             self.parser_iscsi.print_help()
 
 
-    def replay_run(self,cmd_list):
-        if not cmd_list:
+    # def replay_run(self,cmd_list):
+    #     if not cmd_list:
+    #         print('不存在命令去进行replay')
+    #         return
+    #
+    #     trasanction_num = len(cmd_list)
+    #
+    #
+    #     for replay_cmd in cmd_list:
+    #         print(f"--------------transaction:{replay_cmd['tid']}--------------")
+    #         consts.set_glo_tsc_id(replay_cmd['tid'] )
+    #         if replay_cmd:
+    #             print(replay_cmd)
+    #             if not replay_cmd['valid'] == 0:
+    #                 replay_args = self._parser.parse_args(replay_cmd['user_input']['cmd'].split())
+    #                 print(f"* 执行命令：{replay_cmd['user_input']['cmd']} *")
+    #                 try:
+    #                     replay_args.func(replay_args)
+    #                 except consts.ReplayExit:
+    #                     print('该事务replay结束')
+    #                 except Exception:
+    #                     print(str(traceback.format_exc()))
+    #             else:
+    #                 print(f"该命令{replay_cmd['cmd']}有误，无法执行")
+    #
+    #             # if not replay_cmd['type'] == 'err':
+    #             #     replay_args = self._parser.parse_args(replay_cmd['cmd'].split())
+    #             #     print(f"* 执行命令：{replay_cmd['cmd']} *")
+    #             #     try:
+    #             #         replay_args.func(replay_args)
+    #             #     except consts.ReplayExit:
+    #             #         print('该事务replay结束')
+    #             #     except Exception:
+    #             #         print(str(traceback.format_exc()))
+    #             #
+    #             # else:
+    #             #     print(f"该命令{replay_cmd['cmd']}有误，无法执行")
+    #         else:
+    #             print('该事务id:不存在或者不符合replay条件（python vtel_client_main）')
+
+
+    def replay_one(self,dict_input):
+        if not dict_input:
             print('不存在命令去进行replay')
             return
+        print(f"--------------transaction:{dict_input['tid']}--------------")
+        consts.set_glo_tsc_id(dict_input['tid'])
+        if not dict_input['valid'] == 0:
+            replay_args = self._parser.parse_args(dict_input['cmd'].split())
+            print(f"* 执行命令：{dict_input['cmd']} *")
+            try:
+                replay_args.func(replay_args)
+            except consts.ReplayExit:
+                print('该事务replay结束')
+            except Exception:
+                print(str(traceback.format_exc()))
 
-        for replay_cmd in cmd_list:
-            print(f"--------------transaction:{replay_cmd['tid']}--------------")
-            consts.set_glo_tsc_id(replay_cmd['tid'] )
-            if replay_cmd:
-                if not replay_cmd['type'] == 'err':
-                    replay_args = self._parser.parse_args(replay_cmd['cmd'].split())
-                    print(f"* 执行命令：{replay_cmd['cmd']} *")
-                    try:
-                        replay_args.func(replay_args)
-                    except consts.ReplayExit:
-                        print('该事务replay结束')
-                    except Exception:
-                        print(str(traceback.format_exc()))
-
-                else:
-                    print(f"该命令{replay_cmd['cmd']}有误，无法执行")
-            else:
-                print('该事务id:不存在或者不符合replay条件（python vtel_client_main）')
+        else:
+            print(f"该命令{dict_input['cmd']}有误，无法执行")
 
 
-    def replay_collect(self,args):
+    def replay_more(self,dict_input):
+        transaction_num = len(dict_input)
+        print('* MODE : REPLAY *')
+        print(f'transaction num : {transaction_num}')
+
+        number_list = [str(i) for i in list(range(1,len(dict_input)+1))]
+        for i in range(len(dict_input)):
+            print(f"{i+1} transaction:{dict_input[i]['tid']} cmd:{dict_input[i]['cmd']}")
+
+        print('请输入要执行replay的序号，或者all：')
+        answer = input()
+        if answer in number_list:
+            dict_cmd = dict_input[int(answer)-1]
+            self.replay_one(dict_cmd)
+
+        elif answer == 'all':
+            for dict_cmd in dict_input:
+                self.replay_one(dict_cmd)
+
+
+    def replay(self,args):
         logdb = consts.glo_db()
         consts.set_glo_log_switch('no')
         if args.transactionid and args.date:
             print('Please specify only one type of data for replay')
             return
         elif args.transactionid:
-            cmd_list = logdb.get_userinput_via_tid(args.transactionid)
+            dict_cmd = logdb.get_userinput_via_tid(args.transactionid)
+            print('* MODE : REPLAY *')
+            print(f'transaction num : 1')
+            self.replay_one(dict_cmd)
         elif args.date:
-            cmd_list = logdb.get_userinput_via_time(args.date[0],args.date[1])
+            dict_cmd = logdb.get_userinput_via_time(args.date[0],args.date[1])
+            self.replay_more(dict_cmd)
         else:
-            cmd_list = logdb.get_all_transaction()
-        return cmd_list
+            dict_cmd = logdb.get_all_transaction()
+            self.replay_more(dict_cmd)
+        return dict_cmd
 
 
-
-
-    def run(self,args):
-        pass
 
 
     def parse(self):
@@ -246,13 +304,14 @@ class VtelCLI(object):
             if args.subargs_vtel in ['re', 'replay']:
                 consts.set_glo_rpl('yes')
                 logdb.prepare_db()
-                cmd = self.replay_collect(args)
-                self.replay_run(cmd)
+                # cmd = self.replay_collect(args)
+                # self.replay_run_date(cmd)
+                self.replay(args)
             else:
-                self.logger.write_to_log('DATA','input','cmd_input',path,cmd)
+                self.logger.write_to_log('DATA','INPUT','cmd_input',path,{'valid':'0','cmd':cmd})
                 args.func(args)
         else:
-            self.logger.write_to_log('DATA','input','cmd_input', path, cmd)
+            self.logger.write_to_log('DATA','INPUT','cmd_input', path, {'valid':'0','cmd':cmd})
             self._parser.print_help()
 
 
