@@ -267,7 +267,6 @@ class LinstorDB(Database):
         self.insert_data(self.replace_rtb_sql, res,'resourcetb')
         self.insert_data(self.replace_stb_sql, sp,'storagepooltb')
 
-    # 插入数据
     @s.sql_insert_decorator
     def insert_data(self, sql, list_data,tablename):
         for i in range(len(list_data)):

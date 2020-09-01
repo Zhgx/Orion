@@ -147,15 +147,18 @@ class LogDB():
             user_input = eval(user_input)
             dict_one = {'tid':tid, 'valid':user_input['valid'], 'cmd':user_input['cmd']}
             result_list.append(dict_one)
+
         return result_list
 
+    # 需要修改
     def get_all_transaction(self):
-        sql = "SELECT transaction_id,describe2,data FROM logtable WHERE describe1 = 'cmd_input'"
+        sql = "SELECT transaction_id,data FROM logtable WHERE describe1 = 'cmd_input'"
         all_data = self.sql_fetch_all(sql)
         result_list = []
         for i in all_data:
-            tid, args_type, cmd = i
-            dict_one = {'tid':tid, 'valid':args_type, 'cmd':cmd}
+            tid, user_input = i
+            user_input = eval(user_input)
+            dict_one = {'tid':tid, 'valid':user_input['valid'], 'cmd':user_input['cmd']}
             result_list.append(dict_one)
         return result_list
 

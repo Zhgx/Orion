@@ -31,7 +31,7 @@ def judge_result(result):
         messege_war = get_war_mes(result)
         result = {'sts':1,'rst':messege_war}
     elif re_suc.search(result):
-        result = {'sts':0,'rst:':result}
+        result = {'sts':0,'rst':result}
     elif re_war.search(result):
         messege_war = get_war_mes(result)
         result = {'sts':2,'rst':messege_war}
@@ -275,6 +275,7 @@ class Resource():
     def linstor_create_rd(self, res):
         cmd = f'linstor rd c {res}'
         result = execute_linstor_cmd(cmd,s.get_function_name())
+        print('--------------:',result)
         if result['sts'] == 0:
             return True
         elif result['sts'] == 2:

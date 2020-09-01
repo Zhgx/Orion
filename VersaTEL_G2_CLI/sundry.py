@@ -14,6 +14,7 @@ from functools import wraps
 import colorama as ca
 import inspect
 import consts
+import pprint
 import execute
 
 
@@ -211,10 +212,13 @@ def cmd_decorator(type):
                     cmd_result = {'time':'','result':''}
                 if type != 'sys' and cmd_result['result']:
                     result = eval(cmd_result['result'])
+                    result_output = result['rst']
+
                 else:
                     result = cmd_result['result']
+                    result_output = cmd_result['result']
                 print(f"RE:{id_result['time']:<20} 执行系统命令：\n{cmd}")
-                print(f"RE:{cmd_result['time']:<20} 系统命令结果：\n{cmd_result['result']}")
+                print(f"RE:{cmd_result['time']:<20} 系统命令结果：\n{result_output}")
                 if id_result['db_id']:
                     change_pointer(id_result['db_id'])
             return result
@@ -325,7 +329,9 @@ def json_operate_decorator(str):
                     result = eval(json_result['result'])
                 else:
                     result = ''
-                print(f"RE:{id_result['time']} {str}：\n{result}")
+                print(f"RE:{id_result['time']} {str}:")
+                pprint.pprint(result)
+                print()
                 if id_result['db_id']:
                     change_pointer(id_result['db_id'])
             return result
@@ -349,7 +355,10 @@ def sql_insert_decorator(func):
             id_result = logdb.get_id(consts.glo_tsc_id(), func.__name__)
             func(self, sql, data, tablename)
             print(f"RE:{id_result['time']} 插入数据表: {tablename}")
-            print(f"RE:{id_result['time']} 插入数据：\n{data}")
+            print(f"RE:{id_result['time']} 插入数据:")
+            for i in data:
+                print(i)
+            print()
             if id_result['db_id']:
                 change_pointer(id_result['db_id'])
     return wrapper
