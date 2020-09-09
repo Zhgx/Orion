@@ -44,11 +44,11 @@ class MyArgumentParser(argparse.ArgumentParser):
             file = sys.stdout
         self._print_message(self.format_help(), file)
 
-    def _print_message(self, message, file=None):
-        if message:
-            if file is None:
-                file = sys.stderr
-            file.write(message)
+    # def _print_message(self, message, file=None):
+    #     if message:
+    #         if file is None:
+    #             file = sys.stderr
+    #         file.write(message)
 
 
 
@@ -60,11 +60,11 @@ class VtelCLI(object):
     def __init__(self):
         consts._init()
         self.username = sundry.get_username()
-        self.transaction_id = sundry.create_transaction_id()
+        self.transaction_id = sys.argv[-1] if '-gui' in sys.argv \
+            else sundry.create_transaction_id()
         self.logger = log.Log(self.username,self.transaction_id)
         consts.set_glo_log(self.logger)
         self.replay_args_list = []
-
         self._node_commands = NodeCommands()
         self._resource_commands = ResourceCommands()
         self._storagepool_commands = StoragePoolCommands()
@@ -87,6 +87,7 @@ class VtelCLI(object):
         subp = parser.add_subparsers(metavar='',
                                      dest='subargs_vtel')
 
+
         parser_stor = subp.add_parser(
             'stor',
             help='Management operations for LINSTOR',
@@ -99,9 +100,8 @@ class VtelCLI(object):
         parser_stor.add_argument(
             '-gui',
             dest='gui',
-            action='store_true',
-            help=argparse.SUPPRESS,
-            default=False)
+            action='store',
+            help=argparse.SUPPRESS)
 
         parser_iscsi = subp.add_parser(
             'iscsi',
@@ -112,9 +112,8 @@ class VtelCLI(object):
         parser_iscsi.add_argument(
             '-gui',
             dest='gui',
-            action='store_true',
-            help=argparse.SUPPRESS,
-            default=False)
+            action='store',
+            help=argparse.SUPPRESS)
 
 
         # replay function related parameter settings
@@ -147,6 +146,7 @@ class VtelCLI(object):
         parser_stor.set_defaults(func=self.send_database)
         # Set the binding function of iscsi
         parser_iscsi.set_defaults(func=self.send_json)
+        parser_replay.set_defaults(func=self.replay)
 
 
         # 绑定replay有问题
@@ -166,9 +166,13 @@ class VtelCLI(object):
         self._hostgroup_commands.setup_commands(subp_iscsi)
         self._map_commands.setup_commands(subp_iscsi)
 
-        parser.set_defaults(func=parser.print_help)
+        parser.set_defaults(func=self.print_vtel_help)
 
         return parser
+
+
+    def print_vtel_help(self,*args):
+        self._parser.print_help()
 
     # When using the parameter '-gui', send the database through the socket
     def send_database(self, args):
@@ -181,6 +185,7 @@ class VtelCLI(object):
 
     # When using the parameter '-gui', send the json through the socket
     def send_json(self, args):
+
         if args.gui:
             js = iscsi_json.JSON_OPERATION()
             data = js.read_json()
@@ -255,16 +260,16 @@ class VtelCLI(object):
 
         number_list = [str(i) for i in list(range(1,len(dict_input)+1))]
         for i in range(len(dict_input)):
-            print(f"{i+1} transaction:{dict_input[i]['tid']} cmd:{dict_input[i]['cmd']}")
+            print(f"{i+1:<3} Transaction ID: {dict_input[i]['tid']:<12} CMD: {dict_input[i]['cmd']}")
 
-
-        print('请输入要执行replay的序号，或者all：')
         answer = ''
         while answer != 'exit':
+            print('请输入要执行replay的序号，或者all，输入exit退出：')
             answer = input()
             if answer in number_list:
                 dict_cmd = dict_input[int(answer)-1]
                 self.replay_one(dict_cmd)
+                consts.set_glo_log_id(0)
 
             elif answer == 'all':
                 for dict_cmd in dict_input:
@@ -274,45 +279,40 @@ class VtelCLI(object):
 
 
     def replay(self,args):
-        logdb = consts.glo_db()
         consts.set_glo_log_switch('no')
+        consts.set_glo_rpl('yes')
+        obj_logdb = logdb.prepare_db()
         if args.transactionid and args.date:
             print('Please specify only one type of data for replay')
             return
         elif args.transactionid:
-            dict_cmd = logdb.get_userinput_via_tid(args.transactionid)
+            dict_cmd = obj_logdb.get_userinput_via_tid(args.transactionid)
             print('* MODE : REPLAY *')
             print(f'transaction num : 1')
             self.replay_one(dict_cmd)
         elif args.date:
-            dict_cmd = logdb.get_userinput_via_time(args.date[0],args.date[1])
+            dict_cmd = obj_logdb.get_userinput_via_time(args.date[0],args.date[1])
             self.replay_more(dict_cmd)
         else:
-            dict_cmd = logdb.get_all_transaction()
+            dict_cmd = obj_logdb.get_all_transaction()
             self.replay_more(dict_cmd)
         return dict_cmd
 
 
 
 
-    def parse(self):
+    def parse(self): # 调用入口
         args = self._parser.parse_args()
         path = sundry.get_path()
         cmd = ' '.join(sys.argv[1:])
 
         if args.subargs_vtel:
-            if args.subargs_vtel in ['re', 'replay']:
-                consts.set_glo_rpl('yes')
-                logdb.prepare_db()
-                # cmd = self.replay_collect(args)
-                # self.replay_run_date(cmd)
-                self.replay(args)
-            else:
-                self.logger.write_to_log('DATA','INPUT','cmd_input',path,{'valid':'0','cmd':cmd})
-                args.func(args)
+            if args.subargs_vtel not in ['re', 'replay']:
+                self.logger.write_to_log('DATA', 'INPUT', 'cmd_input', path, {'valid': '0', 'cmd': cmd})
         else:
             self.logger.write_to_log('DATA','INPUT','cmd_input', path, {'valid':'0','cmd':cmd})
-            self._parser.print_help()
+
+        args.func(args)
 
 
 def main():

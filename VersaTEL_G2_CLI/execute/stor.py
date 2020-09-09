@@ -275,7 +275,6 @@ class Resource():
     def linstor_create_rd(self, res):
         cmd = f'linstor rd c {res}'
         result = execute_linstor_cmd(cmd,s.get_function_name())
-        print('--------------:',result)
         if result['sts'] == 0:
             return True
         elif result['sts'] == 2:
@@ -302,6 +301,7 @@ class Resource():
 
     # 创建resource 自动
     def create_res_auto(self, res, size, num):
+        print('222')
         cmd = f'linstor r c {res} --auto-place {num}'
         if self.linstor_create_rd(res) is True and self.linstor_create_vd(res, size) is True:
             result = execute_linstor_cmd(cmd,s.get_function_name())

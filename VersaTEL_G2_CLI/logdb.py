@@ -10,6 +10,7 @@ def prepare_db():
     db = LogDB()
     consts.set_glo_db(db)
     _fill_db_with_log()
+    return db
 
 
 def isFileExists(strfile):

@@ -2,9 +2,9 @@
 import logging
 import logging.handlers
 import logging.config
-import consts
 
-path = '/home/samba/VersaTEL_G3_Code/VersaTEL_G2_CLI/'
+
+path = '/home/samba/VersaTEL_G3_Code/VersaTEL_G2_Daemon/'
 
 
 class MyLoggerAdapter(logging.LoggerAdapter):
@@ -21,11 +21,12 @@ class MyLoggerAdapter(logging.LoggerAdapter):
 
 class Log(object):
     fmt = logging.Formatter("%(asctime)s [%(transaction_id)s] [%(username)s] [%(type1)s] [%(type2)s] [%(describe1)s] [%(describe2)s] [%(data)s]|",datefmt = '[%Y/%m/%d %H:%M:%S]')
-    handler_input = logging.handlers.RotatingFileHandler(filename=f'{path}VersaTEL_G2_CLI.log',mode='a',maxBytes=10*1024*1024,backupCount=5)
+    handler_input = logging.handlers.RotatingFileHandler(filename=f'{path}VersaTEL_G2_Daemon.log',mode='a',maxBytes=10*1024*1024,backupCount=5)
     handler_input.setFormatter(fmt)
     def __init__(self,username,transaction_id):
         self.username = username
         self.transaction_id = transaction_id
+        self.logger = self.logger_input()
 
 
     def logger_input(self):
@@ -48,12 +49,11 @@ class Log(object):
 
     # write to log file
     def write_to_log(self,type1,type2,describe1,describe2,data):
-        logger_cli = self.logger_input()
-
-        if consts.glo_log_switch() == 'no':
-            logger_cli.logger.removeHandler(self.handler_input)
+        # logger_cli = self.logger_input()
+        # if consts.glo_log_switch() == 'no':
         # InputLogger.logger.removeHandler(self.handler_input)
-        logger_cli.debug(
+
+        self.logger.debug(
             '',
             extra={
                 'username': self.username,
@@ -63,3 +63,8 @@ class Log(object):
                 'describe1': describe1,
                 'describe2': describe2,
                 'data': data})
+
+
+    def close_log(self):
+        self.logger.logger.removeHandler(self.handler_input)
+

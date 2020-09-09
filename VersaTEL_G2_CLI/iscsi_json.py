@@ -57,9 +57,9 @@ class JSON_OPERATION():
     @s.json_operate_decorator('JSON检查key值的结果')
     def check_key(self,first_key,data_key):
         if data_key in self.json_data[first_key]:
-            return {'area':first_key,'target':data_key, 'result':True}
+            return {'type':first_key,'alias':data_key, 'result':True}
         else:
-            return {'area':first_key,'target':data_key, 'result':False}
+            return {'type':first_key,'alias':data_key, 'result':False}
 
 
     # 检查value值是否存在
@@ -67,8 +67,8 @@ class JSON_OPERATION():
     def check_value(self, first_key, data_value):
         for key in self.json_data[first_key]:
             if data_value in self.json_data[first_key][key]:
-                return {'area':first_key,'target':data_value,'result':True}
-        return {'area':first_key,'target':data_value,'result':False}
+                return {'type':first_key,'alias':data_value,'result':True}
+        return {'type':first_key,'alias':data_value,'result':False}
 
 
     # 更新disk 可能需要注意的地方：没有限制可以修改的key

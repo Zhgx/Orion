@@ -67,6 +67,14 @@ def set_glo_log_switch(value):
     set_value('LOG_SWITCH', value)
 
 
+def set_glo_gui_tid(value):
+    set_value('GUI_TID',value)
+
+
+def glo_gui_tid():
+    return get_value('GUI_TID')
+
+
 def glo_log():
     return get_value('LOG')
 

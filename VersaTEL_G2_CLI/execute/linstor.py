@@ -33,5 +33,8 @@ class Linstor():
         return list_data_all
 
     def get_linstor_data(self,cmd):
+        # 异常演示
+        # 1.cmd_result = s.get_cmd_result(sys._getframe().f_code.co_name, cmd, s.create_oprt_id())
+        # 2.cmd_result = s.execute_cmd(sys._getframe().f_code.co_name, cmd, s.create_oprt_id())
         cmd_result = s.execute_cmd(cmd,s.get_function_name())
         return self.refine_linstor(cmd_result)

@@ -15,7 +15,7 @@ import colorama as ca
 import inspect
 import consts
 import pprint
-import execute
+import log
 
 
 def get_function_name():
@@ -25,13 +25,18 @@ def get_function_name():
 # Connect to the socket server and transfer data, and finally close the
 # connection.
 def send_via_socket(data):
-    ip = "10.203.1.151"
+    ip = "10.203.1.76"
     port = 12144
 
     client = socket.socket()
     client.connect((ip, port))
-    judge_conn = client.recv(8192).decode()
-    print(judge_conn)
+
+    tid = client.recv(8192).decode()
+    print('CLI 接收到的东西：',tid)
+    logger = log.Log('username', tid)
+    # consts.set_glo_gui_tid(tid)
+    client.send(b'no tid')
+    client.recv(8192)
     client.send(b'database')
     client.recv(8192)
     client.sendall(data)
@@ -202,6 +207,7 @@ def cmd_decorator(type):
                 logger.write_to_log('OPRT', 'CMD', type, oprt_id, cmd)
                 result_cmd = func(cmd,func_name)
                 logger.write_to_log('DATA', 'CMD', type, oprt_id, result_cmd)
+
                 return result_cmd
             else:
                 logdb = consts.glo_db()
@@ -358,7 +364,7 @@ def sql_insert_decorator(func):
             print(f"RE:{id_result['time']} 插入数据:")
             for i in data:
                 print(i)
-            print()
+            print()# 格式上的换行
             if id_result['db_id']:
                 change_pointer(id_result['db_id'])
     return wrapper

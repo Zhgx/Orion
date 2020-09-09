@@ -10,9 +10,6 @@ class LVM():
 
     def get_vg(self):
         cmd = 'vgs'
-        # 异常演示
-        # 1.result = s.get_cmd_result(sys._getframe().f_code.co_name, cmd, s.create_oprt_id())
-        # 2.result = s.execute_cmd(sys._getframe().f_code.co_name, cmd, s.create_oprt_id())
         result = s.execute_cmd(cmd,s.get_function_name())
         if result:
             return result
