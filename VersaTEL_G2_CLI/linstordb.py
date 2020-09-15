@@ -2,7 +2,11 @@
 import execute as ex
 import sundry as s
 import sqlite3
+import sys
 
+
+class DataIsEmpty(Exception):
+    pass
 
 queries = {
     'SELECT': 'SELECT %s FROM %s WHERE %s',
@@ -270,6 +274,8 @@ class LinstorDB(Database):
     @s.sql_insert_decorator
     def insert_data(self, sql, list_data,tablename):
         for i in range(len(list_data)):
+            if not list_data[i]:
+                s.prt_log('数据错误，无法插入数据表',2)
             list_data[i].insert(0, i + 1)
             self.cur.execute(sql, list_data[i])
 
