@@ -5,6 +5,10 @@ import sundry as s
 from execute.linstor import Linstor
 from execute.crm import CRMData,CRMConfig
 
+
+
+
+
 class Disk():
     def __init__(self):
         self.js = iscsi_json.JSON_OPERATION()
@@ -12,13 +16,31 @@ class Disk():
     def get_all_disk(self):
         linstor = Linstor()
         linstor_res = linstor.get_linstor_data('linstor --no-color --no-utf8 r lv')
+
+        # #断言
+        # try:
+        #     assert '| Resource |' in str(linstor_res)
+        #     print('*回归测试* ：linstor --no-color --no-utf8 r lv 执行成功')
+        # except AssertionError:
+        #     print('*回归测试* ：linstor --no-color --no-utf8 r lv 执行失败')
+
         disks = {}
         for d in linstor_res:
             disks.update({d[1]: d[5]})
-        self.js.update_data('Disk', disks)
+        # self.js.delete_data('Disk')
+        result = self.js.update_data('Disk', disks)
+
+        # #断言
+        # try:
+        #     # 判断全局变量
+        #     assert disks == result
+        #     print(f'*回归测试* ：{disks} 插入成功')
+        # except AssertionError:
+        #     print(f'*回归测试* ：{disks} 插入失败')
         return disks
 
     def get_spe_disk(self,disk):
+        self.get_all_disk()
         if self.js.check_key('Disk', disk)['result']:
             return {disk: self.js.get_data('Disk').get(disk)}
 
@@ -27,6 +49,12 @@ class Disk():
         list_header = ["ResourceName", "Path"]
         dict_data = self.get_all_disk()
         table = s.show_iscsi_data(list_header,dict_data)
+        # #断言
+        # try:
+        #     assert '| ResourceName |      Path     |' in str(table)
+        #     print('*回归测试* ：输出格式正确')
+        # except AssertionError:
+        #     print('*回归测试* ：输出格式错误')
         s.prt_log(table,0)
 
     # 展示指定的disk

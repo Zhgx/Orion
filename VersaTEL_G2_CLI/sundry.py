@@ -207,7 +207,6 @@ def cmd_decorator(type):
                 logger.write_to_log('OPRT', 'CMD', type, oprt_id, cmd)
                 result_cmd = func(cmd,func_name)
                 logger.write_to_log('DATA', 'CMD', type, oprt_id, result_cmd)
-
                 return result_cmd
             else:
                 logdb = consts.glo_db()
@@ -219,7 +218,6 @@ def cmd_decorator(type):
                 if type != 'sys' and cmd_result['result']:
                     result = eval(cmd_result['result'])
                     result_output = result['rst']
-
                 else:
                     result = cmd_result['result']
                     result_output = cmd_result['result']
@@ -227,6 +225,29 @@ def cmd_decorator(type):
                 print(f"RE:{cmd_result['time']:<20} 系统命令结果：\n{result_output}")
                 if id_result['db_id']:
                     change_pointer(id_result['db_id'])
+            # else:
+            #     logdb = consts.glo_db()
+            #     id_result = logdb.get_id(consts.glo_tsc_id(), func_name)
+            #     if id_result['oprt_id']:
+            #         cmd_result = logdb.get_oprt_result(id_result['oprt_id'])
+            #         # try:
+            #         #     assert cmd_result['time'] != '' #断言有没有获取到data数据
+            #         #     print(f'断言是否取到时间{cmd_result["time"]}：成功 ')
+            #         # except AssertionError:
+            #         #     print(f'断言是否取到时间{cmd_result["time"]}：失败 ')
+            #     else:
+            #         cmd_result = {'time': '', 'result': ''}
+            #     if type != 'sys' and cmd_result['result']:
+            #         result = eval(cmd_result['result'])
+            #         result_output = result['rst']
+            #     else:
+            #         result = cmd_result['result']
+            #         result_output = cmd_result['result']
+            #     print(f"RE:{id_result['time']:<20} 执行系统命令：\n{cmd}")
+            #     print(f"RE:{cmd_result['time']:<20} 系统命令结果：\n{result_output}")
+            #     if id_result['db_id']:
+            #         change_pointer(id_result['db_id'])
+            consts.set_glo_rpldata({func_name:result})
             return result
         return wrapper
     return decorate
@@ -265,6 +286,8 @@ def prt(str, warning_level=0):
         time,cmd_output = db.get_cmd_output(consts.glo_tsc_id())
         if not time:
             time = ''
+
+        consts.set_glo_rpldata({'cmd_output':cmd_output})
         print(f'RE:{time:<20} 日志记录输出：{warning_str:<4}\n{cmd_output}')
         print(f'RE:{"":<20} 此次执行输出：{warning_str:<4}\n{str}')
 
@@ -340,6 +363,7 @@ def json_operate_decorator(str):
                 print()
                 if id_result['db_id']:
                     change_pointer(id_result['db_id'])
+            consts.set_glo_rpldata({func.__name__:result})
             return result
         return wrapper
     return decorate
@@ -367,6 +391,7 @@ def sql_insert_decorator(func):
             print()# 格式上的换行
             if id_result['db_id']:
                 change_pointer(id_result['db_id'])
+
     return wrapper
 
 
@@ -378,3 +403,6 @@ def handle_exception():
     else:
         print('命令结果无法获取，请检查')
         sys.exit()#在这里结束会屏蔽掉程序抛出的异常，再考虑要不要直接在这里中断程序
+
+
+
