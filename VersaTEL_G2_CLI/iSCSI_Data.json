@@ -5,12 +5,7 @@
         "host3": "iqn12321312321"
     },
     "Disk": {
-        "res_a": "/dev/drbd1000",
-        "res_b": "/dev/drbd1002",
-        "res_c": "/dev/drbd1001",
-        "res_d": "/dev/drbd1003",
-        "res_e": "/dev/drbd1004",
-        "res_f": "/dev/drbd1005"
+        "res_a": "/dev/drbd1000"
     },
     "HostGroup": {
         "hg1": [

@@ -8,6 +8,8 @@ import log
 import sundry
 import consts
 import iscsi_json
+import pytest
+
 from commands import (
     NodeCommands,
     ResourceCommands,
@@ -290,12 +292,18 @@ class VtelCLI(object):
             print('* MODE : REPLAY *')
             print(f'transaction num : 1')
             self.replay_one(dict_cmd)
+            print('--------------')
+            import pprint
+            pprint.pprint(consts.glo_rpldata())
+            pytest.main(['-m', dict_cmd['cmd'].replace(' ','_'), 'test/test_cmd.py'])
+
         elif args.date:
             dict_cmd = obj_logdb.get_userinput_via_time(args.date[0],args.date[1])
             self.replay_more(dict_cmd)
         else:
             dict_cmd = obj_logdb.get_all_transaction()
             self.replay_more(dict_cmd)
+
         return dict_cmd
 
 

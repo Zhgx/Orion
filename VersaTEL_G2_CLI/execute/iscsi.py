@@ -5,6 +5,10 @@ import sundry as s
 from execute.linstor import Linstor
 from execute.crm import CRMData,CRMConfig
 
+
+
+
+
 class Disk():
     def __init__(self):
         self.js = iscsi_json.JSON_OPERATION()
@@ -19,6 +23,7 @@ class Disk():
         return disks
 
     def get_spe_disk(self,disk):
+        self.get_all_disk()
         if self.js.check_key('Disk', disk)['result']:
             return {disk: self.js.get_data('Disk').get(disk)}
 
