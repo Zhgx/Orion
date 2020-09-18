@@ -28,10 +28,11 @@ def test_get_linstor_data():
 @pytest.mark.iscsi_d_s
 def test_get_all_disk():
 	disk = iscsi.Disk()
-	disk.get_all_disk()
-	js = iscsi_json.JSON_OPERATION()
+	result = disk.get_all_disk()
+	# js = iscsi_json.JSON_OPERATION()
 	# js.update_data()
-	assert js.get_data('Disk')
+	# assert js.get_data('Disk')
+    assert result ==
 
 
 @pytest.mark.iscsi_d_s
@@ -39,3 +40,7 @@ def test_show_iscsi_data():
 	list_header = ["ResourceName", "Path"]
 	table = s.show_iscsi_data(list_header, dict_data)
 	assert table
+
+
+@pytest.mark.iscsi_d_s_
+def test_show_spe_disk():
