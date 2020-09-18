@@ -341,19 +341,21 @@ class VtelCLI(object):
             return
         elif args.transactionid:
             dict_cmd = obj_logdb.get_userinput_via_tid(args.transactionid)
-            consts.set_glo_tsc_id(args.transactionid)
             print('* MODE : Regression Testing *')
             print(f'transaction num : 1')
-            print((obj_logdb.get_refine_linstor_data(args.transactionid)))
-            # pytest.main(['-m', dict_cmd['cmd'].replace(' ', '_'), 'test/test_cmd.py'])
-            # self.replay_one(dict_cmd)
-
-        # elif args.date:
-        #     dict_cmd = obj_logdb.get_userinput_via_time(args.date[0],args.date[1])
-        #     self.replay_more(dict_cmd)
-        # else:
-        #     dict_cmd = obj_logdb.get_all_transaction()
-        #     self.replay_more(dict_cmd)
+            # consts.set_glo_tsc_id(args.transactionid)
+            # print((obj_logdb.get_refine_linstor_data(args.transactionid)))
+            pytest.main(['-m', dict_cmd['cmd'].replace(' ', '_'), 'test/test_cmd.py'])
+        elif args.date:
+            dict_cmd = obj_logdb.get_userinput_via_time(args.date[0],args.date[1])
+            for one in dict_cmd:
+                print(f"\n-------------- transaction: {one['tid']}  command: {one['cmd']} --------------")
+                pytest.main(['-m', one['cmd'].replace(' ', '_'), 'test/test_cmd.py'])
+        else:
+            dict_cmd = obj_logdb.get_all_transaction()
+            for one in dict_cmd:
+                print(f"\n-------------- transaction: {one['tid']}  command: {one['cmd']} --------------")
+                pytest.main(['-m', one['cmd'].replace(' ', '_'), 'test/test_cmd.py'])
 
 
 
@@ -365,7 +367,7 @@ class VtelCLI(object):
         cmd = ' '.join(sys.argv[1:])
 
         if args.subargs_vtel:
-            if args.subargs_vtel not in ['re', 'replay']:
+            if args.subargs_vtel not in ['re', 'replay','regress','rt']:
                 self.logger.write_to_log('DATA', 'INPUT', 'cmd_input', path, {'valid': '0', 'cmd': cmd})
         else:
             self.logger.write_to_log('DATA','INPUT','cmd_input', path, {'valid':'0','cmd':cmd})
