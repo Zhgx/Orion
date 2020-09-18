@@ -331,6 +331,17 @@ class VtelCLI(object):
 
         return dict_cmd
 
+    def regress_run(self,dict_cmd):
+        print('* MODE : Regression Testing *')
+        for one in dict_cmd:
+            print(f"\n-------------- transaction: {one['tid']}  command: {one['cmd']} --------------")
+            consts.set_glo_tsc_id(one['tid'])
+            pytest.main(['-m', one['cmd'].replace(' ', '_'), 'test/test_cmd.py'])
+
+
+    def checkout_cmd(self,one):
+        pass
+
 
     def regress(self,args):
         consts.set_glo_log_switch('no')
@@ -340,22 +351,14 @@ class VtelCLI(object):
             print('Please specify only one type of data for regression testing.')
             return
         elif args.transactionid:
-            dict_cmd = obj_logdb.get_userinput_via_tid(args.transactionid)
-            print('* MODE : Regression Testing *')
-            print(f'transaction num : 1')
-            # consts.set_glo_tsc_id(args.transactionid)
-            # print((obj_logdb.get_refine_linstor_data(args.transactionid)))
-            pytest.main(['-m', dict_cmd['cmd'].replace(' ', '_'), 'test/test_cmd.py'])
+            dict_cmd = [obj_logdb.get_userinput_via_tid(args.transactionid)]
+            self.regress_run(dict_cmd)
         elif args.date:
             dict_cmd = obj_logdb.get_userinput_via_time(args.date[0],args.date[1])
-            for one in dict_cmd:
-                print(f"\n-------------- transaction: {one['tid']}  command: {one['cmd']} --------------")
-                pytest.main(['-m', one['cmd'].replace(' ', '_'), 'test/test_cmd.py'])
+            self.regress_run(dict_cmd)
         else:
             dict_cmd = obj_logdb.get_all_transaction()
-            for one in dict_cmd:
-                print(f"\n-------------- transaction: {one['tid']}  command: {one['cmd']} --------------")
-                pytest.main(['-m', one['cmd'].replace(' ', '_'), 'test/test_cmd.py'])
+            self.regress_run(dict_cmd)
 
 
 
