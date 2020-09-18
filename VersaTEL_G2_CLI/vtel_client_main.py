@@ -140,6 +140,30 @@ class VtelCLI(object):
             nargs=2,
             help='date')
 
+
+        parser_regress = subp.add_parser(
+            'regress',
+            aliases=['rt'],
+            formatter_class=argparse.RawTextHelpFormatter
+        )
+
+        parser_regress.add_argument(
+            '-t',
+            '--transactionid',
+            dest='transactionid',
+            metavar='',
+            help='transaction id')
+
+        parser_regress.add_argument(
+            '-d',
+            '--date',
+            dest='date',
+            metavar='',
+            nargs=2,
+            help='date')
+
+
+
         self.parser_stor = parser_stor
         self.parser_iscsi = parser_iscsi
         self.parser_replay = parser_replay
@@ -149,6 +173,7 @@ class VtelCLI(object):
         # Set the binding function of iscsi
         parser_iscsi.set_defaults(func=self.send_json)
         parser_replay.set_defaults(func=self.replay)
+        parser_regress.set_defaults(func=self.regress)
 
 
         # 绑定replay有问题
@@ -305,6 +330,31 @@ class VtelCLI(object):
             self.replay_more(dict_cmd)
 
         return dict_cmd
+
+
+    def regress(self,args):
+        consts.set_glo_log_switch('no')
+        consts.set_glo_rpl('yes')
+        obj_logdb = logdb.prepare_db()
+        if args.transactionid and args.date:
+            print('Please specify only one type of data for regression testing.')
+            return
+        elif args.transactionid:
+            dict_cmd = obj_logdb.get_userinput_via_tid(args.transactionid)
+            consts.set_glo_tsc_id(args.transactionid)
+            print('* MODE : Regression Testing *')
+            print(f'transaction num : 1')
+            print((obj_logdb.get_refine_linstor_data(args.transactionid)))
+            # pytest.main(['-m', dict_cmd['cmd'].replace(' ', '_'), 'test/test_cmd.py'])
+            # self.replay_one(dict_cmd)
+
+        # elif args.date:
+        #     dict_cmd = obj_logdb.get_userinput_via_time(args.date[0],args.date[1])
+        #     self.replay_more(dict_cmd)
+        # else:
+        #     dict_cmd = obj_logdb.get_all_transaction()
+        #     self.replay_more(dict_cmd)
+
 
 
 
