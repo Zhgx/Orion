@@ -141,9 +141,9 @@ def re_findall(re_string, tgt_string):
     logger = consts.glo_log()
     re_ = re.compile(re_string)
     oprt_id = create_oprt_id()
-    logger.write_to_log('OPRT', 'regular', 'findall', oprt_id, {'re': re_, 'string': tgt_string})
+    logger.write_to_log('OPRT', 'REGULAR', 'findall', oprt_id, {'re': re_, 'string': tgt_string})
     re_result = re_.findall(tgt_string)
-    logger.write_to_log('DATA', 'regular', 'findall', oprt_id, re_result)
+    logger.write_to_log('DATA', 'REGULAR', 'findall', oprt_id, re_result)
     return re_result
 
 

@@ -293,6 +293,8 @@ class VtelCLI(object):
             print(f'transaction num : 1')
             self.replay_one(dict_cmd)
             print('--------------')
+            import pprint
+            pprint.pprint(consts.glo_rpldata())
             pytest.main(['-m', dict_cmd['cmd'].replace(' ','_'), 'test/test_cmd.py'])
 
         elif args.date:

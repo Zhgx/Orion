@@ -15,6 +15,10 @@ class Linstor():
         list_table = data.split('\n')
         list_data_all = []
 
+        oprt_id = s.create_oprt_id()
+        self.logger.write_to_log('DATA','STR','refine_linstor','',oprt_id)
+        self.logger.write_to_log('OPRT','REGULAR','findall',oprt_id,{'re':reSeparate})
+
         def _clear_symbol(list_data):
             for i in range(len(list_data)):
                 list_data[i] = list_data[i].replace(' ', '')
@@ -26,12 +30,6 @@ class Linstor():
                 _clear_symbol(valid_data)
                 list_data_all.append(valid_data)
 
-        # try:
-        #     assert len(list_data_all[0]) > 2
-        #     print('*回归测试* ：正则提取LINSTOR资源数据成功')
-        # except AssertionError:
-        #     print('*回归测试* ：正则提取LINSTOR资源数据失败')
-
         try:
             list_data_all.pop(0)
         except IndexError:
@@ -41,6 +39,8 @@ class Linstor():
             if not list_data_all[0]:
                 s.prt_log('正则匹配出错,程序退出',2)
                 sys.exit()
+
+        self.logger.write_to_log('DATA', 'REGULAR', 'findall', oprt_id, list_data_all)
         return list_data_all
 
     def get_linstor_data(self,cmd):
