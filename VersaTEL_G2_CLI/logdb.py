@@ -204,3 +204,11 @@ class LogDB():
         else:
             return ('','')
 
+
+
+    # for Regression Testing
+    def get_refine_linstor_data(self,transaction_id):
+        id_dict = self.get_id(transaction_id,'refine_linstor')
+        result = self.get_oprt_result(id_dict['oprt_id'])['result']
+        if result:
+            return eval(result)

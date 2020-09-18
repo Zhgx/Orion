@@ -140,6 +140,30 @@ class VtelCLI(object):
             nargs=2,
             help='date')
 
+
+        parser_regress = subp.add_parser(
+            'regress',
+            aliases=['rt'],
+            formatter_class=argparse.RawTextHelpFormatter
+        )
+
+        parser_regress.add_argument(
+            '-t',
+            '--transactionid',
+            dest='transactionid',
+            metavar='',
+            help='transaction id')
+
+        parser_regress.add_argument(
+            '-d',
+            '--date',
+            dest='date',
+            metavar='',
+            nargs=2,
+            help='date')
+
+
+
         self.parser_stor = parser_stor
         self.parser_iscsi = parser_iscsi
         self.parser_replay = parser_replay
@@ -149,6 +173,7 @@ class VtelCLI(object):
         # Set the binding function of iscsi
         parser_iscsi.set_defaults(func=self.send_json)
         parser_replay.set_defaults(func=self.replay)
+        parser_regress.set_defaults(func=self.regress)
 
 
         # 绑定replay有问题
@@ -306,6 +331,36 @@ class VtelCLI(object):
 
         return dict_cmd
 
+    def regress_run(self,dict_cmd):
+        print('* MODE : Regression Testing *')
+        for one in dict_cmd:
+            print(f"\n-------------- transaction: {one['tid']}  command: {one['cmd']} --------------")
+            consts.set_glo_tsc_id(one['tid'])
+            pytest.main(['-m', one['cmd'].replace(' ', '_'), 'test/test_cmd.py'])
+
+
+    def checkout_cmd(self,one):
+        pass
+
+
+    def regress(self,args):
+        consts.set_glo_log_switch('no')
+        consts.set_glo_rpl('yes')
+        obj_logdb = logdb.prepare_db()
+        if args.transactionid and args.date:
+            print('Please specify only one type of data for regression testing.')
+            return
+        elif args.transactionid:
+            dict_cmd = [obj_logdb.get_userinput_via_tid(args.transactionid)]
+            self.regress_run(dict_cmd)
+        elif args.date:
+            dict_cmd = obj_logdb.get_userinput_via_time(args.date[0],args.date[1])
+            self.regress_run(dict_cmd)
+        else:
+            dict_cmd = obj_logdb.get_all_transaction()
+            self.regress_run(dict_cmd)
+
+
 
 
 
@@ -315,7 +370,7 @@ class VtelCLI(object):
         cmd = ' '.join(sys.argv[1:])
 
         if args.subargs_vtel:
-            if args.subargs_vtel not in ['re', 'replay']:
+            if args.subargs_vtel not in ['re', 'replay','regress','rt']:
                 self.logger.write_to_log('DATA', 'INPUT', 'cmd_input', path, {'valid': '0', 'cmd': cmd})
         else:
             self.logger.write_to_log('DATA','INPUT','cmd_input', path, {'valid':'0','cmd':cmd})
