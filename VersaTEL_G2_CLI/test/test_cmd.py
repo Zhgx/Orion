@@ -38,9 +38,12 @@ def test_get_all_disk(): # 存疑,是否真正插入到json文件中没有测试
 
 
 @pytest.mark.iscsi_d_s
+@pytest.mark.iscsi_d_s_x
 def test_show_iscsi_data():
 	list_header = ["ResourceName", "Path"]
 	disk = iscsi.Disk()
 	dict_data = disk.get_all_disk()
 	table = s.show_iscsi_data(list_header, dict_data)
 	assert '| ResourceName |      Path     |'in str(table)
+
+@pytest.mark.iscsi_d_s_x
