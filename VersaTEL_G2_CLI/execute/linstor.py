@@ -3,6 +3,7 @@ import re
 import consts
 import sundry as s
 import sys
+import regression
 
 
 
@@ -45,4 +46,11 @@ class Linstor():
 
     def get_linstor_data(self,cmd):
         cmd_result = s.execute_cmd(cmd,s.get_function_name())
-        return self.refine_linstor(cmd_result)
+        result = self.refine_linstor(cmd_result)
+        RPL = consts.glo_rpl()
+        if RPL == 'yes':
+            db = consts.glo_db()
+            transaction_id = consts.glo_tsc_id()
+            result_log = db.get_refine_linstor_data(transaction_id)
+            regression.equal(result_log, result)
+        return result
