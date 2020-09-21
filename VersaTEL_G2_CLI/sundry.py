@@ -271,7 +271,6 @@ def execute_cmd(cmd, func_name, timeout=60):
 
 
 
-
 def prt(str, warning_level=0):
     if isinstance(warning_level, int):
         warning_str = '*' * warning_level

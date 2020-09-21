@@ -335,12 +335,31 @@ class VtelCLI(object):
         print('* MODE : Regression Testing *')
         for one in dict_cmd:
             print(f"\n-------------- transaction: {one['tid']}  command: {one['cmd']} --------------")
-            consts.set_glo_tsc_id(one['tid'])
-            pytest.main(['-m', one['cmd'].replace(' ', '_'), 'test/test_cmd.py'])
+            if dict_cmd['valid'] == '0':
+                consts.set_glo_tsc_id(one['tid'])
+                self.checkout_cmd(one['cmd'])
+                # pytest.main(['-m', one['cmd'].replace(' ', '_'), 'test/test_cmd.py'])
+            else:
+                print(f"该命令{dict_cmd['cmd']}有误")
 
 
+
+    #iscsi d s
+    #iscsi d s res_a
+    #stor r c res_a -s 10m -a -num 1
+    #stor r c res_a -s 10m -n node1 -sp pool_a
     def checkout_cmd(self,one):
-        pass
+        list_cmd = one.split(' ')
+        if len(list_cmd) == 3: # 展示全部资源
+            return one['cmd'].replace(' ', '_')
+        elif len(list_cmd) == 4: # 展示单个资源
+            print('_'.join(list_cmd[:3])+('_one'))
+
+
+        if 'iscsi d s' or 'iscsi disk s' or 'iscsi disk show' in one:
+            return 'ds'
+
+
 
 
     def regress(self,args):
