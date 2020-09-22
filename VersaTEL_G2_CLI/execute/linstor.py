@@ -10,7 +10,7 @@ class Linstor():
     def __init__(self):
         self.logger = consts.glo_log()
 
-    @rg.rt_dec('equal')
+    @rg.rt_dec('equal', times=3)
     def refine_linstor(self,data):
         reSeparate = re.compile(r'(.*?\s\|)')
         list_table = data.split('\n')

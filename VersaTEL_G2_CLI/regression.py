@@ -5,11 +5,14 @@ from functools import wraps
 
 def equal(data1, data2):
     try:
-        print('data1:',data1,type(data1))
-        print('data2:',data2,type(data2))
         assert data1 == data2
+        print('')
         return True
     except:
+        print('')
+        print('断言方式：equal')
+        print('data1:',data1,type(data1))
+        print('data2:',data2,type(data2))
         return False
 
 
@@ -54,20 +57,24 @@ def type_dict(data):
 
 
 
-def rt_dec(str,select_key = None, str_part = None,):
+def rt_dec(str,select_key=None, str_part=None, times=1):
     def decorate(func):
         @wraps(func)
         def wrapper(self, *args):
             RPL = consts.glo_rpl()
+            RG = consts.glo_rg()
             result_a = func(self, *args)
-            if RPL == 'yes':
+            if RPL == 'yes' and RG == 'yes':
                 logdb = consts.glo_db()
-                if select_key:
-                    id_result = logdb.get_id(consts.glo_tsc_id(), select_key, 0)
+                if times == 1:
+                    log_id = 0
                 else:
-                    print(func.__name__)
-                    print(consts.glo_log_id())
-                    id_result = logdb.get_id(consts.glo_tsc_id(), func.__name__,0)
+                    log_id = consts.glo_log_id() - 1
+
+                if select_key:
+                    id_result = logdb.get_id(consts.glo_tsc_id(), select_key, log_id)
+                else:
+                    id_result = logdb.get_id(consts.glo_tsc_id(), func.__name__, log_id)
                 result_b = logdb.get_oprt_result(id_result['oprt_id'])['result']
                 if result_b:
                     try:

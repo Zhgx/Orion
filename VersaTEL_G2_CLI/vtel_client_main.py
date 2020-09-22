@@ -140,6 +140,13 @@ class VtelCLI(object):
             nargs=2,
             help='date')
 
+        parser_replay.add_argument(
+            '-rg',
+            dest = 'rg',
+            action='store_true',
+            default=False,
+            help='RegresessionTesting')
+
 
         parser_regress = subp.add_parser(
             'regress',
@@ -222,47 +229,6 @@ class VtelCLI(object):
             self.parser_iscsi.print_help()
 
 
-    # def replay_run(self,cmd_list):
-    #     if not cmd_list:
-    #         print('不存在命令去进行replay')
-    #         return
-    #
-    #     trasanction_num = len(cmd_list)
-    #
-    #
-    #     for replay_cmd in cmd_list:
-    #         print(f"--------------transaction:{replay_cmd['tid']}--------------")
-    #         consts.set_glo_tsc_id(replay_cmd['tid'] )
-    #         if replay_cmd:
-    #             print(replay_cmd)
-    #             if not replay_cmd['valid'] == 0:
-    #                 replay_args = self._parser.parse_args(replay_cmd['user_input']['cmd'].split())
-    #                 print(f"* 执行命令：{replay_cmd['user_input']['cmd']} *")
-    #                 try:
-    #                     replay_args.func(replay_args)
-    #                 except consts.ReplayExit:
-    #                     print('该事务replay结束')
-    #                 except Exception:
-    #                     print(str(traceback.format_exc()))
-    #             else:
-    #                 print(f"该命令{replay_cmd['cmd']}有误，无法执行")
-    #
-    #             # if not replay_cmd['type'] == 'err':
-    #             #     replay_args = self._parser.parse_args(replay_cmd['cmd'].split())
-    #             #     print(f"* 执行命令：{replay_cmd['cmd']} *")
-    #             #     try:
-    #             #         replay_args.func(replay_args)
-    #             #     except consts.ReplayExit:
-    #             #         print('该事务replay结束')
-    #             #     except Exception:
-    #             #         print(str(traceback.format_exc()))
-    #             #
-    #             # else:
-    #             #     print(f"该命令{replay_cmd['cmd']}有误，无法执行")
-    #         else:
-    #             print('该事务id:不存在或者不符合replay条件（python vtel_client_main）')
-
-
     def replay_one(self,dict_input):
         if not dict_input:
             print('不存在命令去进行replay')
@@ -309,6 +275,10 @@ class VtelCLI(object):
         consts.set_glo_log_switch('no')
         consts.set_glo_rpl('yes')
         obj_logdb = logdb.prepare_db()
+
+        if args.rg:
+            consts.set_glo_rg('yes')
+
         if args.transactionid and args.date:
             print('Please specify only one type of data for replay')
             return
@@ -337,29 +307,9 @@ class VtelCLI(object):
             print(f"\n-------------- transaction: {one['tid']}  command: {one['cmd']} --------------")
             if dict_cmd['valid'] == '0':
                 consts.set_glo_tsc_id(one['tid'])
-                self.checkout_cmd(one['cmd'])
                 # pytest.main(['-m', one['cmd'].replace(' ', '_'), 'test/test_cmd.py'])
             else:
                 print(f"该命令{dict_cmd['cmd']}有误")
-
-
-
-    #iscsi d s
-    #iscsi d s res_a
-    #stor r c res_a -s 10m -a -num 1
-    #stor r c res_a -s 10m -n node1 -sp pool_a
-    def checkout_cmd(self,one):
-        list_cmd = one.split(' ')
-        if len(list_cmd) == 3: # 展示全部资源
-            return one['cmd'].replace(' ', '_')
-        elif len(list_cmd) == 4: # 展示单个资源
-            print('_'.join(list_cmd[:3])+('_one'))
-
-
-        if 'iscsi d s' or 'iscsi disk s' or 'iscsi disk show' in one:
-            return 'ds'
-
-
 
 
     def regress(self,args):
@@ -378,9 +328,6 @@ class VtelCLI(object):
         else:
             dict_cmd = obj_logdb.get_all_transaction()
             self.regress_run(dict_cmd)
-
-
-
 
 
     def parse(self): # 调用入口

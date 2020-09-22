@@ -201,6 +201,7 @@ def cmd_decorator(type):
         @wraps(func)
         def wrapper(cmd,func_name):
             RPL = consts.glo_rpl()
+            RG = consts.glo_rg()
             oprt_id = create_oprt_id()
             if RPL == 'no':
                 logger = consts.glo_log()
@@ -222,33 +223,12 @@ def cmd_decorator(type):
                 else:
                     result = cmd_result['result']
                     result_output = cmd_result['result']
-                print(f"RE:{id_result['time']:<20} 执行系统命令：\n{cmd}")
-                print(f"RE:{cmd_result['time']:<20} 系统命令结果：\n{result_output}")
+                if RG == 'no':
+                    print(f"RE:{id_result['time']:<20} 执行系统命令：\n{cmd}")
+                    print(f"RE:{cmd_result['time']:<20} 系统命令结果：\n{result_output}")
                 if id_result['db_id']:
                     change_pointer(id_result['db_id'])
-            # else:
-            #     logdb = consts.glo_db()
-            #     id_result = logdb.get_id(consts.glo_tsc_id(), func_name)
-            #     if id_result['oprt_id']:
-            #         cmd_result = logdb.get_oprt_result(id_result['oprt_id'])
-            #         # try:
-            #         #     assert cmd_result['time'] != '' #断言有没有获取到data数据
-            #         #     print(f'断言是否取到时间{cmd_result["time"]}：成功 ')
-            #         # except AssertionError:
-            #         #     print(f'断言是否取到时间{cmd_result["time"]}：失败 ')
-            #     else:
-            #         cmd_result = {'time': '', 'result': ''}
-            #     if type != 'sys' and cmd_result['result']:
-            #         result = eval(cmd_result['result'])
-            #         result_output = result['rst']
-            #     else:
-            #         result = cmd_result['result']
-            #         result_output = cmd_result['result']
-            #     print(f"RE:{id_result['time']:<20} 执行系统命令：\n{cmd}")
-            #     print(f"RE:{cmd_result['time']:<20} 系统命令结果：\n{result_output}")
-            #     if id_result['db_id']:
-            #         change_pointer(id_result['db_id'])
-            consts.set_glo_rpldata({func_name:result})
+            # consts.set_glo_rpldata({func_name:result})
             return result
         return wrapper
     return decorate
@@ -277,19 +257,19 @@ def prt(str, warning_level=0):
         warning_str = '*' * warning_level
     else:
         warning_str = ''
-    rpl = consts.glo_rpl()
-
-    if rpl == 'no':
+    RPL = consts.glo_rpl()
+    RG = consts.glo_rg()
+    if RPL == 'no':
         print(str)
     else:
         db = consts.glo_db()
         time,cmd_output = db.get_cmd_output(consts.glo_tsc_id())
         if not time:
             time = ''
-
-        consts.set_glo_rpldata({'cmd_output':cmd_output})
-        print(f'RE:{time:<20} 日志记录输出：{warning_str:<4}\n{cmd_output}')
-        print(f'RE:{"":<20} 此次执行输出：{warning_str:<4}\n{str}')
+        # consts.set_glo_rpldata({'cmd_output':cmd_output}) #第一版回归测试代码
+        if RG == 'no':
+            print(f'RE:{time:<20} 日志记录输出：{warning_str:<4}\n{cmd_output}')
+            print(f'RE:{"":<20} 此次执行输出：{warning_str:<4}\n{str}')
 
 
 def prt_log(str, warning_level):
@@ -343,6 +323,7 @@ def json_operate_decorator(str):
         @wraps(func)
         def wrapper(self, *args):
             RPL = consts.glo_rpl()
+            RG = consts.glo_rg()
             if RPL == 'no':
                 logger = consts.glo_log()
                 oprt_id = create_oprt_id()
@@ -358,12 +339,14 @@ def json_operate_decorator(str):
                     result = eval(json_result['result'])
                 else:
                     result = ''
-                print(f"RE:{id_result['time']} {str}:")
-                pprint.pprint(result)
-                print()
+
+                if RG == 'no':
+                    print(f"RE:{id_result['time']} {str}:")
+                    pprint.pprint(result)
+                    print()
                 if id_result['db_id']:
                     change_pointer(id_result['db_id'])
-            consts.set_glo_rpldata({func.__name__:result})
+            # consts.set_glo_rpldata({func.__name__:result})
             return result
         return wrapper
     return decorate
@@ -373,6 +356,7 @@ def sql_insert_decorator(func):
     @wraps(func)
     def wrapper(self, sql, data, tablename):
         RPL = consts.glo_rpl()
+        RG = consts.glo_rg()
         if RPL == 'no':
             logger = consts.glo_log()
             oprt_id = create_oprt_id()
@@ -384,11 +368,13 @@ def sql_insert_decorator(func):
             logdb = consts.glo_db()
             id_result = logdb.get_id(consts.glo_tsc_id(), func.__name__,consts.glo_log_id())
             func(self, sql, data, tablename)
-            print(f"RE:{id_result['time']} 插入数据表: {tablename}")
-            print(f"RE:{id_result['time']} 插入数据:")
-            for i in data:
-                print(i)
-            print()# 格式上的换行
+
+            if RG == 'no':
+                print(f"RE:{id_result['time']} 插入数据表: {tablename}")
+                print(f"RE:{id_result['time']} 插入数据:")
+                for i in data:
+                    print(i)
+                print()# 格式上的换行
             if id_result['db_id']:
                 change_pointer(id_result['db_id'])
     return wrapper

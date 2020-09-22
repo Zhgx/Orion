@@ -29,6 +29,7 @@ def _init():
     _global_dict = {}
     _global_dict['LOG_ID'] = 0
     _global_dict['RPL'] = 'no'
+    _global_dict['RG'] = 'no'
     _global_dict['LOG_SWITCH'] = 'yes'
     _global_dict['RPL_DATA'] = {}
 
@@ -60,6 +61,10 @@ def set_glo_db(value):
 
 def set_glo_rpl(value):
     set_value('RPL', value)
+
+
+def set_glo_rg(value):
+    set_value('RG', value)
 
 
 def set_glo_tsc_id(value):
@@ -100,6 +105,10 @@ def glo_str():
 
 def glo_rpl():
     return get_value('RPL')
+
+
+def glo_rg():
+    return get_value('RG')
 
 
 def glo_tsc_id():

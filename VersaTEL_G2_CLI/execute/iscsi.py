@@ -5,6 +5,7 @@ import sundry as s
 from execute.linstor import Linstor
 from execute.crm import CRMData,CRMConfig
 import regression as rg
+import sys
 
 
 
@@ -238,9 +239,14 @@ class Map():
         # 获取target
         crm_data = CRMData()
         if crm_data.update_crm_conf():
-            crm_data_dict = self.js.get_data('crm')
-            target_all = crm_data_dict['target'][0] # 目前的设计只有一个target，所以取列表的第一个
-            return target_all[0], target_all[1]  # 返回target_name, target_iqn
+            js = iscsi_json.JSON_OPERATION()
+            crm_data_dict = js.get_data('crm')
+            if crm_data_dict['target']:
+                target_all = crm_data_dict['target'][0] # 目前的设计只有一个target，所以取列表的第一个
+                return target_all[0], target_all[1]  # 返回target_name, target_iqn
+            else:
+                print('没有target，创建map失败')
+                sys.exit()
 
     @rg.rt_dec('equal')
     @s.record_log
@@ -256,8 +262,8 @@ class Map():
                     drdb_list.append([res[1], res[4], res[5]])  # 取Resource,MinorNr,DeviceName
         return drdb_list
 
-    @rg.rt_dec('equal')
-    @s.record_log
+    # @rg.rt_dec('equal')
+    # @s.record_log
     def create_map(self, map,hg, dg):
         # 创建前的检查
         if not self.pre_check_create_map(map,hg,dg):

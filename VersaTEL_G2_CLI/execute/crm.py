@@ -4,6 +4,7 @@ import time
 import iscsi_json
 import sundry as s
 import subprocess
+import regression as rg
 
 @s.cmd_decorator('crm')
 def execute_crm_cmd(cmd, func_name, timeout=60):
@@ -55,6 +56,8 @@ class CRMData():
         else:
             s.handle_exception()
 
+    @rg.rt_dec('equal')
+    @s.record_log
     def get_resource_data(self):
         # 用来匹配的原数据，allowed_initiators=""，有时有双引号，有时候没有，无法确定，然后多个iqn是怎么样的
         re_logical = re.compile(
@@ -62,14 +65,18 @@ class CRMData():
         result = s.re_findall(re_logical, self.crm_conf_data)
         return result
 
+    @rg.rt_dec('equal')
+    @s.record_log
     def get_vip_data(self):
         re_vip = re.compile(
             r'primitive\s(\w*)\sIPaddr2\s\\\s*\w*\sip=([0-9.]*)\s\w*=(\d*)\s')
         result = s.re_findall(re_vip, self.crm_conf_data)
         return result
 
+    @rg.rt_dec('equal')
+    @s.record_log
     def get_target_data(self):
-        re_target = re.compile(
+        re_target = re.compile(#params
             r'primitive\s(\w*)\s\w*\s\\\s*params\siqn="([a-zA-Z0-9.:-]*)"\s[a-z=-]*\sportals="([0-9.]*):\d*"\s\\')
         result = s.re_findall(re_target, self.crm_conf_data)
         return result
@@ -109,6 +116,8 @@ class CRMConfig():
             return True
 
     # 获取res的状态
+    @rg.rt_dec('equal')
+    @s.record_log
     def get_res_status(self, res):
         crm_data = CRMData()
         resource_data = crm_data.get_resource_data()
