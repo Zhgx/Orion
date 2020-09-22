@@ -3,14 +3,14 @@ import re
 import consts
 import sundry as s
 import sys
-import regression
-
+import regression as rg
 
 
 class Linstor():
     def __init__(self):
         self.logger = consts.glo_log()
 
+    @rg.rt_dec('equal')
     def refine_linstor(self,data):
         reSeparate = re.compile(r'(.*?\s\|)')
         list_table = data.split('\n')
@@ -46,11 +46,14 @@ class Linstor():
 
     def get_linstor_data(self,cmd):
         cmd_result = s.execute_cmd(cmd,s.get_function_name())
-        result = self.refine_linstor(cmd_result)
-        RPL = consts.glo_rpl()
-        if RPL == 'yes':
-            db = consts.glo_db()
-            transaction_id = consts.glo_tsc_id()
-            result_log = db.get_refine_linstor_data(transaction_id)
-            regression.equal(result_log, result)
-        return result
+        return self.refine_linstor(cmd_result)
+        # RPL = consts.glo_rpl()
+        # if RPL == 'yes':
+        #     db = consts.glo_db()
+        #     transaction_id = consts.glo_tsc_id()
+        #     result_log = db.get_refine_linstor_data(transaction_id)
+        #     regression.equal(result_log, result)
+
+
+
+

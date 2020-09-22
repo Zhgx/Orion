@@ -269,7 +269,6 @@ class ResourceCommands():
             # 自动创建条件判断，符合则执行
             if all(list_auto_required) and not any(list_auto_forbid):
                 if args.gui:
-                    print('111')
                     result = res.create_res_auto(args.resource, args.size, args.num)
                     result_pickled = pickle.dumps(result)
                     sd.send_via_socket(result_pickled)

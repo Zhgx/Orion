@@ -177,8 +177,7 @@ class LogDB():
         else:
             return {'time': '', 'result': ''}
 
-    def get_id(self, transaction_id, string):
-        id_now = consts.glo_log_id()
+    def get_id(self, transaction_id, string,id_now):
         sql = f"SELECT time,id,data FROM logtable WHERE describe1 = '{string}' and type2 = 'STR' and id > {id_now} and transaction_id = '{transaction_id}'"
         result = self.sql_fetch_one(sql)
         if result:
@@ -208,7 +207,7 @@ class LogDB():
 
     # for Regression Testing
     def get_refine_linstor_data(self,transaction_id):
-        id_dict = self.get_id(transaction_id,'refine_linstor')
+        id_dict = self.get_id(transaction_id,'refine_linstor',consts.glo_log_id())
         result = self.get_oprt_result(id_dict['oprt_id'])['result']
         if result:
             return eval(result)

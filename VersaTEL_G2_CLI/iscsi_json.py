@@ -2,6 +2,7 @@ import json
 import consts
 import sundry as s
 from functools import wraps
+import regression as rg
 
 
 class JSON_OPERATION():

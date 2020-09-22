@@ -32,7 +32,7 @@ def test_get_linstor_data():
 def test_get_all_disk(): # 存疑,是否真正插入到json文件中没有测试出来，可能需要另外编写一个用例测试是否插入了
 	disk = iscsi.Disk()
 	result1 = disk.get_all_disk()
-	id_dict = db.get_id(transaction_id, 'update_data')
+	id_dict = db.get_id(transaction_id, 'update_data',consts.glo_log_id()-1)
 	result2 = db.get_oprt_result(id_dict['oprt_id'])['result']
 	assert result1 == eval(result2)
 
@@ -46,4 +46,4 @@ def test_show_iscsi_data():
 	table = s.show_iscsi_data(list_header, dict_data)
 	assert '| ResourceName |      Path     |'in str(table)
 
-@pytest.mark.iscsi_d_s_x
+

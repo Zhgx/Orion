@@ -317,10 +317,10 @@ class VtelCLI(object):
             print('* MODE : REPLAY *')
             print(f'transaction num : 1')
             self.replay_one(dict_cmd)
-            print('--------------')
-            import pprint
-            pprint.pprint(consts.glo_rpldata())
-            pytest.main(['-m', dict_cmd['cmd'].replace(' ','_'), 'test/test_cmd.py'])
+            # print('--------------')
+            # import pprint
+            # pprint.pprint(consts.glo_rpldata())
+            # pytest.main(['-m', dict_cmd['cmd'].replace(' ','_'), 'test/test_cmd.py'])
 
         elif args.date:
             dict_cmd = obj_logdb.get_userinput_via_time(args.date[0],args.date[1])

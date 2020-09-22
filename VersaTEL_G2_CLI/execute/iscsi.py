@@ -4,6 +4,7 @@ import consts
 import sundry as s
 from execute.linstor import Linstor
 from execute.crm import CRMData,CRMConfig
+import regression as rg
 
 
 
@@ -13,6 +14,8 @@ class Disk():
     def __init__(self):
         self.js = iscsi_json.JSON_OPERATION()
 
+
+    @rg.rt_dec('equal','update_data')
     def get_all_disk(self):
         linstor = Linstor()
         linstor_res = linstor.get_linstor_data('linstor --no-color --no-utf8 r lv')
@@ -28,11 +31,13 @@ class Disk():
             return {disk: self.js.get_data('Disk').get(disk)}
 
     # 展示全部disk
+    @rg.rt_dec('str_in', str_part='| ResourceName |      Path     |')
     def show_all_disk(self):
         list_header = ["ResourceName", "Path"]
         dict_data = self.get_all_disk()
         table = s.show_iscsi_data(list_header,dict_data)
         s.prt_log(table,0)
+        return str(table)
 
     # 展示指定的disk
     def show_spe_disk(self, disk):
@@ -214,15 +219,21 @@ class Map():
             else:
                 return True
 
+    @rg.rt_dec('equal')
+    @s.record_log
     def get_initiator(self, hg):
         # 根据hg去获取hostiqn，返回由hostiqn组成的initiator
+
         hostiqn = []
         for h in self.js.get_data('HostGroup').get(hg):
             iqn = self.js.get_data('Host').get(h)
             hostiqn.append(iqn)
         initiator = " ".join(hostiqn)
+
         return initiator
 
+    @rg.rt_dec('equal')
+    @s.record_log
     def get_target(self):
         # 获取target
         crm_data = CRMData()
@@ -231,6 +242,8 @@ class Map():
             target_all = crm_data_dict['target'][0] # 目前的设计只有一个target，所以取列表的第一个
             return target_all[0], target_all[1]  # 返回target_name, target_iqn
 
+    @rg.rt_dec('equal')
+    @s.record_log
     def get_drbd_data(self, dg):
         # 根据dg去收集drbdd的三项数据：resource name，minor number，device name
         disk_all = self.js.get_data('DiskGroup').get(dg)
@@ -243,6 +256,8 @@ class Map():
                     drdb_list.append([res[1], res[4], res[5]])  # 取Resource,MinorNr,DeviceName
         return drdb_list
 
+    @rg.rt_dec('equal')
+    @s.record_log
     def create_map(self, map,hg, dg):
         # 创建前的检查
         if not self.pre_check_create_map(map,hg,dg):

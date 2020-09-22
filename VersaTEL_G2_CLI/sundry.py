@@ -16,6 +16,7 @@ import inspect
 import consts
 import pprint
 import log
+import regression as rg
 
 
 def get_function_name():
@@ -210,7 +211,7 @@ def cmd_decorator(type):
                 return result_cmd
             else:
                 logdb = consts.glo_db()
-                id_result = logdb.get_id(consts.glo_tsc_id(), func_name)
+                id_result = logdb.get_id(consts.glo_tsc_id(), func_name,consts.glo_log_id())
                 if id_result['oprt_id']:
                     cmd_result = logdb.get_oprt_result(id_result['oprt_id'])
                 else:
@@ -351,7 +352,7 @@ def json_operate_decorator(str):
                 logger.write_to_log('DATA', 'JSON', func.__name__, oprt_id,result)
             else:
                 logdb = consts.glo_db()
-                id_result = logdb.get_id(consts.glo_tsc_id(), func.__name__)
+                id_result = logdb.get_id(consts.glo_tsc_id(), func.__name__,consts.glo_log_id())
                 json_result = logdb.get_oprt_result(id_result['oprt_id'])
                 if json_result['result']:
                     result = eval(json_result['result'])
@@ -381,7 +382,7 @@ def sql_insert_decorator(func):
             logger.write_to_log('DATA', 'SQL', func.__name__, oprt_id, data)
         else:
             logdb = consts.glo_db()
-            id_result = logdb.get_id(consts.glo_tsc_id(), func.__name__)
+            id_result = logdb.get_id(consts.glo_tsc_id(), func.__name__,consts.glo_log_id())
             func(self, sql, data, tablename)
             print(f"RE:{id_result['time']} 插入数据表: {tablename}")
             print(f"RE:{id_result['time']} 插入数据:")
@@ -390,7 +391,6 @@ def sql_insert_decorator(func):
             print()# 格式上的换行
             if id_result['db_id']:
                 change_pointer(id_result['db_id'])
-
     return wrapper
 
 
@@ -405,3 +405,14 @@ def handle_exception():
 
 
 
+def record_log(func):
+    @wraps(func)
+    def wrapper(self,*args):
+        logger = consts.glo_log()
+        oprt_id = create_oprt_id()
+        logger.write_to_log('DATA', 'STR', func.__name__, '', oprt_id)
+        logger.write_to_log('OPRT', 'JSON', func.__name__, oprt_id, args)
+        result = func(self, *args)
+        logger.write_to_log('DATA', 'JSON', func.__name__, oprt_id, result)
+        return result
+    return wrapper

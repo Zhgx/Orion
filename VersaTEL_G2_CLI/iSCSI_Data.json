@@ -5,7 +5,9 @@
         "host3": "iqn12321312321"
     },
     "Disk": {
-        "res_a": "/dev/drbd1000"
+        "res_a": "/dev/drbd1000",
+        "res_b": "/dev/drbd1001",
+        "res_c": "/dev/drbd1002"
     },
     "HostGroup": {
         "hg1": [
@@ -23,7 +25,12 @@
             "res_a"
         ]
     },
-    "Map": {},
+    "Map": {
+        "map1": [
+            "hg1",
+            "dg1"
+        ]
+    },
     "crm": {
         "resource": [],
         "vip": [
