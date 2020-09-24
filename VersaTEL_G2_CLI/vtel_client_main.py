@@ -140,6 +140,29 @@ class VtelCLI(object):
             nargs=2,
             help='date')
 
+        # Regression Testing
+        parser_replay = subp.add_parser(
+            'regress',
+            aliases=['rt'],
+            formatter_class=argparse.RawTextHelpFormatter
+        )
+
+        parser_replay.add_argument(
+            '-t',
+            '--transactionid',
+            dest='transactionid',
+            metavar='',
+            help='transaction id')
+
+        parser_replay.add_argument(
+            '-d',
+            '--date',
+            dest='date',
+            metavar='',
+            nargs=2,
+            help='date')
+
+
         self.parser_stor = parser_stor
         self.parser_iscsi = parser_iscsi
         self.parser_replay = parser_replay
