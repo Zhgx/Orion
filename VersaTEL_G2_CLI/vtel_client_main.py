@@ -9,6 +9,7 @@ import sundry
 import consts
 import iscsi_json
 import pytest
+import regression as rg
 
 from commands import (
     NodeCommands,
@@ -148,26 +149,26 @@ class VtelCLI(object):
             help='RegresessionTesting')
 
 
-        parser_regress = subp.add_parser(
-            'regress',
-            aliases=['rt'],
-            formatter_class=argparse.RawTextHelpFormatter
-        )
-
-        parser_regress.add_argument(
-            '-t',
-            '--transactionid',
-            dest='transactionid',
-            metavar='',
-            help='transaction id')
-
-        parser_regress.add_argument(
-            '-d',
-            '--date',
-            dest='date',
-            metavar='',
-            nargs=2,
-            help='date')
+        # parser_regress = subp.add_parser(
+        #     'regress',
+        #     aliases=['rt'],
+        #     formatter_class=argparse.RawTextHelpFormatter
+        # )
+        #
+        # parser_regress.add_argument(
+        #     '-t',
+        #     '--transactionid',
+        #     dest='transactionid',
+        #     metavar='',
+        #     help='transaction id')
+        #
+        # parser_regress.add_argument(
+        #     '-d',
+        #     '--date',
+        #     dest='date',
+        #     metavar='',
+        #     nargs=2,
+        #     help='date')
 
 
 
@@ -180,7 +181,7 @@ class VtelCLI(object):
         # Set the binding function of iscsi
         parser_iscsi.set_defaults(func=self.send_json)
         parser_replay.set_defaults(func=self.replay)
-        parser_regress.set_defaults(func=self.regress)
+        # parser_regress.set_defaults(func=self.regress)
 
 
         # 绑定replay有问题
@@ -240,15 +241,24 @@ class VtelCLI(object):
             try:
                 replay_args.func(replay_args)
             except consts.ReplayExit:
-                print('该事务replay结束')
+                print('* 该事务提前结束 *')
             except Exception:
                 print(str(traceback.format_exc()))
+
+            if consts.glo_rg() == 'yes':
+                list_header = ['Log记录值(类型)','当前运行值(类型)','类型匹配','断言类型','断言结果','被测函数/方法']
+                list_assert = consts.glo_rg_data()
+                print(rg.get_assert_table(list_header,list_assert))
+
         else:
             print(f"该命令{dict_input['cmd']}有误，无法执行")
 
 
     def replay_more(self,dict_input):
-        print('* MODE : REPLAY *')
+        if consts.glo_rg() == 'yes':
+            print('* MODE : Regression Testing *')
+        else:
+            print('* MODE : REPLAY *')
         print(f'transaction num : {len(dict_input)}')
 
         number_list = [str(i) for i in list(range(1,len(dict_input)+1))]
@@ -284,14 +294,12 @@ class VtelCLI(object):
             return
         elif args.transactionid:
             dict_cmd = obj_logdb.get_userinput_via_tid(args.transactionid)
-            print('* MODE : REPLAY *')
+            if consts.glo_rg() == 'yes':
+                print('* MODE : Regression Testing *')
+            else:
+                print('* MODE : REPLAY *')
             print(f'transaction num : 1')
             self.replay_one(dict_cmd)
-            # print('--------------')
-            # import pprint
-            # pprint.pprint(consts.glo_rpldata())
-            # pytest.main(['-m', dict_cmd['cmd'].replace(' ','_'), 'test/test_cmd.py'])
-
         elif args.date:
             dict_cmd = obj_logdb.get_userinput_via_time(args.date[0],args.date[1])
             self.replay_more(dict_cmd)
@@ -301,33 +309,33 @@ class VtelCLI(object):
 
         return dict_cmd
 
-    def regress_run(self,dict_cmd):
-        print('* MODE : Regression Testing *')
-        for one in dict_cmd:
-            print(f"\n-------------- transaction: {one['tid']}  command: {one['cmd']} --------------")
-            if dict_cmd['valid'] == '0':
-                consts.set_glo_tsc_id(one['tid'])
-                # pytest.main(['-m', one['cmd'].replace(' ', '_'), 'test/test_cmd.py'])
-            else:
-                print(f"该命令{dict_cmd['cmd']}有误")
+    # def regress_run(self,dict_cmd):
+    #     print('* MODE : Regression Testing *')
+    #     for one in dict_cmd:
+    #         print(f"\n-------------- transaction: {one['tid']}  command: {one['cmd']} --------------")
+    #         if dict_cmd['valid'] == '0':
+    #             consts.set_glo_tsc_id(one['tid'])
+    #             # pytest.main(['-m', one['cmd'].replace(' ', '_'), 'test/test_cmd.py'])
+    #         else:
+    #             print(f"该命令{dict_cmd['cmd']}有误")
 
 
-    def regress(self,args):
-        consts.set_glo_log_switch('no')
-        consts.set_glo_rpl('yes')
-        obj_logdb = logdb.prepare_db()
-        if args.transactionid and args.date:
-            print('Please specify only one type of data for regression testing.')
-            return
-        elif args.transactionid:
-            dict_cmd = [obj_logdb.get_userinput_via_tid(args.transactionid)]
-            self.regress_run(dict_cmd)
-        elif args.date:
-            dict_cmd = obj_logdb.get_userinput_via_time(args.date[0],args.date[1])
-            self.regress_run(dict_cmd)
-        else:
-            dict_cmd = obj_logdb.get_all_transaction()
-            self.regress_run(dict_cmd)
+    # def regress(self,args):
+    #     consts.set_glo_log_switch('no')
+    #     consts.set_glo_rpl('yes')
+    #     obj_logdb = logdb.prepare_db()
+    #     if args.transactionid and args.date:
+    #         print('Please specify only one type of data for regression testing.')
+    #         return
+    #     elif args.transactionid:
+    #         dict_cmd = [obj_logdb.get_userinput_via_tid(args.transactionid)]
+    #         self.regress_run(dict_cmd)
+    #     elif args.date:
+    #         dict_cmd = obj_logdb.get_userinput_via_time(args.date[0],args.date[1])
+    #         self.regress_run(dict_cmd)
+    #     else:
+    #         dict_cmd = obj_logdb.get_all_transaction()
+    #         self.regress_run(dict_cmd)
 
 
     def parse(self): # 调用入口

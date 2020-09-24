@@ -16,7 +16,7 @@ class Disk():
         self.js = iscsi_json.JSON_OPERATION()
 
 
-    @rg.rt_dec('equal','update_data')
+    @rg.rt_dec('equal','断言说明',str_part='update_data')
     def get_all_disk(self):
         linstor = Linstor()
         linstor_res = linstor.get_linstor_data('linstor --no-color --no-utf8 r lv')
@@ -32,7 +32,7 @@ class Disk():
             return {disk: self.js.get_data('Disk').get(disk)}
 
     # 展示全部disk
-    @rg.rt_dec('str_in', str_part='| ResourceName |      Path     |')
+    @rg.rt_dec('str_in', '断言说明',str_part='| ResourceName |      Path     |')
     def show_all_disk(self):
         list_header = ["ResourceName", "Path"]
         dict_data = self.get_all_disk()
@@ -220,7 +220,7 @@ class Map():
             else:
                 return True
 
-    @rg.rt_dec('equal')
+    @rg.rt_dec('equal','断言说明')
     @s.record_log
     def get_initiator(self, hg):
         # 根据hg去获取hostiqn，返回由hostiqn组成的initiator
@@ -233,7 +233,7 @@ class Map():
 
         return initiator
 
-    @rg.rt_dec('equal')
+    @rg.rt_dec('equal','断言说明')
     @s.record_log
     def get_target(self):
         # 获取target
@@ -245,10 +245,9 @@ class Map():
                 target_all = crm_data_dict['target'][0] # 目前的设计只有一个target，所以取列表的第一个
                 return target_all[0], target_all[1]  # 返回target_name, target_iqn
             else:
-                print('没有target，创建map失败')
-                sys.exit()
+                s.prt_log('没有target，创建map失败',2)
 
-    @rg.rt_dec('equal')
+    @rg.rt_dec('equal','断言说明')
     @s.record_log
     def get_drbd_data(self, dg):
         # 根据dg去收集drbdd的三项数据：resource name，minor number，device name

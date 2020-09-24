@@ -10,7 +10,7 @@ class Linstor():
     def __init__(self):
         self.logger = consts.glo_log()
 
-    @rg.rt_dec('equal', times=3)
+    @rg.rt_dec('equal','断言说明',times=3)
     def refine_linstor(self,data):
         reSeparate = re.compile(r'(.*?\s\|)')
         list_table = data.split('\n')
@@ -45,7 +45,7 @@ class Linstor():
         return list_data_all
 
     def get_linstor_data(self,cmd):
-        cmd_result = s.execute_cmd(cmd,s.get_function_name())
+        cmd_result = s.execute_cmd(cmd)
         return self.refine_linstor(cmd_result)
         # RPL = consts.glo_rpl()
         # if RPL == 'yes':

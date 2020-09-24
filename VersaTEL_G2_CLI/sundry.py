@@ -199,15 +199,16 @@ def change_pointer(new_id):
 def cmd_decorator(type):
     def decorate(func):
         @wraps(func)
-        def wrapper(cmd,func_name):
+        def wrapper(cmd):
             RPL = consts.glo_rpl()
             RG = consts.glo_rg()
             oprt_id = create_oprt_id()
+            func_name = traceback.extract_stack()[-2][2] # 装饰器获取被调用函数的函数名
             if RPL == 'no':
                 logger = consts.glo_log()
                 logger.write_to_log('DATA', 'STR', func_name, '', oprt_id)
                 logger.write_to_log('OPRT', 'CMD', type, oprt_id, cmd)
-                result_cmd = func(cmd,func_name)
+                result_cmd = func(cmd)
                 logger.write_to_log('DATA', 'CMD', type, oprt_id, result_cmd)
                 return result_cmd
             else:
@@ -235,7 +236,7 @@ def cmd_decorator(type):
 
 
 @cmd_decorator('sys')
-def execute_cmd(cmd, func_name, timeout=60):
+def execute_cmd(cmd, timeout=60):
     p = subprocess.Popen(cmd, stderr=subprocess.STDOUT, stdout=subprocess.PIPE, shell=True)
     t_beginning = time.time()
     seconds_passed = 0
@@ -279,10 +280,11 @@ def prt_log(str, warning_level):
     :param print_str: Strings to be printed and recorded
     """
     logger = consts.glo_log()
-    rpl = consts.glo_rpl()
-    if rpl == 'yes':
+    RPL = consts.glo_rpl()
+    if RPL == 'yes':
+        # pass
         prt(str, warning_level)
-    elif rpl == 'no':
+    elif RPL == 'no':
         prt(str, warning_level)
 
     if warning_level == 0:
@@ -291,6 +293,13 @@ def prt_log(str, warning_level):
         logger.write_to_log('INFO', 'WARNING', 'fail', 'output', str)
     elif warning_level == 2:
         logger.write_to_log('INFO', 'ERROR', 'exit', 'output', str)
+        if RPL == 'no':
+            sys.exit()
+        else:
+            raise consts.ReplayExit
+
+
+
 
 
 def color_data(func):

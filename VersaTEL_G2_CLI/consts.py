@@ -31,7 +31,7 @@ def _init():
     _global_dict['RPL'] = 'no'
     _global_dict['RG'] = 'no'
     _global_dict['LOG_SWITCH'] = 'yes'
-    _global_dict['RPL_DATA'] = {}
+    _global_dict['RG_DATA'] = []
 
 def set_value(key, value):
     """ 定义一个全局变量 """
@@ -48,7 +48,7 @@ def get_value(key, dft_val = None):
 
 def append_value(key,value):
     """字典添加键值对"""
-    _global_dict[key].update(value)
+    _global_dict[key].append(value)
 
 
 def set_glo_log(value):
@@ -83,8 +83,8 @@ def set_glo_gui_tid(value):
     set_value('GUI_TID',value)
 
 
-def set_glo_rpldata(value):
-    append_value('RPL_DATA',value)
+def set_glo_rg_data(value):
+    append_value('RG_DATA',value)
 
 
 def glo_gui_tid():
@@ -123,7 +123,7 @@ def glo_log_switch():
     return get_value('LOG_SWITCH')
 
 
-def glo_rpldata():
-    return get_value('RPL_DATA')
+def glo_rg_data():
+    return get_value('RG_DATA')
 
 
