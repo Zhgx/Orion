@@ -230,6 +230,13 @@ class VtelCLI(object):
             self.parser_iscsi.print_help()
 
 
+    def print_regress_table(self):
+        if consts.glo_rg() == 'yes':
+            list_header = ['Log记录值(类型)', '当前运行值(类型)', '类型匹配', '断言类型', '断言结果', '被测函数/方法']
+            list_assert = consts.glo_rg_data()
+            print(rg.get_assert_table(list_header, list_assert))
+
+
     def replay_one(self,dict_input):
         if not dict_input:
             print('不存在命令去进行replay')
@@ -240,15 +247,13 @@ class VtelCLI(object):
             replay_args = self._parser.parse_args(dict_input['cmd'].split())
             try:
                 replay_args.func(replay_args)
+                self.print_regress_table()
             except consts.ReplayExit:
+                self.print_regress_table()
                 print('* 该事务提前结束 *')
             except Exception:
+                self.print_regress_table()
                 print(str(traceback.format_exc()))
-
-            if consts.glo_rg() == 'yes':
-                list_header = ['Log记录值(类型)','当前运行值(类型)','类型匹配','断言类型','断言结果','被测函数/方法']
-                list_assert = consts.glo_rg_data()
-                print(rg.get_assert_table(list_header,list_assert))
 
         else:
             print(f"该命令{dict_input['cmd']}有误，无法执行")
