@@ -8,7 +8,6 @@ import log
 import sundry
 import consts
 import iscsi_json
-import pytest
 import regression as rg
 
 from commands import (
@@ -22,6 +21,7 @@ from commands import (
     MapCommands
 )
 
+
 class MyArgumentParser(argparse.ArgumentParser):
     def parse_args(self, args=None, namespace=None):
         args, argv = self.parse_known_args(args, namespace)
@@ -34,38 +34,32 @@ class MyArgumentParser(argparse.ArgumentParser):
         logger = consts.glo_log()
         cmd = ' '.join(sys.argv[1:])
         path = sundry.get_path()
-        logger.write_to_log('DATA', 'INFO', 'cmd_input', path, {'valid':'1','cmd':cmd})
-        logger.write_to_log('INFO', 'INFO', 'finish','', 'print usage')
+        logger.write_to_log('DATA', 'INFO', 'cmd_input',
+                            path, {'valid': '1', 'cmd': cmd})
+        logger.write_to_log('INFO', 'INFO', 'finish', '', 'print usage')
         if file is None:
             file = sys.stdout
         self._print_message(self.format_usage(), file)
 
     def print_help(self, file=None):
         logger = consts.glo_log()
-        logger.write_to_log('INFO', 'INFO', 'finish','', 'print help')
+        logger.write_to_log('INFO', 'INFO', 'finish', '', 'print help')
         if file is None:
             file = sys.stdout
         self._print_message(self.format_help(), file)
-
-    # def _print_message(self, message, file=None):
-    #     if message:
-    #         if file is None:
-    #             file = sys.stderr
-    #         file.write(message)
-
-
 
 
 class VtelCLI(object):
     """
     Vtel command line client
     """
+
     def __init__(self):
         consts._init()
         self.username = sundry.get_username()
         self.transaction_id = sys.argv[-1] if '-gui' in sys.argv \
             else sundry.create_transaction_id()
-        self.logger = log.Log(self.username,self.transaction_id)
+        self.logger = log.Log(self.username, self.transaction_id)
         consts.set_glo_log(self.logger)
         self.replay_args_list = []
         self._node_commands = NodeCommands()
@@ -78,7 +72,6 @@ class VtelCLI(object):
         self._map_commands = MapCommands()
         self._parser = self.setup_parser()
 
-
     def setup_parser(self):
         parser = MyArgumentParser(prog="vtel")
         """
@@ -86,10 +79,8 @@ class VtelCLI(object):
         """
         #parser.add_argument('--version','-v',action='version',version='%(prog)s ' + VERSION + '; ')
 
-
         subp = parser.add_subparsers(metavar='',
                                      dest='subargs_vtel')
-
 
         parser_stor = subp.add_parser(
             'stor',
@@ -97,7 +88,6 @@ class VtelCLI(object):
             add_help=False,
             formatter_class=argparse.RawTextHelpFormatter,
         )
-
 
         # add parameters to interact with the GUI
         parser_stor.add_argument(
@@ -111,13 +101,11 @@ class VtelCLI(object):
             help='Management operations for iSCSI',
             add_help=False)
 
-
         parser_iscsi.add_argument(
             '-gui',
             dest='gui',
             action='store',
             help=argparse.SUPPRESS)
-
 
         # replay function related parameter settings
         parser_replay = subp.add_parser(
@@ -143,34 +131,10 @@ class VtelCLI(object):
 
         parser_replay.add_argument(
             '-rg',
-            dest = 'rg',
+            dest='rg',
             action='store_true',
             default=False,
             help='RegresessionTesting')
-
-
-        # parser_regress = subp.add_parser(
-        #     'regress',
-        #     aliases=['rt'],
-        #     formatter_class=argparse.RawTextHelpFormatter
-        # )
-        #
-        # parser_regress.add_argument(
-        #     '-t',
-        #     '--transactionid',
-        #     dest='transactionid',
-        #     metavar='',
-        #     help='transaction id')
-        #
-        # parser_regress.add_argument(
-        #     '-d',
-        #     '--date',
-        #     dest='date',
-        #     metavar='',
-        #     nargs=2,
-        #     help='date')
-
-
 
         self.parser_stor = parser_stor
         self.parser_iscsi = parser_iscsi
@@ -181,14 +145,10 @@ class VtelCLI(object):
         # Set the binding function of iscsi
         parser_iscsi.set_defaults(func=self.send_json)
         parser_replay.set_defaults(func=self.replay)
-        # parser_regress.set_defaults(func=self.regress)
 
-
-        # 绑定replay有问题
-        # parser_replay.set_defaults(func=self.replay)
-
-        subp_stor = parser_stor.add_subparsers(dest='subargs_stor',metavar='')
-        subp_iscsi = parser_iscsi.add_subparsers(dest='subargs_iscsi',metavar='')
+        subp_stor = parser_stor.add_subparsers(dest='subargs_stor', metavar='')
+        subp_iscsi = parser_iscsi.add_subparsers(
+            dest='subargs_iscsi', metavar='')
 
         # add all subcommands and argument
         self._node_commands.setup_commands(subp_stor)
@@ -205,8 +165,7 @@ class VtelCLI(object):
 
         return parser
 
-
-    def print_vtel_help(self,*args):
+    def print_vtel_help(self, *args):
         self._parser.print_help()
 
     # When using the parameter '-gui', send the database through the socket
@@ -229,15 +188,14 @@ class VtelCLI(object):
         else:
             self.parser_iscsi.print_help()
 
-
     def print_regress_table(self):
         if consts.glo_rg() == 'yes':
-            list_header = ['Log记录值(类型)', '当前运行值(类型)', '类型匹配', '断言类型', '断言结果', '被测函数/方法']
+            list_header = ['Log记录值(类型)', '当前运行值(类型)',
+                           '类型匹配', '断言类型', '断言结果', '被测函数/方法', '被调用位置']
             list_assert = consts.glo_rg_data()
             print(rg.get_assert_table(list_header, list_assert))
 
-
-    def replay_one(self,dict_input):
+    def replay_one(self, dict_input):
         if not dict_input:
             print('不存在命令去进行replay')
             return
@@ -254,22 +212,19 @@ class VtelCLI(object):
             except Exception:
                 self.print_regress_table()
                 print(str(traceback.format_exc()))
-
         else:
             print(f"该命令{dict_input['cmd']}有误，无法执行")
 
-
-    def replay_more(self,dict_input):
+    def replay_more(self, dict_input):
         if consts.glo_rg() == 'yes':
             print('* MODE : Regression Testing *')
         else:
             print('* MODE : REPLAY *')
         print(f'transaction num : {len(dict_input)}')
 
-        number_list = [str(i) for i in list(range(1,len(dict_input)+1))]
+        number_list = [str(i) for i in list(range(1, len(dict_input)+1))]
         for i in range(len(dict_input)):
             print(f"{i+1:<3} Transaction ID: {dict_input[i]['tid']:<12} CMD: {dict_input[i]['cmd']}")
-
         answer = ''
         while answer != 'exit':
             print('请输入要执行replay的序号，或者all，输入exit退出：')
@@ -285,15 +240,13 @@ class VtelCLI(object):
             else:
                 print('输入的序号不正确')
 
-
-    def replay(self,args):
+    def replay(self, args):
         consts.set_glo_log_switch('no')
         consts.set_glo_rpl('yes')
         obj_logdb = logdb.prepare_db()
 
         if args.rg:
             consts.set_glo_rg('yes')
-
         if args.transactionid and args.date:
             print('Please specify only one type of data for replay')
             return
@@ -306,54 +259,25 @@ class VtelCLI(object):
             print(f'transaction num : 1')
             self.replay_one(dict_cmd)
         elif args.date:
-            dict_cmd = obj_logdb.get_userinput_via_time(args.date[0],args.date[1])
+            dict_cmd = obj_logdb.get_userinput_via_time(
+                args.date[0], args.date[1])
             self.replay_more(dict_cmd)
         else:
             dict_cmd = obj_logdb.get_all_transaction()
             self.replay_more(dict_cmd)
-
         return dict_cmd
 
-    # def regress_run(self,dict_cmd):
-    #     print('* MODE : Regression Testing *')
-    #     for one in dict_cmd:
-    #         print(f"\n-------------- transaction: {one['tid']}  command: {one['cmd']} --------------")
-    #         if dict_cmd['valid'] == '0':
-    #             consts.set_glo_tsc_id(one['tid'])
-    #             # pytest.main(['-m', one['cmd'].replace(' ', '_'), 'test/test_cmd.py'])
-    #         else:
-    #             print(f"该命令{dict_cmd['cmd']}有误")
-
-
-    # def regress(self,args):
-    #     consts.set_glo_log_switch('no')
-    #     consts.set_glo_rpl('yes')
-    #     obj_logdb = logdb.prepare_db()
-    #     if args.transactionid and args.date:
-    #         print('Please specify only one type of data for regression testing.')
-    #         return
-    #     elif args.transactionid:
-    #         dict_cmd = [obj_logdb.get_userinput_via_tid(args.transactionid)]
-    #         self.regress_run(dict_cmd)
-    #     elif args.date:
-    #         dict_cmd = obj_logdb.get_userinput_via_time(args.date[0],args.date[1])
-    #         self.regress_run(dict_cmd)
-    #     else:
-    #         dict_cmd = obj_logdb.get_all_transaction()
-    #         self.regress_run(dict_cmd)
-
-
-    def parse(self): # 调用入口
+    def parse(self):
         args = self._parser.parse_args()
         path = sundry.get_path()
         cmd = ' '.join(sys.argv[1:])
-
         if args.subargs_vtel:
-            if args.subargs_vtel not in ['re', 'replay','regress','rt']:
-                self.logger.write_to_log('DATA', 'INPUT', 'cmd_input', path, {'valid': '0', 'cmd': cmd})
+            if args.subargs_vtel not in ['re', 'replay', 'regress', 'rt']:
+                self.logger.write_to_log('DATA', 'INPUT', 'cmd_input', path, {
+                                         'valid': '0', 'cmd': cmd})
         else:
-            self.logger.write_to_log('DATA','INPUT','cmd_input', path, {'valid':'0','cmd':cmd})
-
+            self.logger.write_to_log('DATA', 'INPUT', 'cmd_input', path, {
+                                     'valid': '0', 'cmd': cmd})
         args.func(args)
 
 

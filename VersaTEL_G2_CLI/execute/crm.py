@@ -6,15 +6,17 @@ import sundry as s
 import subprocess
 import regression as rg
 
+
 @s.cmd_decorator('crm')
-def execute_crm_cmd(cmd,timeout=60):
+def execute_crm_cmd(cmd, timeout=60):
     """
     Execute the command cmd to return the content of the command output.
     If it times out, a TimeoutError exception will be thrown.
     cmd - Command to be executed
     timeout - The longest waiting time(unit:second)
     """
-    p = subprocess.Popen(cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
+    p = subprocess.Popen(cmd, stderr=subprocess.PIPE,
+                         stdout=subprocess.PIPE, shell=True)
     t_beginning = time.time()
     seconds_passed = 0
     output = None
@@ -33,7 +35,7 @@ def execute_crm_cmd(cmd,timeout=60):
     elif len(err) > 0:
         err = err.decode()
         output = {'sts': 0, 'rst': err}
-    elif out == b'':  # 需要再考虑一下 res stop 执行成功没有返回，stop失败也没有返回（无法判断stop成不成功）
+    elif out == b'':
         out = out.decode()
         output = {'sts': 1, 'rst': out}
 
@@ -42,12 +44,11 @@ def execute_crm_cmd(cmd,timeout=60):
     else:
         s.handle_exception()
 
+
 class CRMData():
     def __init__(self):
         self.crm_conf_data = self.get_crm_conf()
 
-
-    # 打印出来的信息太过繁杂，考虑如何实现replay（log记录时）时打印出有效信息，
     def get_crm_conf(self):
         cmd = 'crm configure show'
         result = execute_crm_cmd(cmd)
@@ -56,7 +57,7 @@ class CRMData():
         else:
             s.handle_exception()
 
-    @rg.rt_dec('equal','断言说明')
+    @rg.rt_dec('equal')
     @s.record_log
     def get_resource_data(self):
         # 用来匹配的原数据，allowed_initiators=""，有时有双引号，有时候没有，无法确定，然后多个iqn是怎么样的
@@ -65,7 +66,7 @@ class CRMData():
         result = s.re_findall(re_logical, self.crm_conf_data)
         return result
 
-    @rg.rt_dec('equal','断言说明')
+    @rg.rt_dec('equal')
     @s.record_log
     def get_vip_data(self):
         re_vip = re.compile(
@@ -73,19 +74,18 @@ class CRMData():
         result = s.re_findall(re_vip, self.crm_conf_data)
         return result
 
-    @rg.rt_dec('equal','断言说明')
+    @rg.rt_dec('equal')
     @s.record_log
     def get_target_data(self):
-        re_target = re.compile(#params
+        re_target = re.compile(
             r'primitive\s(\w*)\s\w*\s\\\s*params\siqn="([a-zA-Z0-9.:-]*)"\s[a-z=-]*\sportals="([0-9.]*):\d*"\s\\')
         result = s.re_findall(re_target, self.crm_conf_data)
         return result
 
     # 获取并更新crm信息
     def update_crm_conf(self):
-        # crm_config_status = obj_crm.get_crm_data()
         if 'ERROR' in self.crm_conf_data:
-            s.prt_log("Could not perform requested operations, are you root?",1)
+            s.prt_log("Could not perform requested operations, are you root?", 1)
         else:
             js = iscsi_json.JSON_OPERATION()
             res = self.get_resource_data()
@@ -112,11 +112,11 @@ class CRMConfig():
             f'meta target-role=Stopped'
         result = execute_crm_cmd(cmd)
         if result['sts']:
-            s.prt_log("Create iSCSILogicalUnit success",0)
+            s.prt_log("Create iSCSILogicalUnit success", 0)
             return True
 
     # 获取res的状态
-    @rg.rt_dec('equal','断言说明')
+    @rg.rt_dec('equal')
     @s.record_log
     def get_res_status(self, res):
         crm_data = CRMData()
@@ -132,8 +132,7 @@ class CRMConfig():
         if result['sts']:
             return True
         else:
-            s.prt_log("crm res stop fail",1)
-
+            s.prt_log("crm res stop fail", 1)
 
     # 检查
     def checkout_status(self, res, times, expect_value):
@@ -152,37 +151,37 @@ class CRMConfig():
             else:
                 time.sleep(1)
         else:
-            s.prt_log("Does not meet expectations, please try again.",1)
+            s.prt_log("Does not meet expectations, please try again.", 1)
 
     def delete_crm_res(self, res):
         if self.stop_res(res):
-            if self.checkout_status(res,10,'Stopped'):
+            if self.checkout_status(res, 10, 'Stopped'):
                 time.sleep(3)
                 cmd = f'crm conf del {res}'
                 result = execute_crm_cmd(cmd)
                 if result:
                     output = result['rst']
                     re_str = re.compile(rf'INFO: hanging colocation:co_{res} deleted\nINFO: hanging order:or_{res} deleted\n')
-                    if s.re_search(re_str,output):
-                        s.prt_log(f"crm conf del {res}",0)
+                    if s.re_search(re_str, output):
+                        s.prt_log(f"crm conf del {res}", 0)
                         return True
                     else:
-                        s.prt_log(f"crm delete fail",1)
+                        s.prt_log(f"crm delete fail", 1)
         else:
-            s.prt_log(f"crm delete fail",1)
+            s.prt_log(f"crm delete fail", 1)
 
     def create_col(self, res, target):
         cmd = f'crm conf colocation co_{res} inf: {res} {target}'
         result = execute_crm_cmd(cmd)
         if result['sts']:
-            s.prt_log("set coclocation success",0)
+            s.prt_log("set coclocation success", 0)
             return True
 
     def create_order(self, res, target):
         cmd = f'crm conf order or_{res} {target} {res}'
         result = execute_crm_cmd(cmd)
         if result['sts']:
-            s.prt_log("set order success",0)
+            s.prt_log("set order success", 0)
             return True
 
     def start_res(self, res):

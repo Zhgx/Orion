@@ -1,4 +1,4 @@
-#coding:utf-8
+# coding:utf-8
 """
 Global constants for vtel
 """
@@ -33,12 +33,13 @@ def _init():
     _global_dict['LOG_SWITCH'] = 'yes'
     _global_dict['RG_DATA'] = []
 
+
 def set_value(key, value):
     """ 定义一个全局变量 """
     _global_dict[key] = value
 
 
-def get_value(key, dft_val = None):
+def get_value(key, dft_val=None):
     """ 获得一个全局变量,不存在则返回默认值 """
     try:
         return _global_dict[key]
@@ -46,7 +47,7 @@ def get_value(key, dft_val = None):
         return dft_val
 
 
-def append_value(key,value):
+def append_value(key, value):
     """字典添加键值对"""
     _global_dict[key].append(value)
 
@@ -80,11 +81,11 @@ def set_glo_log_switch(value):
 
 
 def set_glo_gui_tid(value):
-    set_value('GUI_TID',value)
+    set_value('GUI_TID', value)
 
 
 def set_glo_rg_data(value):
-    append_value('RG_DATA',value)
+    append_value('RG_DATA', value)
 
 
 def glo_gui_tid():
@@ -125,5 +126,3 @@ def glo_log_switch():
 
 def glo_rg_data():
     return get_value('RG_DATA')
-
-

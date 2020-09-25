@@ -6,6 +6,7 @@ import consts
 LOG_PATH = "./VersaTEL_G2_CLI.log"
 LOG_FILE_NAME = 'VersaTEL_G2_CLI.log'
 
+
 def prepare_db():
     db = LogDB()
     consts.set_glo_db(db)
@@ -16,6 +17,7 @@ def prepare_db():
 def isFileExists(strfile):
     # 检查文件是否存在
     return os.path.isfile(strfile)
+
 
 def _fill_db_with_log():
     id = (None,)
@@ -33,7 +35,6 @@ def _fill_db_with_log():
     db.con.commit()
 
 
-
 def _read_log_files():
     all_data = ''
     if not isFileExists(LOG_PATH):
@@ -42,7 +43,7 @@ def _read_log_files():
     for file in _get_log_files(LOG_FILE_NAME):
         f = open('./' + file)
         data = f.read()
-        all_data+=data
+        all_data += data
         f.close()
     return all_data
 
@@ -55,7 +56,6 @@ def _get_log_files(base_log_file):
             list_file.append(file)
     list_file.sort(reverse=True)
     return list_file
-
 
 
 class LogDB():
@@ -87,7 +87,6 @@ class LogDB():
         )
     values(?,?,?,?,?,?,?,?,?)
     '''
-
 
     drop_table_sql = "DROP TABLE if exists logtable "
 
@@ -127,17 +126,15 @@ class LogDB():
         date_set = cur.fetchall()
         return list(date_set)
 
-
     def get_userinput_via_tid(self, transaction_id):
         sql = f"SELECT data FROM logtable WHERE describe1 = 'cmd_input' and transaction_id = '{transaction_id}'"
         result = self.sql_fetch_one(sql)
         if result:
             result = eval(result)
-            return {'tid':transaction_id, 'valid':result['valid'],'cmd':result['cmd']}
+            return {'tid': transaction_id, 'valid': result['valid'], 'cmd': result['cmd']}
         # if result:
         #     args_type, cmd = self.sql_fetch_one(sql)
         #     return [{'tid':transaction_id,'type':args_type,'cmd':cmd}]
-
 
     def get_userinput_via_time(self, start_time, end_time):
         sql = f"SELECT transaction_id,data FROM logtable WHERE describe1 = 'cmd_input' and time >= '{start_time}' and time <= '{end_time}'"
@@ -146,7 +143,8 @@ class LogDB():
         for i in all_data:
             tid, user_input = i
             user_input = eval(user_input)
-            dict_one = {'tid':tid, 'valid':user_input['valid'], 'cmd':user_input['cmd']}
+            dict_one = {'tid': tid,
+                        'valid': user_input['valid'], 'cmd': user_input['cmd']}
             result_list.append(dict_one)
 
         return result_list
@@ -159,10 +157,10 @@ class LogDB():
         for i in all_data:
             tid, user_input = i
             user_input = eval(user_input)
-            dict_one = {'tid':tid, 'valid':user_input['valid'], 'cmd':user_input['cmd']}
+            dict_one = {'tid': tid,
+                        'valid': user_input['valid'], 'cmd': user_input['cmd']}
             result_list.append(dict_one)
         return result_list
-
 
     def get_oprt_result(self, oprt_id):
         sql = f"SELECT time,data FROM logtable WHERE type1 = 'DATA' and describe2 = '{oprt_id}'"
@@ -173,41 +171,40 @@ class LogDB():
                 time, data = self.sql_fetch_one(sql)
                 return {'time': time, 'result': data}
             else:
-                return {'time':'','result':''}
+                return {'time': '', 'result': ''}
         else:
             return {'time': '', 'result': ''}
 
-    def get_id(self, transaction_id, string,id_now):
+    def get_id(self, transaction_id, string, id_now):
         sql = f"SELECT time,id,data FROM logtable WHERE describe1 = '{string}' and type2 = 'STR' and id > {id_now} and transaction_id = '{transaction_id}'"
         result = self.sql_fetch_one(sql)
         if result:
-            time,db_id,oprt_id = result
-            return {'time':time,'db_id':db_id,'oprt_id':oprt_id}
+            time, db_id, oprt_id = result
+            return {'time': time, 'db_id': db_id, 'oprt_id': oprt_id}
         else:
-            return {'time':'','db_id':'','oprt_id':''}
+            return {'time': '', 'db_id': '', 'oprt_id': ''}
 
-    def get_anwser(self,transaction_id):
+    def get_anwser(self, transaction_id):
         sql = f"SELECT time,data FROM logtable WHERE transaction_id = '{transaction_id}' and describe2 = 'confirm deletion'"
         result = self.sql_fetch_one(sql)
         if result:
             return result
         else:
-            return ('','')
+            return ('', '')
 
-    def get_cmd_output(self,transaction_id):
+    def get_cmd_output(self, transaction_id):
         id_now = consts.glo_log_id()
         sql = f"SELECT time,data FROM logtable WHERE describe2 = 'output' and type1 = 'INFO' and transaction_id = '{transaction_id}' and id > {id_now}"
         result = self.sql_fetch_one(sql)
         if result:
             return result
         else:
-            return ('','')
-
-
+            return ('', '')
 
     # for Regression Testing
-    def get_refine_linstor_data(self,transaction_id):
-        id_dict = self.get_id(transaction_id,'refine_linstor',consts.glo_log_id())
+    def get_refine_linstor_data(self, transaction_id):
+        id_dict = self.get_id(
+            transaction_id, 'refine_linstor', consts.glo_log_id())
         result = self.get_oprt_result(id_dict['oprt_id'])['result']
         if result:
             return eval(result)

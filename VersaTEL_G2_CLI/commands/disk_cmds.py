@@ -4,11 +4,9 @@ import consts
 import sundry as sd
 
 
-
 class DiskCommands():
     def __init__(self):
         self.logger = consts.glo_log()
-
 
     def setup_commands(self, parser):
         """
@@ -38,8 +36,6 @@ class DiskCommands():
         self.p_show_disk = p_show_disk
         p_show_disk.set_defaults(func=self.show)
 
-
-
     @sd.record_exception
     def show(self, args):
         disk = ex.Disk()
@@ -47,8 +43,6 @@ class DiskCommands():
             disk.show_all_disk()
         else:
             disk.show_spe_disk(args.disk)
-
-
 
     def print_disk_help(self, *args):
         self.disk_parser.print_help()

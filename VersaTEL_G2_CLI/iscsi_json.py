@@ -30,7 +30,6 @@ class JSON_OPERATION():
                 json.dump(json_dict, fw, indent=4, separators=(',', ': '))
             return json_dict
 
-
     # 创建Host、HostGroup、DiskGroup、Map
     @s.json_operate_decorator('JSON添加后的资源信息')
     def add_data(self, first_key, data_key, data_value):
@@ -38,7 +37,6 @@ class JSON_OPERATION():
         with open('iSCSI_Data.json', "w") as fw:
             json.dump(self.json_data, fw, indent=4, separators=(',', ': '))
         return self.json_data[first_key]
-
 
     # 删除Host、HostGroup、DiskGroup、Map
     @s.json_operate_decorator('JSON删除后的资源信息')
@@ -56,21 +54,19 @@ class JSON_OPERATION():
 
     # 检查key值是否存在
     @s.json_operate_decorator('JSON检查key值的结果')
-    def check_key(self,first_key,data_key):
+    def check_key(self, first_key, data_key):
         if data_key in self.json_data[first_key]:
-            return {'type':first_key,'alias':data_key, 'result':True}
+            return {'type': first_key, 'alias': data_key, 'result': True}
         else:
-            return {'type':first_key,'alias':data_key, 'result':False}
-
+            return {'type': first_key, 'alias': data_key, 'result': False}
 
     # 检查value值是否存在
     @s.json_operate_decorator('JSON检查value值的结果')
     def check_value(self, first_key, data_value):
         for key in self.json_data[first_key]:
             if data_value in self.json_data[first_key][key]:
-                return {'type':first_key,'alias':data_value,'result':True}
-        return {'type':first_key,'alias':data_value,'result':False}
-
+                return {'type': first_key, 'alias': data_value, 'result': True}
+        return {'type': first_key, 'alias': data_value, 'result': False}
 
     # 更新disk 可能需要注意的地方：没有限制可以修改的key
     @s.json_operate_decorator(f'JSON更新资源信息')
@@ -80,10 +76,9 @@ class JSON_OPERATION():
             json.dump(self.json_data, fw, indent=4, separators=(',', ': '))
         return self.json_data[first_key]
 
-
     # 更新crm configure资源的信息
     @s.json_operate_decorator('JSON更新CRM资源信息')
-    def update_crm_conf(self, resource,vip,target):
+    def update_crm_conf(self, resource, vip, target):
         self.json_data.update({'crm': {}})
         self.json_data['crm'].update({'resource': resource})
         self.json_data['crm'].update({'vip': vip})
@@ -91,6 +86,3 @@ class JSON_OPERATION():
         with open('iSCSI_Data.json', "w") as fw:
             json.dump(self.json_data, fw, indent=4, separators=(',', ': '))
         return self.json_data['crm']
-
-
-

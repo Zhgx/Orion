@@ -5,6 +5,7 @@ import execute as ex
 import consts
 from consts import ExitCode
 
+
 class usage():
     # node部分使用手册
     node = '''
@@ -152,7 +153,6 @@ class NodeCommands():
             self.p_create_node.print_help()
             return ExitCode.ARGPARSE_ERROR
 
-
     @sd.record_exception
     @sd.comfirm_del('node')
     def delete(self, args):
@@ -164,7 +164,7 @@ class NodeCommands():
         node = ex.Node()
         if args.nocolor:
             if args.node:
-                node.show_one_node(args.node,no_color='yes')
+                node.show_one_node(args.node, no_color='yes')
                 return ExitCode.OK
             else:
                 node.show_all_node(no_color='yes')
@@ -176,7 +176,6 @@ class NodeCommands():
             else:
                 node.show_all_node()
                 return ExitCode.OK
-
 
     def print_node_help(self, *args):
         self.node_parser.print_help()
