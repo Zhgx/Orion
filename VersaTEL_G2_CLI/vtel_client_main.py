@@ -8,7 +8,6 @@ import log
 import sundry
 import consts
 import iscsi_json
-import pytest
 
 from commands import (
     NodeCommands,
@@ -45,13 +44,6 @@ class MyArgumentParser(argparse.ArgumentParser):
         if file is None:
             file = sys.stdout
         self._print_message(self.format_help(), file)
-
-    # def _print_message(self, message, file=None):
-    #     if message:
-    #         if file is None:
-    #             file = sys.stderr
-    #         file.write(message)
-
 
 
 
@@ -140,28 +132,6 @@ class VtelCLI(object):
             nargs=2,
             help='date')
 
-        # Regression Testing
-        parser_replay = subp.add_parser(
-            'regress',
-            aliases=['rt'],
-            formatter_class=argparse.RawTextHelpFormatter
-        )
-
-        parser_replay.add_argument(
-            '-t',
-            '--transactionid',
-            dest='transactionid',
-            metavar='',
-            help='transaction id')
-
-        parser_replay.add_argument(
-            '-d',
-            '--date',
-            dest='date',
-            metavar='',
-            nargs=2,
-            help='date')
-
 
         self.parser_stor = parser_stor
         self.parser_iscsi = parser_iscsi
@@ -172,10 +142,6 @@ class VtelCLI(object):
         # Set the binding function of iscsi
         parser_iscsi.set_defaults(func=self.send_json)
         parser_replay.set_defaults(func=self.replay)
-
-
-        # 绑定replay有问题
-        # parser_replay.set_defaults(func=self.replay)
 
         subp_stor = parser_stor.add_subparsers(dest='subargs_stor',metavar='')
         subp_iscsi = parser_iscsi.add_subparsers(dest='subargs_iscsi',metavar='')
@@ -218,48 +184,6 @@ class VtelCLI(object):
             sundry.send_via_socket(data_pickled)
         else:
             self.parser_iscsi.print_help()
-
-
-    # def replay_run(self,cmd_list):
-    #     if not cmd_list:
-    #         print('不存在命令去进行replay')
-    #         return
-    #
-    #     trasanction_num = len(cmd_list)
-    #
-    #
-    #     for replay_cmd in cmd_list:
-    #         print(f"--------------transaction:{replay_cmd['tid']}--------------")
-    #         consts.set_glo_tsc_id(replay_cmd['tid'] )
-    #         if replay_cmd:
-    #             print(replay_cmd)
-    #             if not replay_cmd['valid'] == 0:
-    #                 replay_args = self._parser.parse_args(replay_cmd['user_input']['cmd'].split())
-    #                 print(f"* 执行命令：{replay_cmd['user_input']['cmd']} *")
-    #                 try:
-    #                     replay_args.func(replay_args)
-    #                 except consts.ReplayExit:
-    #                     print('该事务replay结束')
-    #                 except Exception:
-    #                     print(str(traceback.format_exc()))
-    #             else:
-    #                 print(f"该命令{replay_cmd['cmd']}有误，无法执行")
-    #
-    #             # if not replay_cmd['type'] == 'err':
-    #             #     replay_args = self._parser.parse_args(replay_cmd['cmd'].split())
-    #             #     print(f"* 执行命令：{replay_cmd['cmd']} *")
-    #             #     try:
-    #             #         replay_args.func(replay_args)
-    #             #     except consts.ReplayExit:
-    #             #         print('该事务replay结束')
-    #             #     except Exception:
-    #             #         print(str(traceback.format_exc()))
-    #             #
-    #             # else:
-    #             #     print(f"该命令{replay_cmd['cmd']}有误，无法执行")
-    #         else:
-    #             print('该事务id:不存在或者不符合replay条件（python vtel_client_main）')
-
 
     def replay_one(self,dict_input):
         if not dict_input:
@@ -315,11 +239,6 @@ class VtelCLI(object):
             print('* MODE : REPLAY *')
             print(f'transaction num : 1')
             self.replay_one(dict_cmd)
-            print('--------------')
-            import pprint
-            pprint.pprint(consts.glo_rpldata())
-            pytest.main(['-m', dict_cmd['cmd'].replace(' ','_'), 'test/test_cmd.py'])
-
         elif args.date:
             dict_cmd = obj_logdb.get_userinput_via_time(args.date[0],args.date[1])
             self.replay_more(dict_cmd)
@@ -328,8 +247,6 @@ class VtelCLI(object):
             self.replay_more(dict_cmd)
 
         return dict_cmd
-
-
 
 
     def parse(self): # 调用入口
