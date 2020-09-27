@@ -23,7 +23,7 @@ class MyLoggerAdapter(logging.LoggerAdapter):
 class Log(object):
     fmt = logging.Formatter(
         "%(asctime)s [%(transaction_id)s] [%(username)s] [%(type1)s] [%(type2)s] [%(describe1)s] [%(describe2)s] [%(data)s]|", datefmt='[%Y/%m/%d %H:%M:%S]')
-    handler_input = logging.handlers.RotatingFileHandler(filename=f'{path}VersaTEL_G2_CLI.log', mode='a', maxBytes=10*1024*1024, backupCount=5)
+    handler_input = logging.handlers.RotatingFileHandler(filename=f'VersaTEL_G2_CLI.log', mode='a', maxBytes=10*1024*1024, backupCount=5)
     handler_input.setFormatter(fmt)
 
     def __init__(self, username, transaction_id):

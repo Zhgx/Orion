@@ -1,4 +1,4 @@
-#coding:utf-8
+# coding:utf-8
 """
 Global constants for vtel
 """
@@ -29,15 +29,17 @@ def _init():
     _global_dict = {}
     _global_dict['LOG_ID'] = 0
     _global_dict['RPL'] = 'no'
+    _global_dict['RG'] = 'no'
     _global_dict['LOG_SWITCH'] = 'yes'
-    _global_dict['RPL_DATA'] = {}
+    _global_dict['RG_DATA'] = []
+
 
 def set_value(key, value):
     """ 定义一个全局变量 """
     _global_dict[key] = value
 
 
-def get_value(key, dft_val = None):
+def get_value(key, dft_val=None):
     """ 获得一个全局变量,不存在则返回默认值 """
     try:
         return _global_dict[key]
@@ -45,9 +47,9 @@ def get_value(key, dft_val = None):
         return dft_val
 
 
-def append_value(key,value):
+def append_value(key, value):
     """字典添加键值对"""
-    _global_dict[key].update(value)
+    _global_dict[key].append(value)
 
 
 def set_glo_log(value):
@@ -60,6 +62,10 @@ def set_glo_db(value):
 
 def set_glo_rpl(value):
     set_value('RPL', value)
+
+
+def set_glo_rg(value):
+    set_value('RG', value)
 
 
 def set_glo_tsc_id(value):
@@ -75,11 +81,11 @@ def set_glo_log_switch(value):
 
 
 def set_glo_gui_tid(value):
-    set_value('GUI_TID',value)
+    set_value('GUI_TID', value)
 
 
-def set_glo_rpldata(value):
-    append_value('RPL_DATA',value)
+def set_glo_rg_data(value):
+    append_value('RG_DATA', value)
 
 
 def glo_gui_tid():
@@ -102,6 +108,10 @@ def glo_rpl():
     return get_value('RPL')
 
 
+def glo_rg():
+    return get_value('RG')
+
+
 def glo_tsc_id():
     return get_value('TSC_ID')
 
@@ -114,7 +124,5 @@ def glo_log_switch():
     return get_value('LOG_SWITCH')
 
 
-def glo_rpldata():
-    return get_value('RPL_DATA')
-
-
+def glo_rg_data():
+    return get_value('RG_DATA')

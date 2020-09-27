@@ -10,7 +10,8 @@ def execute_cmd(cmd, timeout=60):
     cmd - Command to be executed
     timeout - The longest waiting time(unit:second)
     """
-    p = subprocess.Popen(cmd, stderr=subprocess.STDOUT, stdout=subprocess.PIPE, shell=True)
+    p = subprocess.Popen(cmd, stderr=subprocess.STDOUT,
+                         stdout=subprocess.PIPE, shell=True)
     t_beginning = time.time()
     seconds_passed = 0
     while True:
@@ -21,7 +22,7 @@ def execute_cmd(cmd, timeout=60):
             p.terminate()
             raise TimeoutError(cmd, timeout)
         time.sleep(0.1)
-    out,err = p.communicate()
+    out, err = p.communicate()
     # if len(out) > 0:
     #     output = {'sts': 1, 'rst': out}
     #     return output
@@ -52,6 +53,7 @@ def execute_cmd(cmd, timeout=60):
 # # cmd = 'linstor rd d res_test'
 # # ex_cmd(cmd)
 
+
 class LVM():
     def __init__(self):
         self.data_vg = self.get_vg()
@@ -59,13 +61,13 @@ class LVM():
 
     def get_vg(self):
         cmd = 'vgs'
-        result = subprocess.check_output(cmd,shell=True)
+        result = subprocess.check_output(cmd, shell=True)
         if result:
             return result.decode()
 
     def get_thinlv(self):
         cmd = 'lvs'
-        result = subprocess.check_output(cmd,shell=True)
+        result = subprocess.check_output(cmd, shell=True)
         if result:
             return result.decode()
 
@@ -98,7 +100,9 @@ class LVM():
             if 'drbdpool' and 'wi' in one:
                 print(one)
 
+
 import sqlite3
+
 
 class DBtest():
     def __init__(self):
@@ -106,8 +110,7 @@ class DBtest():
         self.con = sqlite3.connect("linstordb.db", check_same_thread=False)
         self.cur = self.con.cursor()
 
-
-    def sql_fetch_all(self,sql):
+    def sql_fetch_all(self, sql):
         self.cur.execute(sql)
         date_set = self.cur.fetchall()
         return list(date_set)
