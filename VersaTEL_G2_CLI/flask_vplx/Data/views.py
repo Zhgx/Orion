@@ -9,6 +9,5 @@ from flask import views
 from flask_vplx.Data import datablue
 from flask_vplx.Data import model
 
-
 datablue.add_url_rule('/node', view_func=model.nodeView.as_view('node_view'))
  
