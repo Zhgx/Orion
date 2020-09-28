@@ -10,7 +10,7 @@ judge_len = 8192
 
 def check_daemon_status(job):
     scheduler = BlockingScheduler()
-    scheduler.add_job(job,'interval',minutes=5)
+    scheduler.add_job(job,'interval',seconds=1)
     scheduler.start()
 
 

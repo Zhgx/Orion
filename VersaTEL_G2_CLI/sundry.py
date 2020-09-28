@@ -141,9 +141,9 @@ def re_findall(re_string, tgt_string):
     logger = consts.glo_log()
     re_ = re.compile(re_string)
     oprt_id = create_oprt_id()
-    logger.write_to_log('OPRT', 'regular', 'findall', oprt_id, {'re': re_, 'string': tgt_string})
+    logger.write_to_log('OPRT', 'REGULAR', 'findall', oprt_id, {'re': re_, 'string': tgt_string})
     re_result = re_.findall(tgt_string)
-    logger.write_to_log('DATA', 'regular', 'findall', oprt_id, re_result)
+    logger.write_to_log('DATA', 'REGULAR', 'findall', oprt_id, re_result)
     return re_result
 
 
@@ -207,7 +207,6 @@ def cmd_decorator(type):
                 logger.write_to_log('OPRT', 'CMD', type, oprt_id, cmd)
                 result_cmd = func(cmd,func_name)
                 logger.write_to_log('DATA', 'CMD', type, oprt_id, result_cmd)
-
                 return result_cmd
             else:
                 logdb = consts.glo_db()
@@ -219,7 +218,6 @@ def cmd_decorator(type):
                 if type != 'sys' and cmd_result['result']:
                     result = eval(cmd_result['result'])
                     result_output = result['rst']
-
                 else:
                     result = cmd_result['result']
                     result_output = cmd_result['result']
@@ -276,18 +274,23 @@ def prt_log(str, warning_level):
     :param print_str: Strings to be printed and recorded
     """
     logger = consts.glo_log()
-    rpl = consts.glo_rpl()
-    if rpl == 'yes':
+    RPL = consts.glo_rpl()
+    if RPL == 'yes':
+        # pass
         prt(str, warning_level)
-    elif rpl == 'no':
+    elif RPL == 'no':
         prt(str, warning_level)
 
     if warning_level == 0:
-        logger.write_to_log('INFO', 'INFO', 'finish','output',str)
+        logger.write_to_log('INFO', 'INFO', 'finish', 'output', str)
     elif warning_level == 1:
         logger.write_to_log('INFO', 'WARNING', 'fail', 'output', str)
     elif warning_level == 2:
         logger.write_to_log('INFO', 'ERROR', 'exit', 'output', str)
+        if RPL == 'no':
+            sys.exit()
+        else:
+            raise consts.ReplayExit
 
 
 def color_data(func):
@@ -367,6 +370,7 @@ def sql_insert_decorator(func):
             print()# 格式上的换行
             if id_result['db_id']:
                 change_pointer(id_result['db_id'])
+
     return wrapper
 
 
@@ -378,3 +382,6 @@ def handle_exception():
     else:
         print('命令结果无法获取，请检查')
         sys.exit()#在这里结束会屏蔽掉程序抛出的异常，再考虑要不要直接在这里中断程序
+
+
+

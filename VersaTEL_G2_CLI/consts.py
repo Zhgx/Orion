@@ -1,3 +1,4 @@
+#coding:utf-8
 """
 Global constants for vtel
 """
@@ -71,6 +72,7 @@ def set_glo_gui_tid(value):
     set_value('GUI_TID',value)
 
 
+
 def glo_gui_tid():
     return get_value('GUI_TID')
 
@@ -101,4 +103,5 @@ def glo_log_id():
 
 def glo_log_switch():
     return get_value('LOG_SWITCH')
+
 
