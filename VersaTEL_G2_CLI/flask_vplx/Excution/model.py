@@ -1,7 +1,7 @@
 # coding:utf-8
 from flask import views
 
-class sendmessageView(views.iscsiMapView):
+class iscsiMapView(views.MethodView):
         if request.method == 'GET':
             data_all = request.args.items()
             for i in data_all:
