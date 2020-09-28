@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from flask_Vplx import app
+from flask_vplx import app
 
 if __name__ == '__main__':
   app.run(host='0.0.0.0',  # 任何ip都可以访问
