@@ -2,15 +2,19 @@
 
 import sqlite3
 import VersaTELSocket as vst
+import linstordb
 
 
 class LINSTORDB(object):
 
     def __init__(self):
-        self.con = sqlite3.connect(':memory:', check_same_thread=False)
-        self.cur = self.con.cursor()
-        sql_script = vst.conn(b'python3 vtel.py stor gui -db')
-        self.cur.executescript(sql_script)
+#         self.con = sqlite3.connect(':memory:', check_same_thread=False)
+#         self.cur = self.con.cursor()
+#         sql_script = vst.conn(b'python3 vtel.py stor gui -db')
+#         self.cur.executescript(sql_script)
+        db = linstordb.LinstorDB()
+        db.build_table()
+        self.cur = db.cur
 
 
 class Process_data(LINSTORDB):
