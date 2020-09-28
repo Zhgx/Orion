@@ -1,5 +1,4 @@
 # coding:utf-8
-# coding:utf-8
 
 import sqlite3
 import VersaTELSocket as vst

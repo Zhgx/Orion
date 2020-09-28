@@ -1,0 +1,10 @@
+# coding:utf-8
+from flask import views
+
+class sendmessageView(views.iscsiMapView):
+        if request.method == 'GET':
+            data_all = request.args.items()
+            for i in data_all:
+                data_one_dict = {i[0]:i[1]}
+                data.update(data_one_dict)
+                print(data)

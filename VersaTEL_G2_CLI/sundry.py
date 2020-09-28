@@ -22,6 +22,7 @@ def get_function_name():
     '''获取正在运行函数(或方法)名称'''
     return inspect.stack()[1][3]
 
+
 # Connect to the socket server and transfer data, and finally close the
 # connection.
 def send_via_socket(data):
@@ -32,7 +33,7 @@ def send_via_socket(data):
     client.connect((ip, port))
 
     tid = client.recv(8192).decode()
-    print('CLI 接收到的东西：',tid)
+    print('CLI 接收到的东西：', tid)
     logger = log.Log('username', tid)
     # consts.set_glo_gui_tid(tid)
     client.send(b'no tid')
@@ -44,18 +45,21 @@ def send_via_socket(data):
     client.send(b'exit')
     client.close()
 
+
 def record_exception(func):
     """
     Decorator
     Get exception, throw the exception after recording
     :param func:Command binding function
     """
-    def wrapper(self,*args):
+
+    def wrapper(self, *args):
         try:
-            return func(self,*args)
+            return func(self, *args)
         except Exception as e:
-            self.logger.write_to_log('DATA','DEBUG','exception','', str(traceback.format_exc()))
+            self.logger.write_to_log('DATA', 'DEBUG', 'exception', '', str(traceback.format_exc()))
             raise e
+
     return wrapper
 
 
@@ -64,19 +68,23 @@ def comfirm_del(type):
     Decorator providing confirmation of deletion function.
     :param func: Function to delete linstor resource
     """
+
     def decorate(func):
-        def wrapper(self,*args):
+
+        def wrapper(self, *args):
             cli_args = args[0]
             if cli_args.yes:
-                func(self,*args)
+                func(self, *args)
             else:
                 print(f"Are you sure you want to delete this {type}? If yes, enter 'y/yes'")
                 answer = get_answer()
                 if answer in ['y', 'yes']:
-                    func(self,*args)
+                    func(self, *args)
                 else:
-                    prt_log('Delete canceled',0)
+                    prt_log('Delete canceled', 0)
+
         return wrapper
+
     return decorate
 
 
@@ -90,35 +98,37 @@ def get_answer():
         answer = input()
         logger.write_to_log('DATA', 'INPUT', 'confirm_input', 'confirm deletion', answer)
     else:
-        time,answer = logdb.get_anwser(transaction_id)
+        time, answer = logdb.get_anwser(transaction_id)
         if not time:
             time = ''
         print(f'RE:{time:<20} 用户输入: {answer}')
     return answer
 
 
+def timeout(seconds, error_message='Funtion call timed out'):
 
-
-
-def timeout(seconds,error_message = 'Funtion call timed out'):
     def decorated(func):
-        def _handled_timeout(signum,frame):
+
+        def _handled_timeout(signum, frame):
             raise TimeoutError(error_message)
 
-        def wrapper(*args,**kwargs):
+        def wrapper(*args, **kwargs):
             signal.signal(signal.SIGALRM, _handled_timeout)
             signal.alarm(seconds)
             try:
-                result = func(*args,**kwargs)
+                result = func(*args, **kwargs)
             finally:
                 signal.alarm(0)
             return result
+
         return wrapper
+
     return decorated
 
 
 def create_transaction_id():
     return int(time.time())
+
 
 def create_oprt_id():
     time_stamp = str(create_transaction_id())
@@ -126,11 +136,14 @@ def create_oprt_id():
     shuffle(str_list)
     return ''.join(str_list)
 
+
 def get_username():
     return getpass.getuser()
 
+
 def get_hostname():
     return socket.gethostname()
+
 
 # Get the path of the program
 def get_path():
@@ -151,37 +164,38 @@ def re_search(re_string, tgt_stirng):
     logger = consts.glo_log()
     re_ = re.compile(re_string)
     oprt_id = create_oprt_id()
-    logger.write_to_log('OPRT','REGULAR','search',oprt_id, {'re':re_,'string':tgt_stirng})
+    logger.write_to_log('OPRT', 'REGULAR', 'search', oprt_id, {'re':re_, 'string':tgt_stirng})
     re_result = re_.search(tgt_stirng).group()
     logger.write_to_log('DATA', 'REGULAR', 'search', oprt_id, re_result)
     return re_result
 
 
-def show_iscsi_data(list_header,dict_data):
+def show_iscsi_data(list_header, dict_data):
     table = prettytable.PrettyTable()
     table.field_names = list_header
     if dict_data:
-        for i,j in dict_data.items():
-            data_one = [i,(' '.join(j) if isinstance(j,list) == True else j)]
+        for i, j in dict_data.items():
+            data_one = [i, (' '.join(j) if isinstance(j, list) == True else j)]
             table.add_row(data_one)
     else:
         pass
     return table
 
-def show_map_data(list_header,dict_data):
+
+def show_map_data(list_header, dict_data):
     table = prettytable.PrettyTable()
     table.field_names = list_header
     if dict_data:
         # {map1:[hg1,dg1] => [map1,hg1,dg1]}
         for i, j in dict_data.items():
-            j.insert(0,i)
+            j.insert(0, i)
             table.add_row(j)
     else:
         pass
     return table
 
 
-def show_linstor_data(list_header,list_data):
+def show_linstor_data(list_header, list_data):
     table = prettytable.PrettyTable()
     table.field_names = list_header
     if list_data:
@@ -195,17 +209,20 @@ def show_linstor_data(list_header,list_data):
 def change_pointer(new_id):
     consts.set_glo_log_id(new_id)
 
+
 def cmd_decorator(type):
+
     def decorate(func):
+
         @wraps(func)
-        def wrapper(cmd,func_name):
+        def wrapper(cmd, func_name):
             RPL = consts.glo_rpl()
             oprt_id = create_oprt_id()
             if RPL == 'no':
                 logger = consts.glo_log()
                 logger.write_to_log('DATA', 'STR', func_name, '', oprt_id)
                 logger.write_to_log('OPRT', 'CMD', type, oprt_id, cmd)
-                result_cmd = func(cmd,func_name)
+                result_cmd = func(cmd, func_name)
                 logger.write_to_log('DATA', 'CMD', type, oprt_id, result_cmd)
 
                 return result_cmd
@@ -215,7 +232,7 @@ def cmd_decorator(type):
                 if id_result['oprt_id']:
                     cmd_result = logdb.get_oprt_result(id_result['oprt_id'])
                 else:
-                    cmd_result = {'time':'','result':''}
+                    cmd_result = {'time':'', 'result':''}
                 if type != 'sys' and cmd_result['result']:
                     result = eval(cmd_result['result'])
                     result_output = result['rst']
@@ -228,7 +245,9 @@ def cmd_decorator(type):
                 if id_result['db_id']:
                     change_pointer(id_result['db_id'])
             return result
+
         return wrapper
+
     return decorate
 
 
@@ -249,8 +268,6 @@ def execute_cmd(cmd, func_name, timeout=60):
     return output
 
 
-
-
 def prt(str, warning_level=0):
     if isinstance(warning_level, int):
         warning_str = '*' * warning_level
@@ -262,7 +279,7 @@ def prt(str, warning_level=0):
         print(str)
     else:
         db = consts.glo_db()
-        time,cmd_output = db.get_cmd_output(consts.glo_tsc_id())
+        time, cmd_output = db.get_cmd_output(consts.glo_tsc_id())
         if not time:
             time = ''
         print(f'RE:{time:<20} 日志记录输出：{warning_str:<4}\n{cmd_output}')
@@ -283,7 +300,7 @@ def prt_log(str, warning_level):
         prt(str, warning_level)
 
     if warning_level == 0:
-        logger.write_to_log('INFO', 'INFO', 'finish','output',str)
+        logger.write_to_log('INFO', 'INFO', 'finish', 'output', str)
     elif warning_level == 1:
         logger.write_to_log('INFO', 'WARNING', 'fail', 'output', str)
     elif warning_level == 2:
@@ -296,6 +313,7 @@ def color_data(func):
     :param func:
     :return:
     """
+
     @wraps(func)
     def wrapper(*args):
         status_true = ['UpToDate', 'Online', 'Ok', 'InUse']
@@ -306,9 +324,8 @@ def color_data(func):
             else:
                 lst[-1] = ca.Fore.RED + lst[-1] + ca.Style.RESET_ALL
         return data
+
     return wrapper
-
-
 
 
 def json_operate_decorator(str):
@@ -316,7 +333,9 @@ def json_operate_decorator(str):
     Decorator providing confirmation of deletion function.
     :param func: Function to delete linstor resource
     """
+
     def decorate(func):
+
         @wraps(func)
         def wrapper(self, *args):
             RPL = consts.glo_rpl()
@@ -325,8 +344,8 @@ def json_operate_decorator(str):
                 oprt_id = create_oprt_id()
                 logger.write_to_log('DATA', 'STR', func.__name__, '', oprt_id)
                 logger.write_to_log('OPRT', 'JSON', func.__name__, oprt_id, args)
-                result = func(self,*args)
-                logger.write_to_log('DATA', 'JSON', func.__name__, oprt_id,result)
+                result = func(self, *args)
+                logger.write_to_log('DATA', 'JSON', func.__name__, oprt_id, result)
             else:
                 logdb = consts.glo_db()
                 id_result = logdb.get_id(consts.glo_tsc_id(), func.__name__)
@@ -341,11 +360,14 @@ def json_operate_decorator(str):
                 if id_result['db_id']:
                     change_pointer(id_result['db_id'])
             return result
+
         return wrapper
+
     return decorate
 
 
 def sql_insert_decorator(func):
+
     @wraps(func)
     def wrapper(self, sql, data, tablename):
         RPL = consts.glo_rpl()
@@ -354,7 +376,7 @@ def sql_insert_decorator(func):
             oprt_id = create_oprt_id()
             logger.write_to_log('DATA', 'STR', func.__name__, '', oprt_id)
             logger.write_to_log('OPRT', 'SQL', func.__name__, oprt_id, sql)
-            func(self,sql, data, tablename)
+            func(self, sql, data, tablename)
             logger.write_to_log('DATA', 'SQL', func.__name__, oprt_id, data)
         else:
             logdb = consts.glo_db()
@@ -364,9 +386,10 @@ def sql_insert_decorator(func):
             print(f"RE:{id_result['time']} 插入数据:")
             for i in data:
                 print(i)
-            print()# 格式上的换行
+            print()  # 格式上的换行
             if id_result['db_id']:
                 change_pointer(id_result['db_id'])
+
     return wrapper
 
 
@@ -377,4 +400,4 @@ def handle_exception():
         raise consts.ReplayExit
     else:
         print('命令结果无法获取，请检查')
-        sys.exit()#在这里结束会屏蔽掉程序抛出的异常，再考虑要不要直接在这里中断程序
+        sys.exit()  # 在这里结束会屏蔽掉程序抛出的异常，再考虑要不要直接在这里中断程序
