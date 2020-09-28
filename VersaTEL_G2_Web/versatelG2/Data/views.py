@@ -12,7 +12,7 @@ from versatelG2.Data import model
 
 
 datablue.add_url_rule('/node', view_func=model.nodeView.as_view('nodeview'))
-datablue.add_url_rule('/resource', view_func=model.resourceView.as_view('resourceview'))
+datablue.add_url_rule('/resource_data', view_func=model.resourceView.as_view('resourceview'))
 datablue.add_url_rule('/storagepool', view_func=model.storagepoolView.as_view('storagepoolview'))
 datablue.add_url_rule('/configuration_data', view_func=model.iSCSIView.as_view('iSCSIview'))
 datablue.add_url_rule('/socket', view_func=model.LINSTORView.as_view('LINSTORview'))
