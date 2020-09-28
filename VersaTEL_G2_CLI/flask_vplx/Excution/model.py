@@ -1,5 +1,5 @@
 # coding:utf-8
-from flask import views
+from flask import views,request
 
 class iscsiMapView(views.MethodView):
         if request.method == 'GET':
