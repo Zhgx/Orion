@@ -11,7 +11,7 @@ from flask import Flask, render_template, views
 
 class indexView(views.MethodView):
     def get(self):
-        return render_template("index.html",sss)
+        return render_template("index.html")
     
 class iSCSIcreateView(views.MethodView):
     def get(self):
