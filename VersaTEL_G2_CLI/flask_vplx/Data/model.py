@@ -35,7 +35,7 @@ class R_OP_View(views.MethodView):
         global resourcedict
         pc = Process.Process_data()
         resourcedict = pc.process_data_resource()
-        return ("数据获取成功")
+        return data("数据获取成功")
     
 class R_D_View(views.MethodView):  
     def get(self):
