@@ -1,0 +1,45 @@
+{
+    "Host": {
+        "host1": "iqn-123213-12321",
+        "host2": "iqn12321312321",
+        "host3": "iqn12321312321"
+    },
+    "Disk": {
+        "res_a": "/dev/drbd1000",
+        "res_b": "/dev/drbd1001"
+    },
+    "HostGroup": {
+        "hg1": [
+            "host1"
+        ],
+        "hg2": [
+            "host1"
+        ]
+    },
+    "DiskGroup": {
+        "dg1": [
+            "res_c"
+        ],
+        "dg2": [
+            "res_a"
+        ]
+    },
+    "Map": {},
+    "crm": {
+        "resource": [],
+        "vip": [
+            [
+                "vip",
+                "10.203.1.75",
+                "24"
+            ]
+        ],
+        "target": [
+            [
+                "t_test",
+                "iqn.2020-04.feixitek.com:versaplx00",
+                "10.203.1.75"
+            ]
+        ]
+    }
+}
