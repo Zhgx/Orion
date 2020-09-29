@@ -1,9 +1,35 @@
+/*
+ * 2020.9.29 Paul
+ * note : 英文简写说明
+ * R-S Resource select  /下拉框
+ * R-D Resource Data /Resource数据
+ * _R_D Resource数据变量
+ * A_V 标签a的value值
+ * R_N Resource Name /具体的名字
+ * 
+ * R_operate.js v0.01
+ * */
+
+//操作提示
+resource_operate();
+function resource_operate() {
+	$.ajax({
+		url : "http://10.203.1.76:7777/resource_operate",
+		type : "get",
+		dataType : "json",
+		success : function(R_Hint) {
+			alert(R_Hint);
+		}
+	});
+}
+
+// 下拉框
 $('#R-S').selectpicker({
 	width : 200
 });
 $(function() {
 	$.ajax({
-		url : "/resource_data",
+		url : "http://10.203.1.76:7777/resource_data",
 		type : "get",
 		dataType : "json",
 		success : function(R_D) {
@@ -18,10 +44,12 @@ $(function() {
 			}
 			html_Fir += '</optgroup>'
 			html_Sec += '<optgroup >'
-			html_Sec += '<option  value="resource">' + "All Resource" + '</option>'
+			html_Sec += '<option  value="All_Resource">' + "All Resource"
+					+ '</option>'
 			html_Sec += '</optgroup>'
 			$('#R_S').append(html_Fir);
 			$('#R_S').append(html_Sec);
+			document.getElementById("A_V").innerHTML = "<a>All_Resource</a>";
 			// 缺一不可
 			$('#R_S').selectpicker('refresh');
 			$('#R_S').selectpicker('render');
@@ -29,9 +57,22 @@ $(function() {
 	});
 });
 
-function all_resource_show(res_name) {
+// 下拉框点击事件
+function selectOnchang(obj) {
+	var value = obj.options[obj.selectedIndex].value;
+	document.getElementById("A_V").innerHTML = "<a>" + value + "</a>";
+	if (value == "All_Resource") {
+		all_resource_show();
+	} else {
+		one_resource_show(value);
+	}
+}
+
+// 所有
+all_resource_show()
+function all_resource_show() {
 	$.ajax({
-		url : "/resource_data",
+		url : "http://10.203.1.76:7777/resource_data",
 		type : "get",
 		dataType : "json",
 		success : function(R_D) {
@@ -59,18 +100,17 @@ function all_resource_show(res_name) {
 		}
 	});
 }
-all_resource_show();
 
-function one_resource_show() {
+// 单个
+function one_resource_show(R_N) {
 	$.ajax({
-		url : "/resource_data",
+		url : "http://10.203.1.76:7777/resource_data",
 		type : "get",
 		dataType : "json",
 		success : function(R_D) {
-			var a = "res_a"
 			var _R_D = R_D.data;
 			for (i in _R_D) {
-				if (_R_D[i].resource == a) {
+				if (_R_D[i].resource == R_N) {
 					var mirror_way_son = _R_D[i].mirror_way_son;
 					var html = "";
 					var html_sec = "";
@@ -96,4 +136,3 @@ function one_resource_show() {
 		}
 	});
 }
-one_resource_show();

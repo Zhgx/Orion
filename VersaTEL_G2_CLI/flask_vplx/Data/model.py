@@ -28,11 +28,17 @@ class nodeView(views.MethodView):
         nodedict = pc.process_data_node()
         print("nodedict:",nodedict)
         return data(nodedict)
-    
-class resourceView(views.MethodView):  
+ 
+global resourcedict
+class R_OP_View(views.MethodView):  
     def get(self):
+        global resourcedict
         pc = Process.Process_data()
         resourcedict = pc.process_data_resource()
+        return ("数据获取成功")
+    
+class R_D_View(views.MethodView):  
+    def get(self):
         return data(resourcedict)
     
 class storagepoolView(views.MethodView):  
