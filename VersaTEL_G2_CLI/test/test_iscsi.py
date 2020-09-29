@@ -1,4 +1,4 @@
-import iscsi from execute
+from execute import iscsi
 
 
 class TestDisk:
