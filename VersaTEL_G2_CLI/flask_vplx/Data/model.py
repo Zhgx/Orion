@@ -39,6 +39,7 @@ class R_OP_View(views.MethodView):
     
 class R_D_View(views.MethodView):  
     def get(self):
+        global resourcedict
         return data(resourcedict)
     
 class storagepoolView(views.MethodView):  

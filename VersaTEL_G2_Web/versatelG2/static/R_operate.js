@@ -6,19 +6,33 @@
  * _R_D Resource数据变量
  * A_V 标签a的value值
  * R_N Resource Name /具体的名字
- * 
+ * R_Hint /Resource 提示
  * R_operate.js v0.01
  * */
 
 //操作提示
-resource_operate();
-function resource_operate() {
+function update_resource_operate() {
 	$.ajax({
 		url : "http://10.203.1.76:7777/resource_operate",
 		type : "get",
 		dataType : "json",
 		success : function(R_Hint) {
-			alert(R_Hint);
+			var area = document.getElementById("R-S");
+			area.innerHTML = "";
+			R_Select();
+		}
+	});
+}
+
+First_refresh();
+function First_refresh() {
+	$.ajax({
+		url : "http://10.203.1.76:7777/resource_operate",
+		type : "get",
+		dataType : "json",
+		success : function(R_Hint) {
+			R_Select();
+			all_resource_show();
 		}
 	});
 }
@@ -27,14 +41,14 @@ function resource_operate() {
 $('#R-S').selectpicker({
 	width : 200
 });
-$(function() {
+function R_Select() {
 	$.ajax({
 		url : "http://10.203.1.76:7777/resource_data",
 		type : "get",
 		dataType : "json",
 		success : function(R_D) {
 			var _R_D = R_D.data; // 由于后台传过来的json有个data，在此重命名
-			$('#R-S').html("");
+			$('#R-S').html(" ");
 			var html_Fir = "";
 			var html_Sec = "";
 			html_Fir += '<optgroup label="Resource">'
@@ -55,7 +69,7 @@ $(function() {
 			$('#R_S').selectpicker('render');
 		}
 	});
-});
+}
 
 // 下拉框点击事件
 function selectOnchang(obj) {
@@ -69,7 +83,6 @@ function selectOnchang(obj) {
 }
 
 // 所有
-all_resource_show()
 function all_resource_show() {
 	$.ajax({
 		url : "http://10.203.1.76:7777/resource_data",
