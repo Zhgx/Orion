@@ -19,7 +19,7 @@ class Host_create(views.MethodView):
     def get(self):
         if request.method == 'GET':
             host_iqn = request.args.items()
-            dict_host_iqn = dict(data_all) 
+            dict_host_iqn = dict(host_iqn) 
             str_cmd = "python3 vtel_client_main.py iscsi host create %s %s" % (dict_host_iqn["Host_Name"], dict_host_iqn["Host_iqn"])
             result = subprocess.getoutput(str_cmd)
         return data(result)
@@ -30,7 +30,7 @@ class HostGroup_create(views.MethodView):
     def get(self):
         if request.method == 'GET':
             HostGroup = request.args.items()
-            dict_HostGroup = dict(data_all)
+            dict_HostGroup = dict(HostGroup)
             host = dict_HostGroup['Host'].replace(',', ' ') 
             str_cmd = "python3 vtel_client_main.py iscsi hostgroup create %s %s" % (dict_HostGroup["HostGroup_Name"], host)
             result = subprocess.getoutput(str_cmd)
@@ -42,7 +42,7 @@ class DiskGroup_create(views.MethodView):
     def get(self):
         if request.method == 'GET':
             diskgroup = request.args.items()
-            dict_diskgroup = dict(data_all) 
+            dict_diskgroup = dict(diskgroup) 
             disk = dict_diskgroup['Disk'].replace(',', ' ')
             str_cmd = "python3 vtel_client_main.py iscsi diskgroup create %s %s" % (dict_diskgroup["DiskGroup_Name"], disk)
             result = subprocess.getoutput(str_cmd)
@@ -54,7 +54,7 @@ class Map_create(views.MethodView):
     def get(self):
         if request.method == 'GET':
             map_create = request.args.items()
-            dict_map_create = dict(data_all) 
+            dict_map_create = dict(map_create) 
             str_cmd = "python3 vtel_client_main.py iscsi map create %s -hg %s -dg %s " % (dict_map_create["Map_Name"], dict_map_create["Host_Group"], dict_map_create["Disk_Group"])
             result = subprocess.getoutput(str_cmd)
         return data(result)
