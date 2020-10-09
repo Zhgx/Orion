@@ -4,13 +4,14 @@
 <meta charset="UTF-8">
 <title>Create</title>
 
-	
+
 <link href="{{ url_for('static',filename='bootstrap.min.css') }}"
 	rel="stylesheet" type="text/css" />
 
 <link href="{{ url_for('static',filename='bootstrap-select.min.css') }}"
 	rel="stylesheet" type="text/css" />
-
+<link href="static/css/style.css" rel="stylesheet" type="text/css">
+<script src="{{ url_for('static',filename='iscsi_create.js') }}"></script>
 <style type="text/css">
 body {
 	padding: 10px;
@@ -34,7 +35,10 @@ body {
 					<label for="inputEmail" class="col-sm-2 control-label">Host_Name</label>
 					<div class="col-sm-10">
 						<input type="text" class="form-control" id="Host_Name"
-							placeholder="请输入" style="width: 200px;" value="">
+							placeholder="请输入" style="width: 200px;" value=""
+							onchange="Host_Name_myFunction()"> <span class="red">
+							<span id="Host_Name_Examine" class="hidden">Host已存在！</span>
+						</span>
 					</div>
 				</div>
 				<div class="form-group">
@@ -45,12 +49,14 @@ body {
 					</div>
 				</div>
 				<div class="form-group">
-                    <div class="col-sm-offset-2 col-sm-10">
-                        <button type="submit" class="btn btn-default" data-toggle="modal"
-                            name="Host_create" id="Host_create" data-target="#myModal1">Create</button>
-                    </div>
-                </div>
+					<div class="col-sm-offset-2 col-sm-10">
+						<button type="submit" class="btn btn-default" data-toggle="modal"
+							name="Host_create" id="Host_create" data-target="#myModal1">Create</button>
+					</div>
+				</div>
 			</div>
+			<script src="http://apps.bdimg.com/libs/jquery/2.1.1/jquery.min.js"></script>
+
 			<!-- ------------------------ -->
 			<div class="col-md-12 column">
 				<div class="page-header">
@@ -62,7 +68,11 @@ body {
 					<label for="inputEmail" class="col-sm-2 control-label">HostGroup_Name</label>
 					<div class="col-sm-10">
 						<input type="text" class="form-control" id="HostGroup_Name"
-							placeholder="请输入" style="width: 200px;" value="">
+							placeholder="请输入" style="width: 200px;" value=""
+							onchange="HG_Name_myFunction()"> <span class="red">
+							<span id="HG_Name_Examine" class="hidden">HostGroup
+								Name已存在！</span>
+						</span>
 					</div>
 				</div>
 				<div class="form-group">
@@ -74,35 +84,13 @@ body {
 						</select>
 					</div>
 
-					
-						<script src="https://cdn.staticfile.org/jquery/2.1.1/jquery.min.js"></script>
-					<script
-						src="static/bootstrap-select-1.12.4/js/bootstrap-select.js"></script>
-
+					<script src="https://cdn.staticfile.org/jquery/2.1.1/jquery.min.js"></script>
+					<script src="{{ url_for('static',filename='bootstrap.js') }}"></script>
+					<script src="static/bootstrap-select-1.12.4/js/bootstrap-select.js"></script>
+					<script src="{{ url_for('static',filename='iscsi_create2.js') }}"></script>
 					<script type="text/javascript">
-					$('#Host').selectpicker({width:200});
-				    $(function() {
-                            $.ajax({
-                                url: "/all_host_result",
-                                type: "GET",
-                                dataType: "json",
-                                success: function(hsot_result) {
-                                    $('#Host').html(""); 
-                                    var html = "";
-                                    for(i in hsot_result) {
-                                     	html += '<option value=' + i+ '>' + i + '</option>'
-                                    }
-                                      	$('#Host').append(html);  
-							        	$('#Host').selectpicker('refresh');
-							        	$('#Host').selectpicker('render');
-                                }
-                            });
-                            });
-                             $(window).on('load', function () {
-							    $('#ini_aa').selectpicker({
-							        'selectedText': 'cat'
-							    });
-							});
+	
+				
 					</script>
 				</div>
 				<div class="form-group">
@@ -124,7 +112,11 @@ body {
 					<label for="inputEmail" class="col-sm-2 control-label">DiskGroup_Name</label>
 					<div class="col-sm-10">
 						<input type="text" class="form-control" id="DiskGroup_Name"
-							placeholder="请输入" style="width: 200px;" value="">
+							placeholder="请输入" style="width: 200px;" value=""
+							onchange="DG_Name_myFunction()"> <span class="red">
+							<span id="DG_Name_Examine" class="hidden">DiskGroup
+								Name已存在！</span>
+						</span>
 					</div>
 					<div class="form-group">
 						<label class="col-sm-2 c">Disk</label>
@@ -136,34 +128,9 @@ body {
 						</div>
 
 						<script type="text/javascript">
-						$('#Disk').selectpicker({width:200});
+	
 						
-				    $(function() {
-                            $.ajax({
-                                url: "/all_disk_result",
-                                type: "GET",
-                                dataType: "json",
-                                success: function(data) {
-                                    //var _data = data.data; //由于后台传过来的json有个data，在此重命名
-                                      $('#Disk').html(""); 
-                                    var html = "";
-                                    for(i in Disk_dict) {
-                                    //alert(i);
-                                     html += '<option value=' + i + '>' + i + '</option>'
-                                    }
-                                      $('#Disk').append(html);  
-                                            // 缺一不可
-							        $('#Disk').selectpicker('refresh');
-							        $('#Disk').selectpicker('render');
-                                }
-                            });
-                            });
-                             $(window).on('load', function () {
-							    $('#Disk').selectpicker({
-							        'selectedText': 'cat'
-							    });
-							});
-         
+
 					                            
 					</script>
 
@@ -189,7 +156,10 @@ body {
 						<label for="inputEmail" class="col-sm-2 control-label">Map_Name</label>
 						<div class="col-sm-10">
 							<input type="text" class="form-control" id="Map_Name"
-								placeholder="请输入" style="width: 200px;" value="">
+								placeholder="请输入" style="width: 200px;" value=""
+								onchange="Map_Name_myFunction()"> <span class="red">
+								<span id="Map_Name_Examine" class="hidden">Map Name已存在！</span>
+							</span>
 						</div>
 					</div>
 					<div class="form-group">
@@ -201,34 +171,12 @@ body {
 							</select>
 						</div>
 						<script type="text/javascript">
-					$('#Host_Group').selectpicker({width:200});
+
+					
 						
 						
-					 $(function() {
-                            $.ajax({
-                                url: "/all_hg_result",
-                                type: "get",
-                                dataType: "json",
-                                success: function(data) {
-                                    //var _data = data.data; //由于后台传过来的json有个data，在此重命名
-                                     $('#Host_Group').html("");
-                                    var html = "";
-                                    var Host_Group_dict = data.HostGroup
-                                    for(i in Host_Group_dict) {
-                                       html += '<option value=' + i + '>' + i + '</option>'
-                                    }
-                                      $('#Host_Group').append(html);
-                                          // 缺一不可
-							        $('#Host_Group').selectpicker('refresh');
-							        $('#Host_Group').selectpicker('render');
-                                }
-                            });
-                            });
-                             $(window).on('load', function () {
-    $('#Host_Group').selectpicker({
-        'selectedText': 'cat'
-    });
-});
+						
+				
 					</script>
 					</div>
 					<div class="form-group">
@@ -240,33 +188,7 @@ body {
 							</select>
 						</div>
 						<script type="text/javascript">
-						$('#Disk_Group').selectpicker({width:200});
-						
-					 $(function() {
-                            $.ajax({
-                                url: "/all_dg_result",
-                                type: "get",
-                                dataType: "json",
-                                success: function(data) {
-                                    $('#Disk_Group').html("");
-                                    var html = "";
-                                    var Disk_Group_dict = data.DiskGroup
-                                    for(i in Disk_Group_dict) {
-                                       $('#Disk_Group').append('<option value=' + i + '>' + i + '</option>')
-                                    }
-                                            // 缺一不可
-							        $('#Disk_Group').selectpicker('refresh');
-							        $('#Disk_Group').selectpicker('render');
-                                }
-                            });
-                            });
-                             $(window).on('load', function () {
-							    $('#Disk_Group').selectpicker({
-							        'selectedText': 'cat'
-							    });
-							});
-         
-					   
+					
 					</script>
 					</div>
 
@@ -311,101 +233,17 @@ body {
 				<!-- /.modal-dialog -->
 			</div>
 			<!-- /.modal -->
-</div>
+		</div>
 
-</div>
-		
-		<script src="{{ url_for('static',filename='layui.all.js') }}"></script>
+	</div>
 
-		<script type="text/javascript">
-	$("#Host_create").click(function () {
-     var Host_Name = $("#Host_Name").val()
-     var Host_iqn = $("#Host_iqn").val()
-     $.ajax({
-         url:"/Host_create",
-         type:"GET",
-         data:{
-             Host_Name:Host_Name,
-             Host_iqn:Host_iqn
-         },
-         success:function (data) {
-
-         alert(data);
-         },
-         error:function () {
-         }
-     })
-     $("#Host_Name").val("");
-     $("#Host_iqn").val("");
- });
- ///////////////////////////////////////////////
- 	$("#HostGroup_create").click(function () {
-     var HostGroup_Name = $("#HostGroup_Name").val()
-     var Host = $("#Host").val().toString()
-     $.ajax({
-         url:"/HostGroup_create",
-         type:"GET",
-         data:{
-             HostGroup_Name:HostGroup_Name,
-             Host:Host
-         },
-         success:function (data) {
-         alert(data);
-          
-         //$("#double").val(data);
-          //赋值
-         },
-         error:function () {
-         }
-     })
-    $("#HostGroup_Name").val("");
- });
-  ///////////////////////////////////////////////
- $("#DiskGroup_create").click(function () {
-     var DiskGroup_Name = $("#DiskGroup_Name").val()
-     var Disk = $("#Disk").val().toString()
-     $.ajax({
-         url:"/DiskGroup_create",
-         type:"GET",
-         data:{
-             DiskGroup_Name:DiskGroup_Name,
-             Disk:Disk
-         },
-         success:function (data) {
-         	alert(data);
-         },
-         error:function () {
-         }
-     })
-       $("#DiskGroup_Name").val("");
- });
- /////////////////////////////
- $("#Map_create").click(function () {
-     var Map_Name = $("#Map_Name").val()
-     var Disk_Group = $("#Disk_Group").val()
-     var Host_Group = $("#Host_Group").val()
-     $.ajax({
-         url:"/Map_create",
-         type:"GET",
-         data:{
-             Map_Name:Map_Name,
-             Disk_Group:Disk_Group,
-             Host_Group:Host_Group
-         },
-         success:function (data) {
-            alert(data);
-         },
-         error:function () {
-         }
-     })
-      $("#Map_Name").val("");
- });
-	</script>
-		<script type="text/javascript">
+	<script src="{{ url_for('static',filename='layui.all.js') }}"></script>
+	<script src="{{ url_for('static',filename='iscsi_create3.js') }}"></script>
+	<script type="text/javascript">
 $("#newcreate").click(function(){
  	$("input[type=text]").val('');
 });
 </script>
-		
+
 </body>
 </html>

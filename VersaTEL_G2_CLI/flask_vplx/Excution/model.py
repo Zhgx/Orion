@@ -67,11 +67,12 @@ class oprt_all_host(views.MethodView):
     def get(self):
         js = iscsi_interaction.JsonFile()
         HOST_RESULT = js.provide_all_host()
+        
         return data("host获取值成功")
 
     
 class all_host_result(views.MethodView):
-
+    global HOST_RESULT
     def get(self):
         return data(HOST_RESULT)
 #disk   
