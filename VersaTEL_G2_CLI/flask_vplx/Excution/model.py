@@ -62,9 +62,9 @@ class Map_create(views.MethodView):
 #host
 global HOST_RESULT
 class oprt_all_host(views.MethodView):
-    global HOST_RESULT
 
     def get(self):
+        global HOST_RESULT
         js = iscsi_interaction.JsonFile()
         HOST_RESULT = js.provide_all_host()
         
@@ -72,15 +72,14 @@ class oprt_all_host(views.MethodView):
 
     
 class all_host_result(views.MethodView):
-    global HOST_RESULT
     def get(self):
         return data(HOST_RESULT)
 #disk   
 global DISK_RESULT
 class oprt_all_disk(views.MethodView):
-    global DISK_RESULT
 
     def get(self):
+        global DISK_RESULT
         js = iscsi_interaction.JsonFile()
         DISK_RESULT = js.provide_all_disk()
         return data("disk获取值成功")
@@ -94,9 +93,9 @@ class all_disk_result(views.MethodView):
 #hostgroup
 global HOSTGROUP_RESULT
 class oprt_all_hg(views.MethodView):
-    global HOSTGROUP_RESULT
 
     def get(self):
+        global HOSTGROUP_RESULT
         js = iscsi_interaction.JsonFile()
         HOSTGROUP_RESULT = js.provide_all_hostgroup()
         return data("hostgroup获取值成功")
@@ -110,9 +109,9 @@ class all_hg_result(views.MethodView):
 #diskgroup
 global DISKGROUP_RESULT
 class oprt_all_dg(views.MethodView):
-    global DISKGROUP_RESULT
 
     def get(self):
+        global DISKGROUP_RESULT
         js = iscsi_interaction.JsonFile()
         DISKGROUP_RESULT = js.provide_all_diskgroup()
         return data("diskgroup获取值成功")
@@ -127,9 +126,9 @@ class all_dg_result(views.MethodView):
 #map
 global MAP_RESULT
 class oprt_all_map(views.MethodView):
-    global MAP_RESULT
 
     def get(self):
+        global MAP_RESULT
         js = iscsi_interaction.JsonFile()
         MAP_RESULT = js.provide_all_map()
         return data("map获取值成功")
