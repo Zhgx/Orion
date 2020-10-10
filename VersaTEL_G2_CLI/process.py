@@ -8,8 +8,6 @@ import sundry
 import log
 import sys
 
-path = '/home/samba/VersaTEL_G3_Code/VersaTEL_G2_CLI/'
-cmd = f'python {path}vtel_client_main.py stor -gui '
 
 
 class LINSTORDB(object):

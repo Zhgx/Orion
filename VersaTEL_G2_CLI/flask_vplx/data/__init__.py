@@ -9,4 +9,4 @@ from flask import Flask,Blueprint
 datablue = Blueprint("datablue", __name__)
 
 # from . import views
-from flask_vplx.Data import views
+from flask_vplx.data import views

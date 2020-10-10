@@ -69,12 +69,6 @@ class NodeCommands():
             help='node type: {Controller,Auxiliary,Combined,Satellite}',
             required=True)
         # add a parameter to interact with the GUI
-        p_create_node.add_argument(
-            '-gui',
-            dest='gui',
-            action='store_true',
-            help=argparse.SUPPRESS,
-            default=False)
 
         p_create_node.set_defaults(func=self.create)
 
@@ -102,12 +96,6 @@ class NodeCommands():
             dest='yes',
             action='store_true',
             help='Skip to confirm selection',
-            default=False)
-        p_delete_node.add_argument(
-            '-gui',
-            dest='gui',
-            action='store_true',
-            help=argparse.SUPPRESS,
             default=False)
         p_delete_node.set_defaults(func=self.delete)
 
@@ -140,12 +128,7 @@ class NodeCommands():
     @sd.record_exception
     def create(self, args):
         node = ex.Node()
-        if args.gui:
-            result = node.create_node(args.node, args.ip, args.nodetype)
-            result_pickled = pickle.dumps(result)
-            sd.send_via_socket(result_pickled)
-            return ExitCode.OK
-        elif args.node and args.nodetype and args.ip:
+        if args.node and args.nodetype and args.ip:
             node.create_node(args.node, args.ip, args.nodetype)
             return ExitCode.OK
         else:

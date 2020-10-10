@@ -26,8 +26,6 @@ class HostCommands():
         p_create_host.add_argument(
             'host', action='store', help='host_name')
         p_create_host.add_argument('iqn', action='store', help='host_iqn')
-        p_create_host.add_argument(
-            '-gui', help='iscsi gui', nargs='?', default='cmd')
 
         p_create_host.set_defaults(func=self.create)
 
@@ -67,11 +65,7 @@ class HostCommands():
     @sd.record_exception
     def create(self, args):
         host = ex.Host()
-        if args.gui == 'gui':
-            data = pickle.dumps(host.create_host(args.host, args.iqn))
-            sd.send_via_socket(data)
-        else:
-            host.create_host(args.host, args.iqn)
+        host.create_host(args.host, args.iqn)
 
     @sd.record_exception
     def show(self, args):

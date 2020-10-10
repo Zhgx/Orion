@@ -7,11 +7,11 @@ Created on 2020/3/2
 
 from flask import Flask, Blueprint
 
-from flask_vplx.Data import datablue
-from flask_vplx.Excution import excution_blue
+from flask_vplx.data import datablue
+from flask_vplx.execution import execution_blue
 
 app = Flask(__name__)
 
 # 将蓝图注册到app
 app.register_blueprint(datablue)
-app.register_blueprint(excution_blue)
+app.register_blueprint(execution_blue)

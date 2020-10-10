@@ -14,7 +14,7 @@ def data(datadict):
     return response
 
 
-class Host_create(views.MethodView):
+class HostCreate(views.MethodView):
 
     def get(self):
         if request.method == 'GET':
@@ -25,7 +25,7 @@ class Host_create(views.MethodView):
         return data(result)
 
     
-class HostGroup_create(views.MethodView):
+class HostGroupCreate(views.MethodView):
 
     def get(self):
         if request.method == 'GET':
@@ -37,7 +37,7 @@ class HostGroup_create(views.MethodView):
         return data(result)
 
     
-class DiskGroup_create(views.MethodView):
+class DiskGroupCreate(views.MethodView):
 
     def get(self):
         if request.method == 'GET':
@@ -49,7 +49,7 @@ class DiskGroup_create(views.MethodView):
         return data(result)
 
     
-class Map_create(views.MethodView):
+class MapCreate(views.MethodView):
 
     def get(self):
         if request.method == 'GET':
@@ -59,9 +59,12 @@ class Map_create(views.MethodView):
             result = subprocess.getoutput(str_cmd)
         return data(result)
 
-#host
+
+# host
 global HOST_RESULT
-class oprt_all_host(views.MethodView):
+
+
+class OprtAllHost(views.MethodView):
 
     def get(self):
         global HOST_RESULT
@@ -71,12 +74,17 @@ class oprt_all_host(views.MethodView):
         return data("host获取值成功")
 
     
-class all_host_result(views.MethodView):
+class AllHostResult(views.MethodView):
+
     def get(self):
         return data(HOST_RESULT)
-#disk   
+
+
+# disk   
 global DISK_RESULT
-class oprt_all_disk(views.MethodView):
+
+
+class OprtAllDisk(views.MethodView):
 
     def get(self):
         global DISK_RESULT
@@ -85,14 +93,17 @@ class oprt_all_disk(views.MethodView):
         return data("disk获取值成功")
 
     
-class all_disk_result(views.MethodView):
+class AllDiskResult(views.MethodView):
 
     def get(self):
         return data(DISK_RESULT)
 
-#hostgroup
+
+# hostgroup
 global HOSTGROUP_RESULT
-class oprt_all_hg(views.MethodView):
+
+
+class OprtAllHg(views.MethodView):
 
     def get(self):
         global HOSTGROUP_RESULT
@@ -100,15 +111,18 @@ class oprt_all_hg(views.MethodView):
         HOSTGROUP_RESULT = js.provide_all_hostgroup()
         return data("hostgroup获取值成功")
 
-    
-class all_hg_result(views.MethodView):
+
+class AllHgResult(views.MethodView):
 
     def get(self):
         return data(HOSTGROUP_RESULT)
+
     
-#diskgroup
+# diskgroup
 global DISKGROUP_RESULT
-class oprt_all_dg(views.MethodView):
+
+
+class OprtAllDg(views.MethodView):
 
     def get(self):
         global DISKGROUP_RESULT
@@ -117,15 +131,17 @@ class oprt_all_dg(views.MethodView):
         return data("diskgroup获取值成功")
 
     
-class all_dg_result(views.MethodView):
+class AllDgResult(views.MethodView):
 
     def get(self):
         return data(DISKGROUP_RESULT)
     
     
-#map
+# map
 global MAP_RESULT
-class oprt_all_map(views.MethodView):
+
+
+class OprtAllMap(views.MethodView):
 
     def get(self):
         global MAP_RESULT
@@ -134,7 +150,7 @@ class oprt_all_map(views.MethodView):
         return data("map获取值成功")
 
     
-class all_map_result(views.MethodView):
+class AllMapResult(views.MethodView):
 
     def get(self):
         return data(MAP_RESULT)

@@ -24,7 +24,6 @@ function Host_Name_myFunction() {
 			});
 }
 
-// hostgroup
 function HG_Name_myFunction() {
 	document.getElementById("HG_Name_Examine").className = "hidden";
 	var input_result = $('#HostGroup_Name').val();
@@ -75,6 +74,3 @@ function Map_Name_myFunction() {
 		}
 	});
 }
-
-
-

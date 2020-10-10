@@ -74,12 +74,6 @@ class StoragePoolCommands():
             action='store',
             help='Name of the node for the new storage pool',
             required=True)
-        p_create_sp.add_argument(
-            '-gui',
-            dest='gui',
-            action='store_true',
-            help=argparse.SUPPRESS,
-            default=False)
         group_type = p_create_sp.add_mutually_exclusive_group()
         group_type.add_argument(
             '-lvm',
@@ -126,12 +120,6 @@ class StoragePoolCommands():
             action='store_true',
             help='Skip to confirm selection',
             default=False)
-        p_delete_sp.add_argument(
-            '-gui',
-            dest='gui',
-            action='store_true',
-            help=argparse.SUPPRESS,
-            default=False)
 
         p_delete_sp.set_defaults(func=self.delete)
 
@@ -167,23 +155,11 @@ class StoragePoolCommands():
         if args.storagepool and args.node:
             # The judgment of the lvm module to create a storage pool
             if args.lvm:
-                if args.gui:
-                    result = sp.create_storagepool_lvm(
-                        args.node, args.storagepool, args.lvm)
-                    result_pickled = pickle.dumps(result)
-                    sd.send_via_socket(result_pickled)
-                else:
-                    sp.create_storagepool_lvm(
+                sp.create_storagepool_lvm(
                         args.node, args.storagepool, args.lvm)
             # The judgment of the thin-lv module to create a storage pool
             elif args.tlv:
-                if args.gui:
-                    result = sp.create_storagepool_thinlv(
-                        args.node, args.storagepool, args.tlv)
-                    result_pickled = pickle.dumps(result)
-                    sd.send_via_socket(result_pickled)
-                else:
-                    sp.create_storagepool_thinlv(
+                sp.create_storagepool_thinlv(
                         args.node, args.storagepool, args.tlv)
             else:
                 self.p_create_sp.print_help()

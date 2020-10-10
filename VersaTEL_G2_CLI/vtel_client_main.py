@@ -142,10 +142,6 @@ class VtelCLI(object):
         self.parser_iscsi = parser_iscsi
         self.parser_replay = parser_replay
 
-        # Set the binding function of stor
-        parser_stor.set_defaults(func=self.send_database)
-        # Set the binding function of iscsi
-        parser_iscsi.set_defaults(func=self.send_json)
         parser_replay.set_defaults(func=self.replay)
 
 
@@ -174,66 +170,6 @@ class VtelCLI(object):
     def print_vtel_help(self,*args):
         self._parser.print_help()
 
-    # When using the parameter '-gui', send the database through the socket
-    def send_database(self, args):
-        if args.gui:
-            db = linstordb.LinstorDB()
-            data = pickle.dumps(db.data_base_dump())
-            sundry.send_via_socket(data)
-        else:
-            self.parser_stor.print_help()
-
-    # When using the parameter '-gui', send the json through the socket
-    def send_json(self, args):
-
-        if args.gui:
-            js = iscsi_json.JSON_OPERATION()
-            data = js.read_json()
-            data_pickled = pickle.dumps(data)
-            sundry.send_via_socket(data_pickled)
-        else:
-            self.parser_iscsi.print_help()
-
-
-    # def replay_run(self,cmd_list):
-    #     if not cmd_list:
-    #         print('不存在命令去进行replay')
-    #         return
-    #
-    #     trasanction_num = len(cmd_list)
-    #
-    #
-    #     for replay_cmd in cmd_list:
-    #         print(f"--------------transaction:{replay_cmd['tid']}--------------")
-    #         consts.set_glo_tsc_id(replay_cmd['tid'] )
-    #         if replay_cmd:
-    #             print(replay_cmd)
-    #             if not replay_cmd['valid'] == 0:
-    #                 replay_args = self._parser.parse_args(replay_cmd['user_input']['cmd'].split())
-    #                 print(f"* 执行命令：{replay_cmd['user_input']['cmd']} *")
-    #                 try:
-    #                     replay_args.func(replay_args)
-    #                 except consts.ReplayExit:
-    #                     print('该事务replay结束')
-    #                 except Exception:
-    #                     print(str(traceback.format_exc()))
-    #             else:
-    #                 print(f"该命令{replay_cmd['cmd']}有误，无法执行")
-    #
-    #             # if not replay_cmd['type'] == 'err':
-    #             #     replay_args = self._parser.parse_args(replay_cmd['cmd'].split())
-    #             #     print(f"* 执行命令：{replay_cmd['cmd']} *")
-    #             #     try:
-    #             #         replay_args.func(replay_args)
-    #             #     except consts.ReplayExit:
-    #             #         print('该事务replay结束')
-    #             #     except Exception:
-    #             #         print(str(traceback.format_exc()))
-    #             #
-    #             # else:
-    #             #     print(f"该命令{replay_cmd['cmd']}有误，无法执行")
-    #         else:
-    #             print('该事务id:不存在或者不符合replay条件（python vtel_client_main）')
 
 
     def replay_one(self,dict_input):
