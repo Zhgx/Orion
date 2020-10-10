@@ -5,19 +5,24 @@ import subprocess
 class TestDisk:
 
     def setup_class(self):
+        subprocess.run('python vtel_client_main.py stor r c res_test -s 10m -a -num 1', shell=True)
+        subprocess.run('python vtel_client_main.py iscsi d s', shell=True)
         self.disk = iscsi.Disk()
+
+    def teardown_class(self):
+        subprocess.run('python vtel_client_main.py stor r d res_test -y', shell=True)
 
     def test_get_all_disk(self):
         assert self.disk.get_all_disk() != None
 
     def test_get_spe_disk(self):
-        assert self.disk.get_spe_disk('res_a') != None
+        assert self.disk.get_spe_disk('res_test') != None
 
     def test_show_all_disk(self):
         assert self.disk.show_all_disk() == None
 
     def test_show_spe_disk(self):
-        assert self.disk.show_spe_disk('res_a') == None
+        assert self.disk.show_spe_disk('res_test') == None
 
 
 class TestHost:
@@ -47,15 +52,15 @@ class TestHost:
 class TestDiskGroup:
 
     def setup_class(self):
-        self.diskg = iscsi.DiskGroup()
         subprocess.run('python vtel_client_main.py stor r c res_test -s 10m -a -num 1', shell=True)
+        subprocess.run('python vtel_client_main.py iscsi d s', shell=True)
+        self.diskg = iscsi.DiskGroup()
 
     def teardown_class(self):
         subprocess.run('python vtel_client_main.py stor r d res_test -y', shell=True)
 
-
     def test_create_diskgroup(self):
-        assert self.diskg.create_diskgroup('test_dg1', 'res_a') == True
+        assert self.diskg.create_diskgroup('test_dg1', ['res_test']) == True
 
     def test_get_all_diskgroup(self):
         assert self.diskg.get_all_diskgroup() != None
@@ -76,15 +81,15 @@ class TestDiskGroup:
 class TestHostGroup:
 
     def setup_class(self):
-        self.hostg = iscsi.HostGroup()
         self.host = iscsi.Host()
         self.host.create_host('test_host1', 'test_iqn')
+        self.hostg = iscsi.HostGroup()
 
     def teardown_class(self):
         self.host.delete_host('test_host1')
 
     def test_create_hostgroup(self):
-        assert self.hostg.create_hostgroup('test_hg1', 'test_host1') == True
+        assert self.hostg.create_hostgroup('test_hg1', ['test_host1']) == True
 
     def test_get_all_hostgroup(self):
         assert self.hostg.get_all_hostgroup() != None
@@ -105,13 +110,21 @@ class TestHostGroup:
 class TestMap:
 
     def setup_class(self):
+        subprocess.run('python vtel_client_main.py stor r c res_test -s 10m -a -num 1', shell=True)
+        subprocess.run('python vtel_client_main.py iscsi d s', shell=True)
+        subprocess.run('python vtel_client_main.py iscsi dg c test_dg res_test', shell=True)
+        subprocess.run('python vtel_client_main.py iscsi h c test_host test_iqn', shell=True)
+        subprocess.run('python vtel_client_main.py iscsi hg c test_hg test_host', shell=True)
         self.map = iscsi.Map()
 
     def teardown_class(self):
-        pass
+        subprocess.run('python vtel_client_main.py iscsi hg d test_hg', shell=True)
+        subprocess.run('python vtel_client_main.py iscsi h d test_host', shell=True)
+        subprocess.run('python vtel_client_main.py iscsi dg d test_dg', shell=True)
+        subprocess.run('python vtel_client_main.py stor r d res_test -y', shell=True)
 
     def test_pre_check_create_map(self):
-        pass
+        assert self.map.pre_check_create_map()
 
     def test_get_initiator(self):
         pass

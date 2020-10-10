@@ -79,7 +79,7 @@ class Host():
                     "Fail! The host in ... hostgroup.Please delete the hostgroup first",1)
             else:
                 self.js.delete_data('Host', host)
-                s.prt_log("Dexlete success!",0)
+                s.prt_log("Delete success!",0)
                 return True
         else:
             s.prt_log(f"Fail! Can't find {host}",1)
