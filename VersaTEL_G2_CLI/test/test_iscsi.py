@@ -1,5 +1,6 @@
 from execute import iscsi
 import subprocess
+import iscsi_json
 
 
 class TestDisk:
@@ -124,25 +125,38 @@ class TestMap:
         subprocess.run('python vtel_client_main.py stor r d res_test -y', shell=True)
 
     def test_pre_check_create_map(self):
-        assert self.map.pre_check_create_map()
+        assert self.map.pre_check_create_map('test_map', 'test_hg1', 'test_dg') == None
+        assert self.map.pre_check_create_map('test_map', 'test_hg', 'test_dg1') == None
+        assert self.map.pre_check_create_map('test_map', 'test_hg', 'test_dg') == True
 
     def test_get_initiator(self):
-        pass
+        assert self.map.get_initiator('test_hg') == 'test_iqn'
 
     def test_get_target(self):
-        pass
+        assert self.map.get_target() != None
 
     def test_get_drbd_data(self):
-        pass
+        assert self.map.get_drbd_data('test_dg') != None
 
     def test_create_map(self):
-        pass
+        assert self.map.create_map('test_map', 'test_hg', 'test_dg') == True
 
     def test_get_all_map(self):
-        pass
+        assert self.map.get_all_map() != None
 
     def test_get_spe_map(self):
-        pass
+        assert self.map.get_spe_map('test_map') != None
 
     def test_show_all_map(self):
-        pass
+        assert self.map.show_all_map() == None
+
+    def test_show_spe_map(self):
+        map = iscsi.Map()
+        assert map.show_spe_map('test_map') != None
+
+    def test_pre_check_delete_map(self):
+        assert self.map.pre_check_delete_map('test_map') == True
+
+    def test_delete_map(self):
+        map = iscsi.Map()
+        assert map.delete_map('test_map') == True

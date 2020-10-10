@@ -315,7 +315,7 @@ class Map():
         table_map = s.show_map_data(header_map, list_data[0])
         table_hg = s.show_iscsi_data(header_host, list_data[1])
         table_dg = s.show_iscsi_data(header_disk, list_data[2])
-        result = [f'Map:{map}',table_map,f'Host Group:{hg}',table_hg,f'Disk Group:{dg}',table_dg]
+        result = [f'Map:{map}',str(table_map),f'Host Group:{hg}',str(table_hg),f'Disk Group:{dg}',str(table_dg)]
         s.prt_log('\n'.join(result),0)
         return list_data
 
