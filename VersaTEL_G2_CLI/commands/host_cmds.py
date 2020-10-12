@@ -3,6 +3,7 @@ import execute as ex
 import sundry as sd
 import consts
 
+
 class HostCommands():
     def __init__(self):
         self.logger = consts.glo_log()

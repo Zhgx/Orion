@@ -20,7 +20,6 @@ class MapCommands():
         map_subp = map_parser.add_subparsers(dest='map')
         self.map_parser = map_parser
 
-
         """
         Create map
         """
