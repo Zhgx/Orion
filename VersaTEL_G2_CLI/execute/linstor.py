@@ -44,5 +44,5 @@ class Linstor():
         return list_data_all
 
     def get_linstor_data(self,cmd):
-        cmd_result = s.execute_cmd(cmd,s.get_function_name())
+        cmd_result = s.execute_cmd(cmd)
         return self.refine_linstor(cmd_result)

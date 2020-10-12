@@ -6,7 +6,7 @@ import sundry as s
 import subprocess
 
 @s.cmd_decorator('crm')
-def execute_crm_cmd(cmd, func_name, timeout=60):
+def execute_crm_cmd(cmd, timeout=60):
     """
     Execute the command cmd to return the content of the command output.
     If it times out, a TimeoutError exception will be thrown.
@@ -49,7 +49,7 @@ class CRMData():
     # 打印出来的信息太过繁杂，考虑如何实现replay（log记录时）时打印出有效信息，
     def get_crm_conf(self):
         cmd = 'crm configure show'
-        result = execute_crm_cmd(cmd,s.get_function_name())
+        result = execute_crm_cmd(cmd)
         if result:
             return result['rst']
         else:
@@ -103,7 +103,7 @@ class CRMConfig():
             f'op stop timeout=40 interval=0 ' \
             f'op monitor timeout=40 interval=15 ' \
             f'meta target-role=Stopped'
-        result = execute_crm_cmd(cmd,s.get_function_name())
+        result = execute_crm_cmd(cmd)
         if result['sts']:
             s.prt_log("Create iSCSILogicalUnit success",0)
             return True
@@ -119,7 +119,7 @@ class CRMConfig():
     # 停用res
     def stop_res(self, res):
         cmd = f'crm res stop {res}'
-        result = execute_crm_cmd(cmd,s.get_function_name())
+        result = execute_crm_cmd(cmd)
         if result['sts']:
             return True
         else:
@@ -150,7 +150,7 @@ class CRMConfig():
             if self.checkout_status(res,10,'Stopped'):
                 time.sleep(3)
                 cmd = f'crm conf del {res}'
-                result = execute_crm_cmd(cmd,s.get_function_name())
+                result = execute_crm_cmd(cmd)
                 if result:
                     output = result['rst']
                     re_str = re.compile(rf'INFO: hanging colocation:co_{res} deleted\nINFO: hanging order:or_{res} deleted\n')
@@ -164,20 +164,20 @@ class CRMConfig():
 
     def create_col(self, res, target):
         cmd = f'crm conf colocation co_{res} inf: {res} {target}'
-        result = execute_crm_cmd(cmd,s.get_function_name())
+        result = execute_crm_cmd(cmd)
         if result['sts']:
             s.prt_log("set coclocation success",0)
             return True
 
     def create_order(self, res, target):
         cmd = f'crm conf order or_{res} {target} {res}'
-        result = execute_crm_cmd(cmd,s.get_function_name())
+        result = execute_crm_cmd(cmd)
         if result['sts']:
             s.prt_log("set order success",0)
             return True
 
     def start_res(self, res):
         cmd = f'crm res start {res}'
-        result = execute_crm_cmd(cmd,s.get_function_name())
+        result = execute_crm_cmd(cmd)
         if result['sts']:
             return True
