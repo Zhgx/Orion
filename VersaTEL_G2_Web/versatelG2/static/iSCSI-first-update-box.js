@@ -8,7 +8,7 @@
 $('#Host').selectpicker({
 	width : 200
 });
-$(function() {
+function host_result_select()  {
 	$.ajax({
 		url : "http://10.203.1.76:7777/oprt_all_host",
 		type : "GET",
@@ -32,6 +32,7 @@ $(function() {
 		}
 	});
 });
+host_result_select()
 $(window).on('load', function() {
 	$('#Host').selectpicker({
 		'selectedText' : 'cat'
@@ -42,7 +43,7 @@ $('#Disk').selectpicker({
 	width : 200
 });
 
-$(function() {
+function disk_result_select()  {
 	$.ajax({
 		url : "http://10.203.1.76:7777/oprt_all_disk",
 		type : "GET",
@@ -70,6 +71,7 @@ $(function() {
 	});
 
 });
+disk_result_select()
 $(window).on('load', function() {
 	$('#Disk').selectpicker({
 		'selectedText' : 'cat'
@@ -80,7 +82,7 @@ $('#Host_Group').selectpicker({
 	width : 200
 });
 
-$(function() {
+function all_hg_result_select()  {
 	$.ajax({
 		url : "http://10.203.1.76:7777/oprt_all_hg",
 		type : "get",
@@ -108,6 +110,7 @@ $(function() {
 	});
 
 });
+all_hg_result_select()
 $(window).on('load', function() {
 	$('#Host_Group').selectpicker({
 		'selectedText' : 'cat'
@@ -118,7 +121,7 @@ $('#Disk_Group').selectpicker({
 	width : 200
 });
 
-$(function() {
+function all_dg_result_select() {
 	$.ajax({
 		url : "http://10.203.1.76:7777/oprt_all_dg",
 		type : "get",
@@ -144,6 +147,7 @@ $(function() {
 		}
 	});
 });
+all_dg_result_select()
 $(window).on('load', function() {
 	$('#Disk_Group').selectpicker({
 		'selectedText' : 'cat'
