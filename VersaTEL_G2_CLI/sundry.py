@@ -15,34 +15,12 @@ import colorama as ca
 import inspect
 import consts
 import pprint
-import log
 
 
 def get_function_name():
     '''获取正在运行函数(或方法)名称'''
     return inspect.stack()[1][3]
 
-# Connect to the socket server and transfer data, and finally close the
-# connection.
-def send_via_socket(data):
-    ip = "10.203.1.76"
-    port = 12144
-
-    client = socket.socket()
-    client.connect((ip, port))
-
-    tid = client.recv(8192).decode()
-    print('CLI 接收到的东西：',tid)
-    logger = log.Log('username', tid)
-    # consts.set_glo_gui_tid(tid)
-    client.send(b'no tid')
-    client.recv(8192)
-    client.send(b'database')
-    client.recv(8192)
-    client.sendall(data)
-    client.recv(8192)
-    client.send(b'exit')
-    client.close()
 
 def record_exception(func):
     """
