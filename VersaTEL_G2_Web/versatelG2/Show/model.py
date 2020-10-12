@@ -13,7 +13,7 @@ class Index(views.MethodView):
     def get(self):
         return render_template("index.html")
     
-class iSCSICreate(views.MethodView):
+class IscsiCreate(views.MethodView):
     def get(self):
         return render_template("iSCSI_create.html")
 

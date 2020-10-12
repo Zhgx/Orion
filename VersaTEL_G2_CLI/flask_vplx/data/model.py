@@ -21,7 +21,7 @@ global RESOURCEDICT
 class OprtResource(views.MethodView):  
     def get(self):
         global RESOURCEDICT
-        pc = Process.Process_data()
+        pc =process.Process_data()
         RESOURCEDICT = pc.process_data_resource()
         return data("数据获取成功")
     
