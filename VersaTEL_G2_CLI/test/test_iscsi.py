@@ -1,6 +1,5 @@
 from execute import iscsi
 import subprocess
-import iscsi_json
 
 
 class TestDisk:
