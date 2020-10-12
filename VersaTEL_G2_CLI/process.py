@@ -14,9 +14,12 @@ class LINSTORDB(object):
 
     def __init__(self):
         # 先这样
-        consts._init()
+        
         username = sundry.get_username()
-        transaction_id = sys.argv[-1] if '-gui' in sys.argv else sundry.create_transaction_id()
+        
+        transaction_id = consts.glo_tsc_id()
+        print(transaction_id)
+        print('end_')
         logger = log.Log(username, transaction_id)
         consts.set_glo_log(logger)
         db = linstordb.LinstorDB()

@@ -4,6 +4,8 @@ import json
 import subprocess
 from flask_cors import *
 import iscsi_interaction
+import time
+import consts
 
 
 def data(datadict):
@@ -13,7 +15,23 @@ def data(datadict):
     response.headers['Access-Control-Allow-Headers'] = 'x-requested-with'
     return response
 
+global TEANSACTION_ID_RESULT
 
+class TransactionId(views.MethodView):
+
+    def get(self):
+        global TEANSACTION_ID_RESULT
+        if request.method == 'GET':
+            print('get_id_start')
+            consts._init()
+            transaction_id = request.args.items()
+            dict_transaction = dict(transaction_id)
+            transaction_id_result = dict_transaction["transactionid"]
+            consts.set_glo_tsc_id(transaction_id_result)
+            print("transaction_id:",transaction_id_result) 
+            hint = "success"
+        return data(hint)
+    
 class HostCreate(views.MethodView):
 
     def get(self):

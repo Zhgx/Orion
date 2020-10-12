@@ -58,10 +58,23 @@ class VtelCLI(object):
     Vtel command line client
     """
     def __init__(self):
-        consts._init()
+        if consts.glo_tsc_id:
+            print('1111')
+            print(consts.glo_tsc_id())
+        else:
+            consts._init()
         self.username = sundry.get_username()
-        self.transaction_id = sys.argv[-1] if '-gui' in sys.argv \
-            else sundry.create_transaction_id()
+        if consts.glo_tsc_id():
+            self.transaction_id = consts.glo_tsc_id()
+            print('1111111xx')
+        else:
+            self.transaction_id = sundry.create_transaction_id()
+            
+        
+        print(self.transaction_id)
+        print('1111111')
+#         self.transaction_id = sys.argv[-1] if '-gui' in sys.argv \
+#             else sundry.create_transaction_id()
         self.logger = log.Log(self.username,self.transaction_id)
         consts.set_glo_log(self.logger)
         self.replay_args_list = []

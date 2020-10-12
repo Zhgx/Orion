@@ -28,4 +28,6 @@ class OprtResource(views.MethodView):
 class ResourceResult(views.MethodView):  
     def get(self):
         return data(RESOURCEDICT)
+    
+
 
