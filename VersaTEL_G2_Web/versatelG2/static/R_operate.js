@@ -30,21 +30,15 @@ function First_refresh() {
 	time = time.substr(0, 10);
 	alert(time);
 	$.ajax({
-		url : "http://10.203.1.76:7777/transaction_id",
-		type : "GET",
+		url : "http://10.203.1.76:7777/resource_operate",
+		type : "get",
+		dataType : "json",
 		data : {
 			transactionid : time,
-		},
-		success : function(transaction_result) {
-			$.ajax({
-				url : "http://10.203.1.76:7777/resource_operate",
-				type : "get",
-				dataType : "json",
-				success : function(R_Hint) {
-					R_Select();
-					all_resource_show();
-				}
-			});
+			 },
+		success : function(R_Hint) {
+			R_Select();
+			all_resource_show();
 		}
 	});
 }

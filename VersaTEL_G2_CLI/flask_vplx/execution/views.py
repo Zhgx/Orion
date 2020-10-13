@@ -4,8 +4,6 @@ from flask import views
 from flask_vplx.execution import execution_blue
 from flask_vplx.execution import model
 
-# 事务
-execution_blue.add_url_rule('/transaction_id', view_func=model.TransactionId.as_view('transaction_id'))
 
 # 创建
 execution_blue.add_url_rule('/host_create', view_func=model.HostCreate.as_view('host_create'))

@@ -12,14 +12,11 @@ import sys
 
 class LINSTORDB(object):
 
-    def __init__(self):
+    def __init__(self,tid):
         # 先这样
-        
+        consts._init()
         username = sundry.get_username()
-        
-        transaction_id = consts.glo_tsc_id()
-        print(transaction_id)
-        print('end_')
+        transaction_id = tid
         logger = log.Log(username, transaction_id)
         consts.set_glo_log(logger)
         db = linstordb.LinstorDB()
@@ -31,8 +28,8 @@ class LINSTORDB(object):
 
 class Process_data(LINSTORDB):
 
-    def __init__(self):
-        LINSTORDB.__init__(self)
+    def __init__(self,tid):
+        LINSTORDB.__init__(self,tid)
 
     # 获取表单行数据的通用方法
     def sql_fetch_one(self, sql):
@@ -237,6 +234,8 @@ class Process_data(LINSTORDB):
                 date.append(date_one)
         dict = {"code": 0, "msg": "", "count": 1000, "data": date}
         cur.close()
+        logger = consts.glo_log()
+        logger.write_to_log('type1','type2','describe1','describe2','data')
         return dict
 
     # storage pool表格格式
