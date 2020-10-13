@@ -10,7 +10,7 @@ class LVM():
 
     def get_vg(self):
         cmd = 'vgs'
-        result = s.execute_cmd(cmd,s.get_function_name())
+        result = s.execute_cmd(cmd)
         if result:
             return result
         else:
@@ -18,7 +18,7 @@ class LVM():
 
     def get_thinlv(self):
         cmd = 'lvs'
-        result = s.execute_cmd(cmd,s.get_function_name())
+        result = s.execute_cmd(cmd)
         if result:
             return result
         else:
