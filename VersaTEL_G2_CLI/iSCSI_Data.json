@@ -9,8 +9,7 @@
         "res_b": "/dev/drbd1001",
         "res_c": "/dev/drbd1002",
         "res_d": "/dev/drbd1003",
-        "res_e": "/dev/drbd1004",
-        "res_test": "/dev/drbd1005"
+        "res_e": "/dev/drbd1004"
     },
     "HostGroup": {
         "hg1": [
@@ -53,14 +52,6 @@
                 "02",
                 "/dev/drbd1002",
                 "iqn-123213-12321 ",
-                "Started"
-            ],
-            [
-                "res_test",
-                "iqn.2020-04.feixitek.com:versaplx00",
-                "05",
-                "/dev/drbd1005",
-                "test",
                 "Started"
             ]
         ],
