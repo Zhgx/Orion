@@ -5,6 +5,7 @@ import subprocess
 from flask_cors import *
 import iscsi_interaction
 from execute import iscsi
+import time
 
 
 def data(datadict):
@@ -13,8 +14,7 @@ def data(datadict):
     response.headers['Access-Control-Allow-Methods'] = 'OPTIONS,HEAD,GET,POST'
     response.headers['Access-Control-Allow-Headers'] = 'x-requested-with'
     return response
-
-
+    
 class HostCreate(views.MethodView):
 
     def get(self):

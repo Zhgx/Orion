@@ -26,10 +26,16 @@ function update_resource_operate() {
 
 First_refresh();
 function First_refresh() {
+	var time = Date.parse(new Date()).toString();// 获取到毫秒的时间戳，精确到毫秒
+	time = time.substr(0, 10);
+	alert(time);
 	$.ajax({
 		url : "http://10.203.1.76:7777/resource_operate",
 		type : "get",
 		dataType : "json",
+		data : {
+			transactionid : time,
+			 },
 		success : function(R_Hint) {
 			R_Select();
 			all_resource_show();

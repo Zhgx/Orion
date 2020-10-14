@@ -8,9 +8,7 @@
         "3": "22",
         "Host2": "iqn.host2",
         "222": "2",
-        "22": "22",
-        "Host22": "iqnxxx",
-        "host5": "iqn123"
+        "22": "22"
     },
     "Disk": {
         "res_a": "/dev/drbd1000",
