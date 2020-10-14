@@ -4,6 +4,7 @@ import json
 import subprocess
 from flask_cors import *
 import iscsi_interaction
+from execute import iscsi
 
 
 def data(datadict):
@@ -18,10 +19,16 @@ class HostCreate(views.MethodView):
 
     def get(self):
         if request.method == 'GET':
-            host = request.args.items()
-            dict_host = dict(host) 
-            str_cmd = "python3 vtel_client_main.py iscsi host create %s %s" % (dict_host["Host_Name"], dict_host["Host_iqn"])
-            result = subprocess.getoutput(str_cmd)
+            str_host = request.args.items()
+            dict_host = dict(str_host)
+            host = dict_host["Host_Name"]
+            iqn = dict_host["Host_iqn"]
+            host_obj = iscsi.Host()
+            host_create_results = host_obj.create_host(host, iqn)
+            if host_create_results == True:
+                result = "create success"
+            else:
+                result = "create failed"
         return data(result)
 
     
@@ -31,9 +38,14 @@ class HostGroupCreate(views.MethodView):
         if request.method == 'GET':
             hostgroup = request.args.items()
             dict_hostgroup = dict(hostgroup)
-            host = dict_hostgroup['Host'].replace(',', ' ') 
-            str_cmd = "python3 vtel_client_main.py iscsi hostgroup create %s %s" % (dict_hostgroup["HostGroup_Name"], host)
-            result = subprocess.getoutput(str_cmd)
+            host = dict_hostgroup['Host'].split(',')
+            host_group_name = dict_hostgroup["HostGroup_Name"]
+            host_group_obj = iscsi.HostGroup()
+            host_group_create_results = host_group_obj.create_hostgroup(host_group_name, host)
+            if host_group_create_results == True:
+                result = "create success"
+            else:
+                result = "create failed"
         return data(result)
 
     
@@ -43,9 +55,14 @@ class DiskGroupCreate(views.MethodView):
         if request.method == 'GET':
             diskgroup = request.args.items()
             dict_diskgroup = dict(diskgroup) 
-            disk = dict_diskgroup['Disk'].replace(',', ' ')
-            str_cmd = "python3 vtel_client_main.py iscsi diskgroup create %s %s" % (dict_diskgroup["DiskGroup_Name"], disk)
-            result = subprocess.getoutput(str_cmd)
+            disk = dict_diskgroup['Disk'].split(',')
+            disk_group_name = dict_diskgroup["DiskGroup_Name"]
+            disk_group_obj = iscsi.DiskGroup()
+            disk_group_create_results = disk_group_obj.create_diskgroup(disk_group_name, disk)
+            if disk_group_create_results == True:
+                result = "create success"
+            else:
+                result = "create failed"
         return data(result)
 
     
@@ -54,9 +71,16 @@ class MapCreate(views.MethodView):
     def get(self):
         if request.method == 'GET':
             map = request.args.items()
-            dict_map = dict(map) 
-            str_cmd = "python3 vtel_client_main.py iscsi map create %s -hg %s -dg %s " % (dict_map["Map_Name"], dict_map["Host_Group"], dict_map_create["Disk_Group"])
-            result = subprocess.getoutput(str_cmd)
+            dict_map = dict(map)
+            map_name = dict_map["Map_Name"]
+            host_group_name = dict_map["Host_Group"]
+            disk_group_name = dict_map["Disk_Group"] 
+            map_obj = iscsi.Map()
+            map_create_results = map_obj.create_map(map_name, host_group_name,disk_group_name)
+            if map_create_results == True:
+                result = "create success"
+            else:
+                result = "create failed"
         return data(result)
 
 
@@ -113,7 +137,7 @@ class OprtAllHg(views.MethodView):
 
 
 class AllHgResult(views.MethodView):
-
+    
     def get(self):
         return data(HOSTGROUP_RESULT)
 
@@ -147,10 +171,13 @@ class OprtAllMap(views.MethodView):
         global MAP_RESULT
         js = iscsi_interaction.JsonFile()
         MAP_RESULT = js.provide_all_map()
+        if not MAP_RESULT:
+            MAP_RESULT = "暂未创建Map"
         return data("map获取值成功")
 
     
 class AllMapResult(views.MethodView):
 
     def get(self):
+              
         return data(MAP_RESULT)

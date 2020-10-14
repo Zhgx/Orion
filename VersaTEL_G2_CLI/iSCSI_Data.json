@@ -7,7 +7,10 @@
         "Host4": "iqnxxxx",
         "3": "22",
         "Host2": "iqn.host2",
-        "222": "2"
+        "222": "2",
+        "22": "22",
+        "Host22": "iqnxxx",
+        "host5": "iqn123"
     },
     "Disk": {
         "res_a": "/dev/drbd1000",
@@ -22,6 +25,11 @@
         ],
         "hg2": [
             "host1"
+        ],
+        "hg5": [
+            "host2",
+            "host3",
+            "host5"
         ]
     },
     "DiskGroup": {
@@ -30,11 +38,51 @@
         ],
         "dg2": [
             "res_a"
+        ],
+        "dg3": [
+            "res_a",
+            "res_b",
+            "res_c"
+        ],
+        "dg5": [
+            "res_a",
+            "res_b",
+            "res_c"
         ]
     },
-    "Map": {},
+    "Map": {
+        "map3": [
+            "hg1",
+            "dg1"
+        ]
+    },
     "crm": {
-        "resource": [],
+        "resource": [
+            [
+                "res_a",
+                "iqn.2020-04.feixitek.com:versaplx00",
+                "00",
+                "/dev/drbd1000",
+                "iqn-123213-12321 ",
+                "Started"
+            ],
+            [
+                "res_b",
+                "iqn.2020-04.feixitek.com:versaplx00",
+                "01",
+                "/dev/drbd1001",
+                "3 ",
+                "Started"
+            ],
+            [
+                "res_c",
+                "iqn.2020-04.feixitek.com:versaplx00",
+                "02",
+                "/dev/drbd1002",
+                "iqn-123213-12321 ",
+                "Started"
+            ]
+        ],
         "vip": [
             [
                 "vip",

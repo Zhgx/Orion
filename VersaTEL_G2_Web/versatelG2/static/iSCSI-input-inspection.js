@@ -45,7 +45,7 @@ function DG_Name_myFunction() {
 	document.getElementById("DG_Name_Examine").className = "hidden";
 	var input_result = $('#DiskGroup_Name').val();
 	$.ajax({
-		url : "http://10.203.1.76:7777/all_hg_result",
+		url : "http://10.203.1.76:7777/all_dg_result",
 		type : "GET",
 		dataType : "json",
 		success : function(DG_result) {
@@ -62,12 +62,14 @@ function Map_Name_myFunction() {
 	document.getElementById("Map_Name_Examine").className = "hidden";
 	var input_result = $('#Map_Name').val();
 	$.ajax({
-		url : "http://10.203.1.76:7777/all_hg_result",
+		url : "http://10.203.1.76:7777/all_map_result",
 		type : "GET",
 		dataType : "json",
 		success : function(Map_result) {
 			for (i in Map_result) {
-				if (i == input_result) {
+				if (i == "暂未创建Map") {
+					document.getElementById("Map_Name_Examine").className = "hidden";
+				}else( i == input_result){
 					document.getElementById("Map_Name_Examine").className = "";
 				}
 			}

@@ -56,8 +56,6 @@ $("#HostGroup_create").click(function() {
 					'selectedText' : 'cat'
 				});
 			});
-
-
 			// $("#double").val(data);
 			// 赋值
 		},
@@ -66,6 +64,8 @@ $("#HostGroup_create").click(function() {
 	})
 	$("#HostGroup_Name").val("");
 });
+
+
 $("#DiskGroup_create").click(function() {
 	var DiskGroup_Name = $("#DiskGroup_Name").val()
 	var Disk = $("#Disk").val().toString()
