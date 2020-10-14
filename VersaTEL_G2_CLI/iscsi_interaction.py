@@ -10,12 +10,12 @@ from execute.iscsi import DiskGroup
 from execute.iscsi import Map
 
 
-class JsonFile(object):
+class JsonConfig(object):
 
     def __init__(self):
         consts._init()
         username = s.get_username()
-        transaction_id = sys.argv[-1] if '-gui' in sys.argv else s.create_transaction_id()
+        transaction_id =  s.create_transaction_id()
         logger = log.Log(username, transaction_id)
         consts.set_glo_log(logger)
 

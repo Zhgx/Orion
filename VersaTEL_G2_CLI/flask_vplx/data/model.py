@@ -9,6 +9,7 @@ from flask import Flask, jsonify, render_template, request, make_response, views
 import json
 from flask_cors import *
 import process
+import log
 
 
 def data(datadict):
@@ -36,7 +37,8 @@ class OprtResource(views.MethodView):
         global RESOURCEDICT
         if request.method == 'GET':
             tid = get_tid()
-            pc = process.Process_data(tid)
+            log.set_web_logger(tid)
+            pc = process.Process_data()
             RESOURCEDICT = pc.process_data_resource()
         return data("数据获取成功")
 

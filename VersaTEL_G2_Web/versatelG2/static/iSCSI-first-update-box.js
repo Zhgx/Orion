@@ -9,10 +9,15 @@ $('#Host').selectpicker({
 	width : 200
 });
 function host_result_select()  {
+	var time = Date.parse(new Date()).toString();// 获取到毫秒的时间戳，精确到毫秒
+	time = time.substr(0, 10);
 	$.ajax({
 		url : "http://10.203.1.76:7777/oprt_all_host",
 		type : "GET",
 		dataType : "json",
+		data : {
+			transaction_id:time
+		},
 		success : function() {
 			$.ajax({
 				url : "http://10.203.1.76:7777/all_host_result",
@@ -44,10 +49,15 @@ $('#Disk').selectpicker({
 });
 
 function disk_result_select()  {
+	var time = Date.parse(new Date()).toString();// 获取到毫秒的时间戳，精确到毫秒
+	time = time.substr(0, 10);
 	$.ajax({
 		url : "http://10.203.1.76:7777/oprt_all_disk",
 		type : "GET",
 		dataType : "json",
+		data : {
+			transaction_id:time
+		},
 		success : function() {
 			$.ajax({
 				url : "http://10.203.1.76:7777/all_disk_result",
@@ -83,10 +93,15 @@ $('#Host_Group').selectpicker({
 });
 
 function all_hg_result_select()  {
+	var time = Date.parse(new Date()).toString();// 获取到毫秒的时间戳，精确到毫秒
+	time = time.substr(0, 10);
 	$.ajax({
 		url : "http://10.203.1.76:7777/oprt_all_hg",
 		type : "get",
 		dataType : "json",
+		data : {
+			transaction_id:time
+		},
 		success : function() {
 			$.ajax({
 				url : "http://10.203.1.76:7777/all_hg_result",
@@ -122,10 +137,15 @@ $('#Disk_Group').selectpicker({
 });
 
 function all_dg_result_select() {
+	var time = Date.parse(new Date()).toString();// 获取到毫秒的时间戳，精确到毫秒
+	time = time.substr(0, 10);
 	$.ajax({
 		url : "http://10.203.1.76:7777/oprt_all_dg",
 		type : "get",
 		dataType : "json",
+		data : {
+			transaction_id:time
+		},
 		success : function(data) {
 
 			$.ajax({

@@ -8,8 +8,8 @@ from execute import iscsi
 import time
 
 
-def data(datadict):
-    response = make_response(jsonify(datadict))
+def cors_data(data_dict):
+    response = make_response(jsonify(data_dict))
     response.headers['Access-Control-Allow-Origin'] = '*'
     response.headers['Access-Control-Allow-Methods'] = 'OPTIONS,HEAD,GET,POST'
     response.headers['Access-Control-Allow-Headers'] = 'x-requested-with'
@@ -24,12 +24,13 @@ class HostCreate(views.MethodView):
             host = dict_host["Host_Name"]
             iqn = dict_host["Host_iqn"]
             host_obj = iscsi.Host()
+            print(host_obj.get_all_host())
             host_create_results = host_obj.create_host(host, iqn)
             if host_create_results == True:
                 result = "create success"
             else:
                 result = "create failed"
-        return data(result)
+        return cors_data(result)
 
     
 class HostGroupCreate(views.MethodView):
@@ -46,7 +47,7 @@ class HostGroupCreate(views.MethodView):
                 result = "create success"
             else:
                 result = "create failed"
-        return data(result)
+        return cors_data(result)
 
     
 class DiskGroupCreate(views.MethodView):
@@ -58,12 +59,13 @@ class DiskGroupCreate(views.MethodView):
             disk = dict_diskgroup['Disk'].split(',')
             disk_group_name = dict_diskgroup["DiskGroup_Name"]
             disk_group_obj = iscsi.DiskGroup()
+            
             disk_group_create_results = disk_group_obj.create_diskgroup(disk_group_name, disk)
             if disk_group_create_results == True:
                 result = "create success"
             else:
                 result = "create failed"
-        return data(result)
+        return cors_data(result)
 
     
 class MapCreate(views.MethodView):
@@ -81,103 +83,137 @@ class MapCreate(views.MethodView):
                 result = "create success"
             else:
                 result = "create failed"
-        return data(result)
+        return cors_data(result)
 
 
 # host
-global HOST_RESULT
-
+HOST_RESULT = None
+def update_host():
+    global HOST_RESULT
+    js = iscsi_interaction.JsonConfig()
+    HOST_RESULT = js.provide_all_host()
+    return HOST_RESULT
 
 class OprtAllHost(views.MethodView):
 
     def get(self):
-        global HOST_RESULT
-        js = iscsi_interaction.JsonFile()
-        HOST_RESULT = js.provide_all_host()
-        
-        return data("host获取值成功")
+        if update_host():
+            return cors_data("0")
+        else:
+            return cors_data("1")
 
     
 class AllHostResult(views.MethodView):
 
     def get(self):
-        return data(HOST_RESULT)
+        if not HOST_RESULT:
+            update_host()
+        return cors_data(HOST_RESULT)
 
 
 # disk   
-global DISK_RESULT
-
+DISK_RESULT = None
+def update_disk():
+    global DISK_RESULT
+    js = iscsi_interaction.JsonConfig()
+    DISK_RESULT = js.provide_all_disk()
+    return DISK_RESULT
 
 class OprtAllDisk(views.MethodView):
 
     def get(self):
-        global DISK_RESULT
-        js = iscsi_interaction.JsonFile()
-        DISK_RESULT = js.provide_all_disk()
-        return data("disk获取值成功")
+        if update_disk():
+            return cors_data("0")
+        else:
+            return cors_data("1")
 
     
 class AllDiskResult(views.MethodView):
 
     def get(self):
-        return data(DISK_RESULT)
+        if not DISK_RESULT:
+            update_disk()
+        return cors_data(DISK_RESULT)
 
 
 # hostgroup
-global HOSTGROUP_RESULT
+HOSTGROUP_RESULT = None
+def update_hg():
+    global HOSTGROUP_RESULT
+    js = iscsi_interaction.JsonConfig()
+    HOSTGROUP_RESULT = js.provide_all_hostgroup()
+    return HOSTGROUP_RESULT
+
 
 
 class OprtAllHg(views.MethodView):
 
     def get(self):
-        global HOSTGROUP_RESULT
-        js = iscsi_interaction.JsonFile()
-        HOSTGROUP_RESULT = js.provide_all_hostgroup()
-        return data("hostgroup获取值成功")
+        if update_hg():
+            return cors_data("0")
+        else:
+            return cors_data("1")
 
 
 class AllHgResult(views.MethodView):
     
     def get(self):
-        return data(HOSTGROUP_RESULT)
+        if not HOSTGROUP_RESULT:
+            update_hg()
+        return cors_data(HOSTGROUP_RESULT)
 
     
 # diskgroup
-global DISKGROUP_RESULT
+DISKGROUP_RESULT = None
+
+def update_dg():
+    global DISKGROUP_RESULT
+    js = iscsi_interaction.JsonConfig()
+    DISKGROUP_RESULT = js.provide_all_diskgroup()
+    return DISKGROUP_RESULT
 
 
 class OprtAllDg(views.MethodView):
 
     def get(self):
-        global DISKGROUP_RESULT
-        js = iscsi_interaction.JsonFile()
-        DISKGROUP_RESULT = js.provide_all_diskgroup()
-        return data("diskgroup获取值成功")
+        if update_dg():
+            return cors_data("0")
+        else:
+            return cors_data("1")
 
     
 class AllDgResult(views.MethodView):
 
     def get(self):
-        return data(DISKGROUP_RESULT)
+        if not DISKGROUP_RESULT:
+            update_dg() 
+        return cors_data(DISKGROUP_RESULT)
     
     
 # map
-global MAP_RESULT
+MAP_RESULT = None
+
+def update_map():
+    global MAP_RESULT
+    js = iscsi_interaction.JsonConfig()
+    MAP_RESULT = js.provide_all_map()
+    return MAP_RESULT
+
 
 
 class OprtAllMap(views.MethodView):
 
     def get(self):
-        global MAP_RESULT
-        js = iscsi_interaction.JsonFile()
-        MAP_RESULT = js.provide_all_map()
-        if not MAP_RESULT:
-            MAP_RESULT = "暂未创建Map"
-        return data("map获取值成功")
+        
+        if updata_map():
+            return cors_data("0")
+        else:
+            return cors_data("1")
 
     
 class AllMapResult(views.MethodView):
 
     def get(self):
-              
-        return data(MAP_RESULT)
+        if not MAP_RESULT:
+           update_map() 
+        return cors_data(MAP_RESULT)

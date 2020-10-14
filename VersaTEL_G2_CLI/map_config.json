@@ -8,15 +8,12 @@
         "3": "22",
         "Host2": "iqn.host2",
         "222": "2",
-        "22": "22"
+        "22": "22",
+        "host44": "iqnxxx",
+        "h12": "iqnxx",
+        "Host21": "iqnxxx"
     },
-    "Disk": {
-        "res_a": "/dev/drbd1000",
-        "res_b": "/dev/drbd1001",
-        "res_c": "/dev/drbd1002",
-        "res_d": "/dev/drbd1003",
-        "res_e": "/dev/drbd1004"
-    },
+    "Disk": {},
     "HostGroup": {
         "hg1": [
             "host1"
@@ -28,6 +25,11 @@
             "host2",
             "host3",
             "host5"
+        ],
+        "hg21": [
+            "2",
+            "3",
+            "22"
         ]
     },
     "DiskGroup": {
@@ -43,6 +45,11 @@
             "res_c"
         ],
         "dg5": [
+            "res_a",
+            "res_b",
+            "res_c"
+        ],
+        "dg21": [
             "res_a",
             "res_b",
             "res_c"

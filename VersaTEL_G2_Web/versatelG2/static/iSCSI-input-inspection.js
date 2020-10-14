@@ -6,7 +6,7 @@
 
 //操作提示
 //host
-function Host_Name_myFunction() {
+function Host_Name_myFunction(){
 	document.getElementById("Host_Name_Examine").className = "hidden";
 	var input_result = $('#Host_Name').val();
 	$
@@ -67,9 +67,7 @@ function Map_Name_myFunction() {
 		dataType : "json",
 		success : function(Map_result) {
 			for (i in Map_result) {
-				if (i == "暂未创建Map") {
-					document.getElementById("Map_Name_Examine").className = "hidden";
-				}else( i == input_result){
+				if (i == input_result) {
 					document.getElementById("Map_Name_Examine").className = "";
 				}
 			}

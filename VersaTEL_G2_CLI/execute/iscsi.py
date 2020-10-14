@@ -7,7 +7,7 @@ from execute.crm import CRMData,CRMConfig
 
 class Disk():
     def __init__(self):
-        self.js = iscsi_json.JSON_OPERATION()
+        self.js = iscsi_json.JsonOperation()
 
     def get_all_disk(self):
         linstor = Linstor()
@@ -42,7 +42,7 @@ class Disk():
 
 class Host():
     def __init__(self):
-        self.js = iscsi_json.JSON_OPERATION()
+        self.js = iscsi_json.JsonOperation()
 
     def create_host(self, host, iqn):
         if self.js.check_key('Host', host)['result']:
@@ -89,7 +89,7 @@ class Host():
 
 class DiskGroup():
     def __init__(self):
-        self.js = iscsi_json.JSON_OPERATION()
+        self.js = iscsi_json.JsonOperation()
 
     def create_diskgroup(self, diskgroup, disk):
         if self.js.check_key('DiskGroup', diskgroup)['result']:
@@ -141,7 +141,7 @@ class DiskGroup():
 
 class HostGroup():
     def __init__(self):
-        self.js = iscsi_json.JSON_OPERATION()
+        self.js = iscsi_json.JsonOperation()
 
     def create_hostgroup(self, hostgroup, host):
         if self.js.check_key('HostGroup', hostgroup)['result']:
@@ -193,7 +193,7 @@ class HostGroup():
 
 class Map():
     def __init__(self):
-        self.js = iscsi_json.JSON_OPERATION()
+        self.js = iscsi_json.JsonOperation()
 
 
     def pre_check_create_map(self, map, hg, dg):

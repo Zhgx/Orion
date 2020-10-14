@@ -4,22 +4,23 @@ import sundry as s
 from functools import wraps
 
 
-class JSON_OPERATION():
+class JsonOperation():
     def __init__(self):
         self.RPL = consts.glo_rpl()
+        print('RPL:',self.RPL)
         self.json_data = self.read_json()
 
     # 读取json文档
     @s.json_operate_decorator('读取到的JSON数据')
     def read_json(self):
         try:
-            json_data = open("iSCSI_Data.json", encoding='utf-8')
+            json_data = open("map_config.json", encoding='utf-8')
             json_dict = json.load(json_data)
             json_data.close()
             return json_dict
 
         except json.decoder.JSONDecodeError:
-            with open('iSCSI_Data.json', "w") as fw:
+            with open('map_config.json', "w") as fw:
                 json_dict = {
                     "Host": {},
                     "Disk": {},
@@ -34,7 +35,7 @@ class JSON_OPERATION():
     @s.json_operate_decorator('JSON添加后的资源信息')
     def add_data(self, first_key, data_key, data_value):
         self.json_data[first_key].update({data_key: data_value})
-        with open('iSCSI_Data.json', "w") as fw:
+        with open('map_config.json', "w") as fw:
             json.dump(self.json_data, fw, indent=4, separators=(',', ': '))
         return self.json_data[first_key]
 
@@ -43,7 +44,7 @@ class JSON_OPERATION():
     @s.json_operate_decorator('JSON删除后的资源信息')
     def delete_data(self, first_key, data_key):
         self.json_data[first_key].pop(data_key)
-        with open('iSCSI_Data.json', "w") as fw:
+        with open('map_config.json', "w") as fw:
             json.dump(self.json_data, fw, indent=4, separators=(',', ': '))
         return self.json_data[first_key]
 
@@ -75,7 +76,7 @@ class JSON_OPERATION():
     @s.json_operate_decorator(f'JSON更新资源信息')
     def update_data(self, first_key, data):
         self.json_data[first_key] = data
-        with open('iSCSI_Data.json', "w") as fw:
+        with open('map_config.json', "w") as fw:
             json.dump(self.json_data, fw, indent=4, separators=(',', ': '))
         return self.json_data[first_key]
 
@@ -87,7 +88,7 @@ class JSON_OPERATION():
         self.json_data['crm'].update({'resource': resource})
         self.json_data['crm'].update({'vip': vip})
         self.json_data['crm'].update({'target': target})
-        with open('iSCSI_Data.json', "w") as fw:
+        with open('map_config.json', "w") as fw:
             json.dump(self.json_data, fw, indent=4, separators=(',', ': '))
         return self.json_data['crm']
 
