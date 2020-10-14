@@ -47,9 +47,9 @@ def get_err_detailes(result):
         return (re_.search(result).group(1))
 
 def get_war_mes(result):
-    re_ = re.compile(r'\x1b\[1;33mWARNING:\n\x1b(?:.*\s*)+\n$')
+    re_ = re.compile(r'\x1b\[1;33mWARNING:\n\x1b\[0m(.*)',re.DOTALL)
     if re_.search(result):
-        return (re_.search(result).group())
+        return (re_.search(result).group(1))
 
 
 @s.cmd_decorator('linstor')
