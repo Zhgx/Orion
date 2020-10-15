@@ -36,8 +36,6 @@ class HostGroupCommands():
             action='store',
             help='host_name',
             nargs='+')
-        p_create_hg.add_argument(
-            '-gui', help='iscsi gui', nargs='?', default='cmd')
 
         # level4,arguments of hostgroup show
         p_create_hg.add_argument(
@@ -82,18 +80,12 @@ class HostGroupCommands():
 
         hg_parser.set_defaults(func=self.print_hg_help)
 
-    @sd.record_exception
+    @sd.deco_record_exception
     def create(self, args):
         hostgroup = ex.HostGroup()
-        if args.gui == 'gui':
-            data = pickle.dumps(
-                hostgroup.create_hostgroup(
-                    args.hostgroup, args.host))
-            sd.send_via_socket(data)
-        else:
-            hostgroup.create_hostgroup(args.hostgroup, args.host)
+        hostgroup.create_hostgroup(args.hostgroup, args.host)
 
-    @sd.record_exception
+    @sd.deco_record_exception
     def show(self, args):
         hostgroup = ex.HostGroup()
         if args.hostgroup == 'all' or args.hostgroup is None:
@@ -101,7 +93,7 @@ class HostGroupCommands():
         else:
             hostgroup.show_spe_hostgroup(args.hostgroup)
 
-    @sd.record_exception
+    @sd.deco_record_exception
     def delete(self, args):
         hostgroup = ex.HostGroup()
         hostgroup.delete_hostgroup(args.hostgroup)

@@ -38,8 +38,6 @@ class DiskGroupCommands():
             action='store',
             help='disk_name',
             nargs='+')
-        p_create_dg.add_argument(
-            '-gui', help='iscsi gui', nargs='?', default='cmd')
 
         self.p_create_dg = p_create_dg
         p_create_dg.set_defaults(func=self.create)
@@ -79,17 +77,12 @@ class DiskGroupCommands():
 
         dg_parser.set_defaults(func=self.print_dg_help)
 
-    @sd.record_exception
+    @sd.deco_record_exception
     def create(self, args):
         diskgroup = ex.DiskGroup()
-        if args.gui == 'gui':
-            data = pickle.dumps(diskgroup.create_diskgroup(
-                args.diskgroup, args.disk))
-            sd.send_via_socket(data)
-        else:
-            diskgroup.create_diskgroup(args.diskgroup, args.disk)
+        diskgroup.create_diskgroup(args.diskgroup, args.disk)
 
-    @sd.record_exception
+    @sd.deco_record_exception
     def show(self, args):
         diskgroup = ex.DiskGroup()
         if args.diskgroup == 'all' or args.diskgroup is None:
@@ -97,7 +90,7 @@ class DiskGroupCommands():
         else:
             diskgroup.show_spe_diskgroup(args.diskgroup)
 
-    @sd.record_exception
+    @sd.deco_record_exception
     def delete(self, args):
         diskgroup = ex.DiskGroup()
         diskgroup.delete_diskgroup(args.diskgroup)

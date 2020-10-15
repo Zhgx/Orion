@@ -3,14 +3,15 @@ import os
 import sqlite3
 import consts
 
-LOG_PATH = "./VersaTEL_G2_CLI.log"
-LOG_FILE_NAME = 'VersaTEL_G2_CLI.log'
+
+# LOG_PATH = '/var/log/vtel/Orion_CLI.log'
+LOG_PATH = "./Orion_CLI.log"
+LOG_FILE_NAME = 'Orion_CLI.log'
 
 def prepare_db():
     db = LogDB()
     consts.set_glo_db(db)
     _fill_db_with_log()
-    return db
 
 
 def isFileExists(strfile):
@@ -18,18 +19,13 @@ def isFileExists(strfile):
     return os.path.isfile(strfile)
 
 def _fill_db_with_log():
-    id = (None,)
     re_ = re.compile(r'\[(.*?)\] \[(.*?)\] \[(.*?)\] \[(.*?)\] \[(.*?)\] \[(.*?)\] \[(.*?)\] \[(.*?\]?)\]\|',
                      re.DOTALL)
-
     db = consts.glo_db()
     all_log_data = _read_log_files()
     all_data = re_.findall(all_log_data)
-
     for data in all_data:
-        data = id + data
         db.insert_data(data)
-
     db.con.commit()
 
 
@@ -59,37 +55,6 @@ def _get_log_files(base_log_file):
 
 
 class LogDB():
-    create_table_sql = '''
-    create table if not exists logtable(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        time DATE(30),
-        transaction_id varchar(20),
-        username varchar(20),
-        type1 TEXT,
-        type2 TEXT,
-        describe1 TEXT,
-        describe2 TEXT,
-        data TEXT
-        );'''
-
-    insert_sql = '''
-    replace into logtable
-    (
-        id,
-        time,
-        transaction_id,
-        username,
-        type1,
-        type2,
-        describe1,
-        describe2,
-        data
-        )
-    values(?,?,?,?,?,?,?,?,?)
-    '''
-
-
-    drop_table_sql = "DROP TABLE if exists logtable "
 
     def __init__(self):
         self.con = sqlite3.connect("logDB.db", check_same_thread=False)
@@ -98,14 +63,41 @@ class LogDB():
         self._create_table()
 
     def insert_data(self, data):
-        self.cur.execute(self.insert_sql, data)
+        insert_sql = '''
+        insert into logtable
+        (
+            time,
+            transaction_id,
+            username,
+            type1,
+            type2,
+            describe1,
+            describe2,
+            data
+            )
+        values(?,?,?,?,?,?,?,?)
+        '''
+        self.cur.execute(insert_sql, data)
 
     def _create_table(self):
-        self.cur.execute(self.create_table_sql)
+        create_table_sql = '''
+        create table if not exists logtable(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            time DATE(30),
+            transaction_id varchar(20),
+            username varchar(20),
+            type1 TEXT,
+            type2 TEXT,
+            describe1 TEXT,
+            describe2 TEXT,
+            data TEXT
+            );'''
+        self.cur.execute(create_table_sql)
         self.con.commit()
 
     def _drop_table(self):
-        self.cur.execute(self.drop_table_sql)
+        drop_table_sql = "DROP TABLE if exists logtable "
+        self.cur.execute(drop_table_sql)
         self.con.commit()
 
     # 获取表单行数据的通用方法
@@ -134,9 +126,6 @@ class LogDB():
         if result:
             result = eval(result)
             return {'tid':transaction_id, 'valid':result['valid'],'cmd':result['cmd']}
-        # if result:
-        #     args_type, cmd = self.sql_fetch_one(sql)
-        #     return [{'tid':transaction_id,'type':args_type,'cmd':cmd}]
 
 
     def get_userinput_via_time(self, start_time, end_time):
@@ -148,7 +137,6 @@ class LogDB():
             user_input = eval(user_input)
             dict_one = {'tid':tid, 'valid':user_input['valid'], 'cmd':user_input['cmd']}
             result_list.append(dict_one)
-
         return result_list
 
     # 需要修改

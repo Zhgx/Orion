@@ -2,12 +2,10 @@
     "Host": {
         "host1": "iqn-123213-12321",
         "host2": "iqn12321312321",
-        "host3": "iqn12321312321"
+        "host3": "iqn12321312321",
+        "host4": "iqn123123123"
     },
-    "Disk": {
-        "res_a": "/dev/drbd1000",
-        "res_b": "/dev/drbd1001"
-    },
+    "Disk": {},
     "HostGroup": {
         "hg1": [
             "host1"

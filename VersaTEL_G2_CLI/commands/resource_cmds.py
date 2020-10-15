@@ -77,12 +77,6 @@ class ResourceCommands():
             action='store',
             help=' Size of the resource.In addition to creating diskless resource, you must enter SIZE.'
             'Valid units: B, K, kB, KiB, M, MB,MiB, G, GB, GiB, T, TB, TiB, P, PB, PiB.\nThe default unit is GB.')
-        p_create_res.add_argument(
-            '-gui',
-            dest='gui',
-            action='store_true',
-            help=argparse.SUPPRESS,
-            default=False)
 
         # Add a parameter group that automatically creates a resource
         group_auto = p_create_res.add_argument_group(title='auto create')
@@ -166,12 +160,6 @@ class ResourceCommands():
             action='store_true',
             help='Skip to confirm selection',
             default=False)
-        p_delete_res.add_argument(
-            '-gui',
-            dest='gui',
-            action='store_true',
-            help=argparse.SUPPRESS,
-            default=False)
 
         p_delete_res.set_defaults(func=self.delete)
 
@@ -215,7 +203,7 @@ class ResourceCommands():
         if not re_size.match(size):
             raise InvalidSizeError('Invalid Size')
 
-    @sd.record_exception
+    @sd.deco_record_exception
     def create(self, args):
         """
         Create a LINSTOR resource. There are three types of creation based on different parameters:
@@ -263,14 +251,7 @@ class ResourceCommands():
                 sys.exit()
             # 自动创建条件判断，符合则执行
             if all(list_auto_required) and not any(list_auto_forbid):
-                if args.gui:
-                    result = res.create_res_auto(
-                        args.resource, args.size, args.num)
-                    result_pickled = pickle.dumps(result)
-                    sd.send_via_socket(result_pickled)
-                    print('end')
-                else:
-                    res.create_res_auto(args.resource, args.size, args.num)
+                res.create_res_auto(args.resource, args.size, args.num)
             # 手动创建条件判断，符合则执行
             elif all(list_manual_required) and not any(list_manual_forbid):
                 try:
@@ -281,15 +262,8 @@ class ResourceCommands():
                         'DATA', 'debug', 'exception', '', str(traceback.format_exc()))
                     sys.exit()
                 else:
-                    if args.gui:
-                        result = res.create_res_manual(
-                            args.resource, args.size, args.node, args.storagepool)
-                        result_pickled = pickle.dumps(result)
-                        sd.send_via_socket(result_pickled)
-                        # CLI
-                    else:
-                        res.create_res_manual(
-                            args.resource, args.size, args.node, args.storagepool)
+                    res.create_res_manual(
+                        args.resource, args.size, args.node, args.storagepool)
             else:
                 # self.logger.add_log(username, 'cli_user_input', transaction_id, path, 'ARGPARSE_ERROR', cmd)
                 self.p_create_res.print_help()
@@ -325,8 +299,8 @@ class ResourceCommands():
         else:
             self.p_create_res.print_help()
 
-    @sd.record_exception
-    @sd.comfirm_del('resource')
+    @sd.deco_record_exception
+    @sd.deco_comfirm_del('resource')
     def delete(self, args):
         res = ex.Resource()
         if args.node:
@@ -334,7 +308,7 @@ class ResourceCommands():
         elif not args.node:
             res.delete_resource_all(args.resource)
 
-    @sd.record_exception
+    @sd.deco_record_exception
     def show(self, args):
         res = ex.Resource()
         if args.nocolor:

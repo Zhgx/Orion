@@ -117,125 +117,6 @@ class LinstorDB(Database):
     Get the output of LINSTOR through the command, use regular expression to get and process it into a list,
     and insert it into the newly created memory database.
     """
-
-    # LINSTOR表
-    crt_sptb_sql = '''
-    create table if not exists storagepooltb(id integer primary key,
-        StoragePool varchar(20),
-        Node varchar(20),
-        Driver varchar(20),
-        PoolName varchar(20),
-        FreeCapacity varchar(20),
-        TotalCapacity varchar(20),
-        SupportsSnapshots varchar(20),
-        State varchar(20)
-        );'''
-
-    crt_rtb_sql = '''
-    create table if not exists resourcetb(
-        id integer primary key,
-        Node varchar(20),
-        Resource varchar(20),
-        Storagepool varchar(20),
-        VolumeNr varchar(20),
-        MinorNr varchar(20),
-        DeviceName varchar(20),
-        Allocated varchar(20),
-        InUse varchar(20),
-        State varchar(20)
-        );'''
-
-    crt_ntb_sql = '''
-    create table if not exists nodetb(
-        id integer primary key,
-        Node varchar(20),
-        NodeType varchar(20),
-        Addresses varchar(20),
-        State varchar(20)
-        );'''
-
-    crt_vgtb_sql = '''
-        create table if not exists vgtb(
-        id integer primary key,
-        VG varchar(20),
-        VSize varchar(20),
-        VFree varchar(20)
-        );'''
-
-    crt_thinlvtb_sql = '''
-        create table if not exists thinlvtb(
-        id integer primary key,
-        LV varchar(20),
-        VG varchar(20),
-        LSize varchar(20)
-        );'''
-
-    replace_stb_sql = '''
-    replace into storagepooltb
-    (
-        id,
-        StoragePool,
-        Node,
-        Driver,
-        PoolName,
-        FreeCapacity,
-        TotalCapacity,
-        SupportsSnapshots,
-        State
-        )
-    values(?,?,?,?,?,?,?,?,?)
-    '''
-
-    replace_rtb_sql = '''
-        replace into resourcetb
-        (
-            id,
-            Node,
-            Resource,
-            StoragePool,
-            VolumeNr,
-            MinorNr,
-            DeviceName,
-            Allocated,
-            InUse,
-            State
-            )
-        values(?,?,?,?,?,?,?,?,?,?)
-    '''
-
-    replace_ntb_sql = '''
-        replace into nodetb
-        (
-            id,
-            Node,
-            NodeType,
-            Addresses,
-            State
-            )
-        values(?,?,?,?,?)
-    '''
-
-    replace_vgtb_sql = '''
-        replace into vgtb
-        (
-            id,
-            VG,
-            VSize,
-            VFree
-            )
-        values(?,?,?,?)
-    '''
-
-    replace_thinlvtb_sql = '''
-        replace into thinlvtb
-        (
-            id,
-            LV,
-            VG,
-            LSize
-            )
-        values(?,?,?,?)
-    '''
     # 连接数据库,创建光标对象
 
     def __init__(self):
@@ -243,40 +124,145 @@ class LinstorDB(Database):
         self.cur = self.db.cursor()
 
     def build_table(self,type='linstor'):
-        self.cur.execute(self.crt_ntb_sql)
-        self.cur.execute(self.crt_rtb_sql)
-        self.cur.execute(self.crt_sptb_sql)
+        # LINSTOR表
+        crt_sptb_sql = '''
+            create table if not exists storagepooltb(id integer primary key,
+                StoragePool varchar(20),
+                Node varchar(20),
+                Driver varchar(20),
+                PoolName varchar(20),
+                FreeCapacity varchar(20),
+                TotalCapacity varchar(20),
+                SupportsSnapshots varchar(20),
+                State varchar(20)
+                );'''
+
+        crt_rtb_sql = '''
+            create table if not exists resourcetb(
+                id integer primary key,
+                Node varchar(20),
+                Resource varchar(20),
+                Storagepool varchar(20),
+                VolumeNr varchar(20),
+                MinorNr varchar(20),
+                DeviceName varchar(20),
+                Allocated varchar(20),
+                InUse varchar(20),
+                State varchar(20)
+                );'''
+
+        crt_ntb_sql = '''
+            create table if not exists nodetb(
+                id integer primary key,
+                Node varchar(20),
+                NodeType varchar(20),
+                Addresses varchar(20),
+                State varchar(20)
+                );'''
+
+        crt_vgtb_sql = '''
+                create table if not exists vgtb(
+                id integer primary key,
+                VG varchar(20),
+                VSize varchar(20),
+                VFree varchar(20)
+                );'''
+
+        crt_thinlvtb_sql = '''
+                create table if not exists thinlvtb(
+                id integer primary key,
+                LV varchar(20),
+                VG varchar(20),
+                LSize varchar(20)
+                );'''
+
+
+        self.cur.execute(crt_ntb_sql)
+        self.cur.execute(crt_rtb_sql)
+        self.cur.execute(crt_sptb_sql)
         if type == 'all':
-            self.cur.execute(self.crt_vgtb_sql)
-            self.cur.execute(self.crt_thinlvtb_sql)
+            self.cur.execute(crt_vgtb_sql)
+            self.cur.execute(crt_thinlvtb_sql)
             self.insert_lvm_data()
         self.insert_linstor_data()
         self.db.commit()
 
 
     def insert_lvm_data(self):
+        insert_vgtb_sql = '''
+            insert into vgtb
+            (
+                VG,
+                VSize,
+                VFree
+                )
+            values(?,?,?)
+        '''
+
+        insert_thinlvtb_sql = '''
+            insert into thinlvtb
+            (
+                LV,
+                VG,
+                LSize
+                )
+            values(?,?,?)
+        '''
         lvm = ex.LVM()
         vg = lvm.refine_vg()
         thinlv = lvm.refine_thinlv()
-        self.insert_data(self.replace_vgtb_sql, vg,'vgtb')
-        self.insert_data(self.replace_thinlvtb_sql, thinlv,'thinlvtb')
+        self.insert_data(insert_vgtb_sql, vg,'vgtb')
+        self.insert_data(insert_thinlvtb_sql, thinlv,'thinlvtb')
 
 
     def insert_linstor_data(self):
+        insert_stb_sql = '''
+            insert into storagepooltb
+            (
+                StoragePool,
+                Node,
+                Driver,
+                PoolName,
+                FreeCapacity,
+                TotalCapacity,
+                SupportsSnapshots,
+                State
+                )
+            values(?,?,?,?,?,?,?,?)
+            '''
+
+        insert_rtb_sql = '''
+            insert into resourcetb
+            (
+                Node,
+                Resource,
+                StoragePool,
+                VolumeNr,
+                MinorNr,
+                DeviceName,
+                Allocated,
+                InUse,
+                State
+                )
+            values(?,?,?,?,?,?,?,?,?)
+            '''
+
+        insert_ntb_sql = '''insert into nodetb(Node,NodeType,Addresses,State)values(?,?,?,?)'''
+
+
         linstor = ex.Linstor()
         node = linstor.get_linstor_data('linstor --no-color --no-utf8 n l')
         res = linstor.get_linstor_data('linstor --no-color --no-utf8 r lv')
         sp = linstor.get_linstor_data('linstor --no-color --no-utf8 sp l')
-        self.insert_data(self.replace_ntb_sql, node,'nodetb')
-        self.insert_data(self.replace_rtb_sql, res,'resourcetb')
-        self.insert_data(self.replace_stb_sql, sp,'storagepooltb')
+        self.insert_data(insert_ntb_sql, node,'nodetb')
+        self.insert_data(insert_rtb_sql, res,'resourcetb')
+        self.insert_data(insert_stb_sql, sp,'storagepooltb')
 
-    @s.sql_insert_decorator
+    @s.deco_db_insert
     def insert_data(self, sql, list_data,tablename):
         for i in range(len(list_data)):
             if not list_data[i]:
                 s.prt_log('数据错误，无法插入数据表',2)
-            list_data[i].insert(0, i + 1)
             self.cur.execute(sql, list_data[i])
 
 

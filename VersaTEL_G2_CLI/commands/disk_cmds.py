@@ -36,7 +36,7 @@ class DiskCommands():
         self.p_show_disk = p_show_disk
         p_show_disk.set_defaults(func=self.show)
 
-    @sd.record_exception
+    @sd.deco_record_exception
     def show(self, args):
         disk = ex.Disk()
         if args.disk == 'all' or args.disk is None:
