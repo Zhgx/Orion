@@ -5,8 +5,8 @@ import consts
 
 
 # LOG_PATH = '/var/log/vtel/Orion_CLI.log'
-LOG_PATH = "./Orion_CLI.log"
-LOG_FILE_NAME = 'Orion_CLI.log'
+LOG_PATH = "./VersaTEL_CLI.log"
+LOG_FILE_NAME = 'VersalTEL_CLI.log'
 
 def prepare_db():
     db = LogDB()

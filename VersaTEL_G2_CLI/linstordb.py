@@ -189,25 +189,9 @@ class LinstorDB(Database):
 
 
     def insert_lvm_data(self):
-        insert_vgtb_sql = '''
-            insert into vgtb
-            (
-                VG,
-                VSize,
-                VFree
-                )
-            values(?,?,?)
-        '''
+        insert_vgtb_sql = '''insert into vgtb(VG,VSize,VFree)values(?,?,?)'''
 
-        insert_thinlvtb_sql = '''
-            insert into thinlvtb
-            (
-                LV,
-                VG,
-                LSize
-                )
-            values(?,?,?)
-        '''
+        insert_thinlvtb_sql = '''insert into thinlvtb(LV,VG,LSize)values(?,?,?)'''
         lvm = ex.LVM()
         vg = lvm.refine_vg()
         thinlv = lvm.refine_thinlv()
