@@ -232,6 +232,13 @@ class Resource():
         pass
 
     def collect_args(self,node,sp):
+        """
+        收集输入的参数，进行处理
+        :param node: 列表，node名
+        :param sp: 列表，storagepool名
+        :return: 字典
+        """
+
         dict_args = {}
         if len(sp) == 1:
             for node_one in node:
