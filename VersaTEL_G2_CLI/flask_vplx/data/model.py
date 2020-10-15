@@ -12,7 +12,7 @@ import process
 import log
 
 
-def data(datadict):
+def cors_data(datadict):
     response = make_response(jsonify(datadict))
     response.headers['Access-Control-Allow-Origin'] = '*'
     response.headers['Access-Control-Allow-Methods'] = 'OPTIONS,HEAD,GET,POST'
@@ -21,14 +21,12 @@ def data(datadict):
 
  
 def get_tid():
-    transaction_id = request.args.items()
-    dict_transaction = dict(transaction_id)
-    transaction_id_result = dict_transaction["transactionid"]
-    print("transaction_id_result:", transaction_id_result)
-    return transaction_id_result
+    str_transaction_id = request.args.items()
+    dict_transaction_id = dict(transaction_id)
+    return dict_transaction["transaction_id"]
 
  
-global RESOURCEDICT
+RESOURCEDICT = None
 
 
 class OprtResource(views.MethodView):  
@@ -40,11 +38,14 @@ class OprtResource(views.MethodView):
             log.set_web_logger(tid)
             pc = process.Process_data()
             RESOURCEDICT = pc.process_data_resource()
-        return data("数据获取成功")
+        return cors_data("数据获取成功")
 
     
 class ResourceResult(views.MethodView):  
 
     def get(self):
-        return data(RESOURCEDICT)
+        if not RESOURCEDICT:
+            pc = process.Process_data()
+            RESOURCEDICT = pc.process_data_resource()
+        return cors_data(RESOURCEDICT)
 

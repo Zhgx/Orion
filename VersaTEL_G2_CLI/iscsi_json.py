@@ -7,7 +7,6 @@ from functools import wraps
 class JsonOperation():
     def __init__(self):
         self.RPL = consts.glo_rpl()
-        print('RPL:',self.RPL)
         self.json_data = self.read_json()
 
     # 读取json文档

@@ -12,10 +12,15 @@
 
 //操作提示
 function update_resource_operate() {
+	var time = Date.parse(new Date()).toString();// 获取到毫秒的时间戳，精确到毫秒
+	time = time.substr(0, 10);
 	$.ajax({
 		url : "http://10.203.1.76:7777/resource_operate",
 		type : "get",
 		dataType : "json",
+		data : {
+			transactionid : time
+		},
 		success : function(R_Hint) {
 			var area = document.getElementById("R-S");
 			area.innerHTML = "";
@@ -28,13 +33,12 @@ First_refresh();
 function First_refresh() {
 	var time = Date.parse(new Date()).toString();// 获取到毫秒的时间戳，精确到毫秒
 	time = time.substr(0, 10);
-	alert(time);
 	$.ajax({
 		url : "http://10.203.1.76:7777/resource_operate",
 		type : "get",
 		dataType : "json",
 		data : {
-			transactionid : time,
+			transactionid : time
 			 },
 		success : function(R_Hint) {
 			R_Select();
@@ -48,10 +52,15 @@ $('#R-S').selectpicker({
 	width : 200
 });
 function R_Select() {
+	var time = Date.parse(new Date()).toString();// 获取到毫秒的时间戳，精确到毫秒
+	time = time.substr(0, 10);
 	$.ajax({
 		url : "http://10.203.1.76:7777/resource_data",
 		type : "get",
 		dataType : "json",
+		data : {
+			transaction_id:time
+		},
 		success : function(R_D) {
 			var _R_D = R_D.data; // 由于后台传过来的json有个data，在此重命名
 			$('#R-S').html(" ");
@@ -90,10 +99,15 @@ function selectOnchang(obj) {
 
 // 所有
 function all_resource_show() {
+	var time = Date.parse(new Date()).toString();// 获取到毫秒的时间戳，精确到毫秒
+	time = time.substr(0, 10);
 	$.ajax({
 		url : "http://10.203.1.76:7777/resource_data",
 		type : "get",
 		dataType : "json",
+		data : {
+			transaction_id:time
+		},
 		success : function(R_D) {
 			var _R_D = R_D.data;
 			var html = "";
@@ -122,10 +136,15 @@ function all_resource_show() {
 
 // 单个
 function one_resource_show(R_N) {
+	var time = Date.parse(new Date()).toString();// 获取到毫秒的时间戳，精确到毫秒
+	time = time.substr(0, 10);
 	$.ajax({
 		url : "http://10.203.1.76:7777/resource_data",
 		type : "get",
 		dataType : "json",
+		data : {
+			transaction_id:time
+		},
 		success : function(R_D) {
 			var _R_D = R_D.data;
 			for (i in _R_D) {

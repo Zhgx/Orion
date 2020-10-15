@@ -3,9 +3,9 @@ from flask import Flask, jsonify, render_template, request, make_response, views
 import json
 import subprocess
 from flask_cors import *
-import iscsi_interaction
 from execute import iscsi
 import time
+import log
 
 
 def cors_data(data_dict):
@@ -21,6 +21,8 @@ class HostCreate(views.MethodView):
         if request.method == 'GET':
             str_host = request.args.items()
             dict_host = dict(str_host)
+            tid = dict_host['transaction_id']
+            log.set_web_logger(tid)
             host = dict_host["Host_Name"]
             iqn = dict_host["Host_iqn"]
             host_obj = iscsi.Host()
@@ -39,6 +41,8 @@ class HostGroupCreate(views.MethodView):
         if request.method == 'GET':
             hostgroup = request.args.items()
             dict_hostgroup = dict(hostgroup)
+            tid = dict_hostgroup['transaction_id']
+            log.set_web_logger(tid)
             host = dict_hostgroup['Host'].split(',')
             host_group_name = dict_hostgroup["HostGroup_Name"]
             host_group_obj = iscsi.HostGroup()
@@ -56,6 +60,8 @@ class DiskGroupCreate(views.MethodView):
         if request.method == 'GET':
             diskgroup = request.args.items()
             dict_diskgroup = dict(diskgroup) 
+            tid = dict_diskgroup['transaction_id']
+            log.set_web_logger(tid)
             disk = dict_diskgroup['Disk'].split(',')
             disk_group_name = dict_diskgroup["DiskGroup_Name"]
             disk_group_obj = iscsi.DiskGroup()
@@ -74,6 +80,8 @@ class MapCreate(views.MethodView):
         if request.method == 'GET':
             map = request.args.items()
             dict_map = dict(map)
+            tid = dict_map['transaction_id']
+            log.set_web_logger(tid)
             map_name = dict_map["Map_Name"]
             host_group_name = dict_map["Host_Group"]
             disk_group_name = dict_map["Disk_Group"] 
@@ -86,17 +94,27 @@ class MapCreate(views.MethodView):
         return cors_data(result)
 
 
+def get_tid():
+    if request.method == 'GET':
+        str_transaction_id = request.args.items()
+        dict_transaction = dict(str_transaction_id)
+        return dict_transaction["transaction_id"]
+
 # host
 HOST_RESULT = None
 def update_host():
     global HOST_RESULT
-    js = iscsi_interaction.JsonConfig()
-    HOST_RESULT = js.provide_all_host()
-    return HOST_RESULT
+   
+    host = iscsi.Host()
+    HOST_RESULT = host.get_all_host()
+    
+    return True
 
 class OprtAllHost(views.MethodView):
 
     def get(self):
+        tid = get_tid()
+        log.set_web_logger(tid)
         if update_host():
             return cors_data("0")
         else:
@@ -115,13 +133,16 @@ class AllHostResult(views.MethodView):
 DISK_RESULT = None
 def update_disk():
     global DISK_RESULT
-    js = iscsi_interaction.JsonConfig()
-    DISK_RESULT = js.provide_all_disk()
-    return DISK_RESULT
+    
+    disk = iscsi.Disk()
+    DISK_RESULT = disk.get_all_disk()
+    return True
 
 class OprtAllDisk(views.MethodView):
 
     def get(self):
+        tid = get_tid()
+        log.set_web_logger(tid)
         if update_disk():
             return cors_data("0")
         else:
@@ -140,15 +161,18 @@ class AllDiskResult(views.MethodView):
 HOSTGROUP_RESULT = None
 def update_hg():
     global HOSTGROUP_RESULT
-    js = iscsi_interaction.JsonConfig()
-    HOSTGROUP_RESULT = js.provide_all_hostgroup()
-    return HOSTGROUP_RESULT
+    
+    host_group = iscsi.HostGroup()
+    HOSTGROUP_RESULT = host_group.get_all_hostgroup()
+    return True
 
 
 
 class OprtAllHg(views.MethodView):
 
     def get(self):
+        tid = get_tid()
+        log.set_web_logger(tid)
         if update_hg():
             return cors_data("0")
         else:
@@ -168,14 +192,17 @@ DISKGROUP_RESULT = None
 
 def update_dg():
     global DISKGROUP_RESULT
-    js = iscsi_interaction.JsonConfig()
-    DISKGROUP_RESULT = js.provide_all_diskgroup()
-    return DISKGROUP_RESULT
+    
+    disk_group = iscsi.DiskGroup()
+    DISKGROUP_RESULT = disk_group.get_all_diskgroup()
+    return True
 
 
 class OprtAllDg(views.MethodView):
 
     def get(self):
+        tid = get_tid()
+        log.set_web_logger(tid)
         if update_dg():
             return cors_data("0")
         else:
@@ -195,17 +222,19 @@ MAP_RESULT = None
 
 def update_map():
     global MAP_RESULT
-    js = iscsi_interaction.JsonConfig()
-    MAP_RESULT = js.provide_all_map()
-    return MAP_RESULT
+    
+    map = iscsi.Map()
+    MAP_RESULT = map.get_all_map()
+    return True
 
 
 
 class OprtAllMap(views.MethodView):
 
     def get(self):
-        
-        if updata_map():
+        tid = get_tid()
+        log.set_web_logger(tid)
+        if update_map():
             return cors_data("0")
         else:
             return cors_data("1")
