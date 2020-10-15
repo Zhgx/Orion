@@ -33,26 +33,26 @@ body {
 					</h1>
 				</div>
 				<div class="form-group">
-					<label for="Host_Name" class="col-sm-2 control-label">Host_Name</label>
+					<label for="host_name" class="col-sm-2 control-label">Host_Name</label>
 					<div class="col-sm-10">
-						<input type="text" class="form-control" id="Host_Name"
+						<input type="text" class="form-control" id="host_name"
 							placeholder="请输入" style="width: 200px;" value=""
-							onchange="Host_Name_myFunction()"> <span class="red">
-							<span id="Host_Name_Examine" class="hidden">Host已存在！</span>
+							onchange="host_name_myfunction()"> <span class="red">
+							<span id="host_name_examine" class="hidden">Host已存在！</span>
 						</span>
 					</div>
 				</div>
 				<div class="form-group">
-					<label for="Host_iqn" class="col-sm-2 control-label">Host_iqn</label>
+					<label for="host_iqn" class="col-sm-2 control-label">Host_iqn</label>
 					<div class="col-sm-10">
-						<input type="text" class="form-control" id="Host_iqn"
+						<input type="text" class="form-control" id="host_iqn"
 							placeholder="请输入" style="width: 200px;" value="">
 					</div>
 				</div>
 				<div class="form-group">
 					<div class="col-sm-offset-2 col-sm-10">
 						<button type="submit" class="btn btn-default" data-toggle="modal"
-							name="Host_create" id="Host_create" data-target="#myModal1">Create</button>
+							name="host_create" id="host_create" data-target="#myModal1">Create</button>
 					</div>
 				</div>
 			</div>
@@ -66,12 +66,12 @@ body {
 					</h1>
 				</div>
 				<div class="form-group">
-					<label for="HostGroup_Name" class="col-sm-2 control-label">HostGroup_Name</label>
+					<label for="host_group_name" class="col-sm-2 control-label">HostGroup_Name</label>
 					<div class="col-sm-10">
-						<input type="text" class="form-control" id="HostGroup_Name"
+						<input type="text" class="form-control" id="host_group_name"
 							placeholder="请输入" style="width: 200px;" value=""
-							onchange="HG_Name_myFunction()"> <span class="red">
-							<span id="HG_Name_Examine" class="hidden">HostGroup
+							onchange="hg_name_myfunction()"> <span class="red">
+							<span id="hg_name_examine" class="hidden">HostGroup
 								Name已存在！</span>
 						</span>
 					</div>
@@ -80,7 +80,7 @@ body {
 					<label class="col-sm-2 ">Host</label>
 
 					<div style="width: 340px;" class="col-sm-10 ">
-						<select id='Host' name="Host" multiple class="selectpicker"
+						<select id='host' name="host" multiple class="selectpicker"
 							data-live-search="true">
 						</select>
 					</div>
@@ -88,7 +88,7 @@ body {
 				<div class="form-group">
 					<div class="col-sm-offset-2 col-sm-10">
 						<button type="submit" class="btn btn-default" data-toggle="modal"
-							name="HostGroup_create" id="HostGroup_create"
+							name="host_group_create" id="host_group_create"
 							data-target="#myModal1">Create</button>
 					</div>
 				</div>
@@ -101,20 +101,20 @@ body {
 					</h1>
 				</div>
 				<div class="form-group">
-					<label for="DiskGroup_Name" class="col-sm-2 control-label">DiskGroup_Name</label>
+					<label for="disk_group_name" class="col-sm-2 control-label">DiskGroup_Name</label>
 					<div class="col-sm-10">
-						<input type="text" class="form-control" id="DiskGroup_Name"
+						<input type="text" class="form-control" id="disk_group_name"
 							placeholder="请输入" style="width: 200px;" value=""
-							onchange="DG_Name_myFunction()"> <span class="red">
-							<span id="DG_Name_Examine" class="hidden">DiskGroup
+							onchange="dg_name_myfunction()"> <span class="red">
+							<span id="dg_name_examine" class="hidden">DiskGroup
 								Name已存在！</span>
 						</span>
 					</div>
 					<div class="form-group">
-						<label for="Disk" class="col-sm-2 c">Disk</label>
+						<label for="disk" class="col-sm-2 c">Disk</label>
 
 						<div style="width: 340px;" class="col-sm-10 ">
-							<select id='Disk' name="Disk" multiple class="selectpicker"
+							<select id='disk' name="disk" multiple class="selectpicker"
 								data-live-search="true">
 							</select>
 						</div>
@@ -122,7 +122,7 @@ body {
 					<div class="form-group">
 						<div class="col-sm-offset-2 col-sm-10">
 							<button type="submit" class="btn btn-default" data-toggle="modal"
-								name="DiskGroup_create" id="DiskGroup_create"
+								name="disk_group_create" id="disk_group_create"
 								data-target="#myModal1">Create</button>
 						</div>
 					</div>
@@ -137,29 +137,29 @@ body {
 						</h1>
 					</div>
 					<div class="form-group">
-						<label for="Map_Name" class="col-sm-2 control-label">Map_Name</label>
+						<label for="map_name" class="col-sm-2 control-label">Map_Name</label>
 						<div class="col-sm-10">
-							<input type="text" class="form-control" id="Map_Name"
+							<input type="text" class="form-control" id="map_name"
 								placeholder="请输入" style="width: 200px;" value=""
-								onchange="Map_Name_myFunction()"> <span class="red">
-								<span id="Map_Name_Examine" class="hidden">Map Name已存在！</span>
+								onchange="map_name_myfunction()"> <span class="red">
+								<span id="map_name_examine" class="hidden">Map Name已存在！</span>
 							</span>
 						</div>
 					</div>
 					<div class="form-group">
-						<label for="Host_Group" class="col-sm-2 control-label">Host_Group</label>
+						<label for="host_group" class="col-sm-2 control-label">Host_Group</label>
 
 						<div style="width: 340px;" class="col-sm-10 ">
-							<select id='Host_Group' name="Host_Group" class="selectpicker"
+							<select id='host_group' name="host_group" class="selectpicker"
 								data-live-search="true">
 							</select>
 						</div>
 					</div>
 					<div class="form-group">
-						<label for="Disk_Group" class="col-sm-2 control-label">Disk_Group</label>
+						<label for="disk_group" class="col-sm-2 control-label">Disk_Group</label>
 
 						<div style="width: 340px;" class="col-sm-10 ">
-							<select id='Disk_Group' name="Disk_Group" class="selectpicker"
+							<select id='disk_group' name="disk_group" class="selectpicker"
 								data-live-search="true">
 							</select>
 						</div>
@@ -168,7 +168,7 @@ body {
 					<div class="form-group">
 						<div class="col-sm-offset-2 col-sm-10">
 							<button type="submit" class="btn btn-default" data-toggle="modal"
-								name="Map_create" id="Map_create" data-target="#myModal1">Create</button>
+								name="map_create" id="map_create" data-target="#myModal1">Create</button>
 						</div>
 					</div>
 				</div>

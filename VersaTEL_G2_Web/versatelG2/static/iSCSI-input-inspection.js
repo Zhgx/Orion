@@ -6,69 +6,72 @@
 
 //操作提示
 //host
-function Host_Name_myFunction(){
-	document.getElementById("Host_Name_Examine").className = "hidden";
-	var input_result = $('#Host_Name').val();
+
+var master_ip = "http://10.203.1.76:7777"
+
+function host_name_myfunction(){
+	document.getElementById("host_name_examine").className = "hidden";
+	var input_result = $('#host_name').val();
 	$
 			.ajax({
-				url : "http://10.203.1.76:7777/all_host_result",
+				url : master_ip + "/all_host_result",
 				type : "GET",
 				dataType : "json",
 				success : function(host_result) {
 					for (i in host_result) {
 						if (i == input_result) {
-							document.getElementById("Host_Name_Examine").className = "";
+							document.getElementById("host_name_examine").className = "";
 						}
 					}
 				}
 			});
 }
 
-function HG_Name_myFunction() {
-	document.getElementById("HG_Name_Examine").className = "hidden";
-	var input_result = $('#HostGroup_Name').val();
+function hg_name_myfunction() {
+	document.getElementById("hg_name_examine").className = "hidden";
+	var input_result = $('#host_group_name').val();
 	$.ajax({
-		url : "http://10.203.1.76:7777/all_hg_result",
+		url : master_ip + "/all_hg_result",
 		type : "GET",
 		dataType : "json",
 		success : function(HG_result) {
 			for (i in HG_result) {
 				if (i == input_result) {
-					document.getElementById("HG_Name_Examine").className = "";
+					document.getElementById("hg_name_examine").className = "";
 				}
 			}
 		}
 	});
 }
 
-function DG_Name_myFunction() {
-	document.getElementById("DG_Name_Examine").className = "hidden";
-	var input_result = $('#DiskGroup_Name').val();
+function dg_name_myfunction() {
+	document.getElementById("dg_name_examine").className = "hidden";
+	var input_result = $('#disk_group_name').val();
 	$.ajax({
-		url : "http://10.203.1.76:7777/all_dg_result",
+		url : master_ip + "/all_dg_result",
 		type : "GET",
 		dataType : "json",
 		success : function(DG_result) {
 			for (i in DG_result) {
 				if (i == input_result) {
-					document.getElementById("DG_Name_Examine").className = "";
+					document.getElementById("dg_name_examine").className = "";
 				}
 			}
 		}
 	});
 }
 
-function Map_Name_myFunction() {
-	document.getElementById("Map_Name_Examine").className = "hidden";
-	var input_result = $('#Map_Name').val();
+function map_name_myfunction() {
+	document.getElementById("map_name_examine").className = "hidden";
+	var input_result = $('#map_name').val();
 	$.ajax({
-		url : "http://10.203.1.76:7777/all_map_result",
+		url : master_ip + "/all_map_result",
 		type : "GET",
 		dataType : "json",
 		success : function(Map_result) {
 			for (i in Map_result) {
 				if (i == input_result) {
-					document.getElementById("Map_Name_Examine").className = "";
+					document.getElementById("map_name_examine").className = "";
 				}
 			}
 		}

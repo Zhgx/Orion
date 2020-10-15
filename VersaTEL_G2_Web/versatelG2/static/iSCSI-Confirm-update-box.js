@@ -4,28 +4,30 @@
  * 
  * */
 
+var master_ip = "http://10.203.1.76:7777" 
+
 //操作提示
-$("#Host_create").click(function() {
+$("#host_create").click(function() {
 	var time = Date.parse(new Date()).toString();// 获取到毫秒的时间戳，精确到毫秒
 	time = time.substr(0, 10);
-	var Host_Name = $("#Host_Name").val()
-	var Host_iqn = $("#Host_iqn").val()
+	var hostName = $("#host_name").val()
+	var hostiqn = $("#host_iqn").val()
 	$.ajax({
-		url : "http://10.203.1.76:7777/host_create",
+		url : master_ip + "/host_create",
 		type : "GET",
 		data : {
 			transaction_id:time,
-			Host_Name : Host_Name,
-			Host_iqn : Host_iqn
+			host_name : hostName,
+			host_iqn : hostiqn
 		},
 		success : function(data) {
 			alert(data);
-			$('#Host').selectpicker({
+			$('#host').selectpicker({
 				width : 200
 			});
 			host_result_select();
 			$(window).on('load', function() {
-				$('#Host').selectpicker({
+				$('#host').selectpicker({
 					'selectedText' : 'cat'
 				});
 			});
@@ -34,31 +36,31 @@ $("#Host_create").click(function() {
 		error : function() {
 		}
 	})
-	$("#Host_Name").val("");
-	$("#Host_iqn").val("");
+	$("#host_name").val("");
+	$("#host_iqn").val("");
 
 });
-$("#HostGroup_create").click(function() {
+$("#host_group_create").click(function() {
 	var time = Date.parse(new Date()).toString();// 获取到毫秒的时间戳，精确到毫秒
 	time = time.substr(0, 10);
-	var HostGroup_Name = $("#HostGroup_Name").val()
-	var Host = $("#Host").val().toString()
+	var host_group_name = $("#host_group_name").val()
+	var host = $("#host").val().toString()
 	$.ajax({
-		url : "http://10.203.1.76:7777/hostgroup_create",
+		url : master_ip + "/hostgroup_create",
 		type : "GET",
 		data : {
 			transaction_id:time,
-			HostGroup_Name : HostGroup_Name,
-			Host : Host
+			host_group_name : host_group_name,
+			host : host
 		},
 		success : function(data) {
 			alert(data);
-			$('#Host_Group').selectpicker({
+			$('#host_group').selectpicker({
 				width : 200
 			});
 			all_hg_result_select();
 			$(window).on('load', function() {
-				$('#Host_Group').selectpicker({
+				$('#host_group').selectpicker({
 					'selectedText' : 'cat'
 				});
 			});
@@ -69,31 +71,31 @@ $("#HostGroup_create").click(function() {
 		error : function() {
 		}
 	})
-	$("#HostGroup_Name").val("");
+	$("#host_group_name").val("");
 });
 
-$("#DiskGroup_create").click(function() {
+$("#disk_group_create").click(function() {
 	var time = Date.parse(new Date()).toString();// 获取到毫秒的时间戳，精确到毫秒
 	time = time.substr(0, 10);
-	var DiskGroup_Name = $("#DiskGroup_Name").val()
-	var Disk = $("#Disk").val().toString()
+	var disk_group_name = $("#disk_group_name").val()
+	var disk = $("#disk").val().toString()
 	$.ajax({
-		url : "http://10.203.1.76:7777/diskgroup_create",
+		url : master_ip + "/diskgroup_create",
 		type : "GET",
 		data : {
 			transaction_id:time,
-			DiskGroup_Name : DiskGroup_Name,
-			Disk : Disk
+			disk_group_name : disk_group_name,
+			disk : disk
 		},
 		success : function(data) {
 
 			alert(data);
-			$('#Disk_Group').selectpicker({
+			$('#disk_group').selectpicker({
 				width : 200
 			});
 			all_dg_result_select();
 			$(window).on('load', function() {
-				$('#Disk_Group').selectpicker({
+				$('#disk_group').selectpicker({
 					'selectedText' : 'cat'
 				});
 			});
@@ -102,22 +104,22 @@ $("#DiskGroup_create").click(function() {
 		error : function() {
 		}
 	})
-	$("#DiskGroup_Name").val("");
+	$("#disk_group_name").val("");
 });
-$("#Map_create").click(function() {
+$("#map_create").click(function() {
 	var time = Date.parse(new Date()).toString();// 获取到毫秒的时间戳，精确到毫秒
 	time = time.substr(0, 10);
-	var Map_Name = $("#Map_Name").val()
-	var Disk_Group = $("#Disk_Group").val()
-	var Host_Group = $("#Host_Group").val()
+	var map_name = $("#map_name").val()
+	var disk_group = $("#disk_group").val()
+	var host_group = $("#host_group").val()
 	$.ajax({
-		url : "http://10.203.1.76:7777/map_create",
+		url : master_ip + "/map_create",
 		type : "GET",
 		data : {
 			transaction_id:time,
-			Map_Name : Map_Name,
-			Disk_Group : Disk_Group,
-			Host_Group : Host_Group
+			map_name : map_name,
+			disk_group : disk_group,
+			host_group : host_group
 		},
 		success : function(data) {
 			alert(data);
@@ -125,17 +127,17 @@ $("#Map_create").click(function() {
 		error : function() {
 		}
 	})
-	$("#Map_Name").val("");
+	$("#map_name").val("");
 });
 
-$('#Host').selectpicker({
+$('#host').selectpicker({
 	width : 200
 });
 function host_result_select() {
 	var time = Date.parse(new Date()).toString();// 获取到毫秒的时间戳，精确到毫秒
 	time = time.substr(0, 10);
 	$.ajax({
-		url : "http://10.203.1.76:7777/oprt_all_host",
+		url : master_ip + "/oprt_all_host",
 		type : "GET",
 		dataType : "json",
 		data : {
@@ -143,18 +145,18 @@ function host_result_select() {
 		},
 		success : function() {
 			$.ajax({
-				url : "http://10.203.1.76:7777/all_host_result",
+				url : master_ip + "/all_host_result",
 				type : "GET",
 				dataType : "json",
 				success : function(host_result) {
-					$('#Host').html("");
+					$('#host').html("");
 					var html = "";
 					for (i in host_result) {
 						html += '<option value=' + i + '>' + i + '</option>'
 					}
-					$('#Host').append(html);
-					$('#Host').selectpicker('refresh');
-					$('#Host').selectpicker('render');
+					$('#host').append(html);
+					$('#host').selectpicker('refresh');
+					$('#host').selectpicker('render');
 				}
 			});
 		}
@@ -162,12 +164,12 @@ function host_result_select() {
 };
 host_result_select();
 $(window).on('load', function() {
-	$('#Host').selectpicker({
+	$('#host').selectpicker({
 		'selectedText' : 'cat'
 	});
 });
 
-$('#Disk').selectpicker({
+$('#disk').selectpicker({
 	width : 200
 });
 
@@ -175,7 +177,7 @@ function disk_result_select() {
 	var time = Date.parse(new Date()).toString();// 获取到毫秒的时间戳，精确到毫秒
 	time = time.substr(0, 10);
 	$.ajax({
-		url : "http://10.203.1.76:7777/oprt_all_disk",
+		url : master_ip + "/oprt_all_disk",
 		type : "GET",
 		dataType : "json",
 		data : {
@@ -183,21 +185,21 @@ function disk_result_select() {
 		},
 		success : function() {
 			$.ajax({
-				url : "http://10.203.1.76:7777/all_disk_result",
+				url : master_ip + "/all_disk_result",
 				type : "GET",
 				dataType : "json",
-				success : function(Disk_result) {
+				success : function(disk_result) {
 					// var _data = data.data; //由于后台传过来的json有个data，在此重命名
-					$('#Disk').html("");
+					$('#disk').html("");
 					var html = "";
-					for (i in Disk_result) {
+					for (i in disk_result) {
 						// alert(i);
 						html += '<option value=' + i + '>' + i + '</option>'
 					}
-					$('#Disk').append(html);
+					$('#disk').append(html);
 					// 缺一不可
-					$('#Disk').selectpicker('refresh');
-					$('#Disk').selectpicker('render');
+					$('#disk').selectpicker('refresh');
+					$('#disk').selectpicker('render');
 				}
 			});
 		}
@@ -206,12 +208,12 @@ function disk_result_select() {
 };
 disk_result_select();
 $(window).on('load', function() {
-	$('#Disk').selectpicker({
+	$('#disk').selectpicker({
 		'selectedText' : 'cat'
 	});
 });
 
-$('#Host_Group').selectpicker({
+$('#host_group').selectpicker({
 	width : 200
 });
 
@@ -219,7 +221,7 @@ function all_hg_result_select() {
 	var time = Date.parse(new Date()).toString();// 获取到毫秒的时间戳，精确到毫秒
 	time = time.substr(0, 10);
 	$.ajax({
-		url : "http://10.203.1.76:7777/oprt_all_hg",
+		url : master_ip + "/oprt_all_hg",
 		type : "get",
 		dataType : "json",
 		data : {
@@ -227,20 +229,20 @@ function all_hg_result_select() {
 		},
 		success : function() {
 			$.ajax({
-				url : "http://10.203.1.76:7777/all_hg_result",
+				url : master_ip + "/all_hg_result",
 				type : "get",
 				dataType : "json",
-				success : function(Host_Group_result) {
+				success : function(host_group_result) {
 					// var _data = data.data; //由于后台传过来的json有个data，在此重命名
-					$('#Host_Group').html("");
+					$('#host_group').html("");
 					var html = "";
-					for (i in Host_Group_result) {
+					for (i in host_group_result) {
 						html += '<option value=' + i + '>' + i + '</option>'
 					}
-					$('#Host_Group').append(html);
+					$('#host_group').append(html);
 					// 缺一不可
-					$('#Host_Group').selectpicker('refresh');
-					$('#Host_Group').selectpicker('render');
+					$('#host_group').selectpicker('refresh');
+					$('#host_group').selectpicker('render');
 				}
 			});
 
@@ -250,12 +252,12 @@ function all_hg_result_select() {
 };
 all_hg_result_select();
 $(window).on('load', function() {
-	$('#Host_Group').selectpicker({
+	$('#host_group').selectpicker({
 		'selectedText' : 'cat'
 	});
 });
 
-$('#Disk_Group').selectpicker({
+$('#disk_group').selectpicker({
 	width : 200
 });
 
@@ -263,7 +265,7 @@ function all_dg_result_select() {
 	var time = Date.parse(new Date()).toString();// 获取到毫秒的时间戳，精确到毫秒
 	time = time.substr(0, 10);
 	$.ajax({
-		url : "http://10.203.1.76:7777/oprt_all_dg",
+		url : master_ip + "/oprt_all_dg",
 		type : "get",
 		dataType : "json",
 		data : {
@@ -271,19 +273,19 @@ function all_dg_result_select() {
 		},
 		success : function(data) {
 			$.ajax({
-				url : "http://10.203.1.76:7777/all_dg_result",
+				url : master_ip + "/all_dg_result",
 				type : "get",
 				dataType : "json",
 				success : function(all_dg_result) {
-					$('#Disk_Group').html("");
+					$('#disk_group').html("");
 					var html = "";
 					for (i in all_dg_result) {
-						$('#Disk_Group').append(
+						$('#disk_group').append(
 								'<option value=' + i + '>' + i + '</option>')
 					}
 					// 缺一不可
-					$('#Disk_Group').selectpicker('refresh');
-					$('#Disk_Group').selectpicker('render');
+					$('#disk_group').selectpicker('refresh');
+					$('#disk_group').selectpicker('render');
 				}
 			});
 		}
@@ -291,7 +293,7 @@ function all_dg_result_select() {
 };
 all_dg_result_select();
 $(window).on('load', function() {
-	$('#Disk_Group').selectpicker({
+	$('#disk_group').selectpicker({
 		'selectedText' : 'cat'
 	});
 });

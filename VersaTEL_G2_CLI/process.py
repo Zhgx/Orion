@@ -12,13 +12,13 @@ import sys
 
 class LINSTORDB(object):
 
-    def __init__(self,tid):
+    def __init__(self):
         # 先这样
-        consts._init()
-        username = sundry.get_username()
-        transaction_id = tid
-        logger = log.Log(username, transaction_id)
-        consts.set_glo_log(logger)
+#         consts._init()
+#         username = sundry.get_username()
+#         transaction_id = tid
+#         logger = log.Log(username, transaction_id)
+#         consts.set_glo_log(logger)
         db = linstordb.LinstorDB()
 
         # 生成数据库
@@ -28,8 +28,8 @@ class LINSTORDB(object):
 
 class Process_data(LINSTORDB):
 
-    def __init__(self,tid):
-        LINSTORDB.__init__(self,tid)
+    def __init__(self):
+        LINSTORDB.__init__(self)
 
     # 获取表单行数据的通用方法
     def sql_fetch_one(self, sql):

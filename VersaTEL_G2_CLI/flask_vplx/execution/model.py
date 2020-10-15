@@ -23,8 +23,8 @@ class HostCreate(views.MethodView):
             dict_host = dict(str_host)
             tid = dict_host['transaction_id']
             log.set_web_logger(tid)
-            host = dict_host["Host_Name"]
-            iqn = dict_host["Host_iqn"]
+            host = dict_host["host_name"]
+            iqn = dict_host["host_iqn"]
             host_obj = iscsi.Host()
             print(host_obj.get_all_host())
             host_create_results = host_obj.create_host(host, iqn)
@@ -43,8 +43,8 @@ class HostGroupCreate(views.MethodView):
             dict_hostgroup = dict(hostgroup)
             tid = dict_hostgroup['transaction_id']
             log.set_web_logger(tid)
-            host = dict_hostgroup['Host'].split(',')
-            host_group_name = dict_hostgroup["HostGroup_Name"]
+            host = dict_hostgroup['host'].split(',')
+            host_group_name = dict_hostgroup["host_group_name"]
             host_group_obj = iscsi.HostGroup()
             host_group_create_results = host_group_obj.create_hostgroup(host_group_name, host)
             if host_group_create_results == True:
@@ -62,8 +62,8 @@ class DiskGroupCreate(views.MethodView):
             dict_diskgroup = dict(diskgroup) 
             tid = dict_diskgroup['transaction_id']
             log.set_web_logger(tid)
-            disk = dict_diskgroup['Disk'].split(',')
-            disk_group_name = dict_diskgroup["DiskGroup_Name"]
+            disk = dict_diskgroup['disk'].split(',')
+            disk_group_name = dict_diskgroup["disk_group_name"]
             disk_group_obj = iscsi.DiskGroup()
             
             disk_group_create_results = disk_group_obj.create_diskgroup(disk_group_name, disk)
@@ -82,9 +82,9 @@ class MapCreate(views.MethodView):
             dict_map = dict(map)
             tid = dict_map['transaction_id']
             log.set_web_logger(tid)
-            map_name = dict_map["Map_Name"]
-            host_group_name = dict_map["Host_Group"]
-            disk_group_name = dict_map["Disk_Group"] 
+            map_name = dict_map["map_name"]
+            host_group_name = dict_map["host_group"]
+            disk_group_name = dict_map["disk_group"] 
             map_obj = iscsi.Map()
             map_create_results = map_obj.create_map(map_name, host_group_name,disk_group_name)
             if map_create_results == True:

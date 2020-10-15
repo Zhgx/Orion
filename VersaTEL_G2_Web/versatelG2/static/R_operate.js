@@ -11,15 +11,16 @@
  * */
 
 //操作提示
+var master_ip = "http://10.203.1.76:7777" 
 function update_resource_operate() {
 	var time = Date.parse(new Date()).toString();// 获取到毫秒的时间戳，精确到毫秒
 	time = time.substr(0, 10);
 	$.ajax({
-		url : "http://10.203.1.76:7777/resource_operate",
-		type : "get",
+		url : master_ip + "/resource_operate",
+		type : "GET",
 		dataType : "json",
 		data : {
-			transactionid : time
+			transaction_id : time
 		},
 		success : function(R_Hint) {
 			var area = document.getElementById("R-S");
@@ -34,11 +35,10 @@ function First_refresh() {
 	var time = Date.parse(new Date()).toString();// 获取到毫秒的时间戳，精确到毫秒
 	time = time.substr(0, 10);
 	$.ajax({
-		url : "http://10.203.1.76:7777/resource_operate",
-		type : "get",
-		dataType : "json",
+		url : master_ip + "/resource_operate",
+		type : "GET",
 		data : {
-			transactionid : time
+			transaction_id : time
 			 },
 		success : function(R_Hint) {
 			R_Select();
@@ -55,11 +55,11 @@ function R_Select() {
 	var time = Date.parse(new Date()).toString();// 获取到毫秒的时间戳，精确到毫秒
 	time = time.substr(0, 10);
 	$.ajax({
-		url : "http://10.203.1.76:7777/resource_data",
+		url : master_ip + "/resource_data",
 		type : "get",
 		dataType : "json",
 		data : {
-			transaction_id:time
+			transaction_id : time
 		},
 		success : function(R_D) {
 			var _R_D = R_D.data; // 由于后台传过来的json有个data，在此重命名
@@ -102,11 +102,11 @@ function all_resource_show() {
 	var time = Date.parse(new Date()).toString();// 获取到毫秒的时间戳，精确到毫秒
 	time = time.substr(0, 10);
 	$.ajax({
-		url : "http://10.203.1.76:7777/resource_data",
+		url : master_ip + "/resource_data",
 		type : "get",
 		dataType : "json",
 		data : {
-			transaction_id:time
+			transaction_id : time
 		},
 		success : function(R_D) {
 			var _R_D = R_D.data;
@@ -139,11 +139,11 @@ function one_resource_show(R_N) {
 	var time = Date.parse(new Date()).toString();// 获取到毫秒的时间戳，精确到毫秒
 	time = time.substr(0, 10);
 	$.ajax({
-		url : "http://10.203.1.76:7777/resource_data",
+		url : master_ip + "/resource_data",
 		type : "get",
 		dataType : "json",
 		data : {
-			transaction_id:time
+			transaction_id : time
 		},
 		success : function(R_D) {
 			var _R_D = R_D.data;

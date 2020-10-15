@@ -24,21 +24,21 @@ class ReplayExit(Exception):
 
 
 def _init():
-    global _global_dict
-    _global_dict = {}
-    _global_dict['LOG_ID'] = 0
-    _global_dict['RPL'] = 'no'
-    _global_dict['LOG_SWITCH'] = 'yes'
+    global _GLOBAL_DICT
+    _GLOBAL_DICT = {}
+    _GLOBAL_DICT['LOG_ID'] = 0
+    _GLOBAL_DICT['RPL'] = 'no'
+    _GLOBAL_DICT['LOG_SWITCH'] = 'yes'
 
 def set_value(key, value):
     """ 定义一个全局变量 """
-    _global_dict[key] = value
+    _GLOBAL_DICT[key] = value
 
 
 def get_value(key, dft_val = None):
     """ 获得一个全局变量,不存在则返回默认值 """
     try:
-        return _global_dict[key]
+        return _GLOBAL_DICT[key]
     except KeyError:
         return dft_val
 

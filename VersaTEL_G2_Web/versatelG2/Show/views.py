@@ -9,9 +9,9 @@ from flask import Flask,views
 from versatelG2.Show import showblue
 from versatelG2.Show import model
 
-showblue.add_url_rule('/', view_func=model.Index.as_view('indexview'))
-showblue.add_url_rule('/iSCSI_create', view_func=model.IscsiCreate.as_view('iSCSIcreateview'))
-showblue.add_url_rule('/Resource', view_func=model.Resource.as_view('Resourceview'))
+showblue.add_url_rule('/', view_func=model.Index.as_view('index'))
+showblue.add_url_rule('/iscsi/create', view_func=model.IscsiCreate.as_view('iSCSIcreate'))
+showblue.add_url_rule('/resource/show', view_func=model.Resource.as_view('Resource'))
 
 
 

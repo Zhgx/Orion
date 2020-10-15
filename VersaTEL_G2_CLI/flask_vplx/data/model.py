@@ -21,31 +21,35 @@ def cors_data(datadict):
 
  
 def get_tid():
-    str_transaction_id = request.args.items()
-    dict_transaction_id = dict(transaction_id)
-    return dict_transaction["transaction_id"]
+    if request.method == 'GET':
+        str_transaction_id = request.args.items()
+        dict_transaction = dict(str_transaction_id)
+        return dict_transaction["transaction_id"]
 
- 
+
 RESOURCEDICT = None
 
+def get_all_resource():
+    global RESOURCEDICT
+    pc = process.Process_data()
+    RESOURCEDICT = pc.process_data_resource()
+    return True
 
 class OprtResource(views.MethodView):  
 
     def get(self):
-        global RESOURCEDICT
-        if request.method == 'GET':
-            tid = get_tid()
-            log.set_web_logger(tid)
-            pc = process.Process_data()
-            RESOURCEDICT = pc.process_data_resource()
-        return cors_data("数据获取成功")
+        tid = get_tid()
+        log.set_web_logger(tid)
+        if get_all_resource():
+            return cors_data("0")
+        else:
+            return cors_data("1")
 
     
 class ResourceResult(views.MethodView):  
 
     def get(self):
         if not RESOURCEDICT:
-            pc = process.Process_data()
-            RESOURCEDICT = pc.process_data_resource()
+            get_all_resource()
         return cors_data(RESOURCEDICT)
 

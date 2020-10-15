@@ -12,9 +12,13 @@
         "host44": "iqnxxx",
         "h12": "iqnxx",
         "Host21": "iqnxxx",
-        "host11": "iqnxx"
+        "host11": "iqnxx",
+        "host123": "iqnxx"
     },
-    "Disk": {},
+    "Disk": {
+        "res_a": "/dev/drbd1001",
+        "res_f": "/dev/drbd1000"
+    },
     "HostGroup": {
         "hg1": [
             "host1"
@@ -31,6 +35,11 @@
             "2",
             "3",
             "22"
+        ],
+        "hg3": [
+            "22",
+            "222",
+            "host11"
         ]
     },
     "DiskGroup": {
@@ -54,6 +63,10 @@
             "res_a",
             "res_b",
             "res_c"
+        ],
+        "dg4": [
+            "res_a",
+            "res_f"
         ]
     },
     "Map": {
