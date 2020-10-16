@@ -1,23 +1,16 @@
 {
     "Host": {
-        "host1": "iqn-123213-12321",
-        "host2": "iqn12321312321",
-        "host3": "iqn12321312321",
-        "2": "2",
-        "Host4": "iqnxxxx",
-        "3": "22",
-        "Host2": "iqn.host2",
-        "222": "2",
-        "22": "22",
-        "host44": "iqnxxx",
-        "h12": "iqnxx",
-        "Host21": "iqnxxx",
-        "host11": "iqnxx",
-        "host123": "iqnxx"
+        "host1": "iqnxx",
+        "host2": "iqnxxx",
+        "host3": "iqn123",
+        "h5": "iqnxxx"
     },
     "Disk": {
-        "res_a": "/dev/drbd1001",
-        "res_f": "/dev/drbd1000"
+        "res_a": "/dev/drbd1000",
+        "res_b": "/dev/drbd1001",
+        "res_c": "/dev/drbd1002",
+        "res_d": "/dev/drbd1003",
+        "thinlv_test": "/dev/drbd1004"
     },
     "HostGroup": {
         "hg1": [
@@ -40,6 +33,9 @@
             "22",
             "222",
             "host11"
+        ],
+        "hg4": [
+            "host3"
         ]
     },
     "DiskGroup": {
@@ -67,12 +63,19 @@
         "dg4": [
             "res_a",
             "res_f"
+        ],
+        "dg6": [
+            "thinlv_test"
         ]
     },
     "Map": {
         "map3": [
             "hg1",
             "dg1"
+        ],
+        "map2": [
+            "hg4",
+            "dg6"
         ]
     },
     "crm": {

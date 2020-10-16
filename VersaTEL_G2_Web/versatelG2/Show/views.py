@@ -10,8 +10,8 @@ from versatelG2.Show import showblue
 from versatelG2.Show import model
 
 showblue.add_url_rule('/', view_func=model.Index.as_view('index'))
-showblue.add_url_rule('/iscsi/create', view_func=model.IscsiCreate.as_view('iSCSIcreate'))
-showblue.add_url_rule('/resource/show', view_func=model.Resource.as_view('Resource'))
+showblue.add_url_rule('/iscsi/map/create', view_func=model.IscsiCreate.as_view('iSCSIcreate'))
+showblue.add_url_rule('/stor/resource/show', view_func=model.Resource.as_view('Resource'))
 
 
 

@@ -2,6 +2,7 @@ import json
 import consts
 import sundry as s
 from functools import wraps
+import os
 
 
 class JsonOperation():
@@ -16,18 +17,21 @@ class JsonOperation():
             json_data = open("map_config.json", encoding='utf-8')
             json_dict = json.load(json_data)
             json_data.close()
+#             raise json.decoder.JSONDecodeError 
             return json_dict
-
         except json.decoder.JSONDecodeError:
-            with open('map_config.json', "w") as fw:
-                json_dict = {
-                    "Host": {},
-                    "Disk": {},
-                    "HostGroup": {},
-                    "DiskGroup": {},
-                    "Map": {}}
-                json.dump(json_dict, fw, indent=4, separators=(',', ': '))
-            return json_dict
+            if os.path.isfile('map_config.json'):
+                print('Failed to read map_config.json')
+            else:
+                with open('map_config.json', "w") as fw:
+                    json_dict = {
+                        "Host": {},
+                        "Disk": {},
+                        "HostGroup": {},
+                        "DiskGroup": {},
+                        "Map": {}}
+                    json.dump(json_dict, fw, indent=4, separators=(',', ': '))
+                return json_dict
 
 
     # 创建Host、HostGroup、DiskGroup、Map

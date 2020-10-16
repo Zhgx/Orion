@@ -4,7 +4,7 @@
  * 
  * */
 
-var master_ip = "http://10.203.1.76:7777" 
+var masterIp = "http://10.203.1.76:7777"
 
 //操作提示
 $("#host_create").click(function() {
@@ -13,7 +13,7 @@ $("#host_create").click(function() {
 	var hostName = $("#host_name").val()
 	var hostiqn = $("#host_iqn").val()
 	$.ajax({
-		url : master_ip + "/host_create",
+		url : masterIp + "/host/create",
 		type : "GET",
 		data : {
 			transaction_id:time,
@@ -46,7 +46,7 @@ $("#host_group_create").click(function() {
 	var host_group_name = $("#host_group_name").val()
 	var host = $("#host").val().toString()
 	$.ajax({
-		url : master_ip + "/hostgroup_create",
+		url : masterIp + "/hg/create",
 		type : "GET",
 		data : {
 			transaction_id:time,
@@ -80,7 +80,7 @@ $("#disk_group_create").click(function() {
 	var disk_group_name = $("#disk_group_name").val()
 	var disk = $("#disk").val().toString()
 	$.ajax({
-		url : master_ip + "/diskgroup_create",
+		url : masterIp + "/dg/create",
 		type : "GET",
 		data : {
 			transaction_id:time,
@@ -113,7 +113,7 @@ $("#map_create").click(function() {
 	var disk_group = $("#disk_group").val()
 	var host_group = $("#host_group").val()
 	$.ajax({
-		url : master_ip + "/map_create",
+		url : masterIp + "/map/create",
 		type : "GET",
 		data : {
 			transaction_id:time,
@@ -137,7 +137,7 @@ function host_result_select() {
 	var time = Date.parse(new Date()).toString();// 获取到毫秒的时间戳，精确到毫秒
 	time = time.substr(0, 10);
 	$.ajax({
-		url : master_ip + "/oprt_all_host",
+		url : masterIp + "/host/show/oprt",
 		type : "GET",
 		dataType : "json",
 		data : {
@@ -145,7 +145,7 @@ function host_result_select() {
 		},
 		success : function() {
 			$.ajax({
-				url : master_ip + "/all_host_result",
+				url : masterIp + "/host/show/data",
 				type : "GET",
 				dataType : "json",
 				success : function(host_result) {
@@ -177,7 +177,7 @@ function disk_result_select() {
 	var time = Date.parse(new Date()).toString();// 获取到毫秒的时间戳，精确到毫秒
 	time = time.substr(0, 10);
 	$.ajax({
-		url : master_ip + "/oprt_all_disk",
+		url : masterIp + "/disk/show/oprt",
 		type : "GET",
 		dataType : "json",
 		data : {
@@ -185,7 +185,7 @@ function disk_result_select() {
 		},
 		success : function() {
 			$.ajax({
-				url : master_ip + "/all_disk_result",
+				url : masterIp + "/disk/show/data",
 				type : "GET",
 				dataType : "json",
 				success : function(disk_result) {
@@ -221,7 +221,7 @@ function all_hg_result_select() {
 	var time = Date.parse(new Date()).toString();// 获取到毫秒的时间戳，精确到毫秒
 	time = time.substr(0, 10);
 	$.ajax({
-		url : master_ip + "/oprt_all_hg",
+		url : masterIp + "/hg/show/oprt",
 		type : "get",
 		dataType : "json",
 		data : {
@@ -229,7 +229,7 @@ function all_hg_result_select() {
 		},
 		success : function() {
 			$.ajax({
-				url : master_ip + "/all_hg_result",
+				url : masterIp + "/hg/show/data",
 				type : "get",
 				dataType : "json",
 				success : function(host_group_result) {
@@ -265,7 +265,7 @@ function all_dg_result_select() {
 	var time = Date.parse(new Date()).toString();// 获取到毫秒的时间戳，精确到毫秒
 	time = time.substr(0, 10);
 	$.ajax({
-		url : master_ip + "/oprt_all_dg",
+		url : masterIp + "/dg/show/oprt",
 		type : "get",
 		dataType : "json",
 		data : {
@@ -273,7 +273,7 @@ function all_dg_result_select() {
 		},
 		success : function(data) {
 			$.ajax({
-				url : master_ip + "/all_dg_result",
+				url : masterIp + "/dg/show/data",
 				type : "get",
 				dataType : "json",
 				success : function(all_dg_result) {

@@ -125,6 +125,7 @@ class AllHostResult(views.MethodView):
 
     def get(self):
         if not HOST_RESULT:
+            
             update_host()
         return cors_data(HOST_RESULT)
 

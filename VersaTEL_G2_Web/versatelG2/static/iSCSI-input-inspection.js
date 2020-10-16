@@ -7,14 +7,14 @@
 //操作提示
 //host
 
-var master_ip = "http://10.203.1.76:7777"
+var masterIp = "http://10.203.1.76:7777"
 
 function host_name_myfunction(){
 	document.getElementById("host_name_examine").className = "hidden";
 	var input_result = $('#host_name').val();
 	$
 			.ajax({
-				url : master_ip + "/all_host_result",
+				url : masterIp + "/host/show/data",
 				type : "GET",
 				dataType : "json",
 				success : function(host_result) {
@@ -31,7 +31,7 @@ function hg_name_myfunction() {
 	document.getElementById("hg_name_examine").className = "hidden";
 	var input_result = $('#host_group_name').val();
 	$.ajax({
-		url : master_ip + "/all_hg_result",
+		url : masterIp + "/hg/show/data",
 		type : "GET",
 		dataType : "json",
 		success : function(HG_result) {
@@ -48,7 +48,7 @@ function dg_name_myfunction() {
 	document.getElementById("dg_name_examine").className = "hidden";
 	var input_result = $('#disk_group_name').val();
 	$.ajax({
-		url : master_ip + "/all_dg_result",
+		url : masterIp + "/dg/show/data",
 		type : "GET",
 		dataType : "json",
 		success : function(DG_result) {
@@ -65,7 +65,7 @@ function map_name_myfunction() {
 	document.getElementById("map_name_examine").className = "hidden";
 	var input_result = $('#map_name').val();
 	$.ajax({
-		url : master_ip + "/all_map_result",
+		url : masterIp + "/map/show/data",
 		type : "GET",
 		dataType : "json",
 		success : function(Map_result) {

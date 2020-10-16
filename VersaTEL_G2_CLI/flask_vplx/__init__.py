@@ -13,5 +13,5 @@ from flask_vplx.execution import execution_blue
 app = Flask(__name__)
 
 # 将蓝图注册到app
-app.register_blueprint(datablue)
+app.register_blueprint(datablue,)
 app.register_blueprint(execution_blue)

@@ -2,6 +2,7 @@
 import execute as ex
 import sundry as s
 import sqlite3
+import consts
 
 
 queries = {
@@ -263,7 +264,13 @@ class LinstorDB(Database):
         node = linstor.get_linstor_data('linstor --no-color --no-utf8 n l')
         res = linstor.get_linstor_data('linstor --no-color --no-utf8 r lv')
         sp = linstor.get_linstor_data('linstor --no-color --no-utf8 sp l')
+        logger = consts.glo_log()
+        
+        logger.write_to_log('TEST', 'TEST', 'TEST', 'TEST', 'START')
+        print('TEST START')
         self.insert_data(self.replace_ntb_sql, node,'nodetb')
+        logger.write_to_log('TEST', 'TEST', 'TEST', 'TEST', 'END')
+        print('TEST END')
         self.insert_data(self.replace_rtb_sql, res,'resourcetb')
         self.insert_data(self.replace_stb_sql, sp,'storagepooltb')
 

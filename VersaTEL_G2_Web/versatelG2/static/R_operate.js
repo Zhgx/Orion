@@ -11,12 +11,12 @@
  * */
 
 //操作提示
-var master_ip = "http://10.203.1.76:7777" 
+var masterIp = "http://10.203.1.76:7777" 
 function update_resource_operate() {
 	var time = Date.parse(new Date()).toString();// 获取到毫秒的时间戳，精确到毫秒
 	time = time.substr(0, 10);
 	$.ajax({
-		url : master_ip + "/resource_operate",
+		url : masterIp + "/resource/show/oprt",
 		type : "GET",
 		dataType : "json",
 		data : {
@@ -35,7 +35,7 @@ function First_refresh() {
 	var time = Date.parse(new Date()).toString();// 获取到毫秒的时间戳，精确到毫秒
 	time = time.substr(0, 10);
 	$.ajax({
-		url : master_ip + "/resource_operate",
+		url : masterIp + "/resource/show/oprt",
 		type : "GET",
 		data : {
 			transaction_id : time
@@ -55,7 +55,7 @@ function R_Select() {
 	var time = Date.parse(new Date()).toString();// 获取到毫秒的时间戳，精确到毫秒
 	time = time.substr(0, 10);
 	$.ajax({
-		url : master_ip + "/resource_data",
+		url : masterIp + "/resource/show/data",
 		type : "get",
 		dataType : "json",
 		data : {
@@ -102,7 +102,7 @@ function all_resource_show() {
 	var time = Date.parse(new Date()).toString();// 获取到毫秒的时间戳，精确到毫秒
 	time = time.substr(0, 10);
 	$.ajax({
-		url : master_ip + "/resource_data",
+		url : masterIp + "/resource/show/data",
 		type : "get",
 		dataType : "json",
 		data : {
@@ -139,7 +139,7 @@ function one_resource_show(R_N) {
 	var time = Date.parse(new Date()).toString();// 获取到毫秒的时间戳，精确到毫秒
 	time = time.substr(0, 10);
 	$.ajax({
-		url : master_ip + "/resource_data",
+		url : masterIp + "/resource/show/data",
 		type : "get",
 		dataType : "json",
 		data : {

@@ -10,6 +10,7 @@ import json
 from flask_cors import *
 import process
 import log
+import consts
 
 
 def cors_data(datadict):
@@ -39,7 +40,8 @@ class OprtResource(views.MethodView):
 
     def get(self):
         tid = get_tid()
-        log.set_web_logger(tid)
+        logger = consts.glo_log()
+        logger.transaction_id = tid
         if get_all_resource():
             return cors_data("0")
         else:
