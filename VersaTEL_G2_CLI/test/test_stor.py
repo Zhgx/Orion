@@ -92,8 +92,11 @@ class TestStoragePool:
 class TestResource:
 
     def setup_class(self):
-        self.res = stor.Resource()
         self.node_name = 'ubuntu'
+        try:
+            self.sp = stor.StoragePool()
+            self.sp.create_storagepool_lvm(self.node_name, 'pytest_sp1', 'drbdpool')
+        self.res = stor.Resource()
 
     def test_collect_args(self):
         assert self.res.collect_args([self.node_name], ['pytest_sp1']) == {'ubuntu': 'pytest_sp1'}
