@@ -283,8 +283,7 @@ class Map():
         dict_hg = {}
         dict_dg = {}
         if not self.js.check_key('Map', map)['result']:
-            s.prt_log('No map data',1)
-            return
+            s.prt_log('No map data',2)
 
         hg,dg = self.js.get_data('Map').get(map)
         host = self.js.get_data('HostGroup').get(hg)

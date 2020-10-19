@@ -2,6 +2,7 @@ import json
 import consts
 import sundry as s
 from functools import wraps
+import sys
 
 
 class JsonOperation():
@@ -18,7 +19,7 @@ class JsonOperation():
             json_data.close()
             return json_dict
 
-        except json.decoder.JSONDecodeError:
+        except FileNotFoundError:
             with open('iSCSI_Data.json', "w") as fw:
                 json_dict = {
                     "Host": {},
@@ -28,6 +29,9 @@ class JsonOperation():
                     "Map": {}}
                 json.dump(json_dict, fw, indent=4, separators=(',', ': '))
             return json_dict
+        except json.decoder.JSONDecodeError:
+            print('Failed to read json file.')
+            sys.exit()
 
 
     # 创建Host、HostGroup、DiskGroup、Map

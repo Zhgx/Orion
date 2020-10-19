@@ -134,8 +134,6 @@ def show_map_data(list_header,dict_data):
         for i, j in dict_data.items():
             j.insert(0,i)
             table.add_row(j)
-    else:
-        pass
     return table
 
 
