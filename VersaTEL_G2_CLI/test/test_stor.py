@@ -96,6 +96,8 @@ class TestResource:
         try:
             self.sp = stor.StoragePool()
             self.sp.create_storagepool_lvm(self.node_name, 'pytest_sp1', 'drbdpool')
+        except:
+            pass
         self.res = stor.Resource()
 
     def test_collect_args(self):

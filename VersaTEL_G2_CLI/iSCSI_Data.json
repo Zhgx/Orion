@@ -1,5 +1,7 @@
 {
-    "Host": {},
+    "Host": {
+        "host_test1": "iqn.zane.test:1111"
+    },
     "Disk": {
         "res_a": "/dev/drbd1000",
         "res_b": "/dev/drbd1001",
@@ -7,7 +9,30 @@
         "res_d": "/dev/drbd1003",
         "thinlv_test": "/dev/drbd1004"
     },
-    "HostGroup": {},
-    "DiskGroup": {},
-    "Map": {}
+    "HostGroup": {
+        "hg_test1": [
+            "host_test1"
+        ]
+    },
+    "DiskGroup": {
+        "dgtest": [
+            "thinlv_test"
+        ],
+        "dg_test1": [
+            "res_c",
+            "res_d"
+        ],
+        "dg1": [
+            "res_b"
+        ],
+        "dg2": [
+            "res_c"
+        ]
+    },
+    "Map": {
+        "map1": [
+            "hg_test1",
+            "dg1"
+        ]
+    }
 }
