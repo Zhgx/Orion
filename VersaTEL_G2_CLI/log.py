@@ -87,10 +87,3 @@ class Log(object):
                 'd2': d2,
                 'data': data})
 
-
-# For Web
-def set_web_logger(tid):
-    consts._init()
-    user = sundry.get_username()
-    logger = Log(user, tid,file_name=WEB_LOG_NAME)
-    consts.set_glo_log(logger)
