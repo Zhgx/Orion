@@ -15,7 +15,7 @@ class usage():
     resource_create = '''
     resource(r) create(c) RESOURCE -s SIZE -n NODE[NODE...] -sp STORAGEPOOL[STORAGEPOOL...]
                           RESOURCE -s SIZE -a -num NUM
-                          RESOURCE -dikless -n NODE[NODE...]
+                          RESOURCE -diskless -n NODE[NODE...]
                           RESOURCE -am -n NODE[NODE...] -sp STORAGEPOOL[STORAGEPOOL...]
                           RESOURCE -am -a -num NUM'''
 

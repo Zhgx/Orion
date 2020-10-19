@@ -32,8 +32,8 @@ class Log(object):
         """
         日志格式：
         asctime：时间
-        tid：transaction id，事务的唯一
-        user：username，
+        tid：transaction id，事务的唯一标识
+        user：username，操作系统的用户
         t1：type1，日志数据的类型一
         t2：type2，日志数据的类型二
         d1：description1，日志数据的描述一

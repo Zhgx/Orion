@@ -391,7 +391,7 @@ class Resource():
 
     # 创建resource --diskless
     def create_res_diskless(self, node, res):
-        cmd = f'linstor r c {node} {res} --diskless'
+        cmd = f'linstor r c {node[0]} {res} --diskless'
         result = execute_linstor_cmd(cmd)
         if result['sts'] == 0:
             s.prt_log('SUCCESS', 0)
