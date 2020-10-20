@@ -258,13 +258,14 @@ class Map():
         # 执行创建和启动
         for i in drdb_list:
             res, minor_nr, path = i
-            lunid = minor_nr[-2:]  # lun id 取自MinorNr的后两位数字
+            lunid = int(minor_nr) - 1000
             if obj_crm.create_crm_res(res, target_iqn, lunid, path, initiator):
                 c = obj_crm.create_col(res, target_name)
                 o = obj_crm.create_order(res, target_name)
                 if c and o:
                     s.prt_log(f'create colocation and order success:{res}',0)
                     obj_crm.start_res(res)
+                    obj_crm.checkout_status_fromst(res)
                 else:
                     s.prt_log("create colocation and order fail",1)
                     return False
@@ -273,7 +274,6 @@ class Map():
                 return False
 
         self.js.add_data('Map', map, [hg, dg])
-        s.prt_log('Create success!', 0)
         return True
 
     def get_all_map(self):
