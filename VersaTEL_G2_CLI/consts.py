@@ -24,7 +24,7 @@ class ReplayExit(Exception):
     pass
 
 
-def _init():
+def init():
     global _GLOBAL_DICT
     _GLOBAL_DICT = {}
     _GLOBAL_DICT['LOG_ID'] = 0
