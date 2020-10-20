@@ -8,11 +8,6 @@ import execute as ex
 import consts
 
 
-
-
-
-
-
 class usage():
     resource = '''
     resource(r) {create(c)/modify(m)/delete(d)/show(s)}'''
@@ -211,8 +206,8 @@ class ResourceCommands():
         if len(node) < len(storagepool):
             raise NodeAndSPNumError('指定的storagepool数量应少于node数量')
         elif len(node) > len(storagepool) > 1:
-            raise NodeAndSPNumError('The number of Node and Storage pool do not meet the requirements')
-
+            raise NodeAndSPNumError(
+                'The number of Node and Storage pool do not meet the requirements')
 
     @staticmethod
     def is_vail_size(size):
@@ -269,8 +264,8 @@ class ResourceCommands():
             # 自动创建条件判断，符合则执行
             if all(list_auto_required) and not any(list_auto_forbid):
                 if args.gui:
-                    print('111')
-                    result = res.create_res_auto(args.resource, args.size, args.num)
+                    result = res.create_res_auto(
+                        args.resource, args.size, args.num)
                     result_pickled = pickle.dumps(result)
                     sd.send_via_socket(result_pickled)
                     print('end')
@@ -282,7 +277,8 @@ class ResourceCommands():
                     self.is_args_correct(args.node, args.storagepool)
                 except NodeAndSPNumError:
                     print('The number of nodes does not meet the requirements')
-                    self.logger.write_to_log('DATA','debug','exception','',str(traceback.format_exc()))
+                    self.logger.write_to_log(
+                        'DATA', 'debug', 'exception', '', str(traceback.format_exc()))
                     sys.exit()
                 else:
                     if args.gui:
@@ -315,7 +311,8 @@ class ResourceCommands():
                         args.resource, args.node, args.storagepool)
                 except NodeAndSPNumError:
                     print('The number of nodes does not meet the requirements')
-                    self.logger.write_to_log('DATA', 'debug', 'exception', '', str(traceback.format_exc()))
+                    self.logger.write_to_log(
+                        'DATA', 'debug', 'exception', '', str(traceback.format_exc()))
                     sys.exit()
                 # else:
                 #     self.p_create_res.print_help()
@@ -337,13 +334,12 @@ class ResourceCommands():
         elif not args.node:
             res.delete_resource_all(args.resource)
 
-
     @sd.record_exception
     def show(self, args):
         res = ex.Resource()
         if args.nocolor:
             if args.resource:
-                res.show_one_res(args.resource,no_color='yes')
+                res.show_one_res(args.resource, no_color='yes')
             else:
                 res.show_all_res(no_color='yes')
         else:

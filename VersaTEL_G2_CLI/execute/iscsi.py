@@ -1,12 +1,8 @@
 # coding=utf-8
 import iscsi_json
-import consts
 import sundry as s
 from execute.linstor import Linstor
 from execute.crm import CRMData,CRMConfig
-
-
-
 
 
 class Disk():
@@ -227,9 +223,15 @@ class Map():
         # 获取target
         crm_data = CRMData()
         if crm_data.update_crm_conf():
-            crm_data_dict = self.js.get_data('crm')
-            target_all = crm_data_dict['target'][0] # 目前的设计只有一个target，所以取列表的第一个
-            return target_all[0], target_all[1]  # 返回target_name, target_iqn
+            js = iscsi_json.JSON_OPERATION()
+            crm_data_dict = js.get_data('crm')
+            if crm_data_dict['target']:
+                # 目前的设计只有一个target，所以取列表的第一个
+                target_all = crm_data_dict['target'][0]
+                # 返回target_name, target_iqn
+                return target_all[0], target_all[1]
+            else:
+                s.prt_log('没有target，创建map失败', 2)
 
     def get_drbd_data(self, dg):
         # 根据dg去收集drbdd的三项数据：resource name，minor number，device name
@@ -313,7 +315,7 @@ class Map():
         table_map = s.show_map_data(header_map, list_data[0])
         table_hg = s.show_iscsi_data(header_host, list_data[1])
         table_dg = s.show_iscsi_data(header_disk, list_data[2])
-        result = [f'Map:{map}',table_map,f'Host Group:{hg}',table_hg,f'Disk Group:{dg}',table_dg]
+        result = [f'Map:{map}',str(table_map),f'Host Group:{hg}',str(table_hg),f'Disk Group:{dg}',str(table_dg)]
         s.prt_log('\n'.join(result),0)
         return list_data
 

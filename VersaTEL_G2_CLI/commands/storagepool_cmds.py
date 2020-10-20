@@ -9,10 +9,6 @@ import linstordb
 import consts
 
 
-
-
-
-
 class usage():
     storagepool = '''
     storagepool(sp) {create(c)/modify(m)/delete(d)/show(s)}'''
@@ -31,13 +27,9 @@ class usage():
     storagepool(sp) show(s) [STORAGEPOOL]'''
 
 
-
-
-
 class StoragePoolCommands():
     def __init__(self):
         self.logger = consts.glo_log()
-
 
     def setup_commands(self, parser):
         """
@@ -190,7 +182,6 @@ class StoragePoolCommands():
         else:
             self.p_create_sp.print_help()
 
-
     def modify(self):
         pass
 
@@ -200,13 +191,12 @@ class StoragePoolCommands():
         sp = ex.StoragePool()
         sp.delete_storagepool(args.node, args.storagepool)
 
-
     @sd.record_exception
     def show(self, args):
         sp = ex.StoragePool()
         if args.nocolor:
             if args.storagepool:
-                sp.show_one_sp(args.storagepool,no_color='yes')
+                sp.show_one_sp(args.storagepool, no_color='yes')
             else:
                 sp.show_all_sp(no_color='yes')
 
@@ -215,7 +205,6 @@ class StoragePoolCommands():
                 sp.show_one_sp(args.storagepool)
             else:
                 sp.show_all_sp()
-
 
     def print_sp_help(self, *args):
         self.sp_parser.print_help()

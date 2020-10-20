@@ -15,34 +15,12 @@ import colorama as ca
 import inspect
 import consts
 import pprint
-import log
 
 
 def get_function_name():
     '''获取正在运行函数(或方法)名称'''
     return inspect.stack()[1][3]
 
-# Connect to the socket server and transfer data, and finally close the
-# connection.
-def send_via_socket(data):
-    ip = "10.203.1.76"
-    port = 12144
-
-    client = socket.socket()
-    client.connect((ip, port))
-
-    tid = client.recv(8192).decode()
-    print('CLI 接收到的东西：',tid)
-    logger = log.Log('username', tid)
-    # consts.set_glo_gui_tid(tid)
-    client.send(b'no tid')
-    client.recv(8192)
-    client.send(b'database')
-    client.recv(8192)
-    client.sendall(data)
-    client.recv(8192)
-    client.send(b'exit')
-    client.close()
 
 def record_exception(func):
     """
@@ -198,14 +176,15 @@ def change_pointer(new_id):
 def cmd_decorator(type):
     def decorate(func):
         @wraps(func)
-        def wrapper(cmd,func_name):
+        def wrapper(cmd):
             RPL = consts.glo_rpl()
             oprt_id = create_oprt_id()
+            func_name = traceback.extract_stack()[-2][2]  # 装饰器获取被调用函数的函数名
             if RPL == 'no':
                 logger = consts.glo_log()
                 logger.write_to_log('DATA', 'STR', func_name, '', oprt_id)
                 logger.write_to_log('OPRT', 'CMD', type, oprt_id, cmd)
-                result_cmd = func(cmd,func_name)
+                result_cmd = func(cmd)
                 logger.write_to_log('DATA', 'CMD', type, oprt_id, result_cmd)
                 return result_cmd
             else:
@@ -225,37 +204,15 @@ def cmd_decorator(type):
                 print(f"RE:{cmd_result['time']:<20} 系统命令结果：\n{result_output}")
                 if id_result['db_id']:
                     change_pointer(id_result['db_id'])
-            # else:
-            #     logdb = consts.glo_db()
-            #     id_result = logdb.get_id(consts.glo_tsc_id(), func_name)
-            #     if id_result['oprt_id']:
-            #         cmd_result = logdb.get_oprt_result(id_result['oprt_id'])
-            #         # try:
-            #         #     assert cmd_result['time'] != '' #断言有没有获取到data数据
-            #         #     print(f'断言是否取到时间{cmd_result["time"]}：成功 ')
-            #         # except AssertionError:
-            #         #     print(f'断言是否取到时间{cmd_result["time"]}：失败 ')
-            #     else:
-            #         cmd_result = {'time': '', 'result': ''}
-            #     if type != 'sys' and cmd_result['result']:
-            #         result = eval(cmd_result['result'])
-            #         result_output = result['rst']
-            #     else:
-            #         result = cmd_result['result']
-            #         result_output = cmd_result['result']
-            #     print(f"RE:{id_result['time']:<20} 执行系统命令：\n{cmd}")
-            #     print(f"RE:{cmd_result['time']:<20} 系统命令结果：\n{result_output}")
-            #     if id_result['db_id']:
-            #         change_pointer(id_result['db_id'])
-            consts.set_glo_rpldata({func_name:result})
             return result
         return wrapper
     return decorate
 
 
 @cmd_decorator('sys')
-def execute_cmd(cmd, func_name, timeout=60):
-    p = subprocess.Popen(cmd, stderr=subprocess.STDOUT, stdout=subprocess.PIPE, shell=True)
+def execute_cmd(cmd, timeout=60):
+    p = subprocess.Popen(cmd, stderr=subprocess.STDOUT,
+                         stdout=subprocess.PIPE, shell=True)
     t_beginning = time.time()
     seconds_passed = 0
     while True:
@@ -286,8 +243,6 @@ def prt(str, warning_level=0):
         time,cmd_output = db.get_cmd_output(consts.glo_tsc_id())
         if not time:
             time = ''
-
-        consts.set_glo_rpldata({'cmd_output':cmd_output})
         print(f'RE:{time:<20} 日志记录输出：{warning_str:<4}\n{cmd_output}')
         print(f'RE:{"":<20} 此次执行输出：{warning_str:<4}\n{str}')
 
@@ -299,18 +254,23 @@ def prt_log(str, warning_level):
     :param print_str: Strings to be printed and recorded
     """
     logger = consts.glo_log()
-    rpl = consts.glo_rpl()
-    if rpl == 'yes':
+    RPL = consts.glo_rpl()
+    if RPL == 'yes':
+        # pass
         prt(str, warning_level)
-    elif rpl == 'no':
+    elif RPL == 'no':
         prt(str, warning_level)
 
     if warning_level == 0:
-        logger.write_to_log('INFO', 'INFO', 'finish','output',str)
+        logger.write_to_log('INFO', 'INFO', 'finish', 'output', str)
     elif warning_level == 1:
         logger.write_to_log('INFO', 'WARNING', 'fail', 'output', str)
     elif warning_level == 2:
         logger.write_to_log('INFO', 'ERROR', 'exit', 'output', str)
+        if RPL == 'no':
+            sys.exit()
+        else:
+            raise consts.ReplayExit
 
 
 def color_data(func):
@@ -363,7 +323,6 @@ def json_operate_decorator(str):
                 print()
                 if id_result['db_id']:
                     change_pointer(id_result['db_id'])
-            consts.set_glo_rpldata({func.__name__:result})
             return result
         return wrapper
     return decorate
