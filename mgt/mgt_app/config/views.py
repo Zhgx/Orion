@@ -6,11 +6,11 @@ Created on 2020/3/2
 '''
 
 from flask import Flask,views
-from mgt_app.config import configblue
+from mgt_app.config import config_blueprint
 from mgt_app.config import model
 
-configblue.add_url_rule('/', view_func=model.Index.as_view('index'))
-configblue.add_url_rule('/iscsi/map', view_func=model.IscsiCreate.as_view('iSCSIcreate'))
+config_blueprint.add_url_rule('/', view_func=model.Index.as_view('index'))
+config_blueprint.add_url_rule('/iscsi/map', view_func=model.IscsiCreate.as_view('iSCSIcreate'))
 
 
 

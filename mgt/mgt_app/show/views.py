@@ -6,11 +6,11 @@ Created on 2020/3/2
 '''
 
 from flask import Flask,views
-from mgt_app.show import showblue
+from mgt_app.show import show_blueprint
 from mgt_app.show import model
 
-showblue.add_url_rule('/', view_func=model.Index.as_view('index'))
-showblue.add_url_rule('/stor/resource', view_func=model.Resource.as_view('Resource'))
+show_blueprint.add_url_rule('/', view_func=model.Index.as_view('index'))
+show_blueprint.add_url_rule('/stor/resource', view_func=model.Resource.as_view('Resource'))
 
 
 
