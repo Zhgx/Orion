@@ -8,6 +8,6 @@ Created on 2020/3/2
 
 from flask import Flask,Blueprint
 
-configblue = Blueprint("configblue", __name__)
+showblue = Blueprint("showblue", __name__,template_folder='templates')
 
-from flask_mgt.config import views
+from mgt_app.show import views
