@@ -10,7 +10,7 @@ class LVM():
 
     def get_vg(self):
         cmd = 'vgs'
-        result = s.execute_cmd(cmd,s.get_function_name())
+        result = s.execute_cmd(cmd)
         if result:
             return result
         else:
@@ -18,14 +18,14 @@ class LVM():
 
     def get_thinlv(self):
         cmd = 'lvs'
-        result = s.execute_cmd(cmd,s.get_function_name())
+        result = s.execute_cmd(cmd)
         if result:
             return result
         else:
             s.handle_exception()
 
     def refine_thinlv(self):
-        all_lv = self.data_vg.splitlines()
+        all_lv = self.data_lv.splitlines()
         list_thinlv = []
         re_ = '\s*(\S*)\s*(\S*)\s*\S*\s*(\S*)\s*\S*\s*\S*\s*\S*\s*?'
         for one in all_lv:
@@ -35,7 +35,7 @@ class LVM():
         return list_thinlv
 
     def refine_vg(self):
-        all_vg = self.data_lv.splitlines()
+        all_vg = self.data_vg.splitlines()
         list_vg = []
         re_ = '\s*(\S*)\s*\S*\s*\S*\s*\S*\s*\S*\s*(\S*)\s*(\S*)\s*?'
         for one in all_vg[1:]:
@@ -48,7 +48,15 @@ class LVM():
             return True
 
     def is_thinlv_exists(self,thinlv):
-        all_lv_list = self.data_lv.splitlines()[1:]
-        for one in all_lv_list:
-            if 'twi' and thinlv in one:
-                return True
+        """
+        参数thinlv的正常格式：vg_name/thinlv_name
+        判断传入的thinlv，跟系统存在的thinlv信息是否能够匹配，thinlv和vg都要一一对应
+        :param thinlv:
+        :return:
+        """
+        all_tlv_list = self.refine_thinlv()
+        if '/' in thinlv:
+            vg, thinlv = thinlv.split('/')
+            for one in all_tlv_list:
+                if thinlv ==one[0] and vg == one[1]:
+                    return True

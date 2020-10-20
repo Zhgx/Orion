@@ -179,7 +179,6 @@ class VtelCLI(object):
                 dict_cmd = dict_input[int(answer)-1]
                 self.replay_one(dict_cmd)
                 consts.set_glo_log_id(0)
-
             elif answer == 'all':
                 for dict_cmd in dict_input:
                     self.replay_one(dict_cmd)
@@ -190,7 +189,8 @@ class VtelCLI(object):
     def replay(self,args):
         consts.set_glo_log_switch('no')
         consts.set_glo_rpl('yes')
-        obj_logdb = logdb.prepare_db()
+        logdb.prepare_db()
+        obj_logdb = consts.glo_db()
         if args.transactionid and args.date:
             print('Please specify only one type of data for replay')
             return
@@ -205,7 +205,6 @@ class VtelCLI(object):
         else:
             dict_cmd = obj_logdb.get_all_transaction()
             self.replay_more(dict_cmd)
-
         return dict_cmd
 
 
@@ -213,13 +212,11 @@ class VtelCLI(object):
         args = self._parser.parse_args()
         path = sundry.get_path()
         cmd = ' '.join(sys.argv[1:])
-
         if args.subargs_vtel:
             if args.subargs_vtel not in ['re', 'replay']:
                 self.logger.write_to_log('DATA', 'INPUT', 'cmd_input', path, {'valid': '0', 'cmd': cmd})
         else:
             self.logger.write_to_log('DATA','INPUT','cmd_input', path, {'valid':'0','cmd':cmd})
-
         args.func(args)
 
 

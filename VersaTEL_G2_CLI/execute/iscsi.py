@@ -7,7 +7,7 @@ from execute.crm import CRMData,CRMConfig
 
 class Disk():
     def __init__(self):
-        self.js = iscsi_json.JSON_OPERATION()
+        self.js = iscsi_json.JsonOperation()
 
     def get_all_disk(self):
         linstor = Linstor()
@@ -43,7 +43,7 @@ class Disk():
 
 class Host():
     def __init__(self):
-        self.js = iscsi_json.JSON_OPERATION()
+        self.js = iscsi_json.JsonOperation()
 
     def create_host(self, host, iqn):
         if self.js.check_key('Host', host)['result']:
@@ -79,7 +79,7 @@ class Host():
                     "Fail! The host in ... hostgroup.Please delete the hostgroup first",1)
             else:
                 self.js.delete_data('Host', host)
-                s.prt_log("Dexlete success!",0)
+                s.prt_log("Delete success!",0)
                 return True
         else:
             s.prt_log(f"Fail! Can't find {host}",1)
@@ -90,7 +90,7 @@ class Host():
 
 class DiskGroup():
     def __init__(self):
-        self.js = iscsi_json.JSON_OPERATION()
+        self.js = iscsi_json.JsonOperation()
 
     def create_diskgroup(self, diskgroup, disk):
         if self.js.check_key('DiskGroup', diskgroup)['result']:
@@ -142,7 +142,7 @@ class DiskGroup():
 
 class HostGroup():
     def __init__(self):
-        self.js = iscsi_json.JSON_OPERATION()
+        self.js = iscsi_json.JsonOperation()
 
     def create_hostgroup(self, hostgroup, host):
         if self.js.check_key('HostGroup', hostgroup)['result']:
@@ -194,7 +194,7 @@ class HostGroup():
 
 class Map():
     def __init__(self):
-        self.js = iscsi_json.JSON_OPERATION()
+        self.js = iscsi_json.JsonOperation()
 
 
     def pre_check_create_map(self, map, hg, dg):
@@ -223,7 +223,7 @@ class Map():
         # 获取target
         crm_data = CRMData()
         if crm_data.update_crm_conf():
-            js = iscsi_json.JSON_OPERATION()
+            js = iscsi_json.JsonOperation()
             crm_data_dict = js.get_data('crm')
             if crm_data_dict['target']:
                 # 目前的设计只有一个target，所以取列表的第一个
@@ -233,8 +233,8 @@ class Map():
             else:
                 s.prt_log('没有target，创建map失败', 2)
 
-    def get_drbd_data(self, dg):
-        # 根据dg去收集drbdd的三项数据：resource name，minor number，device name
+    def get_drbd_list(self, dg):
+        # 根据dg去收集drbd的三项数据：resource name，minor number，device name
         disk_all = self.js.get_data('DiskGroup').get(dg)
         linstor = Linstor()
         linstorlv = linstor.get_linstor_data('linstor --no-color --no-utf8 r lv')
@@ -243,6 +243,8 @@ class Map():
             for disk_one in disk_all:
                 if disk_one in res:
                     drdb_list.append([res[1], res[4], res[5]])  # 取Resource,MinorNr,DeviceName
+
+        print('收集到的drdb_list:',drdb_list)
         return drdb_list
 
     def create_map(self, map,hg, dg):
@@ -253,7 +255,9 @@ class Map():
         obj_crm = CRMConfig()
         initiator = self.get_initiator(hg)
         target_name, target_iqn = self.get_target()
-        drdb_list = self.get_drbd_data(dg)
+        drdb_list = self.get_drbd_list(dg)
+
+        list_target_created = []
 
         # 执行创建和启动
         for i in drdb_list:
@@ -265,11 +269,14 @@ class Map():
                 if c and o:
                     s.prt_log(f'create colocation and order success:{res}',0)
                     obj_crm.start_res(res)
+                    list_target_created.append(i[0])
                 else:
                     s.prt_log("create colocation and order fail",1)
                     return False
             else:
-                s.prt_log('Failde to create resource!',1)
+                for res in list_target_created:
+                    obj_crm.delete_crm_res(res)
+                s.prt_log('Failed to create resource!',1)
                 return False
 
         self.js.add_data('Map', map, [hg, dg])
@@ -283,8 +290,7 @@ class Map():
         dict_hg = {}
         dict_dg = {}
         if not self.js.check_key('Map', map)['result']:
-            s.prt_log('No map data',1)
-            return
+            s.prt_log('No map data',2)
 
         hg,dg = self.js.get_data('Map').get(map)
         host = self.js.get_data('HostGroup').get(hg)
