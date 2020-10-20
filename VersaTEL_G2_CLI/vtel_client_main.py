@@ -74,8 +74,6 @@ class VtelCLI(object):
         """
         Set parser vtel sub-parser
         """
-        #parser.add_argument('--version','-v',action='version',version='%(prog)s ' + VERSION + '; ')
-
 
         subp = parser.add_subparsers(metavar='',
                                      dest='subargs_vtel')
