@@ -20,8 +20,8 @@ $("#host_create").click(function() {
 			host_name : hostName,
 			host_iqn : hostiqn
 		},
-		success : function(data) {
-			alert(data);
+		success : function(Successful_feedback) {
+			alert(Successful_feedback);
 			$('#host').selectpicker({
 				width : 200
 			});
@@ -53,8 +53,8 @@ $("#host_group_create").click(function() {
 			host_group_name : host_group_name,
 			host : host
 		},
-		success : function(data) {
-			alert(data);
+		success : function(operation_feedback_prompt) {
+			alert(operation_feedback_prompt);
 			$('#host_group').selectpicker({
 				width : 200
 			});
@@ -87,9 +87,9 @@ $("#disk_group_create").click(function() {
 			disk_group_name : disk_group_name,
 			disk : disk
 		},
-		success : function(data) {
+		success : function(operation_feedback_prompt) {
 
-			alert(data);
+			alert(operation_feedback_prompt);
 			$('#disk_group').selectpicker({
 				width : 200
 			});
@@ -121,8 +121,8 @@ $("#map_create").click(function() {
 			disk_group : disk_group,
 			host_group : host_group
 		},
-		success : function(data) {
-			alert(data);
+		success : function(operation_feedback_prompt) {
+			alert(operation_feedback_prompt);
 		},
 		error : function() {
 		}
@@ -271,7 +271,7 @@ function all_dg_result_select() {
 		data : {
 			transaction_id:time
 		},
-		success : function(data) {
+		success : function() {
 			$.ajax({
 				url : masterIp + "/dg/show/data",
 				type : "get",
