@@ -4,11 +4,10 @@
 <meta charset="UTF-8">
 <title>Create</title>
 
-
-<link href="/static/bootstrap-3.3.7/dist/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
-<link href="/static/bootstrap-select-1.12.4/dist/css/bootstrap-select.min.css" rel="stylesheet" type="text/css" />
-<link href="/static/personal/css/style.css" rel="stylesheet" type="text/css">
-<script type="text/javascript" src="/static/personal/js/iSCSI-input-inspection.js"></script>
+<link href="{{url_for('static',filename='bootstrap-3.3.7/dist/css/bootstrap.min.css')}}" rel="stylesheet" type="text/css" />
+<link href="{{url_for('static',filename='bootstrap-select-1.12.4/dist/css/bootstrap-select.min.css')}}" rel="stylesheet" type="text/css" />
+<link href="{{url_for('static',filename='personal/css/style.css')}}" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="{{url_for('static',filename='personal/js/iSCSI-input-inspection.js')}}"></script>
 <style type="text/css">
 body {
 	padding: 10px;
@@ -54,7 +53,7 @@ body {
 					</div>
 				</div>
 			</div>
-			<script type="text/javascript" src="/static/personal/js/jquery.min.js"></script>
+			<script type="text/javascript" src="{{url_for('static',filename='personal/js/jquery.min.js')}}"></script>
 			<!-- ------------------------ -->
 			<div class="col-md-12 column">
 				<div class="page-header">
@@ -205,11 +204,12 @@ body {
 			<!-- /.modal -->
 		</div>
 	</div>
-	<script type="text/javascript" src="/static/personal/js/JQuery.js"></script>
-	<script type="text/javascript" src="/static/bootstrap-3.3.7/dist/js/bootstrap.js"></script>
-	<script type="text/javascript" src="/static/bootstrap-select-1.12.4/dist/js/bootstrap-select.js"></script>
-	<script type="text/javascript" src="/static/personal/js/iSCSI-Confirm-update-box.js"></script>
-	<script type="text/javascript" src="/static/layui/layui.all.js"></script>
+	<script type="text/javascript" src="{{url_for('static',filename='personal/js/JQuery.js')}}"></script>
+	<script type="text/javascript" src="{{url_for('static',filename='bootstrap-3.3.7/dist/js/bootstrap.js')}}"></script>
+	<script type="text/javascript" src="{{url_for('static',filename='bootstrap-select-1.12.4/dist/js/bootstrap-select.js')}}"></script>
+	<script type="text/javascript" src="{{url_for('static',filename='personal/js/iSCSI-Confirm-update-box.js')}}"></script>
+	<script type="text/javascript" src="{{url_for('static',filename='layui/layui.all.js')}}"></script>
+	
 	<script type="text/javascript">
 $("#newcreate").click(function(){
  	$("input[type=text]").val('');
