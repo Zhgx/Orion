@@ -4,9 +4,9 @@ import sqlite3
 import consts
 
 
-# LOG_PATH = '/var/log/vtel/Orion_CLI.log'
-LOG_PATH = "./VersaTEL_CLI.log"
-LOG_FILE_NAME = 'VersalTEL_CLI.log'
+# LOG_PATH = '/var/log/vtel/'
+LOG_PATH = "./"
+LOG_FILE_NAME = 'cli.log'
 
 def prepare_db():
     db = LogDB()
@@ -32,7 +32,7 @@ def _fill_db_with_log():
 
 def _read_log_files():
     all_data = ''
-    if not isFileExists(LOG_PATH):
+    if not isFileExists(LOG_PATH+LOG_FILE_NAME):
         print('no log file')
         return
     for file in _get_log_files(LOG_FILE_NAME):
@@ -45,7 +45,7 @@ def _read_log_files():
 
 def _get_log_files(base_log_file):
     list_file = []
-    all_file = (os.listdir('.'))
+    all_file = (os.listdir(LOG_PATH))
     for file in all_file:
         if base_log_file in file:
             list_file.append(file)

@@ -66,6 +66,9 @@ class HostCommands():
     @sd.deco_record_exception
     def create(self, args):
         host = ex.Host()
+        # 判断iqn是否符合格式
+        if not sd.re_findall(r'^iqn\.\d{4}-\d{2}\.[a-zA-Z0-9.:-]+',args.iqn):
+            sd.prt_log(f"The format of IQN is wrong. Please confirm and fill in again.",2)
         host.create_host(args.host, args.iqn)
 
     @sd.deco_record_exception

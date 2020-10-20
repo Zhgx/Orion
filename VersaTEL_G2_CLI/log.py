@@ -10,8 +10,8 @@ import sundry
 
 LOG_PATH = './'
 # LOG_PATH = '/var/log/vtel/'
-CLI_LOG_NAME = 'VersaTEL_CLI.log'
-WEB_LOG_NAME = 'VersaTEL_WEB.log'
+CLI_LOG_NAME = 'cli.log'
+WEB_LOG_NAME = 'web.log'
 
 
 class MyLoggerAdapter(logging.LoggerAdapter):

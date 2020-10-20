@@ -46,9 +46,6 @@ class Host():
         self.js = iscsi_json.JsonOperation()
 
     def create_host(self, host, iqn):
-        # 判断iqn是否符合格式
-        if not s.re_findall(r'^iqn.\d{4}-\d{2}.[a-zA-Z0-9.:-]+',iqn):
-            s.prt_log(f"The format of IQN is wrong. Please confirm and fill in again.",2)
         if self.js.check_key('Host', host)['result']:
             s.prt_log(f"Fail! The Host {host} already existed.",1)
         else:
@@ -82,7 +79,7 @@ class Host():
                     "Fail! The host in ... hostgroup.Please delete the hostgroup first",1)
             else:
                 self.js.delete_data('Host', host)
-                s.prt_log("Dexlete success!",0)
+                s.prt_log("Delete success!",0)
                 return True
         else:
             s.prt_log(f"Fail! Can't find {host}",1)
@@ -264,7 +261,6 @@ class Map():
 
         # 执行创建和启动
         for i in drdb_list:
-            # 多个disk进行创建时，第二个失败，应该对第一个进行删除
             res, minor_nr, path = i
             lunid = minor_nr[-2:]  # lun id 取自MinorNr的后两位数字
             if obj_crm.create_crm_res(res, target_iqn, lunid, path, initiator):
