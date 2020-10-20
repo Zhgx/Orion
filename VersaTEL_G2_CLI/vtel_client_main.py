@@ -52,7 +52,7 @@ class VtelCLI(object):
     Vtel command line client
     """
     def __init__(self):
-        consts._init()
+        consts.init()
         self.username = sundry.get_username()
         self.transaction_id = sundry.create_transaction_id()
         self.logger = log.Log(self.username,self.transaction_id)
