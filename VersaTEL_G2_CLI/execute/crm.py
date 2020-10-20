@@ -105,7 +105,7 @@ class CRMConfig():
             f'meta target-role=Stopped'
         result = execute_crm_cmd(cmd)
         if result['sts']:
-            s.prt_log("Create iSCSILogicalUnit success",0)
+            s.prt_log("create iSCSILogicalUnit success",0)
             return True
 
     # 获取res的状态
@@ -115,6 +115,27 @@ class CRMConfig():
         for s in resource_data:
             if s[0] == res:
                 return s[-1]
+
+    # 通过 crm st 获取resource状态
+    def get_res_status_fromst(self, res):
+        cmd = f'crm res list | grep {res}'
+        result = execute_crm_cmd(cmd)
+        if 'Started' in result['rst']:
+            return True
+        else:
+            return False
+
+    # 多次通过 crm st 检查resource状态，状态为started时返回True，检查5次都为stopped 则返回None
+    def checkout_status_fromst(self, res):
+        n = 0
+        while n < 5:
+            n += 1
+            if self.get_res_status_fromst(res):
+                s.prt_log(f'the resource {res} is Started', 0)
+                return True
+            else:
+                time.sleep(1)
+        s.prt_log(f'the resource {res} is Stopped', 1)
 
     # 停用res
     def stop_res(self, res):
@@ -177,6 +198,7 @@ class CRMConfig():
             return True
 
     def start_res(self, res):
+        s.prt_log(f"try to start {res}", 0)
         cmd = f'crm res start {res}'
         result = execute_crm_cmd(cmd)
         if result['sts']:

@@ -1,6 +1,6 @@
 {
     "Host": {
-        "host_test1": "iqn.zane.test:1111"
+        "h1": "iqn.2020-04.feixitek.com:pytest01"
     },
     "Disk": {
         "res_a": "/dev/drbd1000",
@@ -10,8 +10,8 @@
         "thinlv_test": "/dev/drbd1004"
     },
     "HostGroup": {
-        "hg_test1": [
-            "host_test1"
+        "hg1": [
+            "h1"
         ]
     },
     "DiskGroup": {
@@ -27,12 +27,11 @@
         ],
         "dg2": [
             "res_c"
+        ],
+        "dg3": [
+            "res_b",
+            "res_c"
         ]
     },
-    "Map": {
-        "map1": [
-            "hg_test1",
-            "dg1"
-        ]
-    }
+    "Map": {}
 }

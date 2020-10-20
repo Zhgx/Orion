@@ -265,6 +265,7 @@ class Map():
                 if c and o:
                     s.prt_log(f'create colocation and order success:{res}',0)
                     obj_crm.start_res(res)
+                    obj_crm.checkout_status_fromst(res)
                 else:
                     s.prt_log("create colocation and order fail",1)
                     return False
@@ -273,7 +274,6 @@ class Map():
                 return False
 
         self.js.add_data('Map', map, [hg, dg])
-        s.prt_log('Create success!', 0)
         return True
 
     def get_all_map(self):
@@ -335,7 +335,7 @@ class Map():
         crm_config_statu = crm_data.crm_conf_data
         dg = self.js.get_data('Map').get(map)[1]
         resname = self.js.get_data('DiskGroup').get(dg)
-
+        # bug:如果resource为false状态，会无法删除
         if 'ERROR' in crm_config_statu:
             s.prt_log("Could not perform requested operations, are you root?",1)
         else:
