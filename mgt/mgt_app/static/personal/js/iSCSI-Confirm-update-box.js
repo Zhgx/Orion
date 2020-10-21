@@ -12,6 +12,7 @@ $("#host_create").click(function() {
 	time = time.substr(0, 10);
 	var hostName = $("#host_name").val()
 	var hostiqn = $("#host_iqn").val()
+
 	$.ajax({
 		url : masterIp + "/host/create",
 		type : "GET",

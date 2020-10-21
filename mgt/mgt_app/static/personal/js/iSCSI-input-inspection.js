@@ -19,8 +19,15 @@ function host_name_myfunction() {
 		document.getElementById("host_name_format").className = "hidden";
 	} else {
 		if (!match_result) {
+			$("#host_name_hid").val("0");
+			document.getElementById("host_create").disabled = true; 
 			document.getElementById("host_name_format").className = "";
 		} else {
+			$("#host_name_hid").val("1");
+			var host_iqn_hid_val = $("#host_iqn_hid").val();
+			if (host_iqn_hid_val = "1") {
+				document.getElementById("host_create").disabled = false; 
+			}
 			document.getElementById("host_name_format").className = "hidden";
 			$
 					.ajax({
@@ -144,6 +151,13 @@ function iqn_myfunction() {
 	} else {
 		if (!match_result) {
 			document.getElementById("iqn_format").className = "";
+		}else {
+			var host_name_hid_val= $("#host_name_hid").val();
+			alert(host_name_hid_val);
+			if (host_name_hid_val = "1") {
+				document.getElementById("host_create").disabled = false; 
+			}
+			
 		}
 	}
 }

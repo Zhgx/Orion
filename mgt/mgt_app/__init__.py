@@ -15,6 +15,6 @@ def create_app():
     # 将蓝图注册到app
     from mgt_app.show import show_blueprint
     from mgt_app.config import config_blueprint
-    app.register_blueprint(show_blueprint,url_prefix="/show")
-    app.register_blueprint(config_blueprint,url_prefix="/create")
+    app.register_blueprint(show_blueprint)
+    app.register_blueprint(config_blueprint)
     return app
