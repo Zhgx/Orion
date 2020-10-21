@@ -9,27 +9,116 @@ import log
 import sys
 
 
+queries = {
+    'SELECT': 'SELECT %s FROM %s WHERE %s',
+    'SELECT_ALL': 'SELECT %s FROM %s',
+    'SELECT_COUNT': 'SELECT COUNT(%s) FROM %s WHERE %s',
+    'INSERT': 'INSERT INTO %s VALUES(%s)',
+    'UPDATE': 'UPDATE %s SET %s WHERE %s',
+    'DELETE': 'DELETE FROM %s where %s',
+    'DELETE_ALL': 'DELETE FROM %s',
+    'CREATE_TABLE': 'CREATE TABLE IF NOT EXISTS %s(%s)',
+    'DROP_TABLE': 'DROP TABLE if exists %s'}
 
-class LINSTORDB(object):
+class Database():
 
+    def __init__(self, data_file):
+        self.db = sqlite3.connect(data_file, check_same_thread=False)
+        self.data_file = data_file
+
+    def free(self, cursor):
+        cursor.close()
+
+    # def write(self, query, values=None):
+    #     cursor = self.db.cursor()
+    #     if values is not None:
+    #         cursor.execute(query, list(values))
+    #     else:
+    #         cursor.execute(query)
+    #     self.db.commit()
+    #     return cursor
+
+    def read(self, query, values=None):
+        cursor = self.db.cursor()
+        if values is not None:
+            cursor.execute(query, list(values))
+        else:
+            cursor.execute(query)
+        return cursor
+
+
+    def fet_all(self,cursor):
+        return cursor.fetchall()
+
+    def fet_one(self,cursor):
+        return cursor.fetchone()
+
+
+    def select(self, tables, *args, **kwargs):
+        vals = ','.join([l for l in args])
+        locs = ','.join(tables)
+        conds = ' and '.join(['%s=?' % k for k in kwargs])
+        subs = [kwargs[k] for k in kwargs]
+        query = queries['SELECT'] % (vals, locs, conds)
+        return self.read(query,subs)
+
+    def select_all(self, tables, *args):
+        vals = ','.join([l for l in args])
+        locs = ','.join(tables)
+        query = queries['SELECT_ALL'] % (vals, locs)
+        return self.read(query)
+
+    def select_count(self,tables,*args,**kwargs):
+        vals = ','.join([l for l in args])
+        locs = ','.join(tables)
+        conds = ' and '.join(['%s=?' % k for k in kwargs])
+        subs = [kwargs[k] for k in kwargs]
+        query = queries['SELECT_COUNT'] % (vals, locs, conds)
+        cursor = self.read(query, subs)
+        return cursor.fetchone()[0]
+
+
+    # def insert(self, table_name, *args):
+    #     values = ','.join(['?' for l in args])
+    #     query = queries['INSERT'] % (table_name, values)
+    #     return self.write(query, args)
+
+    # def update(self, table_name, set_args, **kwargs):
+    #     updates = ','.join(['%s=?' % k for k in set_args])
+    #     conds = ' and '.join(['%s=?' % k for k in kwargs])
+    #     vals = [set_args[k] for k in set_args]
+    #     subs = [kwargs[k] for k in kwargs]
+    #     query = queries['UPDATE'] % (table_name, updates, conds)
+    #     return self.write(query, vals + subs)
+    #
+    # def delete(self, table_name, **kwargs):
+    #     conds = ' and '.join(['%s=?' % k for k in kwargs])
+    #     subs = [kwargs[k] for k in kwargs]
+    #     query = queries['DELETE'] % (table_name, conds)
+    #     return self.write(query, subs)
+    #
+    # def delete_all(self, table_name):
+    #     query = queries['DELETE_ALL'] % table_name
+    #     return self.write(query)
+    #
+    #
+    # def drop_table(self, table_name):
+    #     query = queries['DROP_TABLE'] % table_name
+    #     self.free(self.write(query))
+
+
+    def disconnect(self):
+        self.db.close()
+
+
+
+
+class Process_data():
     def __init__(self):
-        # 先这样
-#         consts._init()
-#         username = sundry.get_username()
-#         transaction_id = tid
-#         logger = log.Log(username, transaction_id)
-#         consts.set_glo_log(logger)
         db = linstordb.LinstorDB()
-
         # 生成数据库
         db.build_table()
         self.cur = db.cur
-
-
-class Process_data(LINSTORDB):
-
-    def __init__(self):
-        LINSTORDB.__init__(self)
 
     # 获取表单行数据的通用方法
     def sql_fetch_one(self, sql):
@@ -50,7 +139,6 @@ class Process_data(LINSTORDB):
 
     # 选项node数据
     def get_option_node(self):
-
         def get_online_node():
             select_sql = "SELECT Node FROM nodetb WHERE State = 'Online'"
             return self.sql_fetch_all(select_sql)
@@ -107,6 +195,8 @@ class Process_data(LINSTORDB):
         dict_all = {"lvm": list_vg, "thin_lvm": list_thinlv}
         return dict_all
 
+
+
     # 选项node num数据
     def get_option_nodenum(self,):
 
@@ -136,37 +226,7 @@ class Process_data(LINSTORDB):
         node_num = self.sql_fetch_one(sql_count_node)
 
         # 通用的select
-
-        # def _count_node():
-        #     select_sql = "select count(Node) from nodetb"
-        #     cur.execute(select_sql)
-        #     date_set = cur.fetchone()
-        #     return list(date_set)
-        #
-        # def _select_nodetb(n):
-        #     select_sql = "select Node,NodeType,Addresses,State from nodetb where id = ?"  # sql语言：进行查询操作
-        #     cur.execute(select_sql, str(n))
-        #     date_set = cur.fetchone()
-        #     return list(date_set)
-        #
-        # def _select_res_num(n):
-        #     select_sql = "SELECT COUNT(Resource) FROM resourcetb WHERE Node IN (SELECT Node FROM nodetb WHERE id = ?)"
-        #     cur.execute(select_sql, str(n))
-        #     date_set = cur.fetchone()
-        #     return list(date_set)
-        #
-        # def _select_stp_num(n):
-        #     select_sql = "SELECT COUNT(Node) FROM storagepooltb WHERE Node IN (SELECT Node FROM nodetb WHERE id = ?)"
-        #     cur.execute(select_sql, str(n))
-        #     date_set = cur.fetchone()
-        #     return list(date_set)
-        #
-        # def _select_resourcetb(n):
-        #     select_sql = "SELECT Resource,StoragePool,Allocated,DeviceName,InUse,State FROM resourcetb WHERE Node IN ((SELECT Node FROM nodetb WHERE id = ?))"
-        #     cur.execute(select_sql, (str(n)))
-        #     date_set = cur.fetchall()
-        #     return list(date_set)
-        for i in range(1, (node_num + 1)):  # 从1开始循环到给定的整数，有没有更好的办法
+        for i in range(1, (node_num + 1)):
             node, nodetype, addr, status = self.sql_fetch_one(sql_node(i))
             res_num = self.sql_fetch_one(sql_count_res(i))
             stp_num = self.sql_fetch_one(sql_count_stp(i))
@@ -187,7 +247,7 @@ class Process_data(LINSTORDB):
                      "status": status,
                      "res_num_son": list_resdict}
             date.append(date_)
-        dict = {"code": 0, "msg": "", "count": 1000, "data": date}
+        dict = {"data": date}
         cur.close()
         return dict
 
@@ -232,10 +292,8 @@ class Process_data(LINSTORDB):
                             "used": used,
                             "mirror_way_son": list_resdict}
                 date.append(date_one)
-        dict = {"code": 0, "msg": "", "count": 1000, "data": date}
+        dict = {"data": date}
         cur.close()
-        logger = consts.glo_log()
-        logger.write_to_log('type1','type2','describe1','describe2','data')
         return dict
 
     # storage pool表格格式
@@ -271,6 +329,12 @@ class Process_data(LINSTORDB):
                      "status": stp_status,
                      "res_name_son": list_resdict}
             date.append(date_)
-        dict = {"code": 0, "msg": "", "count": 1000, "data": date}
+        dict = {"data": date}
         cur.close()
         return dict
+
+
+
+pc = Process_data()
+pc.process_data_node()
+pc.process_data_stp()

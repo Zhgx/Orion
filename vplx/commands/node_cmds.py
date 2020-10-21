@@ -5,6 +5,7 @@ import execute as ex
 import consts
 from consts import ExitCode
 
+
 class usage():
     # node部分使用手册
     node = '''
@@ -68,7 +69,6 @@ class NodeCommands():
             action='store',
             help='node type: {Controller,Auxiliary,Combined,Satellite}',
             required=True)
-        # add a parameter to interact with the GUI
 
         p_create_node.set_defaults(func=self.create)
 
@@ -125,7 +125,7 @@ class NodeCommands():
 
         node_parser.set_defaults(func=self.print_node_help)
 
-    @sd.record_exception
+    @sd.deco_record_exception
     def create(self, args):
         node = ex.Node()
         if args.node and args.nodetype and args.ip:
@@ -135,19 +135,18 @@ class NodeCommands():
             self.p_create_node.print_help()
             return ExitCode.ARGPARSE_ERROR
 
-
-    @sd.record_exception
-    @sd.comfirm_del('node')
+    @sd.deco_record_exception
+    @sd.deco_comfirm_del('node')
     def delete(self, args):
         node = ex.Node()
         node.delete_node(args.node)
 
-    @sd.record_exception
+    @sd.deco_record_exception
     def show(self, args):
         node = ex.Node()
         if args.nocolor:
             if args.node:
-                node.show_one_node(args.node,no_color='yes')
+                node.show_one_node(args.node, no_color='yes')
                 return ExitCode.OK
             else:
                 node.show_all_node(no_color='yes')
@@ -159,7 +158,6 @@ class NodeCommands():
             else:
                 node.show_all_node()
                 return ExitCode.OK
-
 
     def print_node_help(self, *args):
         self.node_parser.print_help()

@@ -77,12 +77,12 @@ class DiskGroupCommands():
 
         dg_parser.set_defaults(func=self.print_dg_help)
 
-    @sd.record_exception
+    @sd.deco_record_exception
     def create(self, args):
         diskgroup = ex.DiskGroup()
         diskgroup.create_diskgroup(args.diskgroup, args.disk)
 
-    @sd.record_exception
+    @sd.deco_record_exception
     def show(self, args):
         diskgroup = ex.DiskGroup()
         if args.diskgroup == 'all' or args.diskgroup is None:
@@ -90,7 +90,7 @@ class DiskGroupCommands():
         else:
             diskgroup.show_spe_diskgroup(args.diskgroup)
 
-    @sd.record_exception
+    @sd.deco_record_exception
     def delete(self, args):
         diskgroup = ex.DiskGroup()
         diskgroup.delete_diskgroup(args.diskgroup)

@@ -80,12 +80,12 @@ class HostGroupCommands():
 
         hg_parser.set_defaults(func=self.print_hg_help)
 
-    @sd.record_exception
+    @sd.deco_record_exception
     def create(self, args):
         hostgroup = ex.HostGroup()
         hostgroup.create_hostgroup(args.hostgroup, args.host)
 
-    @sd.record_exception
+    @sd.deco_record_exception
     def show(self, args):
         hostgroup = ex.HostGroup()
         if args.hostgroup == 'all' or args.hostgroup is None:
@@ -93,7 +93,7 @@ class HostGroupCommands():
         else:
             hostgroup.show_spe_hostgroup(args.hostgroup)
 
-    @sd.record_exception
+    @sd.deco_record_exception
     def delete(self, args):
         hostgroup = ex.HostGroup()
         hostgroup.delete_hostgroup(args.hostgroup)

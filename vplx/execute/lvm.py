@@ -1,54 +1,48 @@
 # coding=utf-8
+import re
 import consts
 import sundry as s
 import sys
 
-class LVM():
+
+
+class Linstor():
     def __init__(self):
-        self.data_vg = self.get_vg()
-        self.data_lv = self.get_thinlv()
+        self.logger = consts.glo_log()
 
-    def get_vg(self):
-        cmd = 'vgs'
-        result = s.execute_cmd(cmd,s.get_function_name())
-        if result:
-            return result
-        else:
-            s.handle_exception()
+    def refine_linstor(self,data):
+        reSeparate = re.compile(r'(.*?\s\|)')
+        list_table = data.split('\n')
+        list_data_all = []
 
-    def get_thinlv(self):
-        cmd = 'lvs'
-        result = s.execute_cmd(cmd,s.get_function_name())
-        if result:
-            return result
-        else:
-            s.handle_exception()
+        oprt_id = s.create_oprt_id()
+        self.logger.write_to_log('DATA','STR','refine_linstor','',oprt_id)
+        self.logger.write_to_log('OPRT','REGULAR','findall',oprt_id,{'re':reSeparate})
 
-    def refine_thinlv(self):
-        all_lv = self.data_vg.splitlines()
-        list_thinlv = []
-        re_ = '\s*(\S*)\s*(\S*)\s*\S*\s*(\S*)\s*\S*\s*\S*\s*\S*\s*?'
-        for one in all_lv:
-            if 'twi' in one:
-                thinlv_one = s.re_findall(re_,one)
-                list_thinlv.append(list(thinlv_one[0]))
-        return list_thinlv
+        def _clear_symbol(list_data):
+            for i in range(len(list_data)):
+                list_data[i] = list_data[i].replace(' ', '')
+                list_data[i] = list_data[i].replace('|', '')
 
-    def refine_vg(self):
-        all_vg = self.data_lv.splitlines()
-        list_vg = []
-        re_ = '\s*(\S*)\s*\S*\s*\S*\s*\S*\s*\S*\s*(\S*)\s*(\S*)\s*?'
-        for one in all_vg[1:]:
-            vg_one = s.re_findall(re_,one)
-            list_vg.append(list(vg_one[0]))
-        return list_vg
+        for i in range(len(list_table)):
+            if list_table[i].startswith('|') and '=' not in list_table[i]:
+                valid_data = reSeparate.findall(list_table[i])
+                _clear_symbol(valid_data)
+                list_data_all.append(valid_data)
 
-    def is_vg_exists(self,vg):
-        if vg in self.data_vg:
-            return True
+        try:
+            list_data_all.pop(0)
+        except IndexError:
+            s.prt_log('The data cannot be read, please check whether LINSTOR is normal.',2)
+            sys.exit()
+        if list_data_all:
+            if not list_data_all[0]:
+                s.prt_log('正则匹配出错,程序退出',2)
+                sys.exit()
 
-    def is_thinlv_exists(self,thinlv):
-        all_lv_list = self.data_lv.splitlines()[1:]
-        for one in all_lv_list:
-            if 'twi' and thinlv in one:
-                return True
+        self.logger.write_to_log('DATA', 'REGULAR', 'findall', oprt_id, list_data_all)
+        return list_data_all
+
+    def get_linstor_data(self,cmd):
+        cmd_result = s.execute_cmd(cmd)
+        return self.refine_linstor(cmd_result)

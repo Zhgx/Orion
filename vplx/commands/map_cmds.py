@@ -20,7 +20,6 @@ class MapCommands():
         map_subp = map_parser.add_subparsers(dest='map')
         self.map_parser = map_parser
 
-
         """
         Create map
         """
@@ -69,12 +68,12 @@ class MapCommands():
 
         map_parser.set_defaults(func=self.print_map_help)
 
-    @sd.record_exception
+    @sd.deco_record_exception
     def create(self, args):
         map = ex.Map()
         map.create_map(args.map, args.hg, args.dg)
 
-    @sd.record_exception
+    @sd.deco_record_exception
     def show(self, args):
         map = ex.Map()
         if args.map == 'all' or args.map is None:
@@ -82,7 +81,7 @@ class MapCommands():
         else:
             map.show_spe_map(args.map)
 
-    @sd.record_exception
+    @sd.deco_record_exception
     def delete(self, args):
         map = ex.Map()
         map.delete_map(args.map)

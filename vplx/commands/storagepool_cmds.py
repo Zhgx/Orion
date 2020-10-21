@@ -9,10 +9,6 @@ import linstordb
 import consts
 
 
-
-
-
-
 class usage():
     storagepool = '''
     storagepool(sp) {create(c)/modify(m)/delete(d)/show(s)}'''
@@ -31,13 +27,9 @@ class usage():
     storagepool(sp) show(s) [STORAGEPOOL]'''
 
 
-
-
-
 class StoragePoolCommands():
     def __init__(self):
         self.logger = consts.glo_log()
-
 
     def setup_commands(self, parser):
         """
@@ -149,40 +141,38 @@ class StoragePoolCommands():
 
         sp_parser.set_defaults(func=self.print_sp_help)
 
-    @sd.record_exception
+    @sd.deco_record_exception
     def create(self, args):
         sp = ex.StoragePool()
         if args.storagepool and args.node:
             # The judgment of the lvm module to create a storage pool
             if args.lvm:
-                sp.create_storagepool_lvm(
+                    sp.create_storagepool_lvm(
                         args.node, args.storagepool, args.lvm)
             # The judgment of the thin-lv module to create a storage pool
             elif args.tlv:
                 sp.create_storagepool_thinlv(
-                        args.node, args.storagepool, args.tlv)
+                    args.node, args.storagepool, args.tlv)
             else:
                 self.p_create_sp.print_help()
         else:
             self.p_create_sp.print_help()
 
-
     def modify(self):
         pass
 
-    @sd.record_exception
-    @sd.comfirm_del('storage pool')
+    @sd.deco_record_exception
+    @sd.deco_comfirm_del('storage pool')
     def delete(self, args):
         sp = ex.StoragePool()
         sp.delete_storagepool(args.node, args.storagepool)
 
-
-    @sd.record_exception
+    @sd.deco_record_exception
     def show(self, args):
         sp = ex.StoragePool()
         if args.nocolor:
             if args.storagepool:
-                sp.show_one_sp(args.storagepool,no_color='yes')
+                sp.show_one_sp(args.storagepool, no_color='yes')
             else:
                 sp.show_all_sp(no_color='yes')
 
@@ -191,7 +181,6 @@ class StoragePoolCommands():
                 sp.show_one_sp(args.storagepool)
             else:
                 sp.show_all_sp()
-
 
     def print_sp_help(self, *args):
         self.sp_parser.print_help()

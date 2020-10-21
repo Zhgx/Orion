@@ -8,11 +8,6 @@ import execute as ex
 import consts
 
 
-
-
-
-
-
 class usage():
     resource = '''
     resource(r) {create(c)/modify(m)/delete(d)/show(s)}'''
@@ -20,7 +15,7 @@ class usage():
     resource_create = '''
     resource(r) create(c) RESOURCE -s SIZE -n NODE[NODE...] -sp STORAGEPOOL[STORAGEPOOL...]
                           RESOURCE -s SIZE -a -num NUM
-                          RESOURCE -dikless -n NODE[NODE...]
+                          RESOURCE -diskless -n NODE[NODE...]
                           RESOURCE -am -n NODE[NODE...] -sp STORAGEPOOL[STORAGEPOOL...]
                           RESOURCE -am -a -num NUM'''
 
@@ -165,7 +160,7 @@ class ResourceCommands():
             action='store_true',
             help='Skip to confirm selection',
             default=False)
-        
+
         p_delete_res.set_defaults(func=self.delete)
 
         """
@@ -199,8 +194,8 @@ class ResourceCommands():
         if len(node) < len(storagepool):
             raise NodeAndSPNumError('指定的storagepool数量应少于node数量')
         elif len(node) > len(storagepool) > 1:
-            raise NodeAndSPNumError('The number of Node and Storage pool do not meet the requirements')
-
+            raise NodeAndSPNumError(
+                'The number of Node and Storage pool do not meet the requirements')
 
     @staticmethod
     def is_vail_size(size):
@@ -208,7 +203,7 @@ class ResourceCommands():
         if not re_size.match(size):
             raise InvalidSizeError('Invalid Size')
 
-    @sd.record_exception
+    @sd.deco_record_exception
     def create(self, args):
         """
         Create a LINSTOR resource. There are three types of creation based on different parameters:
@@ -263,11 +258,12 @@ class ResourceCommands():
                     self.is_args_correct(args.node, args.storagepool)
                 except NodeAndSPNumError:
                     print('The number of nodes does not meet the requirements')
-                    self.logger.write_to_log('DATA','debug','exception','',str(traceback.format_exc()))
+                    self.logger.write_to_log(
+                        'DATA', 'debug', 'exception', '', str(traceback.format_exc()))
                     sys.exit()
                 else:
                     res.create_res_manual(
-                            args.resource, args.size, args.node, args.storagepool)
+                        args.resource, args.size, args.node, args.storagepool)
             else:
                 # self.logger.add_log(username, 'cli_user_input', transaction_id, path, 'ARGPARSE_ERROR', cmd)
                 self.p_create_res.print_help()
@@ -289,7 +285,8 @@ class ResourceCommands():
                         args.resource, args.node, args.storagepool)
                 except NodeAndSPNumError:
                     print('The number of nodes does not meet the requirements')
-                    self.logger.write_to_log('DATA', 'debug', 'exception', '', str(traceback.format_exc()))
+                    self.logger.write_to_log(
+                        'DATA', 'debug', 'exception', '', str(traceback.format_exc()))
                     sys.exit()
                 # else:
                 #     self.p_create_res.print_help()
@@ -302,8 +299,8 @@ class ResourceCommands():
         else:
             self.p_create_res.print_help()
 
-    @sd.record_exception
-    @sd.comfirm_del('resource')
+    @sd.deco_record_exception
+    @sd.deco_comfirm_del('resource')
     def delete(self, args):
         res = ex.Resource()
         if args.node:
@@ -311,13 +308,12 @@ class ResourceCommands():
         elif not args.node:
             res.delete_resource_all(args.resource)
 
-
-    @sd.record_exception
+    @sd.deco_record_exception
     def show(self, args):
         res = ex.Resource()
         if args.nocolor:
             if args.resource:
-                res.show_one_res(args.resource,no_color='yes')
+                res.show_one_res(args.resource, no_color='yes')
             else:
                 res.show_all_res(no_color='yes')
         else:

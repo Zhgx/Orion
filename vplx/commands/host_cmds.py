@@ -3,6 +3,7 @@ import execute as ex
 import sundry as sd
 import consts
 
+
 class HostCommands():
     def __init__(self):
         self.logger = consts.glo_log()
@@ -62,12 +63,15 @@ class HostCommands():
 
         host_parser.set_defaults(func=self.print_host_help)
 
-    @sd.record_exception
+    @sd.deco_record_exception
     def create(self, args):
         host = ex.Host()
+        # 判断iqn是否符合格式
+        if not sd.re_findall(r'^iqn\.\d{4}-\d{2}\.[a-zA-Z0-9.:-]+',args.iqn):
+            sd.prt_log(f"The format of IQN is wrong. Please confirm and fill in again.",2)
         host.create_host(args.host, args.iqn)
 
-    @sd.record_exception
+    @sd.deco_record_exception
     def show(self, args):
         host = ex.Host()
         if args.host == 'all' or args.host is None:
@@ -75,7 +79,7 @@ class HostCommands():
         else:
             host.show_spe_host(args.host)
 
-    @sd.record_exception
+    @sd.deco_record_exception
     def delete(self, args):
         host = ex.Host()
         host.delete_host(args.host)

@@ -8,6 +8,7 @@ import log
 import sundry
 import consts
 import iscsi_json
+
 from commands import (
     NodeCommands,
     ResourceCommands,
@@ -44,13 +45,6 @@ class MyArgumentParser(argparse.ArgumentParser):
             file = sys.stdout
         self._print_message(self.format_help(), file)
 
-    # def _print_message(self, message, file=None):
-    #     if message:
-    #         if file is None:
-    #             file = sys.stderr
-    #         file.write(message)
-
-
 
 
 class VtelCLI(object):
@@ -58,9 +52,9 @@ class VtelCLI(object):
     Vtel command line client
     """
     def __init__(self):
-        consts._init()
-        self.transaction_id = sundry.create_transaction_id()
+        consts.init()
         self.username = sundry.get_username()
+        self.transaction_id = sundry.create_transaction_id()
         self.logger = log.Log(self.username,self.transaction_id)
         consts.set_glo_log(self.logger)
         self.replay_args_list = []
@@ -80,12 +74,15 @@ class VtelCLI(object):
         """
         Set parser vtel sub-parser
         """
-        #parser.add_argument('--version','-v',action='version',version='%(prog)s ' + VERSION + '; ')
-
 
         subp = parser.add_subparsers(metavar='',
                                      dest='subargs_vtel')
 
+        parser.add_argument('-v',
+                            '--version',
+                            dest='version',
+                            help='Show current version',
+                            action='store_true')
 
         parser_stor = subp.add_parser(
             'stor',
@@ -95,25 +92,10 @@ class VtelCLI(object):
         )
 
 
-        # add parameters to interact with the GUI
-        parser_stor.add_argument(
-            '-gui',
-            dest='gui',
-            action='store',
-            help=argparse.SUPPRESS)
-
         parser_iscsi = subp.add_parser(
             'iscsi',
             help='Management operations for iSCSI',
             add_help=False)
-
-
-        parser_iscsi.add_argument(
-            '-gui',
-            dest='gui',
-            action='store',
-            help=argparse.SUPPRESS)
-
 
         # replay function related parameter settings
         parser_replay = subp.add_parser(
@@ -137,15 +119,12 @@ class VtelCLI(object):
             nargs=2,
             help='date')
 
+
         self.parser_stor = parser_stor
         self.parser_iscsi = parser_iscsi
         self.parser_replay = parser_replay
 
         parser_replay.set_defaults(func=self.replay)
-
-
-        # 绑定replay有问题
-        # parser_replay.set_defaults(func=self.replay)
 
         subp_stor = parser_stor.add_subparsers(dest='subargs_stor',metavar='')
         subp_iscsi = parser_iscsi.add_subparsers(dest='subargs_iscsi',metavar='')
@@ -161,15 +140,15 @@ class VtelCLI(object):
         self._hostgroup_commands.setup_commands(subp_iscsi)
         self._map_commands.setup_commands(subp_iscsi)
 
-        parser.set_defaults(func=self.print_vtel_help)
-
+        parser.set_defaults(func=self.func_vtel)
         return parser
 
 
-    def print_vtel_help(self,*args):
-        self._parser.print_help()
-
-
+    def func_vtel(self,args):
+        if args.version:
+            print(f'VersaTEL G2 {consts.VERSION}')
+        else:
+            self._parser.print_help()
 
     def replay_one(self,dict_input):
         if not dict_input:
@@ -205,7 +184,6 @@ class VtelCLI(object):
                 dict_cmd = dict_input[int(answer)-1]
                 self.replay_one(dict_cmd)
                 consts.set_glo_log_id(0)
-
             elif answer == 'all':
                 for dict_cmd in dict_input:
                     self.replay_one(dict_cmd)
@@ -216,7 +194,8 @@ class VtelCLI(object):
     def replay(self,args):
         consts.set_glo_log_switch('no')
         consts.set_glo_rpl('yes')
-        obj_logdb = logdb.prepare_db()
+        logdb.prepare_db()
+        obj_logdb = consts.glo_db()
         if args.transactionid and args.date:
             print('Please specify only one type of data for replay')
             return
@@ -234,19 +213,15 @@ class VtelCLI(object):
         return dict_cmd
 
 
-
-
     def parse(self): # 调用入口
         args = self._parser.parse_args()
         path = sundry.get_path()
         cmd = ' '.join(sys.argv[1:])
-
         if args.subargs_vtel:
             if args.subargs_vtel not in ['re', 'replay']:
                 self.logger.write_to_log('DATA', 'INPUT', 'cmd_input', path, {'valid': '0', 'cmd': cmd})
         else:
             self.logger.write_to_log('DATA','INPUT','cmd_input', path, {'valid':'0','cmd':cmd})
-
         args.func(args)
 
 
