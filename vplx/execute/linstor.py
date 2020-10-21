@@ -4,14 +4,21 @@ import consts
 import sundry as s
 import sys
 
+
+
 class Linstor():
     def __init__(self):
+        print('linstor1')
         self.logger = consts.glo_log()
 
     def refine_linstor(self,data):
         reSeparate = re.compile(r'(.*?\s\|)')
         list_table = data.split('\n')
         list_data_all = []
+
+        oprt_id = s.create_oprt_id()
+        self.logger.write_to_log('DATA','STR','refine_linstor','',oprt_id)
+        self.logger.write_to_log('OPRT','REGULAR','findall',oprt_id,{'re':reSeparate})
 
         def _clear_symbol(list_data):
             for i in range(len(list_data)):
@@ -29,12 +36,14 @@ class Linstor():
         except IndexError:
             s.prt_log('The data cannot be read, please check whether LINSTOR is normal.',2)
             sys.exit()
+        if list_data_all:
+            if not list_data_all[0]:
+                s.prt_log('正则匹配出错,程序退出',2)
+                sys.exit()
 
+        self.logger.write_to_log('DATA', 'REGULAR', 'findall', oprt_id, list_data_all)
         return list_data_all
 
     def get_linstor_data(self,cmd):
-        # 异常演示
-        # 1.cmd_result = s.get_cmd_result(sys._getframe().f_code.co_name, cmd, s.create_oprt_id())
-        # 2.cmd_result = s.execute_cmd(sys._getframe().f_code.co_name, cmd, s.create_oprt_id())
-        cmd_result = s.execute_cmd(cmd,s.get_function_name())
+        cmd_result = s.execute_cmd(cmd)
         return self.refine_linstor(cmd_result)

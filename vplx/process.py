@@ -9,27 +9,12 @@ import log
 import sys
 
 
-
-class LINSTORDB(object):
-
+class Process_data():
     def __init__(self):
-        # 先这样
-#         consts._init()
-#         username = sundry.get_username()
-#         transaction_id = tid
-#         logger = log.Log(username, transaction_id)
-#         consts.set_glo_log(logger)
         db = linstordb.LinstorDB()
-
         # 生成数据库
         db.build_table()
         self.cur = db.cur
-
-
-class Process_data(LINSTORDB):
-
-    def __init__(self):
-        LINSTORDB.__init__(self)
 
     # 获取表单行数据的通用方法
     def sql_fetch_one(self, sql):
@@ -50,7 +35,6 @@ class Process_data(LINSTORDB):
 
     # 选项node数据
     def get_option_node(self):
-
         def get_online_node():
             select_sql = "SELECT Node FROM nodetb WHERE State = 'Online'"
             return self.sql_fetch_all(select_sql)
@@ -107,6 +91,8 @@ class Process_data(LINSTORDB):
         dict_all = {"lvm": list_vg, "thin_lvm": list_thinlv}
         return dict_all
 
+
+
     # 选项node num数据
     def get_option_nodenum(self,):
 
@@ -136,37 +122,7 @@ class Process_data(LINSTORDB):
         node_num = self.sql_fetch_one(sql_count_node)
 
         # 通用的select
-
-        # def _count_node():
-        #     select_sql = "select count(Node) from nodetb"
-        #     cur.execute(select_sql)
-        #     date_set = cur.fetchone()
-        #     return list(date_set)
-        #
-        # def _select_nodetb(n):
-        #     select_sql = "select Node,NodeType,Addresses,State from nodetb where id = ?"  # sql语言：进行查询操作
-        #     cur.execute(select_sql, str(n))
-        #     date_set = cur.fetchone()
-        #     return list(date_set)
-        #
-        # def _select_res_num(n):
-        #     select_sql = "SELECT COUNT(Resource) FROM resourcetb WHERE Node IN (SELECT Node FROM nodetb WHERE id = ?)"
-        #     cur.execute(select_sql, str(n))
-        #     date_set = cur.fetchone()
-        #     return list(date_set)
-        #
-        # def _select_stp_num(n):
-        #     select_sql = "SELECT COUNT(Node) FROM storagepooltb WHERE Node IN (SELECT Node FROM nodetb WHERE id = ?)"
-        #     cur.execute(select_sql, str(n))
-        #     date_set = cur.fetchone()
-        #     return list(date_set)
-        #
-        # def _select_resourcetb(n):
-        #     select_sql = "SELECT Resource,StoragePool,Allocated,DeviceName,InUse,State FROM resourcetb WHERE Node IN ((SELECT Node FROM nodetb WHERE id = ?))"
-        #     cur.execute(select_sql, (str(n)))
-        #     date_set = cur.fetchall()
-        #     return list(date_set)
-        for i in range(1, (node_num + 1)):  # 从1开始循环到给定的整数，有没有更好的办法
+        for i in range(1, (node_num + 1)):
             node, nodetype, addr, status = self.sql_fetch_one(sql_node(i))
             res_num = self.sql_fetch_one(sql_count_res(i))
             stp_num = self.sql_fetch_one(sql_count_stp(i))
@@ -187,7 +143,7 @@ class Process_data(LINSTORDB):
                      "status": status,
                      "res_num_son": list_resdict}
             date.append(date_)
-        dict = {"code": 0, "msg": "", "count": 1000, "data": date}
+        dict = {"data": date}
         cur.close()
         return dict
 
@@ -232,10 +188,8 @@ class Process_data(LINSTORDB):
                             "used": used,
                             "mirror_way_son": list_resdict}
                 date.append(date_one)
-        dict = {"code": 0, "msg": "", "count": 1000, "data": date}
+        dict = {"data": date}
         cur.close()
-        logger = consts.glo_log()
-        logger.write_to_log('type1','type2','describe1','describe2','data')
         return dict
 
     # storage pool表格格式
@@ -271,6 +225,7 @@ class Process_data(LINSTORDB):
                      "status": stp_status,
                      "res_name_son": list_resdict}
             date.append(date_)
-        dict = {"code": 0, "msg": "", "count": 1000, "data": date}
+        dict = {"data": date}
         cur.close()
         return dict
+
