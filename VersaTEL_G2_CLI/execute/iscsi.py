@@ -79,7 +79,7 @@ class Host():
                     "Fail! The host in ... hostgroup.Please delete the hostgroup first",1)
             else:
                 self.js.delete_data('Host', host)
-                s.prt_log("Dexlete success!",0)
+                s.prt_log("Delete success!",0)
                 return True
         else:
             s.prt_log(f"Fail! Can't find {host}",1)
@@ -231,7 +231,7 @@ class Map():
                 # 返回target_name, target_iqn
                 return target_all[0], target_all[1]
             else:
-                s.prt_log('没有target，创建map失败', 2)
+                s.prt_log('No target，please create target first', 2)
 
     def get_drbd_data(self, dg):
         # 根据dg去收集drbdd的三项数据：resource name，minor number，device name
@@ -254,27 +254,24 @@ class Map():
         initiator = self.get_initiator(hg)
         target_name, target_iqn = self.get_target()
         drdb_list = self.get_drbd_data(dg)
-
         # 执行创建和启动
         for i in drdb_list:
             res, minor_nr, path = i
             lunid = int(minor_nr) - 1000
+            # 创建iSCSILogicalUnit
             if obj_crm.create_crm_res(res, target_iqn, lunid, path, initiator):
-                c = obj_crm.create_col(res, target_name)
-                o = obj_crm.create_order(res, target_name)
-                if c and o:
-                    s.prt_log(f'create colocation and order success:{res}',0)
+                # 创建order，colocation
+                if obj_crm.create_set(res, target_name):
+                    # 尝试启动资源，成功失败都不影响创建
+                    s.prt_log(f"try to start {res}", 0)
                     obj_crm.start_res(res)
-                    obj_crm.checkout_status_fromst(res)
-                else:
-                    s.prt_log("create colocation and order fail",1)
-                    return False
+                    obj_crm.checkout_status_start(res)
+                    self.js.add_data('Map', map, [hg, dg])
+                    s.prt_log('Create map success!', 0)
+                    return True
             else:
-                s.prt_log('Failde to create resource!',1)
+                s.prt_log('Fail to create iSCSILogicalUnit',1)
                 return False
-
-        self.js.add_data('Map', map, [hg, dg])
-        return True
 
     def get_all_map(self):
         return self.js.get_data("Map")
@@ -289,7 +286,6 @@ class Map():
         hg,dg = self.js.get_data('Map').get(map)
         host = self.js.get_data('HostGroup').get(hg)
         disk = self.js.get_data('DiskGroup').get(dg)
-
         for i in host:
             iqn = self.js.get_data('Host').get(i)
             dict_hg.update({i:iqn})
@@ -335,15 +331,12 @@ class Map():
         crm_config_statu = crm_data.crm_conf_data
         dg = self.js.get_data('Map').get(map)[1]
         resname = self.js.get_data('DiskGroup').get(dg)
-
         if 'ERROR' in crm_config_statu:
             s.prt_log("Could not perform requested operations, are you root?",1)
         else:
             for disk in resname:
-                if obj_crm.delete_crm_res(disk):
-                    s.prt_log(f"delete {disk}",0)
+                if obj_crm.delete_res(disk):
+                    self.js.delete_data('Map', map)
+                    s.prt_log("Delete map success!", 0)
                 else:
                     return False
-            self.js.delete_data('Map', map)
-            s.prt_log("Delete success!", 0)
-            return True

@@ -1,19 +1,18 @@
 {
     "Host": {
-        "host1": "iqn-123213-12321",
-        "host2": "iqn12321312321",
-        "host3": "iqn12321312321"
+        "h1": "iqn.2020-11.com.example:pytest01",
+        "h2": "iqn.2020-11.com.example:pytest02"
     },
     "Disk": {
         "res_a": "/dev/drbd1000",
-        "res_b": "/dev/drbd1001"
+        "res_b": "/dev/drbd1001",
+        "res_c": "/dev/drbd1002",
+        "res_d": "/dev/drbd1003",
+        "thinlv_test": "/dev/drbd1004"
     },
     "HostGroup": {
         "hg1": [
-            "host1"
-        ],
-        "hg2": [
-            "host1"
+            "h1"
         ]
     },
     "DiskGroup": {
@@ -24,7 +23,12 @@
             "res_a"
         ]
     },
-    "Map": {},
+    "Map": {
+        "map1": [
+            "hg1",
+            "dg1"
+        ]
+    },
     "crm": {
         "resource": [],
         "vip": [
