@@ -8,6 +8,7 @@ import sys
 
 class Linstor():
     def __init__(self):
+        print('linstor1')
         self.logger = consts.glo_log()
 
     def refine_linstor(self,data):

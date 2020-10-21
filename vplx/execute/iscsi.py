@@ -23,20 +23,6 @@ class Disk():
         if self.js.check_key('Disk', disk)['result']:
             return {disk: self.js.get_data('Disk').get(disk)}
 
-    # 展示全部disk
-    def show_all_disk(self):
-        list_header = ["ResourceName", "Path"]
-        dict_data = self.get_all_disk()
-        table = s.show_iscsi_data(list_header,dict_data)
-        s.prt_log(table,0)
-
-    # 展示指定的disk
-    def show_spe_disk(self, disk):
-        list_header = ["ResourceName", "Path"]
-        dict_data = self.get_spe_disk(disk)
-        table = s.show_iscsi_data(list_header,dict_data)
-        s.prt_log(table,0)
-
     """
     host 操作
     """
@@ -60,17 +46,6 @@ class Host():
         if self.js.check_key('Host', host)['result']:
             return ({host:self.js.get_data('Host').get(host)})
 
-    def show_all_host(self):
-        list_header = ["HostName", "IQN"]
-        dict_data = self.get_all_host()
-        table =  s.show_iscsi_data(list_header, dict_data)
-        s.prt_log(table,0)
-
-    def show_spe_host(self, host):
-        list_header = ["HostName", "IQN"]
-        dict_data = self.get_spe_host(host)
-        table = s.show_iscsi_data(list_header, dict_data)
-        s.prt_log(table,0)
 
     def delete_host(self, host):
         if self.js.check_key('Host', host)['result']:
@@ -113,29 +88,6 @@ class DiskGroup():
         if self.js.check_key('DiskGroup', dg)['result']:
             return {dg:self.js.get_data('DiskGroup').get(dg)}
 
-    def show_all_diskgroup(self):
-        list_header = ["DiskgroupName", "DiskName"]
-        dict_data = self.get_all_diskgroup()
-        table = s.show_iscsi_data(list_header, dict_data)
-        s.prt_log(table,0)
-
-    def show_spe_diskgroup(self,dg):
-        list_header = ["DiskgroupName", "DiskName"]
-        dict_data = self.get_spe_diskgroup(dg)
-        table = s.show_iscsi_data(list_header, dict_data)
-        s.prt_log(table,0)
-
-
-    def delete_diskgroup(self, dg):
-        if self.js.check_key('DiskGroup', dg)['result']:
-            if self.js.check_value('Map', dg)['result']:
-                s.prt_log("Fail! The diskgroup already map,Please delete the map",1)
-            else:
-                self.js.delete_data('DiskGroup', dg)
-                s.prt_log("Delete success!",0)
-        else:
-            s.prt_log(f"Fail! Can't find {dg}",1)
-
     """
     hostgroup 操作
     """
@@ -165,28 +117,6 @@ class HostGroup():
         if self.js.check_key('HostGroup', hg)['result']:
             return {hg:self.js.get_data('HostGroup').get(hg)}
 
-    def show_all_hostgroup(self):
-        list_header = ["HostGroupName", "HostName"]
-        dict_data = self.get_all_hostgroup()
-        table = s.show_iscsi_data(list_header, dict_data)
-        s.prt_log(table,0)
-
-    def show_spe_hostgroup(self,hg):
-        list_header = ["HostGroupName", "HostName"]
-        dict_data = self.get_spe_hostgroup(hg)
-        table = s.show_iscsi_data(list_header, dict_data)
-        s.prt_log(table,0)
-
-
-    def delete_hostgroup(self, hg):
-        if self.js.check_key('HostGroup', hg)['result']:
-            if self.js.check_value('Map', hg)['result']:
-                s.prt_log("Fail! The hostgroup already map,Please delete the map",1)
-            else:
-                self.js.delete_data('HostGroup', hg)
-                s.prt_log("Delete success!",0)
-        else:
-            s.prt_log(f"Fail! Can't find {hg}",1)
 
     """
     map操作
@@ -303,53 +233,3 @@ class Map():
             path = self.js.get_data('Disk').get(i)
             dict_dg.update({i:path})
         return [{map:[hg,dg]},dict_dg,dict_hg]
-
-
-    def show_all_map(self):
-        list_header = ["MapName", "HostGroup","DiskGroup"]
-        dict_data = self.get_all_map()
-        table = s.show_map_data(list_header,dict_data)
-        s.prt_log(table,0)
-
-
-    def show_spe_map(self, map):
-        list_data = self.get_spe_map(map)
-        hg, dg = self.js.get_data('Map').get(map)
-        header_map = ["MapName", "HostGroup","DiskGroup"]
-        header_host = ["HostName", "IQN"]
-        header_disk = ["DiskName", "Disk"]
-        table_map = s.show_map_data(header_map, list_data[0])
-        table_hg = s.show_iscsi_data(header_host, list_data[1])
-        table_dg = s.show_iscsi_data(header_disk, list_data[2])
-        result = [f'Map:{map}',str(table_map),f'Host Group:{hg}',str(table_hg),f'Disk Group:{dg}',str(table_dg)]
-        s.prt_log('\n'.join(result),0)
-        return list_data
-
-
-    def pre_check_delete_map(self, map):
-        if self.js.check_key('Map', map)['result']:
-            return True
-        else:
-            s.prt(f"Fail! Can't find {map}",1)
-
-    # 调用crm删除map
-    def delete_map(self, map):
-        if not self.pre_check_delete_map(map):
-            return
-        obj_crm = CRMConfig()
-        crm_data = CRMData()
-        crm_config_statu = crm_data.crm_conf_data
-        dg = self.js.get_data('Map').get(map)[1]
-        resname = self.js.get_data('DiskGroup').get(dg)
-
-        if 'ERROR' in crm_config_statu:
-            s.prt_log("Could not perform requested operations, are you root?",1)
-        else:
-            for disk in resname:
-                if obj_crm.delete_crm_res(disk):
-                    s.prt_log(f"delete {disk}",0)
-                else:
-                    return False
-            self.js.delete_data('Map', map)
-            s.prt_log("Delete success!", 0)
-            return True

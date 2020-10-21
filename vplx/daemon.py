@@ -3,7 +3,8 @@ from flask_vplx import app
 import consts
 import sundry
 import log
-consts._init()
+
+consts.init()
 consts.glo_log()
 username = sundry.get_username() 
 tid = ''

@@ -72,27 +72,11 @@
     "crm": {
         "resource": [
             [
-                "res_a",
-                "iqn.2020-04.feixitek.com:versaplx00",
-                "00",
-                "/dev/drbd1000",
-                "iqn-123213-12321 ",
-                "Started"
-            ],
-            [
-                "res_b",
-                "iqn.2020-04.feixitek.com:versaplx00",
-                "01",
-                "/dev/drbd1001",
-                "3 ",
-                "Started"
-            ],
-            [
                 "res_c",
                 "iqn.2020-04.feixitek.com:versaplx00",
-                "02",
+                "2",
                 "/dev/drbd1002",
-                "iqn-123213-12321 ",
+                "iqn.2020-11.com.example:pytest01",
                 "Started"
             ]
         ],

@@ -18,59 +18,6 @@ import pprint
 
 
 
-def deco_record_exception(func):
-    """
-    Decorator
-    Get exception, throw the exception after recording
-    :param func:Command binding function
-    """
-    def wrapper(self,*args):
-        try:
-            return func(self,*args)
-        except Exception as e:
-            self.logger.write_to_log('DATA','DEBUG','exception','', str(traceback.format_exc()))
-            raise e
-    return wrapper
-
-
-def deco_comfirm_del(type):
-    """
-    Decorator providing confirmation of deletion function.
-    :param func: Function to delete linstor resource
-    """
-    def decorate(func):
-        def wrapper(self,*args):
-            cli_args = args[0]
-            if cli_args.yes:
-                func(self,*args)
-            else:
-                print(f"Are you sure you want to delete this {type}? If yes, enter 'y/yes'")
-                answer = get_answer()
-                if answer in ['y', 'yes']:
-                    func(self,*args)
-                else:
-                    prt_log('Delete canceled',0)
-        return wrapper
-    return decorate
-
-
-def get_answer():
-    logger = consts.glo_log()
-    rpl = consts.glo_rpl()
-    logdb = consts.glo_db()
-    transaction_id = consts.glo_tsc_id()
-
-    if rpl == 'no':
-        answer = input()
-        logger.write_to_log('DATA', 'INPUT', 'confirm_input', 'confirm deletion', answer)
-    else:
-        time,answer = logdb.get_anwser(transaction_id)
-        if not time:
-            time = ''
-        print(f'RE:{time:<20} 用户输入: {answer}')
-    return answer
-
-
 def create_transaction_id():
     return int(time.time())
 
@@ -83,12 +30,6 @@ def create_oprt_id():
 def get_username():
     return getpass.getuser()
 
-def get_hostname():
-    return socket.gethostname()
-
-# Get the path of the program
-def get_path():
-    return os.getcwd()
 
 
 def re_findall(re_string, tgt_string):
@@ -110,38 +51,6 @@ def re_search(re_string, tgt_stirng):
     logger.write_to_log('DATA', 'REGULAR', 'search', oprt_id, re_result)
     return re_result
 
-
-def show_iscsi_data(list_header,dict_data):
-    table = prettytable.PrettyTable()
-    table.field_names = list_header
-    if dict_data:
-        for i,j in dict_data.items():
-            data_one = [i,(' '.join(j) if isinstance(j,list) == True else j)]
-            table.add_row(data_one)
-    else:
-        pass
-    return table
-
-def show_map_data(list_header,dict_data):
-    table = prettytable.PrettyTable()
-    table.field_names = list_header
-    if dict_data:
-        # {map1:[hg1,dg1] => [map1,hg1,dg1]}
-        for i, j in dict_data.items():
-            j.insert(0,i)
-            table.add_row(j)
-    return table
-
-
-def show_linstor_data(list_header,list_data):
-    table = prettytable.PrettyTable()
-    table.field_names = list_header
-    if list_data:
-        for i in list_data:
-            table.add_row(i)
-    else:
-        pass
-    return table
 
 
 def change_pointer(new_id):
@@ -252,26 +161,6 @@ def prt_log(str, warning_level):
             sys.exit()
         else:
             raise consts.ReplayExit
-
-
-def deco_color(func):
-    """
-    装饰器，给特定的linstor数据进行着色
-    :param func:
-    :return:
-    """
-    @wraps(func)
-    def wrapper(*args):
-        status_true = ['UpToDate', 'Online', 'Ok', 'InUse']
-        data = func(*args)
-        for lst in data:
-            if lst[-1] in status_true:
-                lst[-1] = ca.Fore.GREEN + lst[-1] + ca.Style.RESET_ALL
-            else:
-                lst[-1] = ca.Fore.RED + lst[-1] + ca.Style.RESET_ALL
-        return data
-    return wrapper
-
 
 
 
