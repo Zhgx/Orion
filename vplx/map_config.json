@@ -3,7 +3,8 @@
         "host1": "iqnxx",
         "host2": "iqnxxx",
         "host3": "iqn123",
-        "h5": "iqnxxx"
+        "h5": "iqnxxx",
+        "host_w": "iqn.adf.adfadsf.adfadfs"
     },
     "Disk": {
         "res_a": "/dev/drbd1000",
