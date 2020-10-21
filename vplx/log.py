@@ -10,8 +10,8 @@ import sundry
 
 LOG_PATH = './'
 # LOG_PATH = '/var/log/vtel/'
-CLI_LOG_NAME = 'Orion_CLI.log'
-WEB_LOG_NAME = 'Orion_WEB.log'
+CLI_LOG_NAME = 'cli.log'
+WEB_LOG_NAME = 'web.log'
 
 
 class MyLoggerAdapter(logging.LoggerAdapter):
@@ -28,55 +28,62 @@ class MyLoggerAdapter(logging.LoggerAdapter):
 
 
 class Log(object):
-    def __init__(self, username, transaction_id,file_name=CLI_LOG_NAME):
+    def __init__(self, user, tid,file_name=CLI_LOG_NAME):
+        """
+        日志格式：
+        asctime：时间
+        tid：transaction id，事务的唯一标识
+        user：username，操作系统的用户
+        t1：type1，日志数据的类型一
+        t2：type2，日志数据的类型二
+        d1：description1，日志数据的描述一
+        d2：description2，日志数据的描述二
+        data：具体的结果或者数据
+
+        :param user:
+        :param tid:
+        :param file_name:
+        """
         fmt = logging.Formatter(
-            "%(asctime)s [%(transaction_id)s] [%(username)s] [%(type1)s] [%(type2)s] [%(describe1)s] [%(describe2)s] [%(data)s]|",
+            "%(asctime)s [%(tid)s] [%(user)s] [%(t1)s] [%(t2)s] [%(d1)s] [%(d2)s] [%(data)s]|",
             datefmt='[%Y/%m/%d %H:%M:%S]')
         self.handler_input = logging.handlers.RotatingFileHandler(filename=f'{LOG_PATH}{file_name}', mode='a',
-                                                             maxBytes=10*1024*1024, backupCount=5)
+                                                             maxBytes=10*1024*1024, backupCount=20)
         self.handler_input.setFormatter(fmt)
-        self.username = username
-        self.transaction_id = transaction_id
+        self.user = user
+        self.tid = tid
 
     def logger_input(self):
-        orion_logger = logging.getLogger('orion_logger')
-        orion_logger.addHandler(self.handler_input)
-        orion_logger.setLevel(logging.DEBUG)
-        # %(asctime)s - [%(username)s] - [%(type)s] - [%(describe1)s] - [%(describe2)s] - [%(data)s]
+        vtel_logger = logging.getLogger('vtel_logger')
+        vtel_logger.addHandler(self.handler_input)
+        vtel_logger.setLevel(logging.DEBUG)
         extra_dict = {
-            "username": "USERNAME",
-            "transaction_id": "",
-            "type1": "TYPE1",
-            "type2": "TYPE2",
-            "describe1": "",
-            "describe2": "",
+            "user": "USERNAME",
+            "tid": "",
+            "t1": "TYPE1",
+            "t2": "TYPE2",
+            "d1": "",
+            "d2": "",
             "data": ""}
         # 获取一个自定义LoggerAdapter类的实例
-        logger = MyLoggerAdapter(orion_logger, extra_dict)
+        logger = MyLoggerAdapter(vtel_logger, extra_dict)
         return logger
 
     # write to log file
-    def write_to_log(self, type1, type2, describe1, describe2, data):
-        orion_logger = self.logger_input()
+    def write_to_log(self, t1, t2, d1, d2, data):
+        vtel_logger = self.logger_input()
 
+        # 获取到日志开关变量为'no'时，移除处理器，不再将数据记录到文件中
         if consts.glo_log_switch() == 'no':
-            orion_logger.logger.removeHandler(self.handler_input)
-        # InputLogger.logger.removeHandler(self.handler_input)
-        orion_logger.debug(
+            vtel_logger.logger.removeHandler(self.handler_input)
+        vtel_logger.debug(
             '',
             extra={
-                'username': self.username,
-                'transaction_id': self.transaction_id,
-                'type1': type1,
-                'type2': type2,
-                'describe1': describe1,
-                'describe2': describe2,
+                'user': self.user,
+                'tid': self.tid,
+                't1': t1,
+                't2': t2,
+                'd1': d1,
+                'd2': d2,
                 'data': data})
 
-
-# For Web
-def set_web_logger(transaction_id):
-    consts._init()
-    username = sundry.get_username()
-    logger = Log(username, transaction_id,file_name=WEB_LOG_NAME)
-    consts.set_glo_log(logger)

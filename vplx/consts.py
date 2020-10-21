@@ -1,7 +1,8 @@
+#coding:utf-8
 """
 Global constants for vtel
 """
-VERSION = 'v0.8.0'
+VERSION = "v0.8.0"
 
 
 class ExitCode(object):
@@ -23,7 +24,7 @@ class ReplayExit(Exception):
     pass
 
 
-def _init():
+def init():
     global _GLOBAL_DICT
     _GLOBAL_DICT = {}
     _GLOBAL_DICT['LOG_ID'] = 0
@@ -71,6 +72,7 @@ def set_glo_gui_tid(value):
     set_value('GUI_TID',value)
 
 
+
 def glo_gui_tid():
     return get_value('GUI_TID')
 
@@ -101,4 +103,5 @@ def glo_log_id():
 
 def glo_log_switch():
     return get_value('LOG_SWITCH')
+
 

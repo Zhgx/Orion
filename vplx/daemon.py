@@ -3,11 +3,12 @@ from flask_vplx import app
 import consts
 import sundry
 import log
-consts._init()
+
+consts.init()
 consts.glo_log()
 username = sundry.get_username() 
 tid = ''
-logger = log.Log(username,tid)
+logger = log.Log(username,tid,file_name=log.WEB_LOG_NAME)
 consts.set_glo_log(logger)
 
 
