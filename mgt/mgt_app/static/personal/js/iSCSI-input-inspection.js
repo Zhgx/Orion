@@ -15,6 +15,7 @@ function host_name_myfunction() {
 	var host_name_match_regular = /^[a-zA-Z]\w*$/;
 	match_result = host_name_match_regular.test(input_result)
 	if (!input_result) {
+		$("#host_name_hid").val("0");
 		document.getElementById("host_name_examine").className = "hidden";
 		document.getElementById("host_name_format").className = "hidden";
 	} else {
@@ -50,6 +51,7 @@ function hg_name_myfunction() {
 	var hg_name_match_regular = /^[a-zA-Z]\w*$/;
 	match_result = hg_name_match_regular.test(input_result)
 	if (!input_result) {
+		$("#hg_name_hid").val("0");
 		document.getElementById("hg_name_examine").className = "hidden";
 		document.getElementById("hg_name_format").className = "hidden";
 
@@ -85,6 +87,7 @@ function dg_name_myfunction() {
 	var dg_name_match_regular = /^[a-zA-Z]\w*$/;
 	match_result = dg_name_match_regular.test(input_result)
 	if (!input_result) {
+		$("#dg_name_hid").val("0");
 		document.getElementById("dg_name_examine").className = "hidden";
 		document.getElementById("dg_name_format").className = "hidden";
 	} else {
@@ -117,6 +120,7 @@ function map_name_myfunction() {
 	var map_name_match_regular = /^[a-zA-Z]\w*$/;
 	match_result = map_name_match_regular.test(input_result)
 	if (!input_result) {
+		$("#map_name_hid").val("0");
 		document.getElementById("map_name_examine").className = "hidden";
 		document.getElementById("map_name_format").className = "hidden";
 	} else {
@@ -150,6 +154,7 @@ function iqn_myfunction() {
 	var iqn_match_regular = /^iqn.\d{4}-\d{2}.[a-zA-Z0-9.:-]+$/;
 	match_result = iqn_match_regular.test(input_result)
 	if (!input_result) {
+		$("#host_iqn_hid").val("0");
 		document.getElementById("iqn_format").className = "hidden";
 	} else {
 		if (!match_result) {
