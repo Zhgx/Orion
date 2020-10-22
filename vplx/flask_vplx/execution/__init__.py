@@ -2,7 +2,7 @@
 
 from flask import Flask,Blueprint
 
-execution_blue = Blueprint("execution_blue", __name__)
+execution_blueprint = Blueprint("execution_blueprint", __name__)
 
 from flask_vplx.execution import views
 # from . import views
