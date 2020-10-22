@@ -18,7 +18,7 @@ class JSON_OPERATION():
             json_data.close()
             return json_dict
 
-        except json.decoder.JSONDecodeError:
+        except FileNotFoundError:
             with open('iSCSI_Data.json', "w") as fw:
                 json_dict = {
                     "Host": {},

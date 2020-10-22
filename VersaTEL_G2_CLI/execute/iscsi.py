@@ -233,17 +233,18 @@ class Map():
             else:
                 s.prt_log('No target，please create target first', 2)
 
-    def get_drbd_data(self, dg):
-        # 根据dg去收集drbdd的三项数据：resource name，minor number，device name
-        disk_all = self.js.get_data('DiskGroup').get(dg)
+    def get_disk_data(self, dg):
+        # 根据dg去收集drbdd的三项数据：resource name，device name
+        disk = self.js.get_data('DiskGroup').get(dg)
         linstor = Linstor()
-        linstorlv = linstor.get_linstor_data('linstor --no-color --no-utf8 r lv')
-        drdb_list = []
-        for res in linstorlv:
-            for disk_one in disk_all:
-                if disk_one in res:
-                    drdb_list.append([res[1], res[4], res[5]])  # 取Resource,MinorNr,DeviceName
-        return drdb_list
+        linstor_res = linstor.get_linstor_data('linstor --no-color --no-utf8 r lv')
+        disks = {}
+        for disk_all in linstor_res:
+            # 获取diskgroup中每个disk的相关数据
+            for d in disk:
+                if d in disk_all:
+                    disks.update({disk_all[1]: disk_all[5]})  # 取Resource, DeviceName
+        return disks
 
     def create_map(self, map,hg, dg):
         # 创建前的检查
@@ -253,11 +254,13 @@ class Map():
         obj_crm = CRMConfig()
         initiator = self.get_initiator(hg)
         target_name, target_iqn = self.get_target()
-        drdb_list = self.get_drbd_data(dg)
+        disk_list = self.get_disk_data(dg)
         # 执行创建和启动
-        for i in drdb_list:
-            res, minor_nr, path = i
-            lunid = int(minor_nr) - 1000
+        for i in disk_list:
+            res = i
+            path = disk_list[i]
+            # 取DeviceName后四位数字，减一千作为lun id
+            lunid = int(path[-4:]) - 1000
             # 创建iSCSILogicalUnit
             if obj_crm.create_crm_res(res, target_iqn, lunid, path, initiator):
                 # 创建order，colocation
@@ -266,12 +269,12 @@ class Map():
                     s.prt_log(f"try to start {res}", 0)
                     obj_crm.start_res(res)
                     obj_crm.checkout_status_start(res)
-                    self.js.add_data('Map', map, [hg, dg])
-                    s.prt_log('Create map success!', 0)
-                    return True
             else:
                 s.prt_log('Fail to create iSCSILogicalUnit',1)
                 return False
+        self.js.add_data('Map', map, [hg, dg])
+        s.prt_log('Create map success!', 0)
+        return True
 
     def get_all_map(self):
         return self.js.get_data("Map")
