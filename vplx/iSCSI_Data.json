@@ -1,0 +1,103 @@
+{
+    "Host": {
+        "host1": "iqnxx",
+        "host2": "iqnxxx",
+        "host3": "iqn123",
+        "h5": "iqnxxx",
+        "host_w": "iqn.adf.adfadsf.adfadfs"
+    },
+    "Disk": {
+        "res_a": "/dev/drbd1000",
+        "res_b": "/dev/drbd1001",
+        "res_c": "/dev/drbd1002",
+        "res_d": "/dev/drbd1003",
+        "thinlv_test": "/dev/drbd1004"
+    },
+    "HostGroup": {
+        "hg1": [
+            "host1"
+        ],
+        "hg2": [
+            "host1"
+        ],
+        "hg5": [
+            "host2",
+            "host3",
+            "host5"
+        ],
+        "hg21": [
+            "2",
+            "3",
+            "22"
+        ],
+        "hg3": [
+            "22",
+            "222",
+            "host11"
+        ],
+        "hg4": [
+            "host3"
+        ]
+    },
+    "DiskGroup": {
+        "dg1": [
+            "res_c"
+        ],
+        "dg2": [
+            "res_a"
+        ],
+        "dg3": [
+            "res_a",
+            "res_b",
+            "res_c"
+        ],
+        "dg5": [
+            "res_a",
+            "res_b",
+            "res_c"
+        ],
+        "dg21": [
+            "res_a",
+            "res_b",
+            "res_c"
+        ],
+        "dg4": [
+            "res_a",
+            "res_f"
+        ],
+        "dg6": [
+            "thinlv_test"
+        ],
+        "dg123": [
+            "res_a",
+            "res_b"
+        ]
+    },
+    "Map": {},
+    "crm": {
+        "resource": [
+            [
+                "res_c",
+                "iqn.2020-04.feixitek.com:versaplx00",
+                "2",
+                "/dev/drbd1002",
+                "iqn.2020-11.com.example:pytest01",
+                "Started"
+            ]
+        ],
+        "vip": [
+            [
+                "vip",
+                "10.203.1.75",
+                "24"
+            ]
+        ],
+        "target": [
+            [
+                "t_test",
+                "iqn.2020-04.feixitek.com:versaplx00",
+                "10.203.1.75"
+            ]
+        ]
+    }
+}

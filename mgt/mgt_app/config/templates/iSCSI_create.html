@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Create</title>
+
+<link href="{{url_for('static',filename='bootstrap-3.3.7/dist/css/bootstrap.min.css')}}" rel="stylesheet" type="text/css" />
+<link href="{{url_for('static',filename='bootstrap-select-1.12.4/dist/css/bootstrap-select.min.css')}}" rel="stylesheet" type="text/css" />
+<link href="{{url_for('static',filename='personal/css/style.css')}}" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="{{url_for('static',filename='personal/js/iSCSI-input-inspection.js')}}"></script>
+<style type="text/css">
+body {
+	padding: 10px;
+}
+</style>
+
+</head>
+
+<body>
+	<div class="container">
+		<div class="row clearfix">
+
+			<!-- ------------------------ -->
+			<div class="col-md-12 ">
+				<div class="page-header">
+					<h1>
+					<small>Host</small>
+					</h1>
+				</div>
+				<div class="form-group">
+					<label for="host_name" class="col-sm-2 control-label">Host_Name</label>
+					<div class="col-sm-10">
+						<input type="text" class="form-control" id="host_name"
+							placeholder="请输入" style="width: 200px;" value=""
+							onchange="host_name_myfunction()"> <span class="red">
+							<input id="host_name_hid"  hidden="hidden" value="0">
+							<span id="host_name_examine" class="hidden">Host已存在！</span>
+							<span id="host_name_format" class="hidden">开头只能输入字母，仅包含字母，数字，以及下划线</span>
+						</span>
+					</div>
+				</div>
+				<div class="form-group">
+					<label for="host_iqn" class="col-sm-2 control-label">Host_iqn</label>
+					<div class="col-sm-10">
+						<input type="text" class="form-control" id="host_iqn"
+							placeholder="请输入" style="width: 200px;" value="" onchange="iqn_myfunction()" >
+							<input id="host_iqn_hid"  hidden="hidden" value="0">
+							<span class="red">
+						<span id="iqn_format" class="hidden">IQN正确格式: iqn.yyyy-mm.naming-authority:unique name</span>
+					</span>
+					</div>
+				</div>
+				<div class="form-group">
+					<div class="col-sm-offset-2 col-sm-10">
+						<button type="submit" class="btn btn-default" data-toggle="modal"
+							name="host_create" id="host_create" data-target="#myModal1" disabled="true">Create</button>
+					</div>
+				</div>
+			</div>
+			<script type="text/javascript" src="{{url_for('static',filename='personal/js/jquery.min.js')}}"></script>
+			<!-- ------------------------ -->
+			<div class="col-md-12 column">
+				<div class="page-header">
+					<h1>
+						<small>HostGroup</small>
+					</h1>
+				</div>
+				<div class="form-group">
+					<label for="host_group_name" class="col-sm-2 control-label">HostGroup_Name</label>
+					<div class="col-sm-10">
+						<input type="text" class="form-control" id="host_group_name"
+							placeholder="请输入" style="width: 200px;" value=""
+							onchange="hg_name_myfunction()"> <span class="red">
+							<span id="hg_name_examine" class="hidden">HostGroup
+								Name已存在！</span>
+								<span id="hg_name_format" class="hidden">开头只能输入字母，仅包含字母，数字，以及下划线</span>
+						</span>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-sm-2 ">Host</label>
+
+					<div style="width: 340px;" class="col-sm-10 ">
+						<select id='host' name="host" multiple class="selectpicker"
+							data-live-search="true">
+						</select>
+					</div>
+				</div>
+				<div class="form-group">
+					<div class="col-sm-offset-2 col-sm-10">
+						<button type="submit" class="btn btn-default" data-toggle="modal"
+							name="host_group_create" id="host_group_create"
+							data-target="#myModal1" disabled="disabled">Create</button>
+					</div>
+				</div>
+			</div>
+
+			<div class="col-md-12 ">
+				<div class="page-header">
+					<h1>
+					<small>DiskGroup</small>
+					</h1>
+				</div>
+				<div class="form-group">
+					<label for="disk_group_name" class="col-sm-2 control-label">DiskGroup_Name</label>
+					<div class="col-sm-10">
+						<input type="text" class="form-control" id="disk_group_name"
+							placeholder="请输入" style="width: 200px;" value=""
+							onchange="dg_name_myfunction()"> <span class="red">
+							<span id="dg_name_examine" class="hidden">DiskGroup
+								Name已存在！</span>
+								<span id="dg_name_format" class="hidden">开头只能输入字母，仅包含字母，数字，以及下划线</span>
+						</span>
+					</div>
+					<div class="form-group">
+						<label for="disk" class="col-sm-2 c">Disk</label>
+
+						<div style="width: 340px;" class="col-sm-10 ">
+							<select id='disk' name="disk" multiple class="selectpicker"
+								data-live-search="true">
+							</select>
+						</div>
+					</div>
+					<div class="form-group">
+						<div class="col-sm-offset-2 col-sm-10">
+							<button type="submit" class="btn btn-default" data-toggle="modal"
+								name="disk_group_create" id="disk_group_create"
+								data-target="#myModal1" disabled="disabled">Create</button>
+						</div>
+					</div>
+				</div>
+
+				<!-- ------------------------ -->
+				<div class="col-md-12 column">
+
+					<div class="page-header">
+						<h1>
+							<small>Map</small>
+						</h1>
+					</div>
+					<div class="form-group">
+						<label for="map_name" class="col-sm-2 control-label">Map_Name</label>
+						<div class="col-sm-10">
+							<input type="text" class="form-control" id="map_name"
+								placeholder="请输入" style="width: 200px;" value=""
+								onchange="map_name_myfunction()"> <span class="red">
+								<span id="map_name_examine" class="hidden">Map Name已存在！</span>
+									<span id="map_name_format" class="hidden">开头只能输入字母，仅包含字母，数字，以及下划线</span>
+							</span>
+						</div>
+					</div>
+					<div class="form-group">
+						<label for="host_group" class="col-sm-2 control-label">Host_Group</label>
+
+						<div style="width: 340px;" class="col-sm-10 ">
+							<select id='host_group' name="host_group" class="selectpicker"
+								data-live-search="true">
+							</select>
+						</div>
+					</div>
+					<div class="form-group">
+						<label for="disk_group" class="col-sm-2 control-label">Disk_Group</label>
+
+						<div style="width: 340px;" class="col-sm-10 ">
+							<select id='disk_group' name="disk_group" class="selectpicker"
+								data-live-search="true">
+							</select>
+						</div>
+					</div>
+
+					<div class="form-group">
+						<div class="col-sm-offset-2 col-sm-10">
+							<button type="submit" class="btn btn-default" data-toggle="modal"
+								name="map_create" id="map_create" data-target="#myModal1" disabled="disabled">Create</button>
+						</div>
+					</div>
+				</div>
+			</div>
+			<!-- 模态框 -->
+			<div class="modal fade" id="myModal" tabindex="-1" role="dialog"
+				aria-labelledby="myModalLabel" aria-hidden="true">
+				<div class="modal-dialog">
+					<div class="modal-content">
+						<div class="modal-header">
+							<button type="button" class="close" data-dismiss="modal"
+								aria-hidden="true">×</button>
+							<h4 class="modal-title" id="myModalLabel">模态框（Modal）标题</h4>
+						</div>
+						<div class="modal-body">
+							<div class="progress progress-striped active">
+								<div id="prog" class="progress-bar" role="progressbar"
+									aria-valuenow="" aria-valuemin="0" aria-valuemax="100"
+									style="width: 0%;">
+									<span id="monthTotal">${itsmStatisticMonth.sumCount}</span>
+								</div>
+							</div>
+							<input type="text" id="double" name="double" value="">
+						</div>
+						<div class="modal-footer">
+							<button type="button" id="newcreate" class="btn btn-default"
+								data-dismiss="modal">再次创建</button>
+							<input type="button" class="btn btn-default" value="查看表格"
+								id="see">
+						</div>
+
+					</div>
+					<!-- /.modal-content -->
+				</div>
+				<!-- /.modal-dialog -->
+			</div>
+			<!-- /.modal -->
+		</div>
+	</div>
+	<script type="text/javascript" src="{{url_for('static',filename='personal/js/JQuery.js')}}"></script>
+	<script type="text/javascript" src="{{url_for('static',filename='bootstrap-3.3.7/dist/js/bootstrap.js')}}"></script>
+	<script type="text/javascript" src="{{url_for('static',filename='bootstrap-select-1.12.4/dist/js/bootstrap-select.js')}}"></script>
+	<script type="text/javascript" src="{{url_for('static',filename='personal/js/iSCSI-Confirm-update-box.js')}}"></script>
+	<script type="text/javascript" src="{{url_for('static',filename='layui/layui.all.js')}}"></script>
+	
+	<script type="text/javascript">
+$("#newcreate").click(function(){
+ 	$("input[type=text]").val('');
+});
+</script>
+
+</body>
+</html>
