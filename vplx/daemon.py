@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from flask_vplx import app
+from flask_vplx import create_app
 import consts
 import sundry
 import log
@@ -10,7 +10,7 @@ username = sundry.get_username()
 tid = ''
 logger = log.Log(username,tid,file_name=log.WEB_LOG_NAME)
 consts.set_glo_log(logger)
-
+app = create_app()
 
 if __name__ == '__main__':
   app.run(host='0.0.0.0',  # 任何ip都可以访问

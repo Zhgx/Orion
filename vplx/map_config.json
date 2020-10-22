@@ -4,7 +4,14 @@
         "host2": "iqnxxx",
         "host3": "iqn123",
         "h5": "iqnxxx",
-        "host_w": "iqn.adf.adfadsf.adfadfs"
+        "host_w": "iqn.adf.adfadsf.adfadfs",
+        "host222": "iqn.adfasf",
+        "sda": "iqn.asdfaf",
+        "aaa": "",
+        "": "",
+        "aa": "",
+        "as": "iqn.1231-123.12",
+        "dsd": ""
     },
     "Disk": {
         "res_a": "/dev/drbd1000",
@@ -37,6 +44,9 @@
         ],
         "hg4": [
             "host3"
+        ],
+        "": [
+            ""
         ]
     },
     "DiskGroup": {

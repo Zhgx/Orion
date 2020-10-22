@@ -6,7 +6,7 @@ Created on 2020/1/5
 '''
 from flask import Flask,Blueprint
 
-datablue = Blueprint("datablue", __name__)
+data_blueprint = Blueprint("data_blueprint", __name__)
 
 # from . import views
 from flask_vplx.data import views
