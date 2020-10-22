@@ -20,14 +20,8 @@ function host_name_myfunction() {
 	} else {
 		if (!match_result) {
 			$("#host_name_hid").val("0");
-			document.getElementById("host_create").disabled = true; 
 			document.getElementById("host_name_format").className = "";
 		} else {
-			$("#host_name_hid").val("1");
-			var host_iqn_hid_val = $("#host_iqn_hid").val();
-			if (host_iqn_hid_val = "1") {
-				document.getElementById("host_create").disabled = false; 
-			}
 			document.getElementById("host_name_format").className = "hidden";
 			$
 					.ajax({
@@ -35,11 +29,11 @@ function host_name_myfunction() {
 						type : "GET",
 						dataType : "json",
 						success : function(host_result) {
-							for (i in host_result) {
-								if (i == input_result) {
-									document
-											.getElementById("host_name_examine").className = "";
-								}
+							if (input_result in host_result) {
+								$("#host_name_hid").val("0");
+								document.getElementById("host_name_examine").className = "";
+							} else {
+								$("#host_name_hid").val("1");
 							}
 						}
 					});
@@ -52,7 +46,6 @@ function host_name_myfunction() {
 function hg_name_myfunction() {
 	document.getElementById("hg_name_examine").className = "hidden";
 	document.getElementById("hg_name_format").className = "hidden";
-
 	var input_result = $('#host_group_name').val();
 	var hg_name_match_regular = /^[a-zA-Z]\w*$/;
 	match_result = hg_name_match_regular.test(input_result)
@@ -71,14 +64,14 @@ function hg_name_myfunction() {
 						type : "GET",
 						dataType : "json",
 						success : function(HG_result) {
-							for (i in HG_result) {
-								if (i == input_result) {
-									document.getElementById("hg_name_examine").className = "";
-								}
+							if (input_result = HG_result) {
+								$("#hg_name_hid").val("0");
+								document.getElementById("hg_name_examine").className = "";
+							} else {
+								$("#hg_name_hid").val("1");
 							}
 						}
 					});
-
 		}
 
 	}
@@ -91,10 +84,10 @@ function dg_name_myfunction() {
 	var input_result = $('#disk_group_name').val();
 	var dg_name_match_regular = /^[a-zA-Z]\w*$/;
 	match_result = dg_name_match_regular.test(input_result)
-	if(!input_result){
+	if (!input_result) {
 		document.getElementById("dg_name_examine").className = "hidden";
 		document.getElementById("dg_name_format").className = "hidden";
-	}else {
+	} else {
 		if (!match_result) {
 			document.getElementById("dg_name_format").className = "";
 		} else {
@@ -105,10 +98,11 @@ function dg_name_myfunction() {
 						type : "GET",
 						dataType : "json",
 						success : function(DG_result) {
-							for (i in DG_result) {
-								if (i == input_result) {
-									document.getElementById("dg_name_examine").className = "";
-								}
+							if (input_result in DG_result) {
+								$("#dg_name_hid").val("0");
+								document.getElementById("dg_name_examine").className = "";
+							} else {
+								$("#dg_name_hid").val("1");
 							}
 						}
 					});
@@ -122,24 +116,33 @@ function map_name_myfunction() {
 	var input_result = $('#map_name').val();
 	var map_name_match_regular = /^[a-zA-Z]\w*$/;
 	match_result = map_name_match_regular.test(input_result)
-	if (!match_result) {
-		document.getElementById("map_name_format").className = "";
-	} else {
+	if (!input_result) {
+		document.getElementById("map_name_examine").className = "hidden";
 		document.getElementById("map_name_format").className = "hidden";
-		$
-				.ajax({
-					url : masterIp + "/map/show/data",
-					type : "GET",
-					dataType : "json",
-					success : function(Map_result) {
-						for (i in Map_result) {
-							if (i == input_result) {
+	} else {
+		if (!match_result) {
+			document.getElementById("map_name_format").className = "";
+		} else {
+
+			document.getElementById("map_name_format").className = "hidden";
+			$
+					.ajax({
+						url : masterIp + "/map/show/data",
+						type : "GET",
+						dataType : "json",
+						success : function(Map_result) {
+							if (input_result in Map_result) {
+								$("#map_name_hid").val("0");
 								document.getElementById("map_name_examine").className = "";
+							} else {
+								$("#map_name_hid").val("1");
 							}
 						}
-					}
-				});
+					});
+		}
+
 	}
+
 }
 function iqn_myfunction() {
 	document.getElementById("iqn_format").className = "hidden";
@@ -151,13 +154,8 @@ function iqn_myfunction() {
 	} else {
 		if (!match_result) {
 			document.getElementById("iqn_format").className = "";
-		}else {
-			var host_name_hid_val= $("#host_name_hid").val();
-			alert(host_name_hid_val);
-			if (host_name_hid_val = "1") {
-				document.getElementById("host_create").disabled = false; 
-			}
-			
+		} else {
+			$("#host_iqn_hid").val("1");
 		}
 	}
 }
