@@ -338,8 +338,8 @@ class Map():
             s.prt_log("Could not perform requested operations, are you root?",1)
         else:
             for disk in resname:
-                if obj_crm.delete_res(disk):
-                    self.js.delete_data('Map', map)
-                    s.prt_log("Delete map success!", 0)
-                else:
+                if obj_crm.delete_res(disk) != True:
                     return False
+            self.js.delete_data('Map', map)
+            s.prt_log("Delete map success!", 0)
+            return True
