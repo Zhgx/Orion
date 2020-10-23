@@ -255,6 +255,9 @@ class Map():
         initiator = self.get_initiator(hg)
         target_name, target_iqn = self.get_target()
         disk_list = self.get_disk_data(dg)
+        # 用于收集创建成功的resource
+        list_res_created = []
+
         # 执行创建和启动
         for i in disk_list:
             res = i
@@ -269,9 +272,16 @@ class Map():
                     s.prt_log(f"try to start {res}", 0)
                     obj_crm.start_res(res)
                     obj_crm.checkout_status_start(res)
+                else:
+                    for i in list_res_created:
+                        obj_crm.delete_res(i)
+                    return False
             else:
                 s.prt_log('Fail to create iSCSILogicalUnit',1)
+                for i in list_res_created:
+                    obj_crm.delete_res(i)
                 return False
+
         self.js.add_data('Map', map, [hg, dg])
         s.prt_log('Create map success!', 0)
         return True
