@@ -6,7 +6,7 @@ Created on 2020/1/5
 '''
 from flask import Flask,Blueprint
 
-data_blueprint = Blueprint("data_blueprint", __name__)
+stor_blueprint = Blueprint("stor_blueprint", __name__)
 
 # from . import views
-from flask_vplx.data import views
+from vplx_app.stor import views

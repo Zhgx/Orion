@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Create</title>
+
+<link
+	href="{{url_for('static',filename='bootstrap-3.3.7/dist/css/bootstrap.min.css')}}"
+	rel="stylesheet" type="text/css" />
+<link
+	href="{{url_for('static',filename='bootstrap-select-1.12.4/dist/css/bootstrap-select.min.css')}}"
+	rel="stylesheet" type="text/css" />
+<link href="{{url_for('static',filename='personal/css/style.css')}}"
+	rel="stylesheet" type="text/css" />
+<script type="text/javascript"
+	src="{{url_for('static',filename='personal/js/iSCSI-input-inspection.js')}}"></script>
+<style type="text/css">
+body {
+	padding: 10px;
+}
+</style>
+
+</head>
+
+<body>
+	<div class="container">
+		<div class="row clearfix">
+			<div class="col-md-12 column">
+
+				<div class="page-header">
+					<h1>
+						<small>Map</small>
+					</h1>
+				</div>
+				<div class="form-group">
+					<label for="map_name" class="col-sm-2 control-label">Map_Name</label>
+					<div class="col-sm-10">
+						<input type="text" class="form-control" id="map_name"
+							placeholder="请输入" style="width: 200px;" value=""
+							onchange="map_name_myfunction()"> <input
+							id="map_name_hid" hidden="hidden" value="0"> <span
+							class="red"> <span id="map_name_examine" class="hidden">Map
+								Name已存在！</span> <span id="map_name_format" class="hidden">开头只能输入字母，仅包含字母，数字，以及下划线</span>
+						</span>
+					</div>
+				</div>
+				<div class="form-group">
+					<label for="host_group" class="col-sm-2 control-label">Host_Group</label>
+
+					<div style="width: 340px;" class="col-sm-10 ">
+						<select id='host_group' name="host_group" class="selectpicker"
+							data-live-search="true">
+						</select>
+					</div>
+				</div>
+				<div class="form-group">
+					<label for="disk_group" class="col-sm-2 control-label">Disk_Group</label>
+
+					<div style="width: 340px;" class="col-sm-10 ">
+						<select id='disk_group' name="disk_group" class="selectpicker"
+							data-live-search="true">
+						</select>
+					</div>
+				</div>
+
+				<div class="form-group">
+					<div class="col-sm-offset-2 col-sm-10">
+						<button type="submit" class="btn btn-default" data-toggle="modal"
+							name="map_create" id="map_create" data-target="#myModal1">Create</button>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<script type="text/javascript"
+		src="{{url_for('static',filename='personal/js/JQuery.js')}}"></script>
+	<script type="text/javascript"
+		src="{{url_for('static',filename='bootstrap-3.3.7/dist/js/bootstrap.js')}}"></script>
+	<script type="text/javascript"
+		src="{{url_for('static',filename='bootstrap-select-1.12.4/dist/js/bootstrap-select.js')}}"></script>
+	<script type="text/javascript"
+		src="{{url_for('static',filename='personal/js/iSCSI-Confirm-update-box.js')}}"></script>
+	<script type="text/javascript"
+		src="{{url_for('static',filename='layui/layui.all.js')}}"></script>
+
+	<script type="text/javascript">
+$("#newcreate").click(function(){
+ 	$("input[type=text]").val('');
+});
+</script>
+
+</body>
+</html>

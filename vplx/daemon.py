@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from flask_vplx import create_app
+from vplx_app import create_app
 import consts
 import sundry
 import log

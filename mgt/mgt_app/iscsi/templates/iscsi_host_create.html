@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Create</title>
+
+<link
+	href="{{url_for('static',filename='bootstrap-3.3.7/dist/css/bootstrap.min.css')}}"
+	rel="stylesheet" type="text/css" />
+<link
+	href="{{url_for('static',filename='bootstrap-select-1.12.4/dist/css/bootstrap-select.min.css')}}"
+	rel="stylesheet" type="text/css" />
+<link href="{{url_for('static',filename='personal/css/style.css')}}"
+	rel="stylesheet" type="text/css" />
+<script type="text/javascript"
+	src="{{url_for('static',filename='personal/js/iSCSI-input-inspection.js')}}"></script>
+<style type="text/css">
+body {
+	padding: 10px;
+}
+</style>
+
+</head>
+
+<body>
+	<div class="container">
+		<div class="row clearfix">
+
+			<!-- ------------------------ -->
+			<div class="col-md-12 ">
+				<div class="page-header">
+					<h1>
+						<small>Host</small>
+					</h1>
+				</div>
+				<div class="form-group">
+					<label for="host_name" class="col-sm-2 control-label">Host_Name</label>
+					<div class="col-sm-10">
+						<input type="text" class="form-control" id="host_name"
+							placeholder="请输入" style="width: 200px;" value=""
+							onchange="host_name_myfunction()"> <input
+							id="host_name_hid" hidden="hidden" value="0"> <span
+							class="red"> <span id="host_name_examine" class="hidden">Host已存在！</span>
+							<span id="host_name_format" class="hidden">开头只能输入字母，仅包含字母，数字，以及下划线</span>
+						</span>
+					</div>
+				</div>
+				<div class="form-group">
+					<label for="host_iqn" class="col-sm-2 control-label">Host_iqn</label>
+					<div class="col-sm-10">
+						<input type="text" class="form-control" id="host_iqn"
+							placeholder="请输入" style="width: 200px;" value=""
+							onchange="iqn_myfunction()"> <input id="host_iqn_hid"
+							hidden="hidden" value="0"> <span class="red"> <span
+							id="iqn_format" class="hidden">IQN正确格式:
+								iqn.yyyy-mm.naming-authority:unique name</span>
+						</span>
+					</div>
+				</div>
+				<div class="form-group">
+					<div class="col-sm-offset-2 col-sm-10">
+						<button type="submit" class="btn btn-default" data-toggle="modal"
+							name="host_create" id="host_create" data-target="#myModal1">Create</button>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<script type="text/javascript"
+		src="{{url_for('static',filename='personal/js/JQuery.js')}}"></script>
+	<script type="text/javascript"
+		src="{{url_for('static',filename='bootstrap-3.3.7/dist/js/bootstrap.js')}}"></script>
+	<script type="text/javascript"
+		src="{{url_for('static',filename='bootstrap-select-1.12.4/dist/js/bootstrap-select.js')}}"></script>
+	<script type="text/javascript"
+		src="{{url_for('static',filename='personal/js/iSCSI-Confirm-update-box.js')}}"></script>
+	<script type="text/javascript"
+		src="{{url_for('static',filename='layui/layui.all.js')}}"></script>
+
+	<script type="text/javascript">
+$("#newcreate").click(function(){
+ 	$("input[type=text]").val('');
+});
+</script>
+
+</body>
+</html>
