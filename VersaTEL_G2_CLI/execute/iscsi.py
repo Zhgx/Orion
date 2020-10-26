@@ -266,6 +266,7 @@ class Map():
             lunid = int(path[-4:]) - 1000
             # 创建iSCSILogicalUnit
             if obj_crm.create_crm_res(res, target_iqn, lunid, path, initiator):
+                list_res_created.append(res)
                 # 创建order，colocation
                 if obj_crm.create_set(res, target_name):
                     # 尝试启动资源，成功失败都不影响创建

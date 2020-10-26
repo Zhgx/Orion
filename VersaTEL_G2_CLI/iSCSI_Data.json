@@ -17,7 +17,11 @@
     },
     "DiskGroup": {
         "dg1": [
-            "res_d"
+            "res_a",
+            "res_b"
+        ],
+        "dg2": [
+            "res_b"
         ]
     },
     "Map": {},
