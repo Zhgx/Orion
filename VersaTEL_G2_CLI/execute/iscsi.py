@@ -233,21 +233,20 @@ class Map():
                 # 返回target_name, target_iqn
                 return target_all[0], target_all[1]
             else:
-                s.prt_log('没有target，创建map失败', 2)
+                s.prt_log('No target，please create target first', 2)
 
-    def get_drbd_data(self, dg):
-        # 根据dg去收集drbdd的三项数据：resource name，minor number，device name
-        disk_all = self.js.get_data('DiskGroup').get(dg)
+    def get_disk_data(self, dg):
+        # 根据dg去收集drbdd的三项数据：resource name，device name
+        disk = self.js.get_data('DiskGroup').get(dg)
         linstor = Linstor()
-        linstorlv = linstor.get_linstor_data(
-            'linstor --no-color --no-utf8 r lv')
-        drdb_list = []
-        for res in linstorlv:
-            for disk_one in disk_all:
-                if disk_one in res:
-                    # 取Resource,MinorNr,DeviceName
-                    drdb_list.append([res[1], res[4], res[5]])
-        return drdb_list
+        linstor_res = linstor.get_linstor_data('linstor --no-color --no-utf8 r lv')
+        disks = {}
+        for disk_all in linstor_res:
+            # 获取diskgroup中每个disk的相关数据
+            for d in disk:
+                if d in disk_all:
+                    disks.update({disk_all[1]: disk_all[5]})  # 取Resource, DeviceName
+        return disks
 
     def create_map(self, map, hg, dg):
         # 创建前的检查
@@ -257,27 +256,37 @@ class Map():
         obj_crm = CRMConfig()
         initiator = self.get_initiator(hg)
         target_name, target_iqn = self.get_target()
-        drdb_list = self.get_drbd_data(dg)
+        disk_list = self.get_disk_data(dg)
+        # 用于收集创建成功的resource
+        list_res_created = []
 
         # 执行创建和启动
-        for i in drdb_list:
-            res, minor_nr, path = i
-            lunid = int(minor_nr) - 1000
+        for i in disk_list:
+            res = i
+            path = disk_list[i]
+            # 取DeviceName后四位数字，减一千作为lun id
+            lunid = int(path[-4:]) - 1000
+            # 创建iSCSILogicalUnit
             if obj_crm.create_crm_res(res, target_iqn, lunid, path, initiator):
-                c = obj_crm.create_col(res, target_name)
-                o = obj_crm.create_order(res, target_name)
-                if c and o:
-                    s.prt_log(f'create colocation and order success:{res}', 0)
+                list_res_created.append(res)
+                # 创建order，colocation
+                if obj_crm.create_set(res, target_name):
+                    # 尝试启动资源，成功失败都不影响创建
+                    s.prt_log(f"try to start {res}", 0)
                     obj_crm.start_res(res)
-                    obj_crm.checkout_status_fromst(res)
+                    obj_crm.checkout_status_start(res)
                 else:
-                    s.prt_log("create colocation and order fail", 1)
+                    for i in list_res_created:
+                        obj_crm.delete_res(i)
                     return False
             else:
-                s.prt_log('Failde to create resource!', 1)
+                s.prt_log('Fail to create iSCSILogicalUnit',1)
+                for i in list_res_created:
+                    obj_crm.delete_res(i)
                 return False
 
         self.js.add_data('Map', map, [hg, dg])
+        s.prt_log('Create map success!', 0)
         return True
 
     def get_all_map(self):
@@ -293,7 +302,6 @@ class Map():
         hg, dg = self.js.get_data('Map').get(map)
         host = self.js.get_data('HostGroup').get(hg)
         disk = self.js.get_data('DiskGroup').get(dg)
-
         for i in host:
             iqn = self.js.get_data('Host').get(i)
             dict_hg.update({i: iqn})
@@ -341,10 +349,8 @@ class Map():
             s.prt_log("Could not perform requested operations, are you root?", 1)
         else:
             for disk in resname:
-                if obj_crm.delete_crm_res(disk):
-                    s.prt_log(f"delete {disk}", 0)
-                else:
+                if obj_crm.delete_res(disk) != True:
                     return False
             self.js.delete_data('Map', map)
-            s.prt_log("Delete success!", 0)
+            s.prt_log("Delete map success!", 0)
             return True

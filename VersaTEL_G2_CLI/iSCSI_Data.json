@@ -1,39 +1,20 @@
 {
     "Host": {
-        "h1": "iqn.2020-04.feixitek.com:pytest01"
+        "h1": "iqn.2020-11.com.example:pytest01",
+        "h2": "iqn.2020-11.com.example:pytest02"
     },
     "Disk": {
         "res_a": "/dev/drbd1000",
         "res_b": "/dev/drbd1001",
         "res_c": "/dev/drbd1002",
-        "res_d": "/dev/drbd1003",
-        "res_e": "/dev/drbd1005",
-        "thinlv_test": "/dev/drbd1004"
+        "res_d": "/dev/drbd1003"
     },
     "HostGroup": {
         "hg1": [
             "h1"
         ]
     },
-    "DiskGroup": {
-        "dgtest": [
-            "thinlv_test"
-        ],
-        "dg_test1": [
-            "res_c",
-            "res_d"
-        ],
-        "dg1": [
-            "res_b"
-        ],
-        "dg2": [
-            "res_c"
-        ],
-        "dg3": [
-            "res_b",
-            "res_c"
-        ]
-    },
+    "DiskGroup": {},
     "Map": {},
     "crm": {
         "resource": [
