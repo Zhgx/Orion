@@ -4,12 +4,7 @@
         "h2": "iqn.2020-11.com.example:pytest02"
     },
     "Disk": {
-        "res_a": "/dev/drbd1000",
-        "res_b": "/dev/drbd1001",
-        "res_c": "/dev/drbd1002",
-        "res_d": "/dev/drbd1003",
-        "res_e": "/dev/drbd1005",
-        "thinlv_test": "/dev/drbd1004"
+        "pytest_disk": "pytest_path"
     },
     "HostGroup": {
         "hg1": [
