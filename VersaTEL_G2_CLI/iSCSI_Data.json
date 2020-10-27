@@ -7,7 +7,9 @@
         "res_a": "/dev/drbd1000",
         "res_b": "/dev/drbd1001",
         "res_c": "/dev/drbd1002",
-        "res_d": "/dev/drbd1003"
+        "res_d": "/dev/drbd1003",
+        "res_e": "/dev/drbd1005",
+        "thinlv_test": "/dev/drbd1004"
     },
     "HostGroup": {
         "hg1": [
