@@ -5,12 +5,12 @@ import subprocess
 class TestDisk:
 
     def setup_class(self):
-        subprocess.run('python vtel_client_main.py stor r c res_test -s 10m -a -num 1', shell=True)
-        subprocess.run('python vtel_client_main.py iscsi d s', shell=True)
+        subprocess.run('python3 vtel_client_main.py stor r c res_test -s 10m -a -num 1', shell=True)
+        subprocess.run('python3 vtel_client_main.py iscsi d s', shell=True)
         self.disk = iscsi.Disk()
 
     def teardown_class(self):
-        subprocess.run('python vtel_client_main.py stor r d res_test -y', shell=True)
+        subprocess.run('python3 vtel_client_main.py stor r d res_test -y', shell=True)
 
     def test_get_all_disk(self):
         assert self.disk.get_all_disk() != None
@@ -31,7 +31,7 @@ class TestHost:
         self.host = iscsi.Host()
 
     def test_create_host(self):
-        assert self.host.create_host('test_host1', 'test_iqn') == True
+        assert self.host.create_host('test_host1', 'iqn.2020-04.feixitek.com:pytest01') == True
 
     def test_get_all_host(self):
         assert self.host.get_all_host() != None
@@ -52,8 +52,8 @@ class TestHost:
 class TestDiskGroup:
 
     def setup_class(self):
-        subprocess.run('python vtel_client_main.py stor r c res_test -s 10m -a -num 1', shell=True)
-        subprocess.run('python vtel_client_main.py iscsi d s', shell=True)
+        subprocess.run('python3 vtel_client_main.py stor r c res_test -s 10m -a -num 1', shell=True)
+        subprocess.run('python3 vtel_client_main.py iscsi d s', shell=True)
         self.diskg = iscsi.DiskGroup()
 
     def teardown_class(self):
@@ -82,7 +82,7 @@ class TestHostGroup:
 
     def setup_class(self):
         self.host = iscsi.Host()
-        self.host.create_host('test_host1', 'test_iqn')
+        self.host.create_host('test_host1', 'iqn.2020-04.feixitek.com:pytest01')
         self.hostg = iscsi.HostGroup()
 
     def teardown_class(self):
@@ -110,18 +110,18 @@ class TestHostGroup:
 class TestMap:
 
     def setup_class(self):
-        subprocess.run('python vtel_client_main.py stor r c res_test -s 10m -a -num 1', shell=True)
-        subprocess.run('python vtel_client_main.py iscsi d s', shell=True)
-        subprocess.run('python vtel_client_main.py iscsi dg c test_dg res_test', shell=True)
-        subprocess.run('python vtel_client_main.py iscsi h c test_host test_iqn', shell=True)
-        subprocess.run('python vtel_client_main.py iscsi hg c test_hg test_host', shell=True)
+        subprocess.run('python3 vtel_client_main.py stor r c res_test -s 10m -a -num 1', shell=True)
+        subprocess.run('python3 vtel_client_main.py iscsi d s', shell=True)
+        subprocess.run('python3 vtel_client_main.py iscsi dg c test_dg res_test', shell=True)
+        subprocess.run('python3 vtel_client_main.py iscsi h c test_host iqn.2020-04.feixitek.com:pytest01', shell=True)
+        subprocess.run('python3 vtel_client_main.py iscsi hg c test_hg test_host', shell=True)
         self.map = iscsi.Map()
 
     def teardown_class(self):
-        subprocess.run('python vtel_client_main.py iscsi hg d test_hg', shell=True)
-        subprocess.run('python vtel_client_main.py iscsi h d test_host', shell=True)
-        subprocess.run('python vtel_client_main.py iscsi dg d test_dg', shell=True)
-        subprocess.run('python vtel_client_main.py stor r d res_test -y', shell=True)
+        subprocess.run('python3 vtel_client_main.py iscsi hg d test_hg', shell=True)
+        subprocess.run('python3 vtel_client_main.py iscsi h d test_host', shell=True)
+        subprocess.run('python3 vtel_client_main.py iscsi dg d test_dg', shell=True)
+        subprocess.run('python3 vtel_client_main.py stor r d res_test -y', shell=True)
 
     def test_pre_check_create_map(self):
         assert self.map.pre_check_create_map('test_map', 'test_hg1', 'test_dg') == None
@@ -129,7 +129,7 @@ class TestMap:
         assert self.map.pre_check_create_map('test_map', 'test_hg', 'test_dg') == True
 
     def test_get_initiator(self):
-        assert self.map.get_initiator('test_hg') == 'test_iqn'
+        assert self.map.get_initiator('test_hg') == 'iqn.2020-04.feixitek.com:pytest01'
 
     def test_get_target(self):
         assert self.map.get_target() != None

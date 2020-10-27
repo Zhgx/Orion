@@ -7,6 +7,7 @@
         "res_b": "/dev/drbd1001",
         "res_c": "/dev/drbd1002",
         "res_d": "/dev/drbd1003",
+        "res_e": "/dev/drbd1005",
         "thinlv_test": "/dev/drbd1004"
     },
     "HostGroup": {
@@ -33,5 +34,31 @@
             "res_c"
         ]
     },
-    "Map": {}
+    "Map": {},
+    "crm": {
+        "resource": [
+            [
+                "thinlv_test",
+                "iqn.2020-04.feixitek.com:versaplx00",
+                "04",
+                "/dev/drbd1004",
+                "iqn123 ",
+                "Started"
+            ]
+        ],
+        "vip": [
+            [
+                "vip",
+                "10.203.1.75",
+                "24"
+            ]
+        ],
+        "target": [
+            [
+                "t_test",
+                "iqn.2020-04.feixitek.com:versaplx00",
+                "10.203.1.75"
+            ]
+        ]
+    }
 }
