@@ -17,12 +17,8 @@ import consts
 import pprint
 
 
-def get_function_name():
-    '''获取正在运行函数(或方法)名称'''
-    return inspect.stack()[1][3]
 
-
-def record_exception(func):
+def deco_record_exception(func):
     """
     Decorator
     Get exception, throw the exception after recording
@@ -37,7 +33,7 @@ def record_exception(func):
     return wrapper
 
 
-def comfirm_del(type):
+def deco_comfirm_del(type):
     """
     Decorator providing confirmation of deletion function.
     :param func: Function to delete linstor resource
@@ -73,26 +69,6 @@ def get_answer():
             time = ''
         print(f'RE:{time:<20} 用户输入: {answer}')
     return answer
-
-
-
-
-
-def timeout(seconds,error_message = 'Funtion call timed out'):
-    def decorated(func):
-        def _handled_timeout(signum,frame):
-            raise TimeoutError(error_message)
-
-        def wrapper(*args,**kwargs):
-            signal.signal(signal.SIGALRM, _handled_timeout)
-            signal.alarm(seconds)
-            try:
-                result = func(*args,**kwargs)
-            finally:
-                signal.alarm(0)
-            return result
-        return wrapper
-    return decorated
 
 
 def create_transaction_id():
@@ -154,8 +130,6 @@ def show_map_data(list_header,dict_data):
         for i, j in dict_data.items():
             j.insert(0,i)
             table.add_row(j)
-    else:
-        pass
     return table
 
 
@@ -173,7 +147,14 @@ def show_linstor_data(list_header,list_data):
 def change_pointer(new_id):
     consts.set_glo_log_id(new_id)
 
-def cmd_decorator(type):
+def deco_cmd(type):
+    """
+    装饰器
+    用于装饰系统命令的执行
+    :param type: 系统命令的类型(sys,linstor,crm)
+    :return:返回命令执行结果
+    """
+
     def decorate(func):
         @wraps(func)
         def wrapper(cmd):
@@ -209,7 +190,7 @@ def cmd_decorator(type):
     return decorate
 
 
-@cmd_decorator('sys')
+@deco_cmd('sys')
 def execute_cmd(cmd, timeout=60):
     p = subprocess.Popen(cmd, stderr=subprocess.STDOUT,
                          stdout=subprocess.PIPE, shell=True)
@@ -273,7 +254,7 @@ def prt_log(str_, warning_level):
             raise consts.ReplayExit
 
 
-def color_data(func):
+def deco_color(func):
     """
     装饰器，给特定的linstor数据进行着色
     :param func:
@@ -294,7 +275,7 @@ def color_data(func):
 
 
 
-def json_operate_decorator(str):
+def deco_json_operation(str):
     """
     Decorator providing confirmation of deletion function.
     :param func: Function to delete linstor resource
@@ -328,7 +309,7 @@ def json_operate_decorator(str):
     return decorate
 
 
-def sql_insert_decorator(func):
+def deco_db_insert(func):
     @wraps(func)
     def wrapper(self, sql, data, tablename):
         RPL = consts.glo_rpl()
@@ -350,7 +331,6 @@ def sql_insert_decorator(func):
             print()# 格式上的换行
             if id_result['db_id']:
                 change_pointer(id_result['db_id'])
-
     return wrapper
 
 
