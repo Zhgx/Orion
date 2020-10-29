@@ -26,6 +26,8 @@ def execute_crm_cmd(cmd, timeout=60):
             raise TimeoutError(cmd, timeout)
         time.sleep(0.1)
     out, err = p.communicate()
+    print('out', out)
+    print('err', err)
     if len(out) > 0:
         out = out.decode()
         output = {'sts': 1, 'rst': out}
@@ -182,18 +184,18 @@ class CRMConfig():
     def delete_conf_res(self, res):
         cmd = f'crm conf del {res}'
         result = execute_crm_cmd(cmd)
-        if result:
+        if result['sts']:
+            s.prt_log(f"delete resource success: {res}", 0)
+            return True
+        else:
             output = result['rst']
             re_str = re.compile(rf'INFO: hanging colocation:co_{res} deleted\nINFO: hanging order:or_{res} deleted\n')
             if s.re_search(re_str, output):
                 s.prt_log(f"delete colocation:co_{res}, order:or_{res} success", 0)
                 return True
             else:
-                if result['sts']:
-                    s.prt_log(f"delete resource success: {res}", 0)
-                    return True
-                else:
-                    s.prt_log(f"delete resource fail", 1)
+                s.prt_log(f"delete resource fail", 1)
+                return False
 
     def create_col(self, res, target):
         cmd = f'crm conf colocation co_{res} inf: {res} {target}'
