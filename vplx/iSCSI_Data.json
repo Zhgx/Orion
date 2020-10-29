@@ -3,29 +3,14 @@
         "host1": "iqnxx",
         "host2": "iqnxxx",
         "host3": "iqn123",
-        "Host1": "iqn.2033-22.dsd",
-        "host123": "iqn.2033-232.xx",
-        "host1sd": "iqn.2032-23.dsd",
-        "host212": "iqn.2033-32.xx",
-        "host231": "iqn.2303-322.xx",
-        "host122": "iqn.2302-23.xx",
-        "host2132": "iqn.2323-23.xs",
-        "host1232": "iqn.2323-32.x",
-        "host2121": "iqn.2032-23.xx",
-        "hostwen": "iqn.2032-232.xx",
-        "host44": "iqn.2032-33.xx",
-        "host_test111": "iqn.2030-33.xxxx",
-        "host_test2": "iqn-2222-22.xx",
-        "host_test3": "iqn.2222-22.xxxx",
-        "host1212": "iqn-2233-23.xx",
-        "host132332": "iqn-2323-232.xsx"
+        "h5": "iqnxxx",
+        "host_w": "iqn.adf.adfadsf.adfadfs"
     },
     "Disk": {
         "res_a": "/dev/drbd1000",
         "res_b": "/dev/drbd1001",
         "res_c": "/dev/drbd1002",
         "res_d": "/dev/drbd1003",
-        "res_e": "/dev/drbd1005",
         "thinlv_test": "/dev/drbd1004"
     },
     "HostGroup": {
@@ -83,17 +68,12 @@
         "dg6": [
             "thinlv_test"
         ],
-        "dg110": [
+        "dg123": [
             "res_a",
             "res_b"
         ]
     },
-    "Map": {
-        "Map1": [
-            "hg4",
-            "dg4"
-        ]
-    },
+    "Map": {},
     "crm": {
         "resource": [
             [

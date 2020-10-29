@@ -4,18 +4,16 @@
 <meta charset="utf-8">
 <meta name="viewport"
 	content="width=device-width, initial-scale=1, maximum-scale=1">
-<title>VersaTEL G2</title>
-<link href="https://www.layuicdn.com/layui/css/layui.css"
+<title>orion</title>
+<link href="{{url_for('static',filename='layui/css/layui.css')}}"
 	rel="stylesheet" type="text/css" />
-<script src="{{ url_for('static',filename='JQuery.js') }}"></script>
-<script src="{{ url_for('static',filename='layui.all.js') }}"></script>
 <style>
 .layui-side-scroll {
 	width: 100%;
 }
 
 .layui-nav-tree {
-	width: 100%;ss
+	width: 100%;
 }
 
 .layui-layout-admin .layui-header {
@@ -38,7 +36,7 @@
 <body class="layui-layout-body">
 	<div class="layui-layout layui-layout-admin">
 		<div class="layui-header">
-			<div class="layui-logo">G2</div>
+			<div class="layui-logo">Orion</div>
 			<!-- 头部区域（可配合layui已有的水平导航） -->
 			<ul class="layui-nav layui-layout-left">
 				<li class="layui-nav-item"><a href="">待定页</a></li>
@@ -70,29 +68,30 @@
 						<!-- 图片区，后续自行添加 -->
 						<!-- <li><a href="javascript:;"><img class="logo"
                             src="images/logo.png" alt=""></a></li> -->
-						<li class="layui-nav-item layui-nav-itemed"><a class="title"
-							onclick="selectItem(this)" id="LINSTOR_Create"><span>LINSTOR_Create</span></a></li>
+						<li class="layui-nav-item "><a class="title"
+							onclick="selectItem(this)" id="LINSTOR"><span>LINSTOR</span></a>
+							<dl class="layui-nav-child">
+								<dd>
+									<a onclick="selectItem(this)" id="Resource">Resource</a>
+								</dd>
+							</dl></li>
 
-						<li class="layui-nav-item layui-nav-itemed"><a class="title"
-							onclick="selectItem(this)" id="iSCSI_Create"><span>iSCSI_Create</span></a></li>
-
-
-						<li class="layui-nav-item layui-nav-itemed"><a class="title"
-							onclick="selectItem(this)" id="Show"><span>Show</span></a></li>
-
-						<li class="layui-nav-item"><a class="title"
-							onclick="selectItem(this)" id="Node"><span>Node</span></a></li>
-
-						<li class="layui-nav-item"><a class="title"
-							onclick="selectItem(this)" id="Resource"><span>Resource</span></a></li>
-
-						<li class="layui-nav-item"><a class="title"
-							onclick="selectItem(this)" id="StoragePool"><span>StoragePool</span></a></li>
-
-						<li class="layui-nav-item"><a class="title"
-							onclick="selectItem(this)" id="iSCSI_Show"><span>iSCSI_Show</span></a></li>
-
-
+						<li class="layui-nav-item "><a class="title"
+							onclick="selectItem(this)" id="iSCSI"><span>iSCSI</span></a>
+							<dl class="layui-nav-child">
+								<dd>
+									<a onclick="selectItem(this)" id="Host">Host</a>
+								</dd>
+								<dd>
+									<a onclick="selectItem(this)" id="HostGroup">HostGroup</a>
+								</dd>
+								<dd>
+									<a onclick="selectItem(this)" id="DiskGroup">DiskGroup</a>
+								</dd>
+								<dd>
+									<a onclick="selectItem(this)" id="Map">Map</a>
+								</dd>
+							</dl></li>
 					</ul>
 				</div>
 			</div>
@@ -101,7 +100,8 @@
 		<div class="fourteen wide stretched column" id="mainpage">
 			<iframe
 				style="border: 0; width: 85%; min-height: 80%; margin-left: 15%; max-width: 1700px; position: absolute; z-index: 9999;"
-				src="/show" frameborder="0" scrolling="auto" id="iframecontend"></iframe>
+				src="/index/preview" frameborder="0" scrolling="auto"
+				id="iframecontend"></iframe>
 			<!-- src里面可以放主页网址 -->
 		</div>
 		<div class="layui-footer">
@@ -109,30 +109,34 @@
 			© feixitek.com
 		</div>
 	</div>
+		<script type="text/javascript"
+		src="{{url_for('static',filename='personal/js/JQuery.js')}}"></script>
+	<script type="text/javascript"
+		src="{{url_for('static',filename='layui/layui.all.js')}}"></script>
 	<script type="text/javascript">
     function selectItem(obj) {
         $('.active.item').removeClass("active");
         obj.className += " active";
-        if(obj.id=='LINSTOR_Create'){
-            $('#mainpage iframe').attr('src',"/LINSTOR_create");
+        if(obj.id=='LINSTOR'){
+            $('#mainpage iframe').attr('src',"/index/stor");
             $('#mainpage iframe').css({ "margin-left": "15%","max-width":"1700px"}); 
-        }else if(obj.id=='iSCSI_Create'){
-            $('#mainpage iframe').attr('src',"/iSCSI_create");
+        }else if(obj.id=='iSCSI'){
+            $('#mainpage iframe').attr('src',"/iscsi/all");
             $('#mainpage iframe').css({ "margin-left": "15%","max-width":"1700px"}); 
-        }else if(obj.id=='Show'){
-            $('#mainpage iframe').attr('src',"/show");
+        }else if(obj.id=='Host'){
+            $('#mainpage iframe').attr('src',"/iscsi/host");
             $('#mainpage iframe').css({ "margin-left": "15%","max-width":"1700px"}); 
-        }else if(obj.id=='Node'){
-                $('#mainpage iframe').attr('src',"/Node");
+        }else if(obj.id=='HostGroup'){
+                $('#mainpage iframe').attr('src',"/iscsi/hostgroup");
+                $('#mainpage iframe').css({ "margin-left": "15%","max-width":"1700px"});
+        }else if(obj.id=='DiskGroup'){
+                $('#mainpage iframe').attr('src',"/iscsi/diskgroup");
+                $('#mainpage iframe').css({ "margin-left": "15%","max-width":"1700px"});
+        }else if(obj.id=='Map'){
+                $('#mainpage iframe').attr('src',"/iscsi/map");
                 $('#mainpage iframe').css({ "margin-left": "15%","max-width":"1700px"});
         }else if(obj.id=='Resource'){
-                $('#mainpage iframe').attr('src',"/Resource");
-                $('#mainpage iframe').css({ "margin-left": "15%","max-width":"1700px"});
-        }else if(obj.id=='StoragePool'){
-                $('#mainpage iframe').attr('src',"/StoragePool");
-                $('#mainpage iframe').css({ "margin-left": "15%","max-width":"1700px"});
-        }else if(obj.id=='iSCSI_Show'){
-                $('#mainpage iframe').attr('src',"/iSCSI_Show");
+                $('#mainpage iframe').attr('src',"/stor/resource/show");
                 $('#mainpage iframe').css({ "margin-left": "15%","max-width":"1700px"});
         }
         }
@@ -178,7 +182,7 @@
     });
 
 </script>
-<script type="text/javascript">
+	<!-- 	<script type="text/javascript">
 	$("#LINSTOR_Create").click(function(){
 		$.ajax({
 			url:"/socket",
@@ -189,8 +193,14 @@
 		})
 	});
 
-
-</script>>
+</script> -->
+	<script type="text/javascript">
+layui.use(['tree','element'], function(){
+  var tree = layui.tree
+  ,element = layui.element;
+  //分类树
+});
+</script>
 
 </body>
 </html>
