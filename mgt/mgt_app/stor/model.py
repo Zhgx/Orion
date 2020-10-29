@@ -13,9 +13,9 @@ class Index(views.MethodView):
     def get(self):
         return render_template("index.html")
     
-class Stor(views.MethodView):
+class IndexStor(views.MethodView):
     def get(self):
-        return render_template("prompt_show.html")
+        return render_template("index_linstor_preview.html")
     
     
 class Resource(views.MethodView):

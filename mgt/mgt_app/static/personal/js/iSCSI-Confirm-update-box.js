@@ -8,12 +8,16 @@ var masterIp = "http://10.203.1.76:7777"
 
 // 操作提示
 $("#host_create").click(function() {
+	var time_now = new Date();
+	mytime = time_now.toLocaleString( ); 
 	var time = Date.parse(new Date()).toString();// 获取到毫秒的时间戳，精确到毫秒
 	time = time.substr(0, 10);
 	var hostName = $("#host_name").val()
 	var hostiqn = $("#host_iqn").val()
 	var host_name_hid = $("#host_name_hid").val();
 	var host_iqn_hid = $("#host_iqn_hid").val();
+	var dict_data = {"host_name":hostName,"hostiqn": hostiqn};
+	write_to_log(mytime,time,dict_data);
 	if (host_name_hid == "1" && host_iqn_hid == "1") {
 		$.ajax({
 			url : masterIp + "/host/create",
@@ -318,3 +322,24 @@ $(window).on('load', function() {
 		'selectedText' : 'cat'
 	});
 });
+
+
+function write_to_log(time,tid,data_host) {
+	alert(data_host);
+	$.ajax({
+		url : '/iscsi/write_log',
+		type : "get",
+		dataType : "json",
+		data:{
+			time:time,
+			tid:tid,
+			data_host:data_host
+		},
+		success : function(write_log_result) {
+			alert(write_log_result);
+		}
+	});
+}
+
+
+
