@@ -16,7 +16,7 @@ $("#host_create").click(function() {
 	var hostiqn = $("#host_iqn").val()
 	var host_name_hid = $("#host_name_hid").val();
 	var host_iqn_hid = $("#host_iqn_hid").val();
-	var dict_data = {"host_name":hostName,"hostiqn": hostiqn};
+	var dict_data = JSON.stringify({"host_name":hostName,"hostiqn": hostiqn});
 	write_to_log(mytime,time,dict_data);
 	if (host_name_hid == "1" && host_iqn_hid == "1") {
 		$.ajax({
@@ -325,7 +325,6 @@ $(window).on('load', function() {
 
 
 function write_to_log(time,tid,data_host) {
-	alert(data_host);
 	$.ajax({
 		url : '/iscsi/write_log',
 		type : "get",
@@ -336,7 +335,6 @@ function write_to_log(time,tid,data_host) {
 			data_host:data_host
 		},
 		success : function(write_log_result) {
-			alert(write_log_result);
 		}
 	});
 }
