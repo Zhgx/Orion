@@ -34,7 +34,8 @@
         "host_test15": "iqn.2222-15.151515",
         "asdasd": "dasdd",
         "": "",
-        "host_test17": "iqn.2222-22.xxxxx"
+        "host_test17": "iqn.2222-22.xxxxx",
+        "host_test_1": "iqn.2222-22.xxxxx"
     },
     "Disk": {
         "res_a": "/dev/drbd1000",
@@ -48,59 +49,22 @@
         "hg1": [
             "host1"
         ],
-        "hg2": [
-            "host1"
-        ],
-        "hg5": [
-            "host2",
-            "host3",
-            "host5"
-        ],
-        "hg21": [
-            "2",
-            "3",
-            "22"
-        ],
-        "hg3": [
-            "22",
-            "222",
-            "host11"
-        ],
         "hg4": [
             "host3"
+        ],
+        "hg2": [
+            "host_test12"
         ]
     },
     "DiskGroup": {
         "dg1": [
             "res_c"
         ],
-        "dg2": [
-            "res_a"
-        ],
-        "dg3": [
-            "res_a",
-            "res_b",
-            "res_c"
-        ],
-        "dg5": [
-            "res_a",
-            "res_b",
-            "res_c"
-        ],
-        "dg21": [
-            "res_a",
-            "res_b",
-            "res_c"
-        ],
         "dg4": [
             "res_a",
             "res_f"
         ],
-        "dg6": [
-            "thinlv_test"
-        ],
-        "dg110": [
-            "res_a",
+        "dg2": [
             "res_b"
         ]
     },
@@ -108,6 +72,14 @@
         "Map1": [
             "hg4",
             "dg4"
+        ],
+        "map_test1": [
+            "hg1",
+            "dg1"
+        ],
+        "map_test_1": [
+            "hg2",
+            "dg2"
         ]
     },
     "crm": {
@@ -115,9 +87,17 @@
             [
                 "res_c",
                 "iqn.2020-04.feixitek.com:versaplx00",
-                "2",
+                "02",
                 "/dev/drbd1002",
-                "iqn.2020-11.com.example:pytest01",
+                "iqnxx ",
+                "Started"
+            ],
+            [
+                "thinlv_test",
+                "iqn.2020-04.feixitek.com:versaplx00",
+                "04",
+                "/dev/drbd1004",
+                "iqn123 ",
                 "Started"
             ]
         ],

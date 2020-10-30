@@ -6,7 +6,7 @@ Created on 2020/3/2
 @note: data
 '''
 from flask import Flask, jsonify, render_template, request, make_response, views
-import log
+from public import log
 import consts
 def cors_data(data_dict):
     response = make_response(jsonify(data_dict))
@@ -26,10 +26,10 @@ class ISCSIWrite(views.MethodView):
     def get(self):
         if request.method == 'GET':
             log_data = request.args.to_dict()
-            print(log_data)
-            logger = consts.glo_log()
-            logger.tid = log_data["tid"]
-            logger.write_to_log('DATA', log_data['type'], log_data['d1'], log_data['d2'], log_data["data"])
+            if log_data:
+                logger = consts.glo_log()
+                logger.tid = log_data["tid"]
+                logger.write_to_log('DATA', log_data['type'], log_data['d1'], log_data['d2'], log_data["data"])
         return cors_data("success") 
 
     
