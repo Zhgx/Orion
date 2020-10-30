@@ -66,7 +66,7 @@ function hg_name_myfunction() {
 						type : "GET",
 						dataType : "json",
 						success : function(HG_result) {
-							if (input_result = HG_result) {
+							if (input_result in HG_result) {
 								$("#hg_name_hid").val("0");
 								document.getElementById("hg_name_examine").className = "";
 							} else {
@@ -129,8 +129,12 @@ function map_name_myfunction() {
 		} else {
 
 			document.getElementById("map_name_format").className = "hidden";
-			$
-					.ajax({
+			$.ajax({
+				url : masterIp + "/map/show/oprt",
+				type : "GET",
+				dataType : "json",
+				success : function(map_result) {
+			$.ajax({
 						url : masterIp + "/map/show/data",
 						type : "GET",
 						dataType : "json",
@@ -143,10 +147,11 @@ function map_name_myfunction() {
 							}
 						}
 					});
+			}
+			});
+			
 		}
-
 	}
-
 }
 function iqn_myfunction() {
 	document.getElementById("iqn_format").className = "hidden";

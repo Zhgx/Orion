@@ -1,6 +1,10 @@
 # -*- coding: utf-8 -*-
 from mgt_app import create_app
-import log
+#from public import log
+import sys 
+sys.path.append("..")
+from public import log
+
 import consts
 app = create_app()
 

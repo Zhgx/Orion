@@ -5,7 +5,7 @@ import sqlite3
 import linstordb
 import consts
 import sundry
-import log
+from public import log
 import sys
 
 
