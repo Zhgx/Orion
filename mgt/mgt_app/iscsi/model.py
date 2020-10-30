@@ -5,8 +5,15 @@ Created on 2020/3/2
 @author: Paul
 @note: data
 '''
-
-from flask import Flask, render_template, views,request
+from flask import Flask, jsonify, render_template, request, make_response, views
+import log
+import consts
+def cors_data(data_dict):
+    response = make_response(jsonify(data_dict))
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    response.headers['Access-Control-Allow-Methods'] = 'OPTIONS,HEAD,GET,POST'
+    response.headers['Access-Control-Allow-Headers'] = 'x-requested-with'
+    return response
 
 
 class Index(views.MethodView):
@@ -18,12 +25,12 @@ class ISCSIWrite(views.MethodView):
 
     def get(self):
         if request.method == 'GET':
-            str_host = request.args.items()
-            dict_host = dict(str_host)
-            print(dict_host["time"])
-            print(dict_host["tid"])
-            print(dict_host["data_host[hostiqn]"])
-        return "成功" 
+            log_data = request.args.to_dict()
+            print(log_data)
+            logger = consts.glo_log()
+            logger.tid = log_data["tid"]
+            logger.write_to_log('DATA', log_data['type'], log_data['d1'], log_data['d2'], log_data["data"])
+        return cors_data("success") 
 
     
 class IndexPreview(views.MethodView):

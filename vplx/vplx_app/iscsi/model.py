@@ -22,8 +22,9 @@ class HostCreate(views.MethodView):
             str_host = request.args.items()
             dict_host = dict(str_host)
             tid = dict_host['transaction_id']
+            print(tid)
             logger = consts.glo_log()
-            logger.transaction_id = tid
+            logger.tid = tid
             host = dict_host["host_name"]
             iqn = dict_host["host_iqn"]
             host_obj = iscsi.Host()
