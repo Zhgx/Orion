@@ -9,7 +9,7 @@ from flask import Flask, jsonify, render_template, request, make_response, views
 import json
 from flask_cors import *
 import process
-import log
+from public import log
 import consts
                                                                                                                                                                                                          
 

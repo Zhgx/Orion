@@ -144,8 +144,10 @@ class Map():
         # 根据hg去获取hostiqn，返回由hostiqn组成的initiator
         hostiqn = []
         for h in self.js.get_data('HostGroup').get(hg):
+            print(h)
             iqn = self.js.get_data('Host').get(h)
             hostiqn.append(iqn)
+        print(hostiqn)
         initiator = " ".join(hostiqn)
         return initiator
 
