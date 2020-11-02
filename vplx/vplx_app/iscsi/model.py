@@ -5,7 +5,7 @@ import subprocess
 from flask_cors import *
 from execute import iscsi
 import time
-import log
+from public import log
 import consts
 
 def cors_data(data_dict):
@@ -22,8 +22,9 @@ class HostCreate(views.MethodView):
             str_host = request.args.items()
             dict_host = dict(str_host)
             tid = dict_host['transaction_id']
+            print(tid)
             logger = consts.glo_log()
-            logger.transaction_id = tid
+            logger.tid = tid
             host = dict_host["host_name"]
             iqn = dict_host["host_iqn"]
             host_obj = iscsi.Host()
@@ -241,9 +242,9 @@ def update_map():
 class OprtAllMap(views.MethodView):
 
     def get(self):
-        tid = get_tid()
-        logger = consts.glo_log()
-        logger.transaction_id = tid
+#         tid = get_tid()
+#         logger = consts.glo_log()
+#         logger.transaction_id = tid
         if update_map():
             return cors_data("0")
         else:

@@ -6,8 +6,8 @@ Created on 2020/3/2
 @note: data
 '''
 from flask import Flask, jsonify, render_template, request, make_response, views
-import log
-
+from public import log
+import consts
 def cors_data(data_dict):
     response = make_response(jsonify(data_dict))
     response.headers['Access-Control-Allow-Origin'] = '*'
@@ -25,9 +25,11 @@ class ISCSIWrite(views.MethodView):
 
     def get(self):
         if request.method == 'GET':
-            str_host = request.args.to_dict()
-            logger = log.Log('username',str_host["tid"],file_name=log.WEB_LOG_NAME)
-            logger.write_to_log('t1', 't2', 'd1', 'd2', str_host["data_host"])
+            log_data = request.args.to_dict()
+            if log_data:
+                logger = consts.glo_log()
+                logger.tid = log_data["tid"]
+                logger.write_to_log('DATA', log_data['type'], log_data['d1'], log_data['d2'], log_data["data"])
         return cors_data("success") 
 
     
