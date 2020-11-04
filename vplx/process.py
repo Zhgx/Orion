@@ -74,7 +74,7 @@ class Process_data():
                             "used": used,
                             "mirror_way_son": list_resdict}
                 date.append(date_one)
-        dict = {"data": date}
+        dict = {"code": 0, "msg": "", "count": 1000,"data": date}
         cur.close()
         return dict
 
