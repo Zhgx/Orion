@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport"
 	content="width=device-width, initial-scale=1, maximum-scale=1">
-<title>orion</title>
+<title>VersaTEL</title>
 <link href="{{url_for('static',filename='layui/css/layui.css')}}"
 	rel="stylesheet" type="text/css" />
 <style>
@@ -36,13 +36,27 @@
 <body class="layui-layout-body">
 	<div class="layui-layout layui-layout-admin">
 		<div class="layui-header">
-			<div class="layui-logo">Orion</div>
+			<div class="layui-logo">VersaTEL</div>
 			<!-- 头部区域（可配合layui已有的水平导航） -->
 			<ul class="layui-nav layui-layout-left">
-				<li class="layui-nav-item"><a href="">待定页</a></li>
-				<li class="layui-nav-item"><a href="">待定页</a></li>
-				<li class="layui-nav-item"><a href="">待定页</a></li>
-				<li class="layui-nav-item"><a href="javascript:;">其他</a>
+				<li class="layui-nav-item">
+					<a>Create</a>
+					<dl class="layui-nav-child">
+						<dd>
+							<a onclick="selectItem(this)" id="iSCSICreate"><span>iSCSI</span></a>
+						</dd>
+					</dl>
+				</li>
+				<li class="layui-nav-item">
+					<a>Show</a>
+					<dl class="layui-nav-child">
+						<dd>
+							<a onclick="selectItem(this)" id="LinstorShow"><span>LINSTOR</span></a>
+						</dd>
+					</dl>
+				</li>
+<!--				<li class="layui-nav-item"><a href="">Delete</a></li>-->
+				<!-- <li class="layui-nav-item"><a href="javascript:;">其他</a>
 					<dl class="layui-nav-child">
 						<dd>
 							<a href="">邮件管理</a>
@@ -53,7 +67,7 @@
 						<dd>
 							<a href="">授权管理</a>
 						</dd>
-					</dl></li>
+					</dl></li> -->
 			</ul>
 
 		</div>
@@ -117,12 +131,12 @@
     function selectItem(obj) {
         $('.active.item').removeClass("active");
         obj.className += " active";
-        if(obj.id=='LINSTOR'){
-            $('#mainpage iframe').attr('src',"/index/stor");
-            $('#mainpage iframe').css({ "margin-left": "15%","max-width":"1700px"}); 
-        }else if(obj.id=='iSCSI'){
+        if(obj.id=='LinstorShow'){
+            $('#mainpage iframe').attr('src',"/stor/resource/show");
+            $('#mainpage iframe').css({ "margin-left": "15%","max-width":"1700px"});
+        }else if(obj.id=='iSCSICreate'){
             $('#mainpage iframe').attr('src',"/iscsi/create");
-            $('#mainpage iframe').css({ "margin-left": "15%","max-width":"1700px"}); 
+            $('#mainpage iframe').css({ "margin-left": "15%","max-width":"1700px"});
         }else if(obj.id=='Host'){
             $('#mainpage iframe').attr('src',"/iscsi/host");
             $('#mainpage iframe').css({ "margin-left": "15%","max-width":"1700px"}); 
