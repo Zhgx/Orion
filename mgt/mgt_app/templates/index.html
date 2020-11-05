@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport"
 	content="width=device-width, initial-scale=1, maximum-scale=1">
-<title>orion</title>
+<title>VersaTEL</title>
 <link href="{{url_for('static',filename='layui/css/layui.css')}}"
 	rel="stylesheet" type="text/css" />
 <style>
@@ -33,16 +33,48 @@
 }
 </style>
 </head>
+
 <body class="layui-layout-body">
 	<div class="layui-layout layui-layout-admin">
 		<div class="layui-header">
-			<div class="layui-logo">Orion</div>
+			<div class="layui-logo">VersaTEL</div>
 			<!-- 头部区域（可配合layui已有的水平导航） -->
 			<ul class="layui-nav layui-layout-left">
-				<li class="layui-nav-item"><a href="">待定页</a></li>
-				<li class="layui-nav-item"><a href="">待定页</a></li>
-				<li class="layui-nav-item"><a href="">待定页</a></li>
-				<li class="layui-nav-item"><a href="javascript:;">其他</a>
+				<li class="layui-nav-item">
+					<a>Create</a>
+					<dl class="layui-nav-child">
+						<dd>
+							<a href="" onclick="selectItem(this)" id="StorCreate"><span>Stor</span></a>
+						</dd>
+						<dd>
+							<a onclick="selectItem(this)" id="iSCSICreate"><span>**iSCSI</span></a>
+						</dd>
+					</dl>
+				</li>
+				<li class="layui-nav-item">
+					<a>Show</a>
+					<dl class="layui-nav-child">
+						<dd>
+							<a onclick="selectItem(this)" id="StorShow"><span>**Stor</span></a>
+						</dd>
+						<dd>
+							<a href="" onclick="selectItem(this)" id="iSCSIShow"><span>iSCSI</span></a>
+						</dd>
+					</dl>
+				</li>
+				<li class="layui-nav-item">
+					<a>Delete</a>
+					<dl class="layui-nav-child">
+						<dd>
+							<a href="" onclick="selectItem(this)" id="StorDelete"><span>Stor</span></a>
+						</dd>
+						<dd>
+							<a href="" onclick="selectItem(this)" id="iSCSIDelete"><span>iSCSI</span></a>
+						</dd>
+					</dl>
+				</li>
+<!--				<li class="layui-nav-item"><a href="">Delete</a></li>-->
+				<!-- <li class="layui-nav-item"><a href="javascript:;">其他</a>
 					<dl class="layui-nav-child">
 						<dd>
 							<a href="">邮件管理</a>
@@ -53,7 +85,7 @@
 						<dd>
 							<a href="">授权管理</a>
 						</dd>
-					</dl></li>
+					</dl></li> -->
 			</ul>
 
 		</div>
@@ -69,27 +101,33 @@
 						<!-- <li><a href="javascript:;"><img class="logo"
                             src="images/logo.png" alt=""></a></li> -->
 						<li class="layui-nav-item "><a class="title"
-							onclick="selectItem(this)" id="LINSTOR"><span>LINSTOR</span></a>
+							onclick="selectItem(this)" id="Stor"><span>Stor</span></a>
 							<dl class="layui-nav-child">
 								<dd>
-									<a onclick="selectItem(this)" id="Resource">Resource</a>
+									<a onclick="selectItem(this)" id="Node">Node</a>
+								</dd>
+								<dd>
+									<a onclick="selectItem(this)" id="Storagepool">Storagepool</a>
+								</dd>
+								<dd>
+									<a onclick="selectItem(this)" id="Resource">**Resource</a>
 								</dd>
 							</dl></li>
 
 						<li class="layui-nav-item "><a class="title"
-							onclick="selectItem(this)" id="iSCSI"><span>iSCSI</span></a>
+							onclick="selectItem(this)" id="iSCSI"><span>**iSCSI</span></a>
 							<dl class="layui-nav-child">
 								<dd>
-									<a onclick="selectItem(this)" id="Host">Host</a>
+									<a onclick="selectItem(this)" id="Host">**Host</a>
 								</dd>
 								<dd>
-									<a onclick="selectItem(this)" id="HostGroup">HostGroup</a>
+									<a onclick="selectItem(this)" id="HostGroup">**HostGroup</a>
 								</dd>
 								<dd>
-									<a onclick="selectItem(this)" id="DiskGroup">DiskGroup</a>
+									<a onclick="selectItem(this)" id="DiskGroup">**DiskGroup</a>
 								</dd>
 								<dd>
-									<a onclick="selectItem(this)" id="Map">Map</a>
+									<a onclick="selectItem(this)" id="Map">**Map</a>
 								</dd>
 							</dl></li>
 					</ul>
@@ -117,12 +155,12 @@
     function selectItem(obj) {
         $('.active.item').removeClass("active");
         obj.className += " active";
-        if(obj.id=='LINSTOR'){
-            $('#mainpage iframe').attr('src',"/index/stor");
-            $('#mainpage iframe').css({ "margin-left": "15%","max-width":"1700px"}); 
-        }else if(obj.id=='iSCSI'){
+        if(obj.id=='StorShow'){
+            $('#mainpage iframe').attr('src',"/stor/resource/show");
+            $('#mainpage iframe').css({ "margin-left": "15%","max-width":"1700px"});
+        }else if(obj.id=='iSCSICreate'){
             $('#mainpage iframe').attr('src',"/iscsi/create");
-            $('#mainpage iframe').css({ "margin-left": "15%","max-width":"1700px"}); 
+            $('#mainpage iframe').css({ "margin-left": "15%","max-width":"1700px"});
         }else if(obj.id=='Host'){
             $('#mainpage iframe').attr('src',"/iscsi/host");
             $('#mainpage iframe').css({ "margin-left": "15%","max-width":"1700px"}); 
