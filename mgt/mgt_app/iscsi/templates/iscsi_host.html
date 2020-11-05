@@ -31,7 +31,10 @@
 						<input type="text" class="form-control" id="host_name"
 							placeholder="请输入" style="width: 200px;" value=""
 							onchange="host_name_myfunction()"> <input
-							id="host_name_hid" hidden="hidden" value="0"> <span
+							id="host_name_hid" hidden="hidden" value="0"> 
+							<input
+							id="host_name_verify_status" hidden="hidden" value="0">
+							<span
 							class="red"> <span id="host_name_examine" class="hidden">Host已存在！</span>
 							<span id="host_name_format" class="hidden">开头只能输入字母，仅包含字母，数字，以及下划线</span>
 						</span>
@@ -43,7 +46,10 @@
 						<input type="text" class="form-control" id="host_iqn"
 							placeholder="请输入" style="width: 200px;" value=""
 							onchange="iqn_myfunction()"> <input id="host_iqn_hid"
-							hidden="hidden" value="0"> <span class="red"> <span
+							hidden="hidden" value="0">
+							<input id="host_iqn_verify_status"
+							hidden="hidden" value="0"> 
+							 <span class="red"> <span
 							id="iqn_format" class="hidden">IQN正确格式:
 								iqn.yyyy-mm.naming-authority:unique name</span>
 						</span>
@@ -80,10 +86,8 @@
 		src="{{url_for('static',filename='bootstrap-3.3.7/dist/js/bootstrap.js')}}"></script>
 	<script type="text/javascript"
 		src="{{url_for('static',filename='bootstrap-select-1.12.4/dist/js/bootstrap-select.js')}}"></script>
-	<script type="text/javascript"
-		src="{{url_for('static',filename='personal/js/iSCSI-Confirm-update-box.js')}}"></script>
-	<script type="text/javascript"
-		src="{{url_for('static',filename='personal/js/iSCSI-input-inspection.js')}}"></script>
+ 	<script type="text/javascript"
+		src="{{url_for('static',filename='personal/js/iSCSI-host-create.js')}}"></script> 
 	<script type="text/javascript"
 		src="{{url_for('static',filename='layui/layui.all.js')}}"></script>
 

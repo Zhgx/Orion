@@ -35,7 +35,28 @@
         "asdasd": "dasdd",
         "": "",
         "host_test17": "iqn.2222-22.xxxxx",
-        "host_test_1": "iqn.2222-22.xxxxx"
+        "host_test_1": "iqn.2222-22.xxxxx",
+        "Host_test1": "iqn.3233-23.xsxs",
+        "host_test1": "iqn.2222-22.xx",
+        "host_test213": "iqn.2323-323.xx",
+        "Host_test2": "iqn.2333-22.xss",
+        "Host_test133": "iqn.2323-22.ww",
+        "host_test1233": "iqn.2222-22.xs",
+        "host_test12323": "iqn.2333-23.xxs",
+        "host_test_test_1": "iqn.2222-22.xxxxx",
+        "host_test_2": "iqn.2323-32.xss",
+        "host_test_111": "iqn.2222-22.xxxxx",
+        "host_test_test_11": "iqn.2222-22.xxxxx",
+        "host_test_test_12": "iqn.2222-22.xxxxx",
+        "hsot1": "iqn.2023-23.xx",
+        "hos2323": "iqn.2323-232.xxx",
+        "hsot424": "iqn.2333-232.xx",
+        "hsot2": "iqn.2333-22.xxx",
+        "host242424": "iqn.2323-2323.xxx",
+        "host12323": "iqn.2333-2323.xx",
+        "hosr32": "iqn.2332-23.xx",
+        "host12123": "iqn.2323-23.xx",
+        "hose2": "iqn.2323-23.xx"
     },
     "Disk": {
         "res_a": "/dev/drbd1000",
@@ -54,6 +75,10 @@
         ],
         "hg2": [
             "host_test12"
+        ],
+        "hg_test_11": [
+            "Host_test1",
+            "Host_test133"
         ]
     },
     "DiskGroup": {
@@ -66,6 +91,18 @@
         ],
         "dg2": [
             "res_b"
+        ],
+        "dg_test_22": [
+            "res_b",
+            "res_c"
+        ],
+        "dg_test_test_12": [
+            "res_b",
+            "res_c"
+        ],
+        "dg_test_test_13": [
+            "res_b",
+            "res_c"
         ]
     },
     "Map": {
