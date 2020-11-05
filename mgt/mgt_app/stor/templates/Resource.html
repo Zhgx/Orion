@@ -5,54 +5,46 @@
 <meta name="viewport"
 	content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
 <title>R_T</title>
-<link href="{{url_for('static',filename='bootstrap-3.3.7/dist/css/bootstrap.min.css')}}" rel="stylesheet" type="text/css" />
-<link href="{{url_for('static',filename='bootstrap-select-1.12.4/dist/css/bootstrap-select.min.css')}}" rel="stylesheet" type="text/css" />
-
+<link href="{{url_for('static',filename='layui/css/layui.css')}}"
+	rel="stylesheet" type="text/css" />
 <style>
-table {
-	width: 500px;
-	margin: 20px auto;
-	border-collapse: collapse;
+body {
+	margin: 10px;
+}
+
+.demo-carousel {
+	height: 200px;
+	line-height: 200px;
 	text-align: center;
 }
-
-td, th {
-	border: 1px solid #333;
-}
-
-thead tr {
-	height: 40px;
-	background-color: #ccc;
-}
 </style>
+
 </head>
 <body>
-	<div class="container-fluid">
-		<ol class="breadcrumb">
-			<li><a href="#">Resource</a></li>
-			<li id="A_V"></li>
-		</ol>
-		<select id='R_S' name='R_S' class="selectpicker" multiple
-			data-live-search="true" data-max-options="1" onchange="selectOnchang(this)">
-		</select>
-		<button type="button" class="btn btn-light" onclick="update_resource_operate()">更新</button>
-		<div class="container-fluid">
-			<div class="row">
-				<div class="col-sm-12  bg-success">
-					<table class="table table-bordered">
-						<thead id="J_THData">
-						</thead>
-						<tbody id="J_TbData">
-						</tbody>
-					</table>
-				</div>
-			</div>
-		</div>
+	<div class="page-header">
+		<h1>
+			展示区 <small>Resource</small>
+		</h1>
 	</div>
-	
-<script type="text/javascript" src="{{url_for('static',filename='personal/js/JQuery.js')}}"></script>
-<script type="text/javascript" src="{{url_for('static',filename='bootstrap-select-1.12.4/dist/js/bootstrap-select.js')}}"></script>
-<script type="text/javascript" src="{{url_for('static',filename='bootstrap-3.3.7/dist/js/bootstrap.js')}}"></script>
-<script type="text/javascript" src="{{url_for('static',filename='personal/js/R_operate.js')}}" ></script>
+
+	<table class="layui-hide" id="demo" lay-filter="test"></table>
+	<script type="text/html" id="barDemo">
+  <a class="layui-btn layui-btn-primary layui-btn-xs" lay-event="detail">查看</a>
+</script>
+
+	<script type="text/html" id="barDemo1">
+
+  <a class="layui-btn layui-btn-primary layui-btn-xs" lay-event="detail">查看</a>
+</script>
+
+	<script type="text/javascript"
+		src="{{url_for('static',filename='personal/js/JQuery.js')}}"></script>
+	<script src="{{ url_for('static',filename='layui/layui.js') }}"></script>
+	<script type="text/javascript"
+		src="{{url_for('static',filename='personal/js/R_f_son_table.js')}}"></script>
+	<script>
+
+</script>
+</body>
 </body>
 </html>
