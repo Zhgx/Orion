@@ -1,0 +1,76 @@
+
+# coding:utf-8
+'''
+Created on 2020/3/2
+@author: Paul
+@note: data
+'''
+from flask import Flask, jsonify, render_template, request, make_response, views
+from public import log
+import consts
+def cors_data(data_dict):
+    response = make_response(jsonify(data_dict))
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    response.headers['Access-Control-Allow-Methods'] = 'OPTIONS,HEAD,GET,POST'
+    response.headers['Access-Control-Allow-Headers'] = 'x-requested-with'
+    return response
+
+
+class Index(views.MethodView):
+
+    def get(self):
+        return render_template("index.html")
+
+class ISCSIWrite(views.MethodView):
+
+    def get(self):
+        if request.method == 'GET':
+            log_data = request.args.to_dict()
+            if log_data:
+                logger = consts.glo_log()
+                logger.tid = log_data['tid']
+                logger.write_to_log(log_data['t1'], log_data['t2'], log_data['d1'], log_data['d2'], log_data["data"])
+        return cors_data("success") 
+
+    
+class IndexPreview(views.MethodView):
+
+    def get(self):
+        return render_template("index_preview.html")
+
+    
+class IscsiCreate(views.MethodView):
+
+    def get(self):
+        return render_template("iscsi_create.html")
+
+
+class IscsiAll(views.MethodView):
+
+    def get(self):
+        return render_template("iscsi_all.html")
+    
+    
+class IscsiMap(views.MethodView):
+
+    def get(self):
+        return render_template("iscsi_map.html")
+    
+    
+class IscsiHost(views.MethodView):
+
+    def get(self):
+        return render_template("iscsi_host.html")
+    
+    
+class IscsiHostGroup(views.MethodView):
+
+    def get(self):
+        return render_template("iscsi_hostgroup.html")
+    
+    
+class IscsiDiskGroup(views.MethodView):
+
+    def get(self):
+        return render_template("iscsi_diskgroup.html")
+    

@@ -1,0 +1,156 @@
+{
+    "Host": {
+        "host1": "iqnxx",
+        "host2": "iqnxxx",
+        "host3": "iqn123",
+        "Host1": "iqn.2033-22.dsd",
+        "host123": "iqn.2033-232.xx",
+        "host1sd": "iqn.2032-23.dsd",
+        "host212": "iqn.2033-32.xx",
+        "host231": "iqn.2303-322.xx",
+        "host122": "iqn.2302-23.xx",
+        "host2132": "iqn.2323-23.xs",
+        "host1232": "iqn.2323-32.x",
+        "host2121": "iqn.2032-23.xx",
+        "hostwen": "iqn.2032-232.xx",
+        "host44": "iqn.2032-33.xx",
+        "host_test111": "iqn.2030-33.xxxx",
+        "host_test2": "iqn-2222-22.xx",
+        "host_test3": "iqn.2222-22.xxxx",
+        "host1212": "iqn-2233-23.xx",
+        "host132332": "iqn-2323-232.xsx",
+        "host_test4": "iqn.4444-44.xxx",
+        "host_test21": "iqn.2323-23.xx",
+        "host_test5": "iqn.2222-22.xxx",
+        "host_test6": "iqn.2222-22.casd",
+        "host_test7": "iqn.2222-77.xxxxx",
+        "host_test8": "iqn.2222-22.xxxx",
+        "host_test9": "iqn.2222-222.xxx",
+        "host_test10": "iqn-2222.222.xxx",
+        "host_test11": "iqn-2222.222.xxx",
+        "host12322": "iqn-2323-232.xsx",
+        "host_test12": "iqn.2222-222.xxx",
+        "host_test13": "iqn.2222-22.xxxx",
+        "host_test15": "iqn.2222-15.151515",
+        "asdasd": "dasdd",
+        "": "",
+        "host_test17": "iqn.2222-22.xxxxx",
+        "host_test_1": "iqn.2222-22.xxxxx",
+        "Host_test1": "iqn.3233-23.xsxs",
+        "host_test1": "iqn.2222-22.xx",
+        "host_test213": "iqn.2323-323.xx",
+        "Host_test2": "iqn.2333-22.xss",
+        "Host_test133": "iqn.2323-22.ww",
+        "host_test1233": "iqn.2222-22.xs",
+        "host_test12323": "iqn.2333-23.xxs",
+        "host_test_test_1": "iqn.2222-22.xxxxx",
+        "host_test_2": "iqn.2323-32.xss",
+        "host_test_111": "iqn.2222-22.xxxxx",
+        "host_test_test_11": "iqn.2222-22.xxxxx",
+        "host_test_test_12": "iqn.2222-22.xxxxx",
+        "hsot1": "iqn.2023-23.xx",
+        "hos2323": "iqn.2323-232.xxx",
+        "hsot424": "iqn.2333-232.xx",
+        "hsot2": "iqn.2333-22.xxx",
+        "host242424": "iqn.2323-2323.xxx",
+        "host12323": "iqn.2333-2323.xx",
+        "hosr32": "iqn.2332-23.xx",
+        "host12123": "iqn.2323-23.xx",
+        "hose2": "iqn.2323-23.xx"
+    },
+    "Disk": {
+        "res_a": "/dev/drbd1000",
+        "res_b": "/dev/drbd1001",
+        "res_c": "/dev/drbd1002",
+        "res_d": "/dev/drbd1003",
+        "res_e": "/dev/drbd1005",
+        "thinlv_test": "/dev/drbd1004"
+    },
+    "HostGroup": {
+        "hg1": [
+            "host1"
+        ],
+        "hg4": [
+            "host3"
+        ],
+        "hg2": [
+            "host_test12"
+        ],
+        "hg_test_11": [
+            "Host_test1",
+            "Host_test133"
+        ]
+    },
+    "DiskGroup": {
+        "dg1": [
+            "res_c"
+        ],
+        "dg4": [
+            "res_a",
+            "res_f"
+        ],
+        "dg2": [
+            "res_b"
+        ],
+        "dg_test_22": [
+            "res_b",
+            "res_c"
+        ],
+        "dg_test_test_12": [
+            "res_b",
+            "res_c"
+        ],
+        "dg_test_test_13": [
+            "res_b",
+            "res_c"
+        ]
+    },
+    "Map": {
+        "Map1": [
+            "hg4",
+            "dg4"
+        ],
+        "map_test1": [
+            "hg1",
+            "dg1"
+        ],
+        "map_test_1": [
+            "hg2",
+            "dg2"
+        ]
+    },
+    "crm": {
+        "resource": [
+            [
+                "res_c",
+                "iqn.2020-04.feixitek.com:versaplx00",
+                "02",
+                "/dev/drbd1002",
+                "iqnxx ",
+                "Started"
+            ],
+            [
+                "thinlv_test",
+                "iqn.2020-04.feixitek.com:versaplx00",
+                "04",
+                "/dev/drbd1004",
+                "iqn123 ",
+                "Started"
+            ]
+        ],
+        "vip": [
+            [
+                "vip",
+                "10.203.1.75",
+                "24"
+            ]
+        ],
+        "target": [
+            [
+                "t_test",
+                "iqn.2020-04.feixitek.com:versaplx00",
+                "10.203.1.75"
+            ]
+        ]
+    }
+}
