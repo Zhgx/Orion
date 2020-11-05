@@ -9,10 +9,6 @@ import linstordb
 import consts
 
 
-
-
-
-
 class usage():
     storagepool = '''
     storagepool(sp) {create(c)/modify(m)/delete(d)/show(s)}'''
@@ -31,13 +27,9 @@ class usage():
     storagepool(sp) show(s) [STORAGEPOOL]'''
 
 
-
-
-
 class StoragePoolCommands():
     def __init__(self):
         self.logger = consts.glo_log()
-
 
     def setup_commands(self, parser):
         """
@@ -74,12 +66,6 @@ class StoragePoolCommands():
             action='store',
             help='Name of the node for the new storage pool',
             required=True)
-        p_create_sp.add_argument(
-            '-gui',
-            dest='gui',
-            action='store_true',
-            help=argparse.SUPPRESS,
-            default=False)
         group_type = p_create_sp.add_mutually_exclusive_group()
         group_type.add_argument(
             '-lvm',
@@ -126,12 +112,6 @@ class StoragePoolCommands():
             action='store_true',
             help='Skip to confirm selection',
             default=False)
-        p_delete_sp.add_argument(
-            '-gui',
-            dest='gui',
-            action='store_true',
-            help=argparse.SUPPRESS,
-            default=False)
 
         p_delete_sp.set_defaults(func=self.delete)
 
@@ -161,52 +141,38 @@ class StoragePoolCommands():
 
         sp_parser.set_defaults(func=self.print_sp_help)
 
-    @sd.record_exception
+    @sd.deco_record_exception
     def create(self, args):
         sp = ex.StoragePool()
         if args.storagepool and args.node:
             # The judgment of the lvm module to create a storage pool
             if args.lvm:
-                if args.gui:
-                    result = sp.create_storagepool_lvm(
-                        args.node, args.storagepool, args.lvm)
-                    result_pickled = pickle.dumps(result)
-                    sd.send_via_socket(result_pickled)
-                else:
                     sp.create_storagepool_lvm(
                         args.node, args.storagepool, args.lvm)
             # The judgment of the thin-lv module to create a storage pool
             elif args.tlv:
-                if args.gui:
-                    result = sp.create_storagepool_thinlv(
-                        args.node, args.storagepool, args.tlv)
-                    result_pickled = pickle.dumps(result)
-                    sd.send_via_socket(result_pickled)
-                else:
-                    sp.create_storagepool_thinlv(
-                        args.node, args.storagepool, args.tlv)
+                sp.create_storagepool_thinlv(
+                    args.node, args.storagepool, args.tlv)
             else:
                 self.p_create_sp.print_help()
         else:
             self.p_create_sp.print_help()
 
-
     def modify(self):
         pass
 
-    @sd.record_exception
-    @sd.comfirm_del('storage pool')
+    @sd.deco_record_exception
+    @sd.deco_comfirm_del('storage pool')
     def delete(self, args):
         sp = ex.StoragePool()
         sp.delete_storagepool(args.node, args.storagepool)
 
-
-    @sd.record_exception
+    @sd.deco_record_exception
     def show(self, args):
         sp = ex.StoragePool()
         if args.nocolor:
             if args.storagepool:
-                sp.show_one_sp(args.storagepool,no_color='yes')
+                sp.show_one_sp(args.storagepool, no_color='yes')
             else:
                 sp.show_all_sp(no_color='yes')
 
@@ -215,7 +181,6 @@ class StoragePoolCommands():
                 sp.show_one_sp(args.storagepool)
             else:
                 sp.show_all_sp()
-
 
     def print_sp_help(self, *args):
         self.sp_parser.print_help()

@@ -54,8 +54,7 @@ class VtelCLI(object):
     def __init__(self):
         consts._init()
         self.username = sundry.get_username()
-        self.transaction_id = sys.argv[-1] if '-gui' in sys.argv \
-            else sundry.create_transaction_id()
+        self.transaction_id = sundry.create_transaction_id()
         self.logger = log.Log(self.username,self.transaction_id)
         consts.set_glo_log(self.logger)
         self.replay_args_list = []
@@ -90,25 +89,10 @@ class VtelCLI(object):
         )
 
 
-        # add parameters to interact with the GUI
-        parser_stor.add_argument(
-            '-gui',
-            dest='gui',
-            action='store',
-            help=argparse.SUPPRESS)
-
         parser_iscsi = subp.add_parser(
             'iscsi',
             help='Management operations for iSCSI',
             add_help=False)
-
-
-        parser_iscsi.add_argument(
-            '-gui',
-            dest='gui',
-            action='store',
-            help=argparse.SUPPRESS)
-
 
         # replay function related parameter settings
         parser_replay = subp.add_parser(
@@ -137,10 +121,6 @@ class VtelCLI(object):
         self.parser_iscsi = parser_iscsi
         self.parser_replay = parser_replay
 
-        # Set the binding function of stor
-        parser_stor.set_defaults(func=self.send_database)
-        # Set the binding function of iscsi
-        parser_iscsi.set_defaults(func=self.send_json)
         parser_replay.set_defaults(func=self.replay)
 
         subp_stor = parser_stor.add_subparsers(dest='subargs_stor',metavar='')
@@ -164,26 +144,6 @@ class VtelCLI(object):
 
     def print_vtel_help(self,*args):
         self._parser.print_help()
-
-    # When using the parameter '-gui', send the database through the socket
-    def send_database(self, args):
-        if args.gui:
-            db = linstordb.LinstorDB()
-            data = pickle.dumps(db.data_base_dump())
-            sundry.send_via_socket(data)
-        else:
-            self.parser_stor.print_help()
-
-    # When using the parameter '-gui', send the json through the socket
-    def send_json(self, args):
-
-        if args.gui:
-            js = iscsi_json.JSON_OPERATION()
-            data = js.read_json()
-            data_pickled = pickle.dumps(data)
-            sundry.send_via_socket(data_pickled)
-        else:
-            self.parser_iscsi.print_help()
 
     def replay_one(self,dict_input):
         if not dict_input:
@@ -219,7 +179,6 @@ class VtelCLI(object):
                 dict_cmd = dict_input[int(answer)-1]
                 self.replay_one(dict_cmd)
                 consts.set_glo_log_id(0)
-
             elif answer == 'all':
                 for dict_cmd in dict_input:
                     self.replay_one(dict_cmd)
@@ -230,7 +189,8 @@ class VtelCLI(object):
     def replay(self,args):
         consts.set_glo_log_switch('no')
         consts.set_glo_rpl('yes')
-        obj_logdb = logdb.prepare_db()
+        logdb.prepare_db()
+        obj_logdb = consts.glo_db()
         if args.transactionid and args.date:
             print('Please specify only one type of data for replay')
             return
@@ -245,7 +205,6 @@ class VtelCLI(object):
         else:
             dict_cmd = obj_logdb.get_all_transaction()
             self.replay_more(dict_cmd)
-
         return dict_cmd
 
 
@@ -253,13 +212,11 @@ class VtelCLI(object):
         args = self._parser.parse_args()
         path = sundry.get_path()
         cmd = ' '.join(sys.argv[1:])
-
         if args.subargs_vtel:
             if args.subargs_vtel not in ['re', 'replay']:
                 self.logger.write_to_log('DATA', 'INPUT', 'cmd_input', path, {'valid': '0', 'cmd': cmd})
         else:
             self.logger.write_to_log('DATA','INPUT','cmd_input', path, {'valid':'0','cmd':cmd})
-
         args.func(args)
 
 
