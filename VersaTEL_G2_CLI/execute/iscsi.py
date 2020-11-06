@@ -93,6 +93,9 @@ class Host():
 
 class DiskGroup():
     def __init__(self):
+        # 更新json文档中的disk信息
+        disk = Disk()
+        disk.get_all_disk()
         self.js = iscsi_json.JsonOperation()
 
     def create_diskgroup(self, diskgroup, disk):
