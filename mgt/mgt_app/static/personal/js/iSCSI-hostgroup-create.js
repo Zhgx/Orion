@@ -37,13 +37,13 @@ $("#host_group_create").click(function() {
 	});
 	hg_name_myfunction();
 	if (hg_name_hid == "1") {
-		write_to_log(tid,'DATA','COMBO_BOX','host','',host);
+		write_to_log(tid,'DATA','RADIO','host','',host);
 		write_to_log(tid, 'OPRT', 'CLICK', 'host_group_create', 'accept', dict_data);
 		$.ajax({
 			url : vplxIp + "/hg/create",
 			type : "GET",
 			data : {
-				transaction_id : tid,
+				tid : tid,
 				host_group_name : host_group_name,
 				host : host
 			},
@@ -87,7 +87,7 @@ function host_result_select() {
 		type : "GET",
 		dataType : "json",
 		data : {
-			transaction_id : tid
+			tid : tid
 		},
 		success : function(status) {
 			write_to_log(tid,'OPRT','ROUTE',vplxIp,'/host/show/oprt',status);
@@ -95,6 +95,9 @@ function host_result_select() {
 				url : vplxIp + "/host/show/data",
 				type : "GET",
 				dataType : "json",
+						data : {
+			tid : tid
+		},
 				success : function(host_result) {
 					write_to_log(tid,'DATA','ROUTE',vplxIp,'/host/show/data',JSON.stringify(host_result));
 					$('#host').html("");
@@ -166,7 +169,7 @@ function hg_name_myfunction() {
 				type : "GET",
 				dataType : "json",
 				data : {
-					transaction_id : tid
+					tid : tid
 				},
 				success : function(HG_result) {
 					write_to_log(tid, 'OPRT', 'ROUTE', vplxIp,
@@ -176,6 +179,9 @@ function hg_name_myfunction() {
 						url : vplxIp + "/hg/show/data",
 						type : "GET",
 						dataType : "json",
+								data : {
+			tid : tid
+		},
 						success : function(HG_result_data) {
 							write_to_log(tid,'DATA','ROUTE',vplxIp,'/hg/show/data', JSON.stringify(HG_result_data));
 							if (input_result in HG_result_data) {
@@ -215,7 +221,7 @@ function all_hg_result_select() {
 		type : "get",
 		dataType : "json",
 		data : {
-			transaction_id : tid
+			tid : tid
 		},
 		success : function(status) {
 			write_to_log(tid, 'OPRT', 'ROUTE', vplxIp, '/hg/show/oprt', status);
@@ -223,6 +229,9 @@ function all_hg_result_select() {
 				url : vplxIp + "/hg/show/data",
 				type : "get",
 				dataType : "json",
+						data : {
+			tid : tid
+		},
 				success : function(host_group_result) {
 					// var _data = data.data; //由于后台传过来的json有个data，在此重命名
 					write_to_log(tid, 'DATA', 'ROUTE', vplxIp, '/hg/show/data',JSON.stringify( host_group_result));

@@ -58,7 +58,9 @@
         "host12123": "iqn.2323-23.xx",
         "hose2": "iqn.2323-23.xx",
         "host111": "iqn.2333-1223",
-        "host_test_1117": "iqn.2222-22.xxxxx"
+        "host_test_1117": "iqn.2222-22.xxxxx",
+        "host_data_1": "iqn.2222-22.xxxx",
+        "host_iqn_test111": "iqn.2222-22.xxxxx"
     },
     "Disk": {
         "res_a": "/dev/drbd1000",
