@@ -36,13 +36,13 @@ $("#disk_group_create").click(function() {
 	});
 	dg_name_myfunction();
 	if (dg_name_hid == "1") {
-		write_to_log(tid,'DATA','COMBO_BOX','disk','',disk);
+		write_to_log(tid,'DATA','RADIO','disk','',disk);
 		write_to_log(tid, 'OPRT', 'CLICK', 'disk_group_create', 'accept', dict_data);
 		$.ajax({
 			url : vplxIp + "/dg/create",
 			type : "GET",
 			data : {
-				transaction_id : tid,
+				tid : tid,
 				disk_group_name : disk_group_name,
 				disk : disk
 			},
@@ -118,7 +118,7 @@ function dg_name_myfunction() {
 				type : "GET",
 				dataType : "json",
 				data : {
-					transaction_id : tid
+					tid : tid
 				},
 				success : function(DG_result) {
 					write_to_log(tid, 'OPRT', 'ROUTE', vplxIp,
@@ -128,6 +128,9 @@ function dg_name_myfunction() {
 						url : vplxIp + "/dg/show/data",
 						type : "GET",
 						dataType : "json",
+								data : {
+			tid : tid
+		},
 						success : function(DG_result) {
 							write_to_log(tid,'DATA','ROUTE',vplxIp,'/dg/show/data',JSON.stringify(DG_result));
 							if (input_result in DG_result) {
@@ -163,7 +166,7 @@ function disk_result_select() {
 		type : "GET",
 		dataType : "json",
 		data : {
-			transaction_id : tid
+			tid : tid
 		},
 		success : function(status) {
 			write_to_log(tid,'OPRT','ROUTE',vplxIp,'/disk/show/oprt',status);
@@ -171,6 +174,9 @@ function disk_result_select() {
 				url : vplxIp + "/disk/show/data",
 				type : "GET",
 				dataType : "json",
+						data : {
+			tid : tid
+		},
 				success : function(disk_result) {
 					write_to_log(tid,'DATA','ROUTE',vplxIp,'/disk/show/data',JSON.stringify(disk_result));
 					// var _data = data.data; //由于后台传过来的json有个data，在此重命名
@@ -214,7 +220,7 @@ function all_dg_result_select() {
 		type : "get",
 		dataType : "json",
 		data : {
-			transaction_id : tid
+			tid : tid
 		},
 		success : function(status) {
 			write_to_log(tid, 'OPRT', 'ROUTE', vplxIp, '/dg/show/oprt',status);
@@ -222,6 +228,9 @@ function all_dg_result_select() {
 				url : vplxIp + "/dg/show/data",
 				type : "get",
 				dataType : "json",
+						data : {
+			tid : tid
+		},
 				success : function(all_dg_result) {
 					write_to_log(tid, 'DATA', 'ROUTE', vplxIp, '/dg/show/data',JSON.stringify(all_dg_result));
 					$('#disk_group').html("");

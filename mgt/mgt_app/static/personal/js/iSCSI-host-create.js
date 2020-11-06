@@ -62,7 +62,7 @@ $("#host_create").click(
 					url : vplxIp + "/host/create",
 					type : "GET",
 					data : {
-						transaction_id : tid,
+						tid : tid,
 						host_name : hostName,
 						host_iqn : hostiqn
 					},
@@ -139,7 +139,7 @@ function host_name_myfunction() {
 						type : "GET",
 						dataType : "json",
 						data : {
-							transaction_id : tid
+							tid : tid
 						},
 						success : function(host_result) {
 							write_to_log(tid, 'OPRT', 'ROUTE', vplxIp,
@@ -150,6 +150,9 @@ function host_name_myfunction() {
 										url : vplxIp + "/host/show/data",
 										type : "GET",
 										dataType : "json",
+										data : {
+											tid : tid
+										},
 										success : function(host_result) {
 											write_to_log(tid, 'DATA', 'ROUTE',
 													vplxIp,
@@ -221,7 +224,7 @@ function host_result_select() {
 		type : "GET",
 		dataType : "json",
 		data : {
-			transaction_id : tid
+			tid : tid
 		},
 		success : function(status) {
 			write_to_log(tid,'OPRT','ROUTE',vplxIp,'/host/show/oprt',status);
@@ -229,6 +232,9 @@ function host_result_select() {
 				url : vplxIp + "/host/show/data",
 				type : "GET",
 				dataType : "json",
+						data : {
+			tid : tid
+		},
 				success : function(host_result) {
 					write_to_log(tid,'DATA','ROUTE',vplxIp,'/host/show/data',JSON.stringify(host_result));
 					$('#host').html("");

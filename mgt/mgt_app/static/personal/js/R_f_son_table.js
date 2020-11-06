@@ -48,7 +48,7 @@ function resource_oprt() {
 				type : "get",
 				dataType : "json",
 				data : {
-					transaction_id : tid
+					tid : tid
 				},
 				success : function(status) {
 					write_to_log(tid,'OPRT','ROUTE',vplxIp,'/host/show/oprt111',status);
