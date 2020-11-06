@@ -107,30 +107,23 @@ class CRMConfig():
             s.prt_log("create iSCSILogicalUnit success",0)
             return True
 
-    # 通过crm config获取res的状态
-    # 可能不会再用到
-    def get_res_status(self, res):
-        crm_data = CRMData()
-        resource_data = crm_data.get_resource_data()
-        for s in resource_data:
-            if s[0] == res:
-                return s[-1]
-
     # 通过 crm st 获取resource状态
-    def get_res_status_fromst(self, res):
+    def get_res_status(self, res):
         cmd = f'crm res list | grep {res}'
         result = execute_crm_cmd(cmd)
         if 'Started' in result['rst']:
             return True
         elif 'Stopped' in result['rst']:
             return False
+        else:
+            pass
 
     # 多次通过 crm st 检查resource状态，状态为started时返回True，检查5次都为stopped 则返回None
     def checkout_status_start(self, res):
         n = 0
         while n < 5:
             n += 1
-            if self.get_res_status_fromst(res):
+            if self.get_res_status(res):
                 s.prt_log(f'the resource {res} is Started', 0)
                 return True
             else:
@@ -142,7 +135,7 @@ class CRMConfig():
         n = 0
         while n < 5:
             n += 1
-            if self.get_res_status_fromst(res) == False:
+            if self.get_res_status(res) == False:
                 s.prt_log(f'the resource {res} is Stopped', 0)
                 return True
             else:
@@ -183,7 +176,8 @@ class CRMConfig():
         result = execute_crm_cmd(cmd)
         if result['sts']:
             s.prt_log(f"delete resource success: {res}", 0)
-        if result:
+            return True
+        else:
             output = result['rst']
             re_str = re.compile(rf'INFO: hanging colocation:co_{res} deleted\nINFO: hanging order:or_{res} deleted\n')
             if s.re_search(re_str, output):
@@ -191,6 +185,7 @@ class CRMConfig():
                 return True
             else:
                 s.prt_log(f"delete resource fail", 1)
+                return False
 
     def create_col(self, res, target):
         cmd = f'crm conf colocation co_{res} inf: {res} {target}'
