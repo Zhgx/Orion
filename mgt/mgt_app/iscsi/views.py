@@ -12,6 +12,7 @@ from mgt_app.iscsi import model
 iscsi_blueprint.add_url_rule('/', view_func=model.Index.as_view('index'))
 iscsi_blueprint.add_url_rule('/index/preview', view_func=model.IndexPreview.as_view('index_preview'))
 iscsi_blueprint.add_url_rule('/iscsi/write_log', view_func=model.ISCSIWrite.as_view('iscsi_write_log'))
+iscsi_blueprint.add_url_rule('/vplxip' ,view_func=model.VplxIp.as_view('VplxIp'))
 
 iscsi_blueprint.add_url_rule('/iscsi/all', view_func=model.IscsiAll.as_view('iscsi_all'))
 iscsi_blueprint.add_url_rule('/iscsi/create', view_func=model.IscsiCreate.as_view('iscsi_create'))

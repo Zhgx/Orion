@@ -5,9 +5,28 @@
  * */
 
 // 操作提示
-var masterIp = "http://10.203.1.76:7777"
+var vplxIp = get_vlpx_ip();
 var tid = Date.parse(new Date()).toString();// 获取到毫秒的时间戳，精确到毫秒
 var tid = tid.substr(0, 10);
+
+function get_vlpx_ip(){
+	var obj = new Object();
+	$.ajax({
+		url : "http://127.0.0.1:7773/vplxip",
+		type : "GET",
+		dataType : "json",
+		async:false,
+		success : function(data) {
+			console.log("okokok");
+			console.log(data["ip"]);
+			obj =  "http://"+data["ip"];
+		}
+	});
+
+	return obj;
+}
+
+
 $("#host_group_create").click(function() {
 	var host_group_name = $("#host_group_name").val()
 	var host = $("#host").val().toString()
@@ -21,7 +40,7 @@ $("#host_group_create").click(function() {
 		write_to_log(tid,'DATA','COMBO_BOX','host','',host);
 		write_to_log(tid, 'OPRT', 'CLICK', 'host_group_create', 'accept', dict_data);
 		$.ajax({
-			url : masterIp + "/hg/create",
+			url : vplxIp + "/hg/create",
 			type : "GET",
 			data : {
 				transaction_id : tid,
@@ -29,7 +48,7 @@ $("#host_group_create").click(function() {
 				host : host
 			},
 			success : function(operation_feedback_prompt) {
-				write_to_log(tid, 'OPRT', 'ROUTE', masterIp, '/hg/create' ,operation_feedback_prompt);
+				write_to_log(tid, 'OPRT', 'ROUTE', vplxIp, '/hg/create' ,operation_feedback_prompt);
 				alert(operation_feedback_prompt);
 				$("#host_group_name").val("");
 				$('#host_group').selectpicker({
@@ -47,7 +66,7 @@ $("#host_group_create").click(function() {
 				// 赋值
 			},
 			error : function() {
-				write_to_log(tid, 'OPRT', 'ROUTE', masterIp, '/hg/create', 'error');
+				write_to_log(tid, 'OPRT', 'ROUTE', vplxIp, '/hg/create', 'error');
 				
 			}
 		})
@@ -64,20 +83,20 @@ $('#host').selectpicker({
 });
 function host_result_select() {
 	$.ajax({
-		url : masterIp + "/host/show/oprt",
+		url : vplxIp + "/host/show/oprt",
 		type : "GET",
 		dataType : "json",
 		data : {
 			transaction_id : tid
 		},
 		success : function(status) {
-			write_to_log(tid,'OPRT','ROUTE',masterIp,'/host/show/oprt',status);
+			write_to_log(tid,'OPRT','ROUTE',vplxIp,'/host/show/oprt',status);
 			$.ajax({
-				url : masterIp + "/host/show/data",
+				url : vplxIp + "/host/show/data",
 				type : "GET",
 				dataType : "json",
 				success : function(host_result) {
-					write_to_log(tid,'DATA','ROUTE',masterIp,'/host/show/data',JSON.stringify(host_result));
+					write_to_log(tid,'DATA','ROUTE',vplxIp,'/host/show/data',JSON.stringify(host_result));
 					$('#host').html("");
 					var html = "";
 					for (i in host_result) {
@@ -88,13 +107,13 @@ function host_result_select() {
 					$('#host').selectpicker('render');
 				},
 				error : function(){
-					write_to_log(tid,'DATA','ROUTE',masterIp,'/host/show/data','error');
+					write_to_log(tid,'DATA','ROUTE',vplxIp,'/host/show/data','error');
 				}
 				
 			});
 		},
 		error : function() {
-			write_to_log(tid,'DATA','ROUTE',masterIp,'/host/show/oprt','error');
+			write_to_log(tid,'DATA','ROUTE',vplxIp,'/host/show/oprt','error');
 		}
 	});
 };
@@ -143,22 +162,22 @@ function hg_name_myfunction() {
 			document.getElementById("hg_name_format").className = "hidden";
 			$
 			.ajax({
-				url : masterIp + "/hg/show/oprt",
+				url : vplxIp + "/hg/show/oprt",
 				type : "GET",
 				dataType : "json",
 				data : {
 					transaction_id : tid
 				},
 				success : function(HG_result) {
-					write_to_log(tid, 'OPRT', 'ROUTE', masterIp,
+					write_to_log(tid, 'OPRT', 'ROUTE', vplxIp,
 							'/hg/show/oprt', HG_result);
 					$
 					.ajax({
-						url : masterIp + "/hg/show/data",
+						url : vplxIp + "/hg/show/data",
 						type : "GET",
 						dataType : "json",
 						success : function(HG_result_data) {
-							write_to_log(tid,'DATA','ROUTE',masterIp,'/hg/show/data', JSON.stringify(HG_result_data));
+							write_to_log(tid,'DATA','ROUTE',vplxIp,'/hg/show/data', JSON.stringify(HG_result_data));
 							if (input_result in HG_result_data) {
 								$("#hg_name_hid").val("0");
 								document.getElementById("hg_name_examine").className = "";
@@ -168,13 +187,13 @@ function hg_name_myfunction() {
 							}
 						},
 						error : function() {
-							write_to_log(tid,'DATA','ROUTE',masterIp,'/hg/show/data','error');
+							write_to_log(tid,'DATA','ROUTE',vplxIp,'/hg/show/data','error');
 						}
 					});
 					
 				},
 				error : function() {
-					write_to_log(tid, 'OPRT', 'ROUTE', masterIp,
+					write_to_log(tid, 'OPRT', 'ROUTE', vplxIp,
 							'/hg/show/oprt', 'error');
 				}
 			});
@@ -192,21 +211,21 @@ $('#host_group').selectpicker({
 
 function all_hg_result_select() {
 	$.ajax({
-		url : masterIp + "/hg/show/oprt",
+		url : vplxIp + "/hg/show/oprt",
 		type : "get",
 		dataType : "json",
 		data : {
 			transaction_id : tid
 		},
 		success : function(status) {
-			write_to_log(tid, 'OPRT', 'ROUTE', masterIp, '/hg/show/oprt', status);
+			write_to_log(tid, 'OPRT', 'ROUTE', vplxIp, '/hg/show/oprt', status);
 			$.ajax({
-				url : masterIp + "/hg/show/data",
+				url : vplxIp + "/hg/show/data",
 				type : "get",
 				dataType : "json",
 				success : function(host_group_result) {
 					// var _data = data.data; //由于后台传过来的json有个data，在此重命名
-					write_to_log(tid, 'DATA', 'ROUTE', masterIp, '/hg/show/data',JSON.stringify( host_group_result));
+					write_to_log(tid, 'DATA', 'ROUTE', vplxIp, '/hg/show/data',JSON.stringify( host_group_result));
 					$('#host_group').html("");
 					var html = "";
 					for (i in host_group_result) {
@@ -218,14 +237,14 @@ function all_hg_result_select() {
 					$('#host_group').selectpicker('render');
 				},
 				error : function() {
-					write_to_log(tid, 'DATA', 'ROUTE', masterIp, '/hg/show/data', 'error');
+					write_to_log(tid, 'DATA', 'ROUTE', vplxIp, '/hg/show/data', 'error');
 				}
 				
 			});
 
 		},
 		error : function() {
-			write_to_log(tid, 'OPRT', 'ROUTE', masterIp, '/hg/show/oprt', 'error');
+			write_to_log(tid, 'OPRT', 'ROUTE', vplxIp, '/hg/show/oprt', 'error');
 		}
 	});
 

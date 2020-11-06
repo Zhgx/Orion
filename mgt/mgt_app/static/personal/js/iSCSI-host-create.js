@@ -5,9 +5,30 @@
  * */
 
 // 操作提示
-var masterIp = "http://10.203.1.76:7777"
+
+var vplxIp = get_vlpx_ip();
 var tid = Date.parse(new Date()).toString();// 获取到毫秒的时间戳，精确到毫秒
 var tid = tid.substr(0, 10);
+
+
+function get_vlpx_ip(){
+	var obj = new Object();
+	$.ajax({
+		url : "http://127.0.0.1:7773/vplxip",
+		type : "GET",
+		dataType : "json",
+		async:false,
+		success : function(data) {
+			console.log("okokok");
+			console.log(data["ip"]);
+			obj =  "http://"+data["ip"];
+		}
+	});
+
+	return obj;
+}
+
+
 $("#host_create").click(
 		function() {
 			var hostName = $("#host_name").val()
@@ -20,6 +41,8 @@ $("#host_create").click(
 				"host_alias" : hostName,
 				"host_iqn" : hostiqn
 			});
+
+
 			if (host_name_verify_status == "0") {
 				host_name_myfunction();
 			}else if (host_name_verify_status == "1")  {
@@ -36,7 +59,7 @@ $("#host_create").click(
 				write_to_log(tid, 'OPRT', 'CLICK', 'host_create', 'accept',
 						dict_data);
 				$.ajax({
-					url : masterIp + "/host/create",
+					url : vplxIp + "/host/create",
 					type : "GET",
 					data : {
 						transaction_id : tid,
@@ -44,7 +67,7 @@ $("#host_create").click(
 						host_iqn : hostiqn
 					},
 					success : function(operation_feedback_prompt) {
-						write_to_log(tid, 'OPRT', 'ROUTE', masterIp,
+						write_to_log(tid, 'OPRT', 'ROUTE', vplxIp,
 								'/host/create', operation_feedback_prompt);
 						alert(operation_feedback_prompt);
 						$("#host_name").val("");
@@ -62,7 +85,7 @@ $("#host_create").click(
 
 					},
 					error : function() {
-						write_to_log(tid, 'OPRT', 'ROUTE', masterIp,
+						write_to_log(tid, 'OPRT', 'ROUTE', vplxIp,
 								'/host/create', 'error');
 					}
 				})
@@ -112,24 +135,24 @@ function host_name_myfunction() {
 			document.getElementById("host_name_format").className = "hidden";
 			$
 					.ajax({
-						url : masterIp + "/host/show/oprt",
+						url : vplxIp + "/host/show/oprt",
 						type : "GET",
 						dataType : "json",
 						data : {
 							transaction_id : tid
 						},
 						success : function(host_result) {
-							write_to_log(tid, 'OPRT', 'ROUTE', masterIp,
+							write_to_log(tid, 'OPRT', 'ROUTE', vplxIp,
 									'/host/show/oprt', host_result);
 
 							$
 									.ajax({
-										url : masterIp + "/host/show/data",
+										url : vplxIp + "/host/show/data",
 										type : "GET",
 										dataType : "json",
 										success : function(host_result) {
 											write_to_log(tid, 'DATA', 'ROUTE',
-													masterIp,
+													vplxIp,
 													'/host/show/data',
 													JSON.stringify(host_result));
 											if (input_result in host_result) {
@@ -150,14 +173,14 @@ function host_name_myfunction() {
 										},
 										error : function() {
 											write_to_log(tid, 'DATA', 'ROUTE',
-													masterIp,
+													vplxIp,
 													'/host/show/data', 'error');
 										}
 									});
 
 						},
 						error : function() {
-							write_to_log(tid, 'OPRT', 'ROUTE', masterIp,
+							write_to_log(tid, 'OPRT', 'ROUTE', vplxIp,
 									'/host/show/oprt', 'error');
 						}
 					});
@@ -194,20 +217,20 @@ $('#host').selectpicker({
 });
 function host_result_select() {
 	$.ajax({
-		url : masterIp + "/host/show/oprt",
+		url : vplxIp + "/host/show/oprt",
 		type : "GET",
 		dataType : "json",
 		data : {
 			transaction_id : tid
 		},
 		success : function(status) {
-			write_to_log(tid,'OPRT','ROUTE',masterIp,'/host/show/oprt',status);
+			write_to_log(tid,'OPRT','ROUTE',vplxIp,'/host/show/oprt',status);
 			$.ajax({
-				url : masterIp + "/host/show/data",
+				url : vplxIp + "/host/show/data",
 				type : "GET",
 				dataType : "json",
 				success : function(host_result) {
-					write_to_log(tid,'DATA','ROUTE',masterIp,'/host/show/data',JSON.stringify(host_result));
+					write_to_log(tid,'DATA','ROUTE',vplxIp,'/host/show/data',JSON.stringify(host_result));
 					$('#host').html("");
 					var html = "";
 					for (i in host_result) {
@@ -218,17 +241,16 @@ function host_result_select() {
 					$('#host').selectpicker('render');
 				},
 				error : function(){
-					write_to_log(tid,'DATA','ROUTE',masterIp,'/host/show/data','error');
+					write_to_log(tid,'DATA','ROUTE',vplxIp,'/host/show/data','error');
 				}
 				
 			});
 		},
 		error : function() {
-			write_to_log(tid,'DATA','ROUTE',masterIp,'/host/show/oprt','error');
+			write_to_log(tid,'DATA','ROUTE',vplxIp,'/host/show/oprt','error');
 		}
 	});
 };
-host_result_select();
 $(window).on('load', function() {
 	$('#host').selectpicker({
 		'selectedText' : 'cat'

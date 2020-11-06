@@ -56,7 +56,9 @@
         "host12323": "iqn.2333-2323.xx",
         "hosr32": "iqn.2332-23.xx",
         "host12123": "iqn.2323-23.xx",
-        "hose2": "iqn.2323-23.xx"
+        "hose2": "iqn.2323-23.xx",
+        "host111": "iqn.2333-1223",
+        "host_test_1117": "iqn.2222-22.xxxxx"
     },
     "Disk": {
         "res_a": "/dev/drbd1000",
@@ -103,6 +105,13 @@
         "dg_test_test_13": [
             "res_b",
             "res_c"
+        ],
+        "dg12": [
+            "res_a",
+            "res_b"
+        ],
+        "dg123": [
+            "res_a"
         ]
     },
     "Map": {
@@ -117,10 +126,22 @@
         "map_test_1": [
             "hg2",
             "dg2"
+        ],
+        "map123": [
+            "hg1",
+            "dg123"
         ]
     },
     "crm": {
         "resource": [
+            [
+                "res_b",
+                "iqn.2020-04.feixitek.com:versaplx00",
+                "01",
+                "/dev/drbd1001",
+                "iqn.2222-222.xxx ",
+                "Started"
+            ],
             [
                 "res_c",
                 "iqn.2020-04.feixitek.com:versaplx00",

@@ -14,6 +14,10 @@ def cors_data(data_dict):
     response.headers['Access-Control-Allow-Methods'] = 'OPTIONS,HEAD,GET,POST'
     response.headers['Access-Control-Allow-Headers'] = 'x-requested-with'
     return response
+
+
+
+
     
 class HostCreate(views.MethodView):
 
@@ -22,14 +26,17 @@ class HostCreate(views.MethodView):
             str_host = request.args.items()
             dict_host = dict(str_host)
             tid = dict_host['transaction_id']
-            print(tid)
+            #记录除了tid之后接收到的数据
             logger = consts.glo_log()
             logger.tid = tid
+            logger.write_to_log('OPRT','ROUTE','/host/create','GET',dict_host)
             host = dict_host["host_name"]
             iqn = dict_host["host_iqn"]
             host_obj = iscsi.Host()
-            print(host_obj.get_all_host())
             host_create_results = host_obj.create_host(host, iqn)
+            # 记录执行函数执行结果：
+            #[OPRT] [FUNC] [host_create] [] [host_create_results]
+            logger.write_to_log('DATA', 'MethodView', 'HostCreate', 'result', host_create_results)
             if host_create_results == True:
                 result = "create success"
             else:
