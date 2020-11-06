@@ -21,11 +21,16 @@ def cors_data(datadict):
     return response
 
  
-def get_tid():
+def get_request_data():
     if request.method == 'GET':
-        str_transaction_id = request.args.items()
-        dict_transaction = dict(str_transaction_id)
-        return dict_transaction["transaction_id"]
+        str_data = request.args.items()
+        dict_data = dict(str_data)
+        tid = dict_data['tid']
+        # 记录除了tid之后接收到的数据
+        logger = consts.glo_log()
+        logger.tid = tid
+        return dict_data
+
 
 
 RESOURCEDICT = None
@@ -39,19 +44,25 @@ def get_all_resource():
 class OprtResource(views.MethodView):  
 
     def get(self):
-        tid = get_tid()
+        get_request_data()
         logger = consts.glo_log()
-        logger.transaction_id = tid
+        logger.write_to_log('OPRT', 'ROUTE', '/resource/show/oprt', 'mgt_ip', '')
         if get_all_resource():
+            logger.write_to_log('DATA', 'RETURN', 'OprtResource', 'result', '0')
             return cors_data("0")
         else:
+            logger.write_to_log('DATA', 'RETURN', 'OprtResource', 'result', '1')
             return cors_data("1")
 
     
 class ResourceResult(views.MethodView):  
 
     def get(self):
+        # get_request_data()
+        # logger = consts.glo_log()
+        # logger.write_to_log('DATA', 'ROUTE', '/resource/show/data', 'mgt_ip', '')
         if not RESOURCEDICT:
             get_all_resource()
+        # logger.write_to_log('DATA', 'RETURN', 'ResourceResult', 'result', RESOURCEDICT)
         return cors_data(RESOURCEDICT)
 

@@ -39,14 +39,14 @@ $("#map_create").click(function() {
 	});
 	map_name_myfunction();
 	if (map_name_hid == "1") {
-		write_to_log(tid,'DATA','COMBO_BOX','host group','',host_group);
-		write_to_log(tid,'DATA','COMBO_BOX','disk group','',disk_group);
+		write_to_log(tid,'DATA','CHECKBOX','host group','',host_group);
+		write_to_log(tid,'DATA','CHECKBOX','disk group','',disk_group);
 		write_to_log(tid, 'OPRT', 'CLICK', 'map_create', 'accept', dict_data);
 		$.ajax({
 			url : vplxIp + "/map/create",
 			type : "GET",
 			data : {
-				transaction_id : tid,
+				tid : tid,
 				map_name : map_name,
 				disk_group : disk_group,
 				host_group : host_group
@@ -77,7 +77,7 @@ function all_hg_result_select() {
 		type : "get",
 		dataType : "json",
 		data : {
-			transaction_id : tid
+			tid : tid
 		},
 		success : function(status) {
 			write_to_log(tid, 'OPRT', 'ROUTE', vplxIp, '/hg/show/oprt', status);
@@ -85,6 +85,9 @@ function all_hg_result_select() {
 				url : vplxIp + "/hg/show/data",
 				type : "get",
 				dataType : "json",
+						data : {
+			tid : tid
+		},
 				success : function(host_group_result) {
 					// var _data = data.data; //由于后台传过来的json有个data，在此重命名
 					write_to_log(tid, 'DATA', 'ROUTE', vplxIp, '/hg/show/data',JSON.stringify( host_group_result));
@@ -128,7 +131,7 @@ function all_dg_result_select() {
 		type : "get",
 		dataType : "json",
 		data : {
-			transaction_id : tid
+			tid : tid
 		},
 		success : function(status) {
 			write_to_log(tid, 'OPRT', 'ROUTE', vplxIp, '/dg/show/oprt',status);
@@ -136,6 +139,9 @@ function all_dg_result_select() {
 				url : vplxIp + "/dg/show/data",
 				type : "get",
 				dataType : "json",
+						data : {
+			tid : tid
+		},
 				success : function(all_dg_result) {
 					write_to_log(tid, 'DATA', 'ROUTE', vplxIp, '/dg/show/data',JSON.stringify(all_dg_result));
 					$('#disk_group').html("");
@@ -207,7 +213,7 @@ function map_name_myfunction() {
 						type : "GET",
 						dataType : "json",
 						data : {
-							transaction_id : tid
+							tid : tid
 						},
 						success : function(map_result) {
 							write_to_log(tid,'OPRT','ROUTE',vplxIp,'/map/show/oprt',map_result);
@@ -216,6 +222,9 @@ function map_name_myfunction() {
 										url : vplxIp + "/map/show/data",
 										type : "GET",
 										dataType : "json",
+												data : {
+			tid : tid
+		},
 										success : function(Map_result) {
 											write_to_log(tid,'DATA','ROUTE',vplxIp,'/map/show/data',JSON.stringify(Map_result));
 											if (input_result in Map_result) {

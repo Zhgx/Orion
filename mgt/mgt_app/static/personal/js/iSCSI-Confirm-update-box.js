@@ -42,7 +42,7 @@ $("#host_create").click(function() {
 			url : vplxIp + "/host/create",
 			type : "GET",
 			data : {
-				transaction_id : tid,
+				tid : tid,
 				host_name : hostName,
 				host_iqn : hostiqn
 			},
@@ -82,13 +82,13 @@ $("#host_group_create").click(function() {
 		"host" : host
 	});
 	if (hg_name_hid == "1") {
-		write_to_log(tid,'DATA','COMBO_BOX','host','',host);
+		write_to_log(tid,'DATA','RADIO','host','',host);
 		write_to_log(tid, 'OPRT', 'CLICK', 'host_group_create', 'accept', dict_data);
 		$.ajax({
 			url : vplxIp + "/hg/create",
 			type : "GET",
 			data : {
-				transaction_id : tid,
+				tid : tid,
 				host_group_name : host_group_name,
 				host : host
 			},
@@ -131,13 +131,13 @@ $("#disk_group_create").click(function() {
 		"disk" : disk
 	});
 	if (dg_name_hid == "1") {
-		write_to_log(tid,'DATA','COMBO_BOX','disk','',disk);
+		write_to_log(tid,'DATA','RADIO','disk','',disk);
 		write_to_log(tid, 'OPRT', 'CLICK', 'disk_group_create', 'accept', dict_data);
 		$.ajax({
 			url : vplxIp + "/dg/create",
 			type : "GET",
 			data : {
-				transaction_id : tid,
+				tid : tid,
 				disk_group_name : disk_group_name,
 				disk : disk
 			},
@@ -177,14 +177,14 @@ $("#map_create").click(function() {
 		"host_group" : host_group
 	});
 	if (map_name_hid == "1") {
-		write_to_log(tid,'DATA','COMBO_BOX','host group','',host_group);
-		write_to_log(tid,'DATA','COMBO_BOX','disk group','',disk_group);
+		write_to_log(tid,'DATA','CHECKBOX','host group','',host_group);
+		write_to_log(tid,'DATA','CHECKBOX','disk group','',disk_group);
 		write_to_log(tid, 'OPRT', 'CLICK', 'map_create', 'accept', dict_data);
 		$.ajax({
 			url : vplxIp + "/map/create",
 			type : "GET",
 			data : {
-				transaction_id : tid,
+				tid : tid,
 				map_name : map_name,
 				disk_group : disk_group,
 				host_group : host_group
@@ -214,7 +214,7 @@ function host_result_select() {
 		type : "GET",
 		dataType : "json",
 		data : {
-			transaction_id : tid
+			tid : tid
 		},
 		success : function(status) {
 			write_to_log(tid,'OPRT','ROUTE',vplxIp,'/host/show/oprt',status);
@@ -222,6 +222,9 @@ function host_result_select() {
 				url : vplxIp + "/host/show/data",
 				type : "GET",
 				dataType : "json",
+						data : {
+			tid : tid
+		},
 				success : function(host_result) {
 					write_to_log(tid,'DATA','ROUTE',vplxIp,'/host/show/data',JSON.stringify(host_result));
 					$('#host').html("");
@@ -261,7 +264,7 @@ function all_hg_result_select() {
 		type : "get",
 		dataType : "json",
 		data : {
-			transaction_id : tid
+			tid : tid
 		},
 		success : function(status) {
 			write_to_log(tid, 'OPRT', 'ROUTE', vplxIp, '/hg/show/oprt', status);
@@ -269,6 +272,9 @@ function all_hg_result_select() {
 				url : vplxIp + "/hg/show/data",
 				type : "get",
 				dataType : "json",
+						data : {
+			tid : tid
+		},
 				success : function(host_group_result) {
 					// var _data = data.data; //由于后台传过来的json有个data，在此重命名
 					write_to_log(tid, 'DATA', 'ROUTE', vplxIp, '/hg/show/data',JSON.stringify( host_group_result));
@@ -312,7 +318,7 @@ function all_dg_result_select() {
 		type : "get",
 		dataType : "json",
 		data : {
-			transaction_id : tid
+			tid : tid
 		},
 		success : function(status) {
 			write_to_log(tid, 'OPRT', 'ROUTE', vplxIp, '/dg/show/oprt',status);
@@ -320,6 +326,9 @@ function all_dg_result_select() {
 				url : vplxIp + "/dg/show/data",
 				type : "get",
 				dataType : "json",
+						data : {
+			tid : tid
+		},
 				success : function(all_dg_result) {
 					write_to_log(tid, 'DATA', 'ROUTE', vplxIp, '/dg/show/data',JSON.stringify(all_dg_result));
 					$('#disk_group').html("");
@@ -391,7 +400,7 @@ function host_name_myfunction() {
 						type : "GET",
 						dataType : "json",
 						data : {
-							transaction_id : tid
+							tid : tid
 						},
 						success : function(host_result) {
 							write_to_log(tid, 'OPRT', 'ROUTE', vplxIp,
@@ -402,15 +411,18 @@ function host_name_myfunction() {
 										url : vplxIp + "/host/show/data",
 										type : "GET",
 										dataType : "json",
+												data : {
+			tid : tid
+		},
 										success : function(host_result) {
 											write_to_log(tid,'DATA','ROUTE',vplxIp,'/host/show/data', JSON.stringify(host_result));
 											if (input_result in host_result) {
-												write_to_log(tid,'DATA','INPUT_TEXT','host_name','F',input_result);
+												write_to_log(tid,'DATA','TEXT','host_name','F',input_result);
 												$("#host_name_hid").val("0");
 												document
 														.getElementById("host_name_examine").className = "";
 											} else {
-												write_to_log(tid,'DATA','INPUT_TEXT','host_name','T',input_result);
+												write_to_log(tid,'DATA','TEXT','host_name','T',input_result);
 												$("#host_name_hid").val("1");
 											}
 										},
@@ -452,7 +464,7 @@ function hg_name_myfunction() {
 				type : "GET",
 				dataType : "json",
 				data : {
-					transaction_id : tid
+					tid : tid
 				},
 				success : function(HG_result) {
 					write_to_log(tid, 'OPRT', 'ROUTE', vplxIp,
@@ -462,13 +474,16 @@ function hg_name_myfunction() {
 						url : vplxIp + "/hg/show/data",
 						type : "GET",
 						dataType : "json",
+								data : {
+			tid : tid
+		},
 						success : function(HG_result_data) {
 							write_to_log(tid,'DATA','ROUTE',vplxIp,'/hg/show/data', JSON.stringify(HG_result_data));
 							if (input_result in HG_result_data) {
 								$("#hg_name_hid").val("0");
 								document.getElementById("hg_name_examine").className = "";
 							} else {
-								write_to_log(tid,'DATA','INPUT_TEXT','host_group_name','T',input_result);
+								write_to_log(tid,'DATA','TEXT','host_group_name','T',input_result);
 								$("#hg_name_hid").val("1");
 							}
 						},
@@ -510,6 +525,9 @@ function dg_name_myfunction() {
 				url : vplxIp + "/dg/show/oprt",
 				type : "GET",
 				dataType : "json",
+						data : {
+			tid : tid
+		},
 				success : function(DG_result) {
 					write_to_log(tid, 'OPRT', 'ROUTE', vplxIp,
 							'/dg/show/oprt', DG_result);
@@ -518,6 +536,9 @@ function dg_name_myfunction() {
 						url : vplxIp + "/dg/show/data",
 						type : "GET",
 						dataType : "json",
+								data : {
+			tid : tid
+		},
 						success : function(DG_result) {
 							write_to_log(tid,'DATA','ROUTE',vplxIp,'/dg/show/data',JSON.stringify(DG_result));
 							if (input_result in DG_result) {
@@ -565,6 +586,9 @@ function map_name_myfunction() {
 						url : vplxIp + "/map/show/oprt",
 						type : "GET",
 						dataType : "json",
+								data : {
+			tid : tid
+		},
 						success : function(map_result) {
 							write_to_log(tid,'OPRT','ROUTE',vplxIp,'/map/show/oprt',map_result);
 							$
@@ -572,6 +596,9 @@ function map_name_myfunction() {
 										url : vplxIp + "/map/show/data",
 										type : "GET",
 										dataType : "json",
+												data : {
+			tid : tid
+		},
 										success : function(Map_result) {
 											write_to_log(tid,'DATA','ROUTE',vplxIp,'/map/show/data',Map_result);
 											if (input_result in Map_result) {
@@ -607,10 +634,10 @@ function iqn_myfunction() {
 	} else {
 		if (!match_result) {
 			$("#host_iqn_hid").val("0");
-			write_to_log(tid,'DATA','INPUT_TEXT','iqn','F',input_result)
+			write_to_log(tid,'DATA','TEXT','iqn','F',input_result)
 			document.getElementById("iqn_format").className = "";
 		} else {
-			write_to_log(tid,'DATA','INPUT_TEXT','iqn','T',input_result)
+			write_to_log(tid,'DATA','TEXT','iqn','T',input_result)
 			$("#host_iqn_hid").val("1");
 		}
 	}
