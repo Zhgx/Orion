@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Create</title>
+<title>iSCSI Configure</title>
 
 <link href="{{url_for('static',filename='bootstrap-3.3.7/dist/css/bootstrap.min.css')}}" rel="stylesheet" type="text/css" />
 <link href="{{url_for('static',filename='bootstrap-select-1.12.4/dist/css/bootstrap-select.min.css')}}" rel="stylesheet" type="text/css" />
@@ -27,7 +27,7 @@ body {
 					</h1>
 				</div>
 				<div class="form-group">
-					<label for="host_name" class="col-sm-2 control-label">Host_Name</label>
+					<label for="host_name" class="col-sm-2 control-label">Alias</label>
 					<div class="col-sm-10">
 						<input type="text" class="form-control" id="host_name"
 							placeholder="请输入" style="width: 200px;" value=""
@@ -40,7 +40,7 @@ body {
 					</div>
 				</div>
 				<div class="form-group">
-					<label for="host_iqn" class="col-sm-2 control-label">Host_iqn</label>
+					<label for="host_iqn" class="col-sm-2 control-label">IQN</label>
 					<div class="col-sm-10">
 						<input type="text" class="form-control" id="host_iqn"
 							placeholder="请输入" style="width: 200px;" value="" onchange="iqn_myfunction()" >
@@ -66,7 +66,7 @@ body {
 					</h1>
 				</div>
 				<div class="form-group">
-					<label for="host_group_name" class="col-sm-2 control-label">HostGroup_Name</label>
+					<label for="host_group_name" class="col-sm-2 control-label">Name</label>
 					<div class="col-sm-10">
 						<input type="text" class="form-control" id="host_group_name"
 							placeholder="请输入" style="width: 200px;" value=""
@@ -104,7 +104,7 @@ body {
 					</h1>
 				</div>
 				<div class="form-group">
-					<label for="disk_group_name" class="col-sm-2 control-label">DiskGroup_Name</label>
+					<label for="disk_group_name" class="col-sm-2 control-label">Name</label>
 					<div class="col-sm-10">
 						<input type="text" class="form-control" id="disk_group_name"
 							placeholder="请输入" style="width: 200px;" value=""
@@ -143,7 +143,7 @@ body {
 						</h1>
 					</div>
 					<div class="form-group">
-						<label for="map_name" class="col-sm-2 control-label">Map_Name</label>
+						<label for="map_name" class="col-sm-2 control-label">Name</label>
 						<div class="col-sm-10">
 							<input type="text" class="form-control" id="map_name"
 								placeholder="请输入" style="width: 200px;" value=""
@@ -156,7 +156,7 @@ body {
 						</div>
 					</div>
 					<div class="form-group">
-						<label for="host_group" class="col-sm-2 control-label">Host_Group</label>
+						<label for="host_group" class="col-sm-2 control-label">HostGroup</label>
 
 						<div style="width: 340px;" class="col-sm-10 ">
 							<select id='host_group' name="host_group" class="selectpicker"
@@ -165,7 +165,7 @@ body {
 						</div>
 					</div>
 					<div class="form-group">
-						<label for="disk_group" class="col-sm-2 control-label">Disk_Group</label>
+						<label for="disk_group" class="col-sm-2 control-label">DiskGroup</label>
 
 						<div style="width: 340px;" class="col-sm-10 ">
 							<select id='disk_group' name="disk_group" class="selectpicker"
