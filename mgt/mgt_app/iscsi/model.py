@@ -7,6 +7,7 @@ Created on 2020/3/2
 '''
 from flask import Flask, jsonify, render_template, request, make_response, views
 from public import log
+from ..utils import read_config
 import consts
 def cors_data(data_dict):
     response = make_response(jsonify(data_dict))
@@ -30,7 +31,16 @@ class ISCSIWrite(views.MethodView):
                 logger = consts.glo_log()
                 logger.tid = log_data['tid']
                 logger.write_to_log(log_data['t1'], log_data['t2'], log_data['d1'], log_data['d2'], log_data["data"])
-        return cors_data("success") 
+        return cors_data("success")
+
+
+class VplxIp(views.MethodView):
+    def get(self):
+        config_obj = read_config.Config()
+        ip = {
+            'ip': config_obj.get_ip() + ":" + config_obj.get_port()
+        }
+        return cors_data(ip)
 
     
 class IndexPreview(views.MethodView):

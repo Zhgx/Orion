@@ -1,6 +1,28 @@
-var masterIp = "http://10.203.1.76:7777"
+
+var vplxIp = get_vlpx_ip();
 var tid = Date.parse(new Date()).toString();// 获取到毫秒的时间戳，精确到毫秒
 var tid = tid.substr(0, 10);
+
+
+
+function get_vlpx_ip(){
+	var obj = new Object();
+	$.ajax({
+		url : "http://127.0.0.1:7773/vplxip",
+		type : "GET",
+		dataType : "json",
+		async:false,
+		success : function(data) {
+			console.log("okokok");
+			console.log(data["ip"]);
+			obj =  "http://"+data["ip"];
+		}
+	});
+
+	return obj;
+}
+
+
 function write_to_log(tid, t1, t2, d1, d2, data) {
 	$.ajax({
 		url : '/iscsi/write_log',
@@ -22,13 +44,14 @@ function write_to_log(tid, t1, t2, d1, d2, data) {
 function resource_oprt() {
 	$
 			.ajax({
-				url : masterIp + "/host/show/oprt",
+				url : vplxIp + "/host/show/oprt",
 				type : "get",
 				dataType : "json",
 				data : {
 					transaction_id : tid
 				},
-				success : function() {
+				success : function(status) {
+					write_to_log(tid,'OPRT','ROUTE',vplxIp,'/host/show/oprt111',status);
 
 					layui
 							.use(
@@ -41,7 +64,7 @@ function resource_oprt() {
 										table
 												.render({
 													elem : '#demo',
-													url : masterIp
+													url : vplxIp
 															+ "/resource/show/data" // 数据接口
 													,
 													title : '用户表',
@@ -273,7 +296,12 @@ function resource_oprt() {
 
 									});
 
+				},
+				error:function () {
+					write_to_log(tid,'OPRT','ROUTE',vplxIp,'/host/show/oprt','error');
+
 				}
+
 			});
 };
 resource_oprt();
