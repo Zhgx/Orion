@@ -4,7 +4,7 @@ import iscsi_json
 class TestJSON_OPERATION:
 
     def setup_class(self):
-        self.js = iscsi_json.JSON_OPERATION()
+        self.js = iscsi_json.JsonOperation()
 
     def test_read_json(self):
         assert self.js.read_json() != None

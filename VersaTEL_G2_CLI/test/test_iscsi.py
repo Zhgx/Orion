@@ -134,8 +134,8 @@ class TestMap:
     def test_get_target(self):
         assert self.map.get_target() != None
 
-    def test_get_drbd_data(self):
-        assert self.map.get_drbd_data('test_dg') != None
+    def test_get_disk_data(self):
+        assert self.map.get_disk_data('test_dg') != None
 
     def test_create_map(self):
         assert self.map.create_map('test_map', 'test_hg', 'test_dg') == True

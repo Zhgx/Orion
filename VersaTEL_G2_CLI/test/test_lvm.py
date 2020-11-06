@@ -21,4 +21,4 @@ class TestLVM:
         assert self.l.is_vg_exists('drbdpool') == True
 
     def test_is_thinlv_exists(self):
-        assert self.l.is_thinlv_exists('res_a_00000') == True
+        assert self.l.is_thinlv_exists('drbdpool/thinlv_test') == True
