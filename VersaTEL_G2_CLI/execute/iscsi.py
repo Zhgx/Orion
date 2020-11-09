@@ -7,7 +7,7 @@ from execute.crm import CRMData,CRMConfig
 
 class Disk():
     def __init__(self):
-        self.js = iscsi_json.JSON_OPERATION()
+        self.js = iscsi_json.JsonOperation()
 
     def get_all_disk(self):
         linstor = Linstor()
@@ -43,7 +43,7 @@ class Disk():
 
 class Host():
     def __init__(self):
-        self.js = iscsi_json.JSON_OPERATION()
+        self.js = iscsi_json.JsonOperation()
 
     def create_host(self, host, iqn):
         if self.js.check_key('Host', host)['result']:
@@ -79,7 +79,7 @@ class Host():
                     "Fail! The host in ... hostgroup.Please delete the hostgroup first",1)
             else:
                 self.js.delete_data('Host', host)
-                s.prt_log("Dexlete success!",0)
+                s.prt_log("Delete success!",0)
                 return True
         else:
             s.prt_log(f"Fail! Can't find {host}",1)
@@ -90,7 +90,10 @@ class Host():
 
 class DiskGroup():
     def __init__(self):
-        self.js = iscsi_json.JSON_OPERATION()
+        # 更新json文档中的disk信息
+        disk = Disk()
+        disk.get_all_disk()
+        self.js = iscsi_json.JsonOperation()
 
     def create_diskgroup(self, diskgroup, disk):
         if self.js.check_key('DiskGroup', diskgroup)['result']:
@@ -142,7 +145,7 @@ class DiskGroup():
 
 class HostGroup():
     def __init__(self):
-        self.js = iscsi_json.JSON_OPERATION()
+        self.js = iscsi_json.JsonOperation()
 
     def create_hostgroup(self, hostgroup, host):
         if self.js.check_key('HostGroup', hostgroup)['result']:
@@ -194,7 +197,7 @@ class HostGroup():
 
 class Map():
     def __init__(self):
-        self.js = iscsi_json.JSON_OPERATION()
+        self.js = iscsi_json.JsonOperation()
 
 
     def pre_check_create_map(self, map, hg, dg):
@@ -223,7 +226,7 @@ class Map():
         # 获取target
         crm_data = CRMData()
         if crm_data.update_crm_conf():
-            js = iscsi_json.JSON_OPERATION()
+            js = iscsi_json.JsonOperation()
             crm_data_dict = js.get_data('crm')
             if crm_data_dict['target']:
                 # 目前的设计只有一个target，所以取列表的第一个
@@ -231,19 +234,20 @@ class Map():
                 # 返回target_name, target_iqn
                 return target_all[0], target_all[1]
             else:
-                s.prt_log('没有target，创建map失败', 2)
+                s.prt_log('No target，please create target first', 2)
 
-    def get_drbd_data(self, dg):
-        # 根据dg去收集drbdd的三项数据：resource name，minor number，device name
-        disk_all = self.js.get_data('DiskGroup').get(dg)
+    def get_disk_data(self, dg):
+        # 根据dg去收集drbdd的三项数据：resource name，device name
+        disk = self.js.get_data('DiskGroup').get(dg)
         linstor = Linstor()
-        linstorlv = linstor.get_linstor_data('linstor --no-color --no-utf8 r lv')
-        drdb_list = []
-        for res in linstorlv:
-            for disk_one in disk_all:
-                if disk_one in res:
-                    drdb_list.append([res[1], res[4], res[5]])  # 取Resource,MinorNr,DeviceName
-        return drdb_list
+        linstor_res = linstor.get_linstor_data('linstor --no-color --no-utf8 r lv')
+        disks = {}
+        for disk_all in linstor_res:
+            # 获取diskgroup中每个disk的相关数据
+            for d in disk:
+                if d in disk_all:
+                    disks.update({disk_all[1]: disk_all[5]})  # 取Resource, DeviceName
+        return disks
 
     def create_map(self, map,hg, dg):
         # 创建前的检查
@@ -253,27 +257,37 @@ class Map():
         obj_crm = CRMConfig()
         initiator = self.get_initiator(hg)
         target_name, target_iqn = self.get_target()
-        drdb_list = self.get_drbd_data(dg)
+        disk_list = self.get_disk_data(dg)
+        # 用于收集创建成功的resource
+        list_res_created = []
 
         # 执行创建和启动
-        for i in drdb_list:
-            res, minor_nr, path = i
-            lunid = minor_nr[-2:]  # lun id 取自MinorNr的后两位数字
+        for i in disk_list:
+            res = i
+            path = disk_list[i]
+            # 取DeviceName后四位数字，减一千作为lun id
+            lunid = int(path[-4:]) - 1000
+            # 创建iSCSILogicalUnit
             if obj_crm.create_crm_res(res, target_iqn, lunid, path, initiator):
-                c = obj_crm.create_col(res, target_name)
-                o = obj_crm.create_order(res, target_name)
-                if c and o:
-                    s.prt_log(f'create colocation and order success:{res}',0)
+                list_res_created.append(res)
+                # 创建order，colocation
+                if obj_crm.create_set(res, target_name):
+                    # 尝试启动资源，成功失败都不影响创建
+                    s.prt_log(f"try to start {res}", 0)
                     obj_crm.start_res(res)
+                    obj_crm.checkout_status_start(res)
                 else:
-                    s.prt_log("create colocation and order fail",1)
+                    for i in list_res_created:
+                        obj_crm.delete_res(i)
                     return False
             else:
-                s.prt_log('Failde to create resource!',1)
+                s.prt_log('Fail to create iSCSILogicalUnit',1)
+                for i in list_res_created:
+                    obj_crm.delete_res(i)
                 return False
 
         self.js.add_data('Map', map, [hg, dg])
-        s.prt_log('Create success!', 0)
+        s.prt_log('Create map success!', 0)
         return True
 
     def get_all_map(self):
@@ -283,13 +297,11 @@ class Map():
         dict_hg = {}
         dict_dg = {}
         if not self.js.check_key('Map', map)['result']:
-            s.prt_log('No map data',1)
-            return
+            s.prt_log('No map data',2)
 
         hg,dg = self.js.get_data('Map').get(map)
         host = self.js.get_data('HostGroup').get(hg)
         disk = self.js.get_data('DiskGroup').get(dg)
-
         for i in host:
             iqn = self.js.get_data('Host').get(i)
             dict_hg.update({i:iqn})
@@ -335,15 +347,12 @@ class Map():
         crm_config_statu = crm_data.crm_conf_data
         dg = self.js.get_data('Map').get(map)[1]
         resname = self.js.get_data('DiskGroup').get(dg)
-
         if 'ERROR' in crm_config_statu:
             s.prt_log("Could not perform requested operations, are you root?",1)
         else:
             for disk in resname:
-                if obj_crm.delete_crm_res(disk):
-                    s.prt_log(f"delete {disk}",0)
-                else:
+                if obj_crm.delete_res(disk) != True:
                     return False
             self.js.delete_data('Map', map)
-            s.prt_log("Delete success!", 0)
+            s.prt_log("Delete map success!", 0)
             return True
