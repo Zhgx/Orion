@@ -56,15 +56,23 @@
         "host12323": "iqn.2333-2323.xx",
         "hosr32": "iqn.2332-23.xx",
         "host12123": "iqn.2323-23.xx",
-        "hose2": "iqn.2323-23.xx"
+        "hose2": "iqn.2323-23.xx",
+        "host111": "iqn.2333-1223",
+        "host_test_1117": "iqn.2222-22.xxxxx",
+        "host_data_1": "iqn.2222-22.xxxx",
+        "host_iqn_test111": "iqn.2222-22.xxxxx",
+        "host_test_119": "iqn.1111-11.xxx",
+        "host_test_112": "iqn.2222-22.xxx",
+        "hosr112": "iqn.2323-32.xx",
+        "hos12": "iqn.2323-232.xx",
+        "host33": "iqn.3233-23.xx",
+        "hosee2e": "iqn.2323-232.xx",
+        "hose2323": "iqn.2323-32.xx"
     },
     "Disk": {
         "res_a": "/dev/drbd1000",
         "res_b": "/dev/drbd1001",
-        "res_c": "/dev/drbd1002",
-        "res_d": "/dev/drbd1003",
-        "res_e": "/dev/drbd1005",
-        "thinlv_test": "/dev/drbd1004"
+        "res_c": "/dev/drbd1002"
     },
     "HostGroup": {
         "hg1": [
@@ -79,6 +87,11 @@
         "hg_test_11": [
             "Host_test1",
             "Host_test133"
+        ],
+        "host_group_test1": [
+            "host_test_111",
+            "host_test_1117",
+            "host_test_112"
         ]
     },
     "DiskGroup": {
@@ -103,6 +116,25 @@
         "dg_test_test_13": [
             "res_b",
             "res_c"
+        ],
+        "dg12": [
+            "res_a",
+            "res_b"
+        ],
+        "dg123": [
+            "res_a"
+        ],
+        "disk_group_test1": [
+            "res_a",
+            "res_b",
+            "res_c"
+        ],
+        "dg_test_1": [
+            "res_d"
+        ],
+        "dsd": [
+            "res_a",
+            "res_b"
         ]
     },
     "Map": {
@@ -117,10 +149,26 @@
         "map_test_1": [
             "hg2",
             "dg2"
+        ],
+        "map123": [
+            "hg1",
+            "dg123"
+        ],
+        "map_test_111": [
+            "hg1",
+            "dg_test_1"
         ]
     },
     "crm": {
         "resource": [
+            [
+                "res_b",
+                "iqn.2020-04.feixitek.com:versaplx00",
+                "01",
+                "/dev/drbd1001",
+                "iqn.2222-222.xxx ",
+                "Started"
+            ],
             [
                 "res_c",
                 "iqn.2020-04.feixitek.com:versaplx00",

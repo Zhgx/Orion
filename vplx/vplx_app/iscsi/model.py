@@ -1,11 +1,7 @@
 # coding:utf-8
 from flask import Flask, jsonify, render_template, request, make_response, views
-import json
-import subprocess
 from flask_cors import *
 from execute import iscsi
-import time
-from public import log
 import consts
 
 def cors_data(data_dict):
@@ -14,88 +10,97 @@ def cors_data(data_dict):
     response.headers['Access-Control-Allow-Methods'] = 'OPTIONS,HEAD,GET,POST'
     response.headers['Access-Control-Allow-Headers'] = 'x-requested-with'
     return response
+
+
+
+def get_request_data():
+    if request.method == 'GET':
+        str_data = request.args.items()
+        dict_data = dict(str_data)
+        tid = dict_data['tid']
+        # 记录除了tid之后接收到的数据
+        logger = consts.glo_log()
+        logger.tid = tid
+        consts.set_glo_log(logger)
+        return dict_data
+
     
 class HostCreate(views.MethodView):
 
     def get(self):
-        if request.method == 'GET':
-            str_host = request.args.items()
-            dict_host = dict(str_host)
-            tid = dict_host['transaction_id']
-            print(tid)
-            logger = consts.glo_log()
-            logger.tid = tid
-            host = dict_host["host_name"]
-            iqn = dict_host["host_iqn"]
-            host_obj = iscsi.Host()
-            print(host_obj.get_all_host())
-            host_create_results = host_obj.create_host(host, iqn)
-            if host_create_results == True:
-                result = "create success"
-            else:
-                result = "create failed"
+        dict_data = get_request_data()
+        logger = consts.glo_log()
+        host = dict_data["host_name"]
+        iqn = dict_data["host_iqn"]
+        logger.write_to_log('OPRT', 'ROUTE', '/host/create', dict_data['ip'], dict_data)
+        host_obj = iscsi.Host()
+        host_create_results = host_obj.create_host(host, iqn)
+        logger.write_to_log('DATA', 'RESULT', 'HostCreate', 'result', host_create_results)
+        if host_create_results == True:
+            result = "create success"
+        else:
+            result = "create failed"
+        logger.write_to_log('DATA', 'RETURN', 'HostCreate', 'result', result)
         return cors_data(result)
+
 
     
 class HostGroupCreate(views.MethodView):
 
     def get(self):
-        if request.method == 'GET':
-            hostgroup = request.args.items()
-            dict_hostgroup = dict(hostgroup)
-            tid = dict_hostgroup['transaction_id']
-            logger = consts.glo_log()
-            logger.transaction_id = tid
-            host = dict_hostgroup['host'].split(',')
-            host_group_name = dict_hostgroup["host_group_name"]
-            host_group_obj = iscsi.HostGroup()
-            host_group_create_results = host_group_obj.create_hostgroup(host_group_name, host)
-            if host_group_create_results == True:
-                result = "create success"
-            else:
-                result = "create failed"
+        dict_data = get_request_data()
+        logger = consts.glo_log()
+        host = dict_data['host'].split(',')
+        host_group_name = dict_data["host_group_name"]
+        logger.write_to_log('OPRT', 'ROUTE', '/hg/create', dict_data['ip'], dict_data)
+        host_group_obj = iscsi.HostGroup()
+        host_group_create_results = host_group_obj.create_hostgroup(host_group_name, host)
+        logger.write_to_log('DATA', 'RESULT', 'HostGroupCreate', 'result', host_group_create_results)
+        if host_group_create_results == True:
+            result = "create success"
+        else:
+            result = "create failed"
+        logger.write_to_log('DATA', 'RETURN', 'HostGroupCreate', 'result', result)
         return cors_data(result)
 
     
 class DiskGroupCreate(views.MethodView):
 
     def get(self):
-        if request.method == 'GET':
-            diskgroup = request.args.items()
-            dict_diskgroup = dict(diskgroup) 
-            tid = dict_diskgroup['transaction_id']
-            logger = consts.glo_log()
-            logger.transaction_id = tid
-            disk = dict_diskgroup['disk'].split(',')
-            disk_group_name = dict_diskgroup["disk_group_name"]
-            disk_group_obj = iscsi.DiskGroup()
-            
-            disk_group_create_results = disk_group_obj.create_diskgroup(disk_group_name, disk)
-            if disk_group_create_results == True:
-                result = "create success"
-            else:
-                result = "create failed"
+        dict_data = get_request_data()
+        logger = consts.glo_log()
+        disk = dict_data['disk'].split(',')
+        logger.write_to_log('OPRT', 'ROUTE', '/dg/create', dict_data['ip'], dict_data)
+        disk_group_name = dict_data["disk_group_name"]
+        disk_group_obj = iscsi.DiskGroup()
+
+        disk_group_create_results = disk_group_obj.create_diskgroup(disk_group_name, disk)
+        logger.write_to_log('DATA', 'RESULT', 'DiskGroupCreate', 'result', disk_group_create_results)
+        if disk_group_create_results == True:
+            result = "create success"
+        else:
+            result = "create failed"
+        logger.write_to_log('DATA', 'RETURN', 'DiskGroupCreate', 'result', result)
         return cors_data(result)
 
     
 class MapCreate(views.MethodView):
 
     def get(self):
-        if request.method == 'GET':
-            map = request.args.items()
-            dict_map = dict(map)
-            tid = dict_map['transaction_id']
-            logger = consts.glo_log()
-            logger.transaction_id = tid
-            map_name = dict_map["map_name"]
-            host_group_name = dict_map["host_group"]
-            disk_group_name = dict_map["disk_group"] 
-            map_obj = iscsi.Map()
-            map_create_results = map_obj.create_map(map_name, host_group_name,disk_group_name)
-            if map_create_results == True:
-                result = "create success"
-            else:
-                result = "create failed"
+        dict_data = get_request_data()
+        logger = consts.glo_log()
+        map_name = dict_data["map_name"]
+        host_group_name = dict_data["host_group"]
+        disk_group_name = dict_data["disk_group"]
+        logger.write_to_log('OPRT', 'ROUTE', '/map/create', dict_data['ip'], dict_data)
+        map_obj = iscsi.Map()
+        map_create_results = map_obj.create_map(map_name, host_group_name,disk_group_name)
+        logger.write_to_log('DATA', 'RESULT', 'MapCreate', 'result', map_create_results)
+        if map_create_results == True:
+            result = "create success"
+        else:
+            result = "create failed"
+        logger.write_to_log('DATA', 'RETURN', 'MapCreate', 'result', result)
         return cors_data(result)
 
 
@@ -118,21 +123,26 @@ def update_host():
 class OprtAllHost(views.MethodView):
 
     def get(self):
-        tid = get_tid()
+        dict_data = get_request_data()
         logger = consts.glo_log()
-        logger.transaction_id = tid
+        logger.write_to_log('OPRT', 'ROUTE', '/host/show/oprt', dict_data['ip'], '')
         if update_host():
+            logger.write_to_log('DATA', 'RETURN', 'OprtAllHost', 'result', '0')
             return cors_data("0")
         else:
+            logger.write_to_log('DATA', 'RETURN', 'OprtAllHost', 'result', '1')
             return cors_data("1")
 
     
 class AllHostResult(views.MethodView):
 
     def get(self):
+        dict_data = get_request_data()
+        logger = consts.glo_log()
+        logger.write_to_log('DATA', 'ROUTE', '/host/show/data', dict_data['ip'], '')
         if not HOST_RESULT:
-            
             update_host()
+        logger.write_to_log('DATA', 'RETURN', 'AllHostResult', 'result', HOST_RESULT)
         return cors_data(HOST_RESULT)
 
 
@@ -148,20 +158,25 @@ def update_disk():
 class OprtAllDisk(views.MethodView):
 
     def get(self):
-        tid = get_tid()
+        dict_data = get_request_data()
         logger = consts.glo_log()
-        logger.transaction_id = tid
+        logger.write_to_log('OPRT', 'ROUTE', '/disk/show/oprt', dict_data["ip"], '')
         if update_disk():
+            logger.write_to_log('DATA', 'RETURN', 'OprtAllDisk', 'result', '0')
             return cors_data("0")
         else:
+            logger.write_to_log('DATA', 'RETURN', 'OprtAllDisk', 'result', '1')
             return cors_data("1")
 
     
 class AllDiskResult(views.MethodView):
-
     def get(self):
+        dict_data = get_request_data()
+        logger = consts.glo_log()
+        logger.write_to_log('DATA', 'ROUTE', '/disk/show/data', dict_data["ip"], '')
         if not DISK_RESULT:
             update_disk()
+        logger.write_to_log('DATA', 'RETURN', 'AllDiskResult', 'result', DISK_RESULT)
         return cors_data(DISK_RESULT)
 
 
@@ -179,20 +194,26 @@ def update_hg():
 class OprtAllHg(views.MethodView):
 
     def get(self):
-        tid = get_tid()
+        dict_data = get_request_data()
         logger = consts.glo_log()
-        logger.transaction_id = tid
+        logger.write_to_log('OPRT', 'ROUTE', '/hg/show/oprt', dict_data['ip'], '')
         if update_hg():
+            logger.write_to_log('DATA', 'RETURN', 'OprtAllHg', 'result', '0')
             return cors_data("0")
         else:
+            logger.write_to_log('DATA', 'RETURN', 'OprtAllHg', 'result', '1')
             return cors_data("1")
 
 
 class AllHgResult(views.MethodView):
     
     def get(self):
+        dict_data = get_request_data()
+        logger = consts.glo_log()
+        logger.write_to_log('DATA', 'ROUTE', '/hg/show/data', dict_data['ip'], '')
         if not HOSTGROUP_RESULT:
             update_hg()
+        logger.write_to_log('DATA', 'RETURN', 'AllHgResult', 'result', HOSTGROUP_RESULT)
         return cors_data(HOSTGROUP_RESULT)
 
     
@@ -210,20 +231,26 @@ def update_dg():
 class OprtAllDg(views.MethodView):
 
     def get(self):
-        tid = get_tid()
+        dict_data = get_request_data()
         logger = consts.glo_log()
-        logger.transaction_id = tid
+        logger.write_to_log('OPRT', 'ROUTE', '/dg/show/oprt', dict_data['ip'], '')
         if update_dg():
+            logger.write_to_log('DATA', 'RETURN', 'OprtAllDg', 'result', '0')
             return cors_data("0")
         else:
+            logger.write_to_log('DATA', 'RETURN', 'OprtAllDg', 'result', '1')
             return cors_data("1")
 
     
 class AllDgResult(views.MethodView):
 
     def get(self):
+        dict_data = get_request_data()
+        logger = consts.glo_log()
+        logger.write_to_log('DATA', 'ROUTE', '/dg/show/data', dict_data['ip'], '')
         if not DISKGROUP_RESULT:
-            update_dg() 
+            update_dg()
+        logger.write_to_log('DATA', 'RETURN', 'AllDgResult', 'result',DISKGROUP_RESULT)
         return cors_data(DISKGROUP_RESULT)
     
     
@@ -242,18 +269,25 @@ def update_map():
 class OprtAllMap(views.MethodView):
 
     def get(self):
-#         tid = get_tid()
-#         logger = consts.glo_log()
-#         logger.transaction_id = tid
+        dict_data = get_request_data()
+        logger = consts.glo_log()
+        logger.write_to_log('OPRT', 'ROUTE', '/map/show/oprt', dict_data['ip'], '')
         if update_map():
+            logger.write_to_log('DATA', 'RETURN', 'OprtAllMap', 'result', '0')
             return cors_data("0")
         else:
+            logger.write_to_log('DATA', 'RETURN', 'OprtAllMap', 'result', '1')
             return cors_data("1")
 
     
 class AllMapResult(views.MethodView):
 
+
     def get(self):
+        dict_data = get_request_data()
+        logger = consts.glo_log()
+        logger.write_to_log('DATA', 'ROUTE', '/map/show/data', dict_data['ip'], '')
         if not MAP_RESULT:
-           update_map() 
+           update_map()
+        logger.write_to_log('DATA', 'RETURN', 'AllMapResult', 'result', MAP_RESULT)
         return cors_data(MAP_RESULT)

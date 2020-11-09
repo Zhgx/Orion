@@ -5,60 +5,103 @@
  * */
 
 // 操作提示
-var masterIp = "http://10.203.1.76:7777"
+var vplxIp = get_vlpx_ip();
 var tid = Date.parse(new Date()).toString();// 获取到毫秒的时间戳，精确到毫秒
 var tid = tid.substr(0, 10);
+var mgtIp = get_mgt_ip();
 
-$("#disk_group_create").click(function() {
-	var disk_group_name = $("#disk_group_name").val()
-	var disk = $("#disk").val().toString()
-	var dg_name_hid = $("#dg_name_hid").val();
-	var dict_data = JSON.stringify({
-		"disk_group_name" : disk_group_name,
-		"disk" : disk
+function get_mgt_ip() {
+	var obj = new Object();
+	$.ajax({
+		url : "http://127.0.0.1:7773/mgtip",
+		type : "GET",
+		dataType : "json",
+		async : false,
+		success : function(data) {
+			obj = "http://" + data["ip"];
+		}
 	});
-	dg_name_myfunction();
-	if (dg_name_hid == "1") {
-		write_to_log(tid,'DATA','COMBO_BOX','disk','',disk);
-		write_to_log(tid, 'OPRT', 'CLICK', 'disk_group_create', 'accept', dict_data);
-		$.ajax({
-			url : masterIp + "/dg/create",
-			type : "GET",
-			data : {
-				transaction_id : tid,
-				disk_group_name : disk_group_name,
-				disk : disk
-			},
-			success : function(operation_feedback_prompt) {
-				write_to_log(tid, 'OPRT', 'ROUTE', masterIp, '/dg/create' ,operation_feedback_prompt);
-				alert(operation_feedback_prompt);
-				$("#disk_group_name").val("");
-				$("#dg_name_hid").val("0");
-				$('#disk_group').selectpicker({
-					width : 200
-				});
-				all_dg_result_select();
-				$(window).on('load', function() {
-					$('#disk_group').selectpicker({
-						'selectedText' : 'cat'
-					});
-				});
 
-			},
-			error : function() {
-				write_to_log(tid, 'OPRT', 'ROUTE', masterIp, '/dg/create', 'error');
+	return obj;
+}
+
+function get_vlpx_ip() {
+	var obj = new Object();
+	$.ajax({
+		url : "http://127.0.0.1:7773/vplxip",
+		type : "GET",
+		dataType : "json",
+		async : false,
+		success : function(data) {
+			obj = "http://" + data["ip"];
+		}
+	});
+
+	return obj;
+}
+
+$("#disk_group_create").click(
+		function() {
+			var disk_group_name = $("#disk_group_name").val()
+			var disk = $("#disk").val().toString()
+			var dg_name_hid = $("#dg_name_hid").val();
+			var dg_name_verify_status = $("#dg_name_verify_status").val();
+			var dict_data = JSON.stringify({
+				"disk_group_name" : disk_group_name,
+				"disk" : disk
+			});
+
+			if (dg_name_verify_status == "0") {
+				dg_name_myfunction();
+			} else if (dg_name_verify_status == "1") {
+				pass
 			}
-		})
-	} else {
-		write_to_log(tid, 'OPRT', 'CLICK', 'disk_group_create', 'refuse', dict_data);
-		alert("请输入正确值!")
-	}
-});
+			if (dg_name_hid == "1") {
+				write_to_log(tid, 'DATA', 'RADIO', 'disk', '', disk);
+				write_to_log(tid, 'OPRT', 'CLICK', 'disk_group_create',
+						'accept', dict_data);
+				$.ajax({
+					url : vplxIp + "/dg/create",
+					type : "GET",
+					data : {
+						tid : tid,
+						ip : mgtIp,
+						disk_group_name : disk_group_name,
+						disk : disk
+					},
+					success : function(operation_feedback_prompt) {
+						write_to_log(tid, 'OPRT', 'ROUTE', vplxIp,
+								'/dg/create', operation_feedback_prompt);
+						$("#dg_name_verify_status").val("0");
+						alert(operation_feedback_prompt);
+						$("#disk_group_name").val("");
+						$("#dg_name_hid").val("0");
+						$('#disk_group').selectpicker({
+							width : 200
+						});
+						all_dg_result_select();
+						$(window).on('load', function() {
+							$('#disk_group').selectpicker({
+								'selectedText' : 'cat'
+							});
+						});
+
+					},
+					error : function() {
+						write_to_log(tid, 'OPRT', 'ROUTE', vplxIp,
+								'/dg/create', 'error');
+					}
+				})
+			} else {
+				write_to_log(tid, 'OPRT', 'CLICK', 'disk_group_create',
+						'refuse', dict_data);
+				alert("请输入正确值!")
+			}
+		});
 
 $('#disk').selectpicker({
 	width : 200
 });
-
 
 function write_to_log(tid, t1, t2, d1, d2, data) {
 	$.ajax({
@@ -80,6 +123,7 @@ function write_to_log(tid, t1, t2, d1, d2, data) {
 // 输入框验证
 
 function dg_name_myfunction() {
+	$("#dg_name_verify_status").val("1");
 	document.getElementById("dg_name_examine").className = "hidden";
 	document.getElementById("dg_name_format").className = "hidden";
 	var input_result = $('#disk_group_name').val();
@@ -96,42 +140,51 @@ function dg_name_myfunction() {
 		} else {
 			document.getElementById("dg_name_format").className = "hidden";
 			$
-			.ajax({
-				url : masterIp + "/dg/show/oprt",
-				type : "GET",
-				dataType : "json",
-				data : {
-					transaction_id : tid
-				},
-				success : function(DG_result) {
-					write_to_log(tid, 'OPRT', 'ROUTE', masterIp,
-							'/dg/show/oprt', DG_result);
-					$
 					.ajax({
-						url : masterIp + "/dg/show/data",
+						url : vplxIp + "/dg/show/oprt",
 						type : "GET",
 						dataType : "json",
+						data : {
+							tid : tid,
+							ip : mgtIp
+						},
 						success : function(DG_result) {
-							write_to_log(tid,'DATA','ROUTE',masterIp,'/dg/show/data',JSON.stringify(DG_result));
-							if (input_result in DG_result) {
-								$("#dg_name_hid").val("0");
-								document.getElementById("dg_name_examine").className = "";
-							} else {
-								$("#dg_name_hid").val("1");
-							}
+							write_to_log(tid, 'OPRT', 'ROUTE', vplxIp,
+									'/dg/show/oprt', DG_result);
+							$
+									.ajax({
+										url : vplxIp + "/dg/show/data",
+										type : "GET",
+										dataType : "json",
+										data : {
+											tid : tid,
+											ip : mgtIp
+										},
+										success : function(DG_result) {
+											write_to_log(tid, 'DATA', 'ROUTE',
+													vplxIp, '/dg/show/data',
+													JSON.stringify(DG_result));
+											if (input_result in DG_result) {
+												$("#dg_name_hid").val("0");
+												document
+														.getElementById("dg_name_examine").className = "";
+											} else {
+												$("#dg_name_hid").val("1");
+											}
+										},
+										error : function() {
+											write_to_log(tid, 'DATA', 'ROUTE',
+													vplxIp, '/dg/show/data',
+													'error');
+										}
+									});
 						},
 						error : function() {
-							write_to_log(tid,'DATA','ROUTE',masterIp,'/dg/show/data','error');
+							write_to_log(tid, 'OPRT', 'ROUTE', vplxIp,
+									'/dg/show/oprt', 'error');
 						}
 					});
-				},
-				error : function() {
-					write_to_log(tid, 'OPRT', 'ROUTE', masterIp,
-							'/dg/show/oprt', 'error');
-				}
-			});
-			
-			
+
 		}
 	}
 }
@@ -142,20 +195,27 @@ $('#disk').selectpicker({
 
 function disk_result_select() {
 	$.ajax({
-		url : masterIp + "/disk/show/oprt",
+		url : vplxIp + "/disk/show/oprt",
 		type : "GET",
 		dataType : "json",
 		data : {
-			transaction_id : tid
+			tid : tid,
+			ip : mgtIp
 		},
 		success : function(status) {
-			write_to_log(tid,'OPRT','ROUTE',masterIp,'/disk/show/oprt',status);
+			write_to_log(tid, 'OPRT', 'ROUTE', vplxIp, '/disk/show/oprt',
+					status);
 			$.ajax({
-				url : masterIp + "/disk/show/data",
+				url : vplxIp + "/disk/show/data",
 				type : "GET",
 				dataType : "json",
+				data : {
+					tid : tid,
+					ip : mgtIp
+				},
 				success : function(disk_result) {
-					write_to_log(tid,'DATA','ROUTE',masterIp,'/disk/show/data',JSON.stringify(disk_result));
+					write_to_log(tid, 'DATA', 'ROUTE', vplxIp,
+							'/disk/show/data', JSON.stringify(disk_result));
 					// var _data = data.data; //由于后台传过来的json有个data，在此重命名
 					$('#disk').html("");
 					var html = "";
@@ -169,12 +229,14 @@ function disk_result_select() {
 					$('#disk').selectpicker('render');
 				},
 				error : function() {
-					write_to_log(tid, 'DATA', 'ROUTE', masterIp, '/disk/show/data', 'error');
+					write_to_log(tid, 'DATA', 'ROUTE', vplxIp,
+							'/disk/show/data', 'error');
 				}
 			});
 		},
 		error : function() {
-			write_to_log(tid, 'OPRT', 'ROUTE', masterIp, '/disk/show/oprt', 'error');
+			write_to_log(tid, 'OPRT', 'ROUTE', vplxIp, '/disk/show/oprt',
+					'error');
 		}
 	});
 
@@ -186,47 +248,58 @@ $(window).on('load', function() {
 	});
 });
 
-
 $('#disk_group').selectpicker({
 	width : 200
 });
 
 function all_dg_result_select() {
-	$.ajax({
-		url : masterIp + "/dg/show/oprt",
-		type : "get",
-		dataType : "json",
-		data : {
-			transaction_id : tid
-		},
-		success : function(status) {
-			write_to_log(tid, 'OPRT', 'ROUTE', masterIp, '/dg/show/oprt',status);
-			$.ajax({
-				url : masterIp + "/dg/show/data",
+	$
+			.ajax({
+				url : vplxIp + "/dg/show/oprt",
 				type : "get",
 				dataType : "json",
-				success : function(all_dg_result) {
-					write_to_log(tid, 'DATA', 'ROUTE', masterIp, '/dg/show/data',JSON.stringify(all_dg_result));
-					$('#disk_group').html("");
-					var html = "";
-					for (i in all_dg_result) {
-						$('#disk_group').append(
-								'<option value=' + i + '>' + i + '</option>')
-					}
-					// 缺一不可
-					$('#disk_group').selectpicker('refresh');
-					$('#disk_group').selectpicker('render');
+				data : {
+					tid : tid,
+					ip : mgtIp
 				},
-				error : function(){
-					write_to_log(tid, 'DATA', 'ROUTE', masterIp, '/dg/show/data', 'error');
+				success : function(status) {
+					write_to_log(tid, 'OPRT', 'ROUTE', vplxIp, '/dg/show/oprt',
+							status);
+					$.ajax({
+						url : vplxIp + "/dg/show/data",
+						type : "get",
+						dataType : "json",
+						data : {
+							tid : tid,
+							ip : mgtIp
+						},
+						success : function(all_dg_result) {
+							write_to_log(tid, 'DATA', 'ROUTE', vplxIp,
+									'/dg/show/data', JSON
+											.stringify(all_dg_result));
+							$('#disk_group').html("");
+							var html = "";
+							for (i in all_dg_result) {
+								$('#disk_group').append(
+										'<option value=' + i + '>' + i
+												+ '</option>')
+							}
+							// 缺一不可
+							$('#disk_group').selectpicker('refresh');
+							$('#disk_group').selectpicker('render');
+						},
+						error : function() {
+							write_to_log(tid, 'DATA', 'ROUTE', vplxIp,
+									'/dg/show/data', 'error');
+						}
+					});
+				},
+				error : function() {
+					write_to_log(tid, 'OPRT', 'ROUTE', vplxIp, '/dg/show/oprt',
+							'error');
 				}
+
 			});
-		},
-		error : function() {
-			write_to_log(tid, 'OPRT', 'ROUTE', masterIp, '/dg/show/oprt', 'error');
-		}
-		
-	});
 };
 $(window).on('load', function() {
 	$('#disk_group').selectpicker({
@@ -234,3 +307,6 @@ $(window).on('load', function() {
 	});
 });
 
+$("#disk").on("change", function(a, b, c) {
+	$("#Disk_Show_Input").val($("#disk option:selected").text());
+})
