@@ -146,7 +146,7 @@ class TestResource:
     def test_create_res_diskless(self):
         self.res.linstor_create_rd('pytest_res')
         self.res.linstor_create_vd('pytest_res', '10m')
-        assert self.res.create_res_diskless(self.node_name, 'pytest_res') == None
+        assert self.res.create_res_diskless([self.node_name], 'pytest_res') == None
         self.res.linstor_delete_rd('pytest_res')
 
     def test_add_mirror_auto(self):

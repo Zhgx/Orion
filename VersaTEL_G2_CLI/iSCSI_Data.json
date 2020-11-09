@@ -3,9 +3,7 @@
         "h1": "iqn.2020-11.com.example:pytest01",
         "h2": "iqn.2020-11.com.example:pytest02"
     },
-    "Disk": {
-        "pytest_disk": "pytest_path"
-    },
+    "Disk": {},
     "HostGroup": {
         "hg1": [
             "h1"
