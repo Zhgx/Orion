@@ -44,9 +44,9 @@ def get_all_resource():
 class OprtResource(views.MethodView):  
 
     def get(self):
-        get_request_data()
+        dict_data = get_request_data()
         logger = consts.glo_log()
-        logger.write_to_log('OPRT', 'ROUTE', '/resource/show/oprt', 'mgt_ip', '')
+        logger.write_to_log('OPRT', 'ROUTE', '/resource/show/oprt', dict_data['ip'], '')
         if get_all_resource():
             logger.write_to_log('DATA', 'RETURN', 'OprtResource', 'result', '0')
             return cors_data("0")
@@ -60,7 +60,7 @@ class ResourceResult(views.MethodView):
     def get(self):
         # get_request_data()
         # logger = consts.glo_log()
-        # logger.write_to_log('DATA', 'ROUTE', '/resource/show/data', 'mgt_ip', '')
+        # logger.write_to_log('DATA', 'ROUTE', '/resource/show/data', dict_data['ip'], '')
         if not RESOURCEDICT:
             get_all_resource()
         # logger.write_to_log('DATA', 'RETURN', 'ResourceResult', 'result', RESOURCEDICT)

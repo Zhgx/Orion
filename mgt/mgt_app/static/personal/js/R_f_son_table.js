@@ -2,7 +2,22 @@
 var vplxIp = get_vlpx_ip();
 var tid = Date.parse(new Date()).toString();// 获取到毫秒的时间戳，精确到毫秒
 var tid = tid.substr(0, 10);
+var mgtIp = get_mgt_ip();
 
+function get_mgt_ip(){
+	var obj = new Object();
+	$.ajax({
+		url : "http://127.0.0.1:7773/mgtip",
+		type : "GET",
+		dataType : "json",
+		async:false,
+		success : function(data) {
+			obj =  "http://"+data["ip"];
+		}
+	});
+
+	return obj;
+}
 
 
 function get_vlpx_ip(){
@@ -19,20 +34,17 @@ function get_vlpx_ip(){
 
 	return obj;
 }
-function resource_show_data() {
-	 var obj = new Object();
+
+function resource_show_data_log() {
 	$.ajax({
 		type : "get",
-		data:vplxIp,
-		success : function(data) {
-			var obj = data;
-			alert(obj);
-		}
+		url:vplxIp+ "/resource/show/data",
+		async:false,
+		success : function(resource_data) {
+			write_to_log(tid,'DATA','ROUTE',vplxIp,'/resource/show/data',JSON.stringify(resource_data.data));
+			}
 		});
-	return obj;
 }
-
-
 
 function write_to_log(tid, t1, t2, d1, d2, data) {
 	$.ajax({
@@ -59,10 +71,12 @@ function resource_oprt() {
 				type : "get",
 				dataType : "json",
 				data : {
-					tid : tid
+					tid : tid,
+					ip : mgtIp
 				},
 				success : function(status) {
 					write_to_log(tid,'OPRT','ROUTE',vplxIp,'/resource/show/oprt',status);
+					resource_show_data_log();
 					layui
 							.use(
 									[ 'laydate', 'laypage', 'layer', 'table',
@@ -74,9 +88,7 @@ function resource_oprt() {
 										table
 												.render({
 													elem : '#demo',
-													url : resource_show_data()
-															+ "/resource/show/data" // 数据接口
-													,
+													url : vplxIp+ "/resource/show/data", // 数据接口
 													title : '用户表',
 													cols : [ [ // 表头
 															{

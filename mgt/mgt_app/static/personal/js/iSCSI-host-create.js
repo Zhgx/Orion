@@ -9,7 +9,22 @@
 var vplxIp = get_vlpx_ip();
 var tid = Date.parse(new Date()).toString();// 获取到毫秒的时间戳，精确到毫秒
 var tid = tid.substr(0, 10);
+var mgtIp = get_mgt_ip();
 
+function get_mgt_ip(){
+	var obj = new Object();
+	$.ajax({
+		url : "http://127.0.0.1:7773/mgtip",
+		type : "GET",
+		dataType : "json",
+		async:false,
+		success : function(data) {
+			obj =  "http://"+data["ip"];
+		}
+	});
+
+	return obj;
+}
 
 function get_vlpx_ip(){
 	var obj = new Object();
@@ -35,24 +50,19 @@ $("#host_create").click(
 			var hostiqn = $("#host_iqn").val()
 			var host_name_hid = $("#host_name_hid").val();
 			var host_iqn_hid = $("#host_iqn_hid").val();
-			var host_name_verify_status =  $("#host_name_verify_status").val("1");
-			var host_iqn_verify_status = $("#host_iqn_verify_status").val("1");
+			var host_name_verify_status =  $("#host_name_verify_status").val();
+			var host_iqn_verify_status = $("#host_iqn_verify_status").val();
 			var dict_data = JSON.stringify({
 				"host_alias" : hostName,
 				"host_iqn" : hostiqn
 			});
 
-
 			if (host_name_verify_status == "0") {
 				host_name_myfunction();
-			}else if (host_name_verify_status == "1")  {
-				pass
 			};
 			if (host_iqn_verify_status == "0") {
 				iqn_myfunction();
-			}else if (host_iqn_verify_status == "1") {
-				pass
-			}
+				};
 			if (host_name_hid == "1" && host_iqn_hid == "1") {
 				$("#host_name_verify_status").val("0");
 				$("#host_iqn_verify_status").val("0");
@@ -63,12 +73,15 @@ $("#host_create").click(
 					type : "GET",
 					data : {
 						tid : tid,
+						ip : mgtIp,
 						host_name : hostName,
 						host_iqn : hostiqn
 					},
 					success : function(operation_feedback_prompt) {
 						write_to_log(tid, 'OPRT', 'ROUTE', vplxIp,
 								'/host/create', operation_feedback_prompt);
+						$("#host_name_verify_status").val("0");
+						$("#host_iqn_verify_status").val("0");
 						alert(operation_feedback_prompt);
 						$("#host_name").val("");
 						$("#host_iqn").val("");
@@ -139,7 +152,8 @@ function host_name_myfunction() {
 						type : "GET",
 						dataType : "json",
 						data : {
-							tid : tid
+							tid : tid,
+							ip : mgtIp
 						},
 						success : function(host_result) {
 							write_to_log(tid, 'OPRT', 'ROUTE', vplxIp,
@@ -151,7 +165,8 @@ function host_name_myfunction() {
 										type : "GET",
 										dataType : "json",
 										data : {
-											tid : tid
+											tid : tid,
+											ip : mgtIp
 										},
 										success : function(host_result) {
 											write_to_log(tid, 'DATA', 'ROUTE',
@@ -224,7 +239,8 @@ function host_result_select() {
 		type : "GET",
 		dataType : "json",
 		data : {
-			tid : tid
+			tid : tid,
+			ip : mgtIp
 		},
 		success : function(status) {
 			write_to_log(tid,'OPRT','ROUTE',vplxIp,'/host/show/oprt',status);
@@ -233,8 +249,9 @@ function host_result_select() {
 				type : "GET",
 				dataType : "json",
 						data : {
-			tid : tid
-		},
+							tid : tid,
+							ip : mgtIp
+						},
 				success : function(host_result) {
 					write_to_log(tid,'DATA','ROUTE',vplxIp,'/host/show/data',JSON.stringify(host_result));
 					$('#host').html("");

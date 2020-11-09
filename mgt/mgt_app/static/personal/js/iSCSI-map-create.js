@@ -8,7 +8,22 @@
 var vplxIp = get_vlpx_ip();
 var tid = Date.parse(new Date()).toString();// 获取到毫秒的时间戳，精确到毫秒
 var tid = tid.substr(0, 10);
+var mgtIp = get_mgt_ip();
 
+function get_mgt_ip(){
+	var obj = new Object();
+	$.ajax({
+		url : "http://127.0.0.1:7773/mgtip",
+		type : "GET",
+		dataType : "json",
+		async:false,
+		success : function(data) {
+			obj =  "http://"+data["ip"];
+		}
+	});
+
+	return obj;
+}
 
 function get_vlpx_ip(){
 	var obj = new Object();
@@ -32,12 +47,17 @@ $("#map_create").click(function() {
 	var disk_group = $("#disk_group").val()
 	var host_group = $("#host_group").val()
 	var map_name_hid = $("#map_name_hid").val();
+	var map_name_verify_status = $("#map_name_verify_status").val();
 	var dict_data = JSON.stringify({
 		"map_name" : map_name,
 		"disk_group" : disk_group,
 		"host_group" : host_group
 	});
-	map_name_myfunction();
+	if (map_name_verify_status == "0") {
+		map_name_myfunction();
+	} else if (map_name_verify_status == "1") {
+		pass
+	}
 	if (map_name_hid == "1") {
 		write_to_log(tid,'DATA','CHECKBOX','host group','',host_group);
 		write_to_log(tid,'DATA','CHECKBOX','disk group','',disk_group);
@@ -47,12 +67,14 @@ $("#map_create").click(function() {
 			type : "GET",
 			data : {
 				tid : tid,
+				ip : mgtIp,
 				map_name : map_name,
 				disk_group : disk_group,
 				host_group : host_group
 			},
 			success : function(operation_feedback_prompt) {
 				write_to_log(tid, 'OPRT', 'ROUTE', vplxIp, '/map/create' ,JSON.stringify(operation_feedback_prompt));
+				$("#map_name_verify_status").val("0");
 				alert(operation_feedback_prompt);
 				$("#map_name").val("");
 				$("#map_name_hid").val("0");
@@ -77,7 +99,8 @@ function all_hg_result_select() {
 		type : "get",
 		dataType : "json",
 		data : {
-			tid : tid
+			tid : tid,
+			ip : mgtIp
 		},
 		success : function(status) {
 			write_to_log(tid, 'OPRT', 'ROUTE', vplxIp, '/hg/show/oprt', status);
@@ -86,8 +109,9 @@ function all_hg_result_select() {
 				type : "get",
 				dataType : "json",
 						data : {
-			tid : tid
-		},
+							tid : tid,
+							ip : mgtIp
+						},
 				success : function(host_group_result) {
 					// var _data = data.data; //由于后台传过来的json有个data，在此重命名
 					write_to_log(tid, 'DATA', 'ROUTE', vplxIp, '/hg/show/data',JSON.stringify( host_group_result));
@@ -131,7 +155,8 @@ function all_dg_result_select() {
 		type : "get",
 		dataType : "json",
 		data : {
-			tid : tid
+			tid : tid,
+			ip : mgtIp
 		},
 		success : function(status) {
 			write_to_log(tid, 'OPRT', 'ROUTE', vplxIp, '/dg/show/oprt',status);
@@ -140,8 +165,9 @@ function all_dg_result_select() {
 				type : "get",
 				dataType : "json",
 						data : {
-			tid : tid
-		},
+							tid : tid,
+							ip : mgtIp
+						},
 				success : function(all_dg_result) {
 					write_to_log(tid, 'DATA', 'ROUTE', vplxIp, '/dg/show/data',JSON.stringify(all_dg_result));
 					$('#disk_group').html("");
@@ -191,6 +217,7 @@ function write_to_log(tid, t1, t2, d1, d2, data) {
 }
 // 输入框验证
 function map_name_myfunction() {
+	$("#map_name_verify_status").val("1");
 	document.getElementById("map_name_examine").className = "hidden";
 	document.getElementById("map_name_format").className = "hidden";
 	var input_result = $('#map_name').val();
@@ -213,7 +240,8 @@ function map_name_myfunction() {
 						type : "GET",
 						dataType : "json",
 						data : {
-							tid : tid
+							tid : tid,
+							ip : mgtIp
 						},
 						success : function(map_result) {
 							write_to_log(tid,'OPRT','ROUTE',vplxIp,'/map/show/oprt',map_result);
@@ -223,8 +251,9 @@ function map_name_myfunction() {
 										type : "GET",
 										dataType : "json",
 												data : {
-			tid : tid
-		},
+													tid : tid,
+													ip : mgtIp
+												},
 										success : function(Map_result) {
 											write_to_log(tid,'DATA','ROUTE',vplxIp,'/map/show/data',JSON.stringify(Map_result));
 											if (input_result in Map_result) {
