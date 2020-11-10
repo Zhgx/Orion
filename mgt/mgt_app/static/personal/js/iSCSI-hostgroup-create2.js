@@ -88,10 +88,9 @@ function host_table() {
 													.stringify(host_result));
 									for (i in host_result) {
 										tr = '<td >'
-												+ '<input type="checkbox" name="checkbox" οnclick="test(this);"/>'
+												+ '<input type="checkbox" id="checkbox" name="checkbox"  checked＝"false";"/>'
 												+ '</td>' + '<td name="id">' + i
-												+ '</td>' + '<td name="name">'
-												+ host_result[i] + '</td>'
+												+ '</td>'
 										$("#H_T").append(
 												'<tr>'
 														+ tr + '</tr>')
@@ -115,23 +114,41 @@ function host_table() {
 
 $(function() {
 	$("#btn").on('click', function() {
-		function check() {
-            var check = $("input[type='checkbox']:checked");//在table中找input下类型为checkbox属性为选中状态的数据
-            var i = 0;
-            check.each(function(){
-                i++;
-            });
-            console.log(i);
-              check.each(function () {//遍历
-                  var row = $(this).parent("td").parent("tr");
-                var id = row.find("[name='id']").html(); //注意html()和val()
-                var name = row.find("[name='name']").html(); 
-                console.log(id+","+name)
-            })
-        }
 		
-		
+		var products = [];  
+		var ordernums = [];  
+		var ordernums1 = []; 
+		var $span = $("input[name=checkbox]:checked");
+		var $tds = $("td").has($span);     //定义选中复选框的单元格 
+		var $trs = $("tr").has($tds);  
+		for(var i=0; i<$trs.length;i++){  
+		var product = $("td:eq(1)",$($trs[i])).html();   //获取选中的C3单元格的值
+		products.push(product);     //将选中的值放到数组中
+		$("#H_T_Show").html("");
+		for (i in products) {
+			tr = '<td >'
+				+ '<input type="checkbox" id="checkbox1" name="checkbox1"  checked＝"false";"/>'
+				+ '</td>' + '<td>' + products[i]
+			+ '</td>' 
+			$("#H_T_Show").append(
+					'<tr>'
+					+ tr + '</tr>')
+		}
+		}
 	});
 });
 
+$(function() {
+			  var obt=document.getElementById("btn1");
+			  var otb=document.getElementById("HTable_Show");
+			  var tbody=otb.getElementsByTagName("tbody")[0];  
+			  obt.onclick=function(){
+			    var cks=document.getElementsByName("checkbox1");
+			    for(var index=0;index<cks.length;index++){
+			      if(cks[index].checked==true){
+			        tbody.removeChild(cks[index].parentNode.parentNode);
+			      }
+			    }
+			  }
+});
 
