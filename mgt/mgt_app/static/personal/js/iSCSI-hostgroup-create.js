@@ -293,5 +293,5 @@ $(window).on('load', function() {
 	});
 });
 $("#host").on("change", function(a, b, c) {
-	$("#Hg_Show_Input").val($("#host option:selected").text());
+ 	$("#Hg_Show_Input").val($("#host option:selected").text());
 })
