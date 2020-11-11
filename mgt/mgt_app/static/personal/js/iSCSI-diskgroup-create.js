@@ -308,5 +308,5 @@ $(window).on('load', function() {
 });
 
 $("#disk").on("change", function(a, b, c) {
-	$("#Disk_Show_Input").val($("#disk option:selected").text());
+	$("#Dg_Show_Input").val($("#disk option:selected").text());
 })

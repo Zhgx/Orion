@@ -16,71 +16,58 @@
 body {
 	padding: 10px;
 }
+table.table tr th, td {
+	text-align: center;
+	cursor: pointer;
+}
 </style>
-
 </head>
 
 <body>
 	<div class="container">
-		<div class="row clearfix">
-			<!-- ------------------------ -->
-			<div class="col-md-12 column">
-				<div class="page-header">
-					<h1>
-						<small>Create</small>
-					</h1>
-				</div>
-				<div class="form-group">
-					<label for="host_group_name" class="col-sm-1 control-label">Name</label>
-					<div class="col-sm-11">
-						<input type="text" class="form-control" id="host_group_name"
-							placeholder="请输入" style="width: 200px;" value=""
-							onchange="hg_name_myfunction()"> <input id="hg_name_hid"
-							hidden="hidden" value="0"> 
-							<input
-							id="hg_name_verify_status" hidden="hidden" value="0">
-							<span class="red"> <span
-							id="hg_name_examine" class="hidden">HostGroup Name已存在！</span> <span
-							id="hg_name_format" class="hidden">开头只能输入字母，仅包含字母，数字，以及下划线</span>
-						</span>
-					</div>
-				</div>
-				<div class="form-group">
-					<label class="col-sm-1 ">Host</label>
-
-					<div style="width: 340px;" class="col-sm-11 ">
-						<select id='host' name="host" multiple class="selectpicker"
-							data-live-search="true"  >
-						</select>
-					</div>
-				</div>
-				<div class="form-group">
-					<div class="col-sm-offset-1 col-sm-11">
-						<button type="submit" class="btn btn-default" data-toggle="modal"
-							name="host_group_create" id="host_group_create"
-							data-target="#myModal1">Create</button>
-					</div>
+		<div class="row">
+		
+			<div class="col-xs-5 ">
+				<div class=".table-responsive">
+					<table id="HTable" class="table table-hover table-bordered">
+						<thead>
+							<tr>
+								<th></th>
+								<th>Host</th>
+							</tr>
+						</thead>
+						<tbody id="H_T">
+						</tbody>
+					</table>
 				</div>
 			</div>
-			<input class="text" id = "content">
+			<div class="col-xs-1 ">
+				<button class="btn btn-primary btn-large btn-block" type="button"
+					id="btn" data-method="append">--></button>
+				<button id="btn1" class="btn btn-primary btn-large btn-block"
+					type="button"><---</button>
+			</div>
+			<div class="col-xs-5 ">
+				<div class=".table-responsive">
+					<table id="HTable_Show" class="table table-hover table-bordered">
+						<thead>
+							<tr>
+								<th></th>
+								<th>Host</th>
+							</tr>
+						</thead>
+						<tbody id="H_T_Show">
+						</tbody>
+					</table>
+				</div>
+			</div>
 		</div>
 	</div>
-	<script type="text/javascript"
-		src="{{url_for('static',filename='personal/js/JQuery.js')}}"></script>
-	<script type="text/javascript"
-		src="{{url_for('static',filename='bootstrap-3.3.7/dist/js/bootstrap.js')}}"></script>
-	<script type="text/javascript"
-		src="{{url_for('static',filename='bootstrap-select-1.12.4/dist/js/bootstrap-select.js')}}"></script>
-	<script type="text/javascript"
-		src="{{url_for('static',filename='personal/js/iSCSI-hostgroup-create.js')}}"></script>
-	<script type="text/javascript"
-		src="{{url_for('static',filename='layui/layui.all.js')}}"></script>
-
-	<script type="text/javascript">
-$("#newcreate").click(function(){
- 	$("input[type=text]").val('');
-});
-</script>
-
+<script type="text/javascript"
+	src="{{url_for('static',filename='personal/js/JQuery.js')}}"></script>
+<script type="text/javascript"
+	src="{{url_for('static',filename='bootstrap-3.3.7/dist/js/bootstrap.min.js')}}"></script>
+<script type="text/javascript"
+	src="{{url_for('static',filename='personal/js/iSCSI-hostgroup-create2.js')}}"></script>
 </body>
 </html>

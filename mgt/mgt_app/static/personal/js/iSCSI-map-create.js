@@ -278,4 +278,9 @@ function map_name_myfunction() {
 		}
 	}
 }
-
+$("#host_group").on("change", function(a, b, c) {
+	$("#Hg_Show_Input_All").val($("#host_group option:selected").text());
+});
+$("#disk_group").on("change", function(a, b, c) {
+	$("#Dg_Show_Input_All").val($("#disk_group option:selected").text());
+});

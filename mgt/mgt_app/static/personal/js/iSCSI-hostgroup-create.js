@@ -292,4 +292,6 @@ $(window).on('load', function() {
 		'selectedText' : 'cat'
 	});
 });
-
+$("#host").on("change", function(a, b, c) {
+ 	$("#Hg_Show_Input").val($("#host option:selected").text());
+})
