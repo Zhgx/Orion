@@ -1,0 +1,47 @@
+{
+    "Host": {
+        "h1": "iqn.2020-11.com.example:pytest01",
+        "h2": "iqn.2020-11.com.example:pytest02",
+        "h3": "iqn.2020-11.com.example:pytest03",
+        "h4": "iqn.2020-11.com.example:pytest04"
+    },
+    "Disk": {
+        "res_a": "/dev/drbd1000",
+        "res_b": "/dev/drbd1001",
+        "res_c": "/dev/drbd1002"
+    },
+    "HostGroup": {
+        "hg1": [
+            "h1",
+            "h2"
+        ],
+        "hg2": [
+            "h3",
+            "h4"
+        ],
+        "hg3": [
+            "h1",
+            "h3"
+        ]
+    },
+    "DiskGroup": {
+        "dg1": [
+            "res_a",
+            "res_b"
+        ],
+        "dg2": [
+            "res_a",
+            "res_b"
+        ]
+    },
+    "Map": {
+        "map1": [
+            "hg1,hg2",
+            "dg1"
+        ],
+        "map2": [
+            "hg2",
+            "dg1"
+        ]
+    }
+}

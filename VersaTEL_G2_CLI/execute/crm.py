@@ -104,16 +104,43 @@ class CRMConfig():
             f'meta target-role=Stopped'
         result = execute_crm_cmd(cmd)
         if result['sts']:
-            s.prt_log("Create iSCSILogicalUnit success",0)
+            s.prt_log("create iSCSILogicalUnit success",0)
             return True
 
-    # 获取res的状态
+    # 通过 crm st 获取resource状态
     def get_res_status(self, res):
-        crm_data = CRMData()
-        resource_data = crm_data.get_resource_data()
-        for s in resource_data:
-            if s[0] == res:
-                return s[-1]
+        cmd = f'crm res list | grep {res}'
+        result = execute_crm_cmd(cmd)
+        if 'Started' in result['rst']:
+            return True
+        elif 'Stopped' in result['rst']:
+            return False
+        else:
+            pass
+
+    # 多次通过 crm st 检查resource状态，状态为started时返回True，检查5次都为stopped 则返回None
+    def checkout_status_start(self, res):
+        n = 0
+        while n < 5:
+            n += 1
+            if self.get_res_status(res):
+                s.prt_log(f'the resource {res} is Started', 0)
+                return True
+            else:
+                time.sleep(1)
+        s.prt_log(f'the resource {res} is Stopped', 1)
+
+    # 多次通过 crm st 检查resource状态，状态为stop时返回True，检查5次都不为stopped 则返回None
+    def checkout_status_stop(self, res):
+        n = 0
+        while n < 5:
+            n += 1
+            if self.get_res_status(res) == False:
+                s.prt_log(f'the resource {res} is Stopped', 0)
+                return True
+            else:
+                time.sleep(1)
+        s.prt_log(f"the resource {res} can't Stopped", 1)
 
     # 停用res
     def stop_res(self, res):
@@ -124,42 +151,41 @@ class CRMConfig():
         else:
             s.prt_log("crm res stop fail",1)
 
+    # 删除resource步骤
+    def delete_res(self, res):
+        if self.stop_res(res):
+            if self.checkout_status_stop(res):
+                if self.delete_conf_res(res):
+                    return True
+        s.prt_log(f"resource delete fail",1)
 
-    # 检查
-    def checkout_status(self, res, times, expect_value):
-        """
-        检查res的状态
-        :param res: 需要检查的资源
-        :param num: 需要检查的次数
-        :param expect_value: 预期值
-        :return: 返回True则说明是预期效果
-        """
-        n = 0
-        while n < times:
-            n += 1
-            if self.get_res_status(res) == expect_value:
+    # 创建resource相关配置
+    def create_set(self, res, target):
+        if self.create_col(res, target):
+            if self.create_order(res, target):
+                s.prt_log(f'create colocation:co_{res}, order:or_{res} success', 0)
                 return True
             else:
-                time.sleep(1)
+                s.prt_log("create order fail", 1)
         else:
-            s.prt_log("Does not meet expectations, please try again.",1)
+            s.prt_log("create colocation fail", 1)
 
-    def delete_crm_res(self, res):
-        if self.stop_res(res):
-            if self.checkout_status(res,10,'Stopped'):
-                time.sleep(3)
-                cmd = f'crm conf del {res}'
-                result = execute_crm_cmd(cmd)
-                if result:
-                    output = result['rst']
-                    re_str = re.compile(rf'INFO: hanging colocation:co_{res} deleted\nINFO: hanging order:or_{res} deleted\n')
-                    if s.re_search(re_str,output):
-                        s.prt_log(f"crm conf del {res}",0)
-                        return True
-                    else:
-                        s.prt_log(f"crm delete fail",1)
+    # 执行crm命令删除resource的配置
+    def delete_conf_res(self, res):
+        cmd = f'crm conf del {res}'
+        result = execute_crm_cmd(cmd)
+        if result['sts']:
+            s.prt_log(f"delete resource success: {res}", 0)
+            return True
         else:
-            s.prt_log(f"crm delete fail",1)
+            output = result['rst']
+            re_str = re.compile(rf'INFO: hanging colocation:co_{res} deleted\nINFO: hanging order:or_{res} deleted\n')
+            if s.re_search(re_str, output):
+                s.prt_log(f"delete colocation:co_{res}, order:or_{res} success", 0)
+                return True
+            else:
+                s.prt_log(f"delete resource fail", 1)
+                return False
 
     def create_col(self, res, target):
         cmd = f'crm conf colocation co_{res} inf: {res} {target}'
@@ -179,4 +205,19 @@ class CRMConfig():
         cmd = f'crm res start {res}'
         result = execute_crm_cmd(cmd)
         if result['sts']:
+            return True
+
+    # 刷新recourse状态，后续会用到
+    def refresh(self):
+        cmd = f'crm resource refresh'
+        result = execute_crm_cmd(cmd)
+        if result['sts']:
+            s.prt_log("refresh",0)
+            return True
+
+    def change_initiator(self, res, iqns):
+        cmd = f"crm config set {res}.allowed_initiators \"{iqns}\""
+        result = execute_crm_cmd(cmd)
+        if result['sts']:
+            s.prt_log(f"change {res} allowed_initiators success",0)
             return True
