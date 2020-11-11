@@ -208,10 +208,7 @@ class Map():
         elif self.js.check_key('DiskGroup', dg)['result'] == False:
             s.prt_log(f"Can't find {dg}",1)
         else:
-            if self.js.check_value('Map', dg)['result']:
-                s.prt_log("The diskgroup already map",1)
-            else:
-                return True
+            return True
 
     def get_initiator(self, hg):
         # 根据hg去获取hostiqn，返回由hostiqn组成的initiator
@@ -249,15 +246,20 @@ class Map():
                     disks.update({disk_all[1]: disk_all[5]})  # 取Resource, DeviceName
         return disks
 
-    def create_map(self, map,hg, dg):
+    def create_map(self, map, hg, dg):
         # 创建前的检查
         if not self.pre_check_create_map(map,hg,dg):
             return
+
+        # 检查disk是否已map过
+        if self.check_dg_map(map, hg, dg):
+            return True
 
         obj_crm = CRMConfig()
         initiator = self.get_initiator(hg)
         target_name, target_iqn = self.get_target()
         disk_list = self.get_disk_data(dg)
+
         # 用于收集创建成功的resource
         list_res_created = []
 
@@ -356,3 +358,39 @@ class Map():
             self.js.delete_data('Map', map)
             s.prt_log("Delete map success!", 0)
             return True
+
+    # 对已map的dg进行二次map
+    def check_dg_map(self, map, hg, dg):
+        if self.js.check_value('Map', dg)['result']:
+            s.prt_log("The DiskGroup already map, continue the map? yes/no",0)
+            answer = input()
+            if answer in ['y', 'yes', 'Y', 'YES']:
+                obj_crm = CRMConfig()
+                disk_list = self.get_disk_data(dg)
+                initiator = self.merge_initiator(hg, dg)
+                for disk in disk_list:
+                    obj_crm.change_initiator(disk, initiator)
+                self.js.add_data('Map', map, [hg, dg])
+                s.prt_log('Create map success!', 0)
+            return True
+        else:
+            return False
+
+    # 获取已map的dg对应的hg
+    def get_hg_by_dg(self, dg):
+        map = self.js.get_data('Map')
+        hg_list = []
+        for i in map.values():
+            if dg in i:
+                hg_list.append(i[0])
+        return hg_list
+
+    # 将hg的iqn合并
+    def merge_initiator(self, hg, dg):
+        initiator_new = self.get_initiator(hg)
+        initiator_old = ''
+        hg_list = self.get_hg_by_dg(dg)
+        for i in hg_list:
+            initiator_old = f'{initiator_old} {self.get_initiator(i)}'
+        initiator = f'{initiator_old} {initiator_new}'
+        return initiator[1:]
