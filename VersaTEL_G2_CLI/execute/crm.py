@@ -214,3 +214,10 @@ class CRMConfig():
         if result['sts']:
             s.prt_log("refresh",0)
             return True
+
+    def change_initiator(self, res, iqns):
+        cmd = f"crm config set {res}.allowed_initiators \"{iqns}\""
+        result = execute_crm_cmd(cmd)
+        if result['sts']:
+            s.prt_log(f"change {res} allowed_initiators success",0)
+            return True

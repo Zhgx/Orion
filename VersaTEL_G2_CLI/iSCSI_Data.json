@@ -1,19 +1,27 @@
 {
     "Host": {
         "h1": "iqn.2020-11.com.example:pytest01",
-        "h2": "iqn.2020-11.com.example:pytest02"
+        "h2": "iqn.2020-11.com.example:pytest02",
+        "h3": "iqn.2020-11.com.example:pytest03",
+        "h4": "iqn.2020-11.com.example:pytest04"
     },
     "Disk": {
         "res_a": "/dev/drbd1000",
         "res_b": "/dev/drbd1001",
-        "res_c": "/dev/drbd1002",
-        "res_d": "/dev/drbd1003",
-        "res_e": "/dev/drbd1005",
-        "thinlv_test": "/dev/drbd1004"
+        "res_c": "/dev/drbd1002"
     },
     "HostGroup": {
         "hg1": [
-            "h1"
+            "h1",
+            "h2"
+        ],
+        "hg2": [
+            "h3",
+            "h4"
+        ],
+        "hg3": [
+            "h1",
+            "h3"
         ]
     },
     "DiskGroup": {
@@ -22,34 +30,18 @@
             "res_b"
         ],
         "dg2": [
+            "res_a",
             "res_b"
         ]
     },
-    "Map": {},
-    "crm": {
-        "resource": [
-            [
-                "thinlv_test",
-                "iqn.2020-04.feixitek.com:versaplx00",
-                "04",
-                "/dev/drbd1004",
-                "iqn123 ",
-                "Started"
-            ]
+    "Map": {
+        "map1": [
+            "hg1,hg2",
+            "dg1"
         ],
-        "vip": [
-            [
-                "vip",
-                "10.203.1.75",
-                "24"
-            ]
-        ],
-        "target": [
-            [
-                "t_test",
-                "iqn.2020-04.feixitek.com:versaplx00",
-                "10.203.1.75"
-            ]
+        "map2": [
+            "hg2",
+            "dg1"
         ]
     }
 }
