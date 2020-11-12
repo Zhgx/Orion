@@ -7,7 +7,9 @@ Created on 2020/3/2
 '''
 from flask import Flask, jsonify, render_template, request, make_response, views
 from public import log
+from ..utils import read_config
 import consts
+import socket
 def cors_data(data_dict):
     response = make_response(jsonify(data_dict))
     response.headers['Access-Control-Allow-Origin'] = '*'
@@ -28,9 +30,30 @@ class ISCSIWrite(views.MethodView):
             log_data = request.args.to_dict()
             if log_data:
                 logger = consts.glo_log()
-                logger.tid = log_data["tid"]
-                logger.write_to_log('DATA', log_data['type'], log_data['d1'], log_data['d2'], log_data["data"])
-        return cors_data("success") 
+                logger.tid = log_data['tid']
+                logger.write_to_log(log_data['t1'], log_data['t2'], log_data['d1'], log_data['d2'], log_data["data"])
+        return cors_data("success")
+
+
+class VplxIp(views.MethodView):
+    def get(self):
+        config_obj = read_config.Config()
+        ip = {
+            'ip': config_obj.get_ip() + ":" + config_obj.get_port()
+        }
+        return cors_data(ip)
+
+class MgtIp(views.MethodView):
+    def get(self):
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            s.connect(('8.8.8.8', 80))
+            ip = s.getsockname()[0]
+        finally:
+            s.close()
+        mgt_ip = {'ip':ip}
+        return cors_data(mgt_ip)
+
 
     
 class IndexPreview(views.MethodView):

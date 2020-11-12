@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Create</title>
+<title>DiskGroup</title>
 
 <link
 	href="{{url_for('static',filename='bootstrap-3.3.7/dist/css/bootstrap.min.css')}}"
@@ -12,8 +12,6 @@
 	rel="stylesheet" type="text/css" />
 <link href="{{url_for('static',filename='personal/css/style.css')}}"
 	rel="stylesheet" type="text/css" />
-<script type="text/javascript"
-	src="{{url_for('static',filename='personal/js/iSCSI-input-inspection.js')}}"></script>
 <style type="text/css">
 body {
 	padding: 10px;
@@ -25,22 +23,23 @@ body {
 <body>
 	<div class="container">
 		<div class="row clearfix">
+			<div class="page-header">
+				<h1>
+					<small>Create</small>
+				</h1>
+			</div>
 
-			<div class="col-md-12 ">
-				<div class="page-header">
-					<h1>
-						<small>DiskGroup</small>
-					</h1>
-				</div>
-				<div class="form-group">
-					<label for="disk_group_name" class="col-sm-2 control-label">DiskGroup_Name</label>
+			<div class="row">
+				<div class="col-xs-6 ">
+					<label for="disk_group_name" class="col-sm-2 control-label">Name</label>
 					<div class="col-sm-10">
 						<input type="text" class="form-control" id="disk_group_name"
 							placeholder="请输入" style="width: 200px;" value=""
 							onchange="dg_name_myfunction()"> <input id="dg_name_hid"
-							hidden="hidden" value="0"> <span class="red"> <span
-							id="dg_name_examine" class="hidden">DiskGroup Name已存在！</span> <span
-							id="dg_name_format" class="hidden">开头只能输入字母，仅包含字母，数字，以及下划线</span>
+							hidden="hidden" value="0"> <input
+							id="dg_name_verify_status" hidden="hidden" value="0"> <span
+							class="red"> <span id="dg_name_examine" class="hidden">DiskGroup
+								Name已存在！</span> <span id="dg_name_format" class="hidden">开头只能输入字母，仅包含字母，数字，以及下划线</span>
 						</span>
 					</div>
 					<div class="form-group">
@@ -48,7 +47,7 @@ body {
 
 						<div style="width: 340px;" class="col-sm-10 ">
 							<select id='disk' name="disk" multiple class="selectpicker"
-								data-live-search="true">
+								data-live-search="true" >
 							</select>
 						</div>
 					</div>
@@ -60,7 +59,9 @@ body {
 						</div>
 					</div>
 				</div>
-
+				<div class="col-xs-6 ">
+				<textarea class="form-control" rows="3"  id="Dg_Show_Input"  ></textarea>
+				</div>
 			</div>
 		</div>
 	</div>
@@ -71,7 +72,7 @@ body {
 	<script type="text/javascript"
 		src="{{url_for('static',filename='bootstrap-select-1.12.4/dist/js/bootstrap-select.js')}}"></script>
 	<script type="text/javascript"
-		src="{{url_for('static',filename='personal/js/iSCSI-Confirm-update-box.js')}}"></script>
+		src="{{url_for('static',filename='personal/js/iSCSI-diskgroup-create.js')}}"></script>
 	<script type="text/javascript"
 		src="{{url_for('static',filename='layui/layui.all.js')}}"></script>
 
