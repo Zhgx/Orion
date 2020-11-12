@@ -2,7 +2,7 @@
 """
 Global constants for vtel
 """
-VERSION = 'v0.8.0'
+VERSION = "v0.8.0"
 
 
 class ExitCode(object):
@@ -24,7 +24,7 @@ class ReplayExit(Exception):
     pass
 
 
-def _init():
+def init():
     global _GLOBAL_DICT
     _GLOBAL_DICT = {}
     _GLOBAL_DICT['LOG_ID'] = 0

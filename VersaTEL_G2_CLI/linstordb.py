@@ -250,14 +250,6 @@ class LinstorDB(Database):
             self.cur.execute(sql, list_data[i])
 
 
-    def data_base_dump(self):
-        cur = self.cur
-        con = self.db
-        self.build_table('all')
-        SQL_script = con.iterdump()
-        cur.close()
-        return "\n".join(SQL_script)
-
 
 class CollectData(LinstorDB):
     """

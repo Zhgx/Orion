@@ -31,9 +31,9 @@ class MapCommands():
         p_create_map.add_argument(
             'map', action='store', help='map_name')
         p_create_map.add_argument(
-            '-hg', action='store', help='hostgroup_name')
+            '-hg', action='store', nargs='+', help='hostgroup_name')
         p_create_map.add_argument(
-            '-dg', action='store', help='diskgroup_name')
+            '-dg', action='store', nargs='+', help='diskgroup_name')
 
         p_create_map.set_defaults(func=self.create)
 
@@ -66,6 +66,52 @@ class MapCommands():
 
         p_show_map.set_defaults(func=self.show)
 
+        """
+        Modify map
+        """
+        p_modify_map = map_subp.add_parser(
+            'modify',
+            aliases='m',
+            help='map modify [hg] -a [hostgroup_name] -r [diskgroup_name]')
+
+        group = p_modify_map.add_mutually_exclusive_group()
+
+
+
+        group.add_argument(
+            '-hg',
+            '--hostgroup',
+            dest='hg',
+            help='hg name'
+        )
+
+        group.add_argument(
+            '-dg',
+            '--diskgroup',
+            dest='dg',
+            help='dg name'
+        )
+
+        p_modify_map.add_argument(
+            '-a',
+            '--add',
+            dest='add',
+            action='store',
+            help='host name',
+            metavar='HOST|DISK',
+            nargs='+')
+
+        p_modify_map.add_argument(
+            '-r',
+            '--remove',
+            dest='remove',
+            action='store',
+            help='host name',
+            metavar='HOST|DISK',
+            nargs='+')
+
+        p_modify_map.set_defaults(func=self.modify)
+
         map_parser.set_defaults(func=self.print_map_help)
 
     @sd.deco_record_exception
@@ -85,6 +131,20 @@ class MapCommands():
     def delete(self, args):
         map = ex.Map()
         map.delete_map(args.map)
+
+
+    @sd.deco_record_exception
+    def modify(self, args):
+        if args.hg:
+            print(args.hg)
+            print(args.add)
+            print(args.remove)
+
+        elif args.dg:
+            print(args.dg)
+            print(args.add)
+            print(args.remove)
+
 
     def print_map_help(self, *args):
         self.map_parser.print_help()
