@@ -78,7 +78,42 @@ class HostGroupCommands():
 
         p_delete_hg.set_defaults(func=self.delete)
 
+
+        """
+        Modify HostGroup
+        """
+        p_modify_hg = hg_subp.add_parser(
+            'modify',
+            aliases='m',
+            help='hostgroup modify [hostgroup_name] [-a host_name1] [-d host_name2] ...')
+
+
+        p_modify_hg.add_argument(
+            'hostgroup',
+            help='hostgroup_name')
+
+        p_modify_hg.add_argument(
+            '-a',
+            '--add',
+            dest='add',
+            action='store',
+            help='host name',
+            metavar='HOST',
+            nargs='+')
+
+        p_modify_hg.add_argument(
+            '-r',
+            '--remove',
+            dest='remove',
+            action='store',
+            help='host name',
+            metavar='HOST',
+            nargs='+')
+
+        p_modify_hg.set_defaults(func=self.modify)
+
         hg_parser.set_defaults(func=self.print_hg_help)
+
 
     @sd.deco_record_exception
     def create(self, args):
@@ -97,6 +132,16 @@ class HostGroupCommands():
     def delete(self, args):
         hostgroup = ex.HostGroup()
         hostgroup.delete_hostgroup(args.hostgroup)
+
+
+    @sd.deco_record_exception
+    def modify(self, args):
+        if args.remove:
+            print('需要删除：',args.remove)
+
+        if args.add:
+            print('需要删除：',args.add)
+
 
     def print_hg_help(self, *args):
         self.hg_parser.print_help()

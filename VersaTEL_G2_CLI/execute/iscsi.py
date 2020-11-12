@@ -45,10 +45,19 @@ class Host():
     def __init__(self):
         self.js = iscsi_json.JsonOperation()
 
+
+    def check_iqn(self,iqn):
+        """
+        判断iqn是否符合格式
+        """
+        if not s.re_findall(r'^iqn\.\d{4}-\d{2}\.[a-zA-Z0-9.:-]+', iqn):
+            s.prt_log(f"The format of IQN is wrong. Please confirm and fill in again.", 2)
+
     def create_host(self, host, iqn):
         if self.js.check_key('Host', host)['result']:
             s.prt_log(f"Fail! The Host {host} already existed.",1)
         else:
+            self.check_iqn(iqn)
             self.js.add_data("Host", host, iqn)
             s.prt_log("Create success!",0)
             return True
@@ -83,6 +92,16 @@ class Host():
                 return True
         else:
             s.prt_log(f"Fail! Can't find {host}",1)
+
+
+    def modify_host(self,host,iqn):
+        if self.js.check_key('Host', host)['result']:
+            self.check_iqn(iqn)
+
+        else:
+            s.prt_log("不存在这个host可以去进行修改",1)
+
+
 
     """
     diskgroup 操作
@@ -247,6 +266,13 @@ class Map():
         return disks
 
     def create_map(self, map, hg, dg):
+        """
+        创建map
+        :param map:
+        :param hg: list,
+        :param dg: list,
+        :return:T/F
+        """
         # 创建前的检查
         if not self.pre_check_create_map(map,hg,dg):
             return

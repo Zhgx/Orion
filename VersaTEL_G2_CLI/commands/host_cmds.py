@@ -63,12 +63,27 @@ class HostCommands():
 
         host_parser.set_defaults(func=self.print_host_help)
 
+
+        """
+        Modify iSCSI Host
+        """
+        p_modify_host = host_subp.add_parser(
+            'modify', aliases='m', help='host modify / host modify [host_name]')
+
+        # add arguments of host modify
+        p_modify_host.add_argument(
+            'host', action='store', help='host you want to modify')
+
+        p_modify_host.add_argument(
+            'iqn' , action='store', help='iqn you want to modify')
+
+        p_modify_host.set_defaults(func=self.modify)
+
+
+
     @sd.deco_record_exception
     def create(self, args):
         host = ex.Host()
-        # 判断iqn是否符合格式
-        if not sd.re_findall(r'^iqn\.\d{4}-\d{2}\.[a-zA-Z0-9.:-]+',args.iqn):
-            sd.prt_log(f"The format of IQN is wrong. Please confirm and fill in again.",2)
         host.create_host(args.host, args.iqn)
 
     @sd.deco_record_exception
@@ -83,6 +98,11 @@ class HostCommands():
     def delete(self, args):
         host = ex.Host()
         host.delete_host(args.host)
+
+    @sd.deco_record_exception
+    def modify(self, args):
+        host = ex.Host()
+        host.modify_host(args.host,args.iqn)
 
     def print_host_help(self, *args):
         self.host_parser.print_help()

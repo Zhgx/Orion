@@ -187,7 +187,7 @@ class VtelCLI(object):
             elif answer == 'all':
                 for dict_cmd in dict_input:
                     self.replay_one(dict_cmd)
-            else:
+            elif answer != 'exit':
                 print('输入的序号不正确')
 
 

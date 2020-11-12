@@ -3,7 +3,8 @@
         "h1": "iqn.2020-11.com.example:pytest01",
         "h2": "iqn.2020-11.com.example:pytest02",
         "h3": "iqn.2020-11.com.example:pytest03",
-        "h4": "iqn.2020-11.com.example:pytest04"
+        "h4": "iqn.2020-11.com.example:pytest04",
+        "h5": "iqn.2020-11.com.example:pytest05"
     },
     "Disk": {
         "res_a": "/dev/drbd1000",
@@ -36,7 +37,7 @@
     },
     "Map": {
         "map1": [
-            "hg1,hg2",
+            "hg1",
             "dg1"
         ],
         "map2": [
@@ -45,3 +46,11 @@
         ]
     }
 }
+
+["Map": {
+    "map1": [
+        {"hostgroup": ['hg1','hg2']},
+        {"diskgroup": ['dg1', 'dg2']}
+    ]
+}]
+
