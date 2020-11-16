@@ -74,14 +74,17 @@ class MapCommands():
             aliases='m',
             help='map modify [hg] -a [hostgroup_name] -r [diskgroup_name]')
 
+        p_modify_map.add_argument(
+            'map',
+            action='store',
+            help='map_name')
+
         group = p_modify_map.add_mutually_exclusive_group()
-
-
-
         group.add_argument(
             '-hg',
             '--hostgroup',
             dest='hg',
+            action='store_true',
             help='hg name'
         )
 
@@ -89,6 +92,7 @@ class MapCommands():
             '-dg',
             '--diskgroup',
             dest='dg',
+            action='store_true',
             help='dg name'
         )
 
@@ -135,15 +139,20 @@ class MapCommands():
 
     @sd.deco_record_exception
     def modify(self, args):
-        if args.hg:
-            print(args.hg)
-            print(args.add)
-            print(args.remove)
+        map = ex.Map()
 
+        if args.hg:
+            if args.add:
+                map.add_hg(args.map,args.add)
+
+            if args.remove:
+                map.remove_hg(args.map,args.remove)
         elif args.dg:
-            print(args.dg)
-            print(args.add)
-            print(args.remove)
+            if args.add:
+                map.add_dg(args.map,args.add)
+
+            if args.remove:
+                map.remove_dg(args.map,args.remove)
 
 
     def print_map_help(self, *args):

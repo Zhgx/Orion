@@ -221,3 +221,4 @@ class CRMConfig():
         if result['sts']:
             s.prt_log(f"change {res} allowed_initiators success",0)
             return True
+
