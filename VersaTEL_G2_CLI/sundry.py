@@ -111,7 +111,7 @@ def re_search(re_string, tgt_stirng):
     return re_result
 
 
-def show_iscsi_data(list_header,dict_data):
+def show_iscsi_data(list_header, dict_data):
     table = prettytable.PrettyTable()
     table.field_names = list_header
     if dict_data:
@@ -122,14 +122,28 @@ def show_iscsi_data(list_header,dict_data):
         pass
     return table
 
-def show_map_data(list_header,dict_data):
+
+def show_spe_map_data(list_header, list_data):
+    table = prettytable.PrettyTable()
+    table.field_names = list_header
+    if list_data:
+        for i in list_data:
+            table.add_row(i)
+    else:
+        pass
+    return table
+
+
+def show_map_data(list_header, dict_data):
     table = prettytable.PrettyTable()
     table.field_names = list_header
     if dict_data:
-        # {map1:[hg1,dg1] => [map1,hg1,dg1]}
+        # {map1:{"HostGroup":[hg1,hg2],"DiskGroup":[dg1,dg2]} => [map1,"hg1 hg2","dg1 dg2"]}
         for i, j in dict_data.items():
-            j.insert(0,i)
-            table.add_row(j)
+            data_list = [i,
+                         (' '.join(j["HostGroup"]) if isinstance(j["HostGroup"], list) == True else j["HostGroup"]),
+                         (' '.join(j["DiskGroup"]) if isinstance(j["DiskGroup"], list) == True else j["DiskGroup"])]
+            table.add_row(data_list)
     return table
 
 
