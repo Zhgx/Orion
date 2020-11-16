@@ -96,4 +96,18 @@ class JsonOperation():
         return self.json_data['crm']
 
 
-
+    def get_map_by_disk(self, disk):
+        dg_dict = self.get_data("DiskGroup")
+        map_dict = self.get_data("Map")
+        # 根据disk获取dg
+        dg_list = []
+        for dg in dg_dict.items():
+            if disk in dg[1]:
+                dg_list.append(dg[0])
+        # 根据dg获取map
+        map_list = []
+        for dg in dg_list:
+            for map in map_dict.items():
+                if dg in map[1]['DiskGroup']:
+                    map_list.append(map[0])
+        return set(map_list)

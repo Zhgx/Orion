@@ -390,10 +390,14 @@ class Map():
         if 'ERROR' in crm_config_statu:
             s.prt_log("Could not perform requested operations, are you root?",1)
         else:
-            # set()去重
             for disk in set(resname):
-                if obj_crm.delete_res(disk) != True:
-                    return False
+                map_list = self.js.get_map_by_disk(disk)
+                if map_list == [map]:
+                    if obj_crm.delete_res(disk) != True:
+                        return False
+                else:
+                    iqn = self.get_initiator(disk)
+                    obj_crm.change_initiator(disk, iqn)
             self.js.delete_data('Map', map)
             s.prt_log("Delete map success!", 0)
             return True
