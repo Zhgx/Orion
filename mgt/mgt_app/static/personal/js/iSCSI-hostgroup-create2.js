@@ -85,7 +85,7 @@ function host_table() {
 							'/host/show/data', JSON.stringify(host_result));
 					for (i in host_result) {
 						tr = '<td >' + i + '</td>'
-						$("#H_T").append('<tr class="aa">' + tr + '</tr>')
+						$("#H_T").append('<tr onClick="change(this)" >' + tr + '</tr>')
 					}
 				},
 				error : function() {
@@ -102,32 +102,36 @@ function host_table() {
 	});
 };
 
-function demo() {
-	var aa = $("#table1_hidden").val();
-	var tb = document.getElementById('HTable_Show');    // table 的 id
-	var rows = tb.rows;                           // 获取表格所有行
-	for(var i = 0; i<rows.length; i++ ){
-	   for(var j = 0; j<rows[i].cells.length; j++ ){
-		   alert("ss",rows[i].cells[j].innerHTML);
-		   if (rows[i].cells[j].innerHTML != aa) {
-			   	tr = '<td >'+aa+'</td>'
-				$("#H_T_Show").append('<tr >'+tr+'</tr>')
-		   }
-	   }
+function change(obj){
+	if(event.srcElement.tagName=="TD"){
+	curRow=event.srcElement.parentElement;
+	tr = curRow.innerHTML;
+	alert(tr);
+	$("#H_T_Show").append('<tr onClick="change_second(this)">'+tr+'</tr>');
+	curRow.remove();//删除
 	}
-	
+}
+//	var td = curRow.cells
+//	for(var i = 0; i<td.length; i++ ){
+//			   var bb = td[i].innerHTML
+//			   obj.push(bb);
+//			   $("#H_T_Show").append(obj);
+//			   alert(obj);
+//	}
+//	if (curRow.style.background) {//变颜色
+//		curRow.style.background="";
+//	}else {
+//		curRow.style.background="blue";
+//	}
+//
+function change_second() {
+	var obj = [];
+	if(event.srcElement.tagName=="TD"){
+	curRow=event.srcElement.parentElement;
+	console.log(curRow);
+	tr = curRow.innerHTML
+	$("#H_T").append('<tr onClick="change(this)" >' + tr + '</tr>')
+	curRow.remove();
+}
 }
 
-$("#HTable tr").click(function(){
-	if($(this).hasClass("focus"))
-	{
-	$(this).siblings("tr").removeClass("focus");
-	}
-	else
-	{
-	$(this).addClass("focus");
-	$(this).siblings("tr").removeClass("focus");
-	var td = $( this ).find( "td" );
-	$("#table1_hidden").val(td.text());
-	}
-	})
