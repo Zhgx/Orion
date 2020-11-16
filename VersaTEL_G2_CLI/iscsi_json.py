@@ -59,7 +59,7 @@ class JsonOperation():
 
     # 检查key值是否存在
     @s.deco_json_operation('JSON检查key值的结果')
-    def check_key(self,first_key,data_key):
+    def check_key(self, first_key, data_key):
         if data_key in self.json_data[first_key]:
             return {'type': first_key, 'alias': data_key, 'result': True}
         else:

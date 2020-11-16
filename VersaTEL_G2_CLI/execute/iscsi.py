@@ -254,12 +254,18 @@ class Map():
     def pre_check_create_map(self, map, hg, dg):
         if self.js.check_key('Map', map)['result']:
             s.prt_log(f'The Map "{map}" already existed.',1)
-        elif self.js.check_key('HostGroup', hg)['result'] == False:
+        elif self.checkout_exist('HostGroup', hg) == False:
             s.prt_log(f"Can't find {hg}",1)
-        elif self.js.check_key('DiskGroup', dg)['result'] == False:
+        elif self.checkout_exist('DiskGroup', dg) == False:
             s.prt_log(f"Can't find {dg}",1)
         else:
             return True
+
+    # 检查列表的每个成员hg/dg是否存在
+    def checkout_exist(self, key, data_list):
+        for i in data_list:
+            if self.js.check_key(key, i)['result'] == False:
+                return False
 
     def get_initiator(self, hg):
         # 根据hg去获取hostiqn，返回由hostiqn组成的initiator
@@ -306,7 +312,7 @@ class Map():
         :return:T/F
         """
         # 创建前的检查
-        if not self.pre_check_create_map(map,hg,dg):
+        if not self.pre_check_create_map(map, hg, dg):
             return
 
         # 检查disk是否已map过
@@ -314,17 +320,17 @@ class Map():
             return True
 
         obj_crm = CRMConfig()
-        initiator = self.get_initiator(hg)
+        initiator = self.get_all_initiator(hg)
         target_name, target_iqn = self.get_target()
-        disk_list = self.get_disk_data(dg)
+        disk_dict = self.get_all_disk(dg)
 
         # 用于收集创建成功的resource
         list_res_created = []
 
         # 执行创建和启动
-        for i in disk_list:
+        for i in disk_dict:
             res = i
-            path = disk_list[i]
+            path = disk_dict[i]
             # 取DeviceName后四位数字，减一千作为lun id
             lunid = int(path[-4:]) - 1000
             # 创建iSCSILogicalUnit
@@ -346,7 +352,7 @@ class Map():
                     obj_crm.delete_res(i)
                 return False
 
-        self.js.add_data('Map', map, [hg, dg])
+        self.js.add_data('Map', map, {'HostGroup':hg, 'DiskGroup':dg})
         s.prt_log('Create map success!', 0)
         return True
 
@@ -354,21 +360,25 @@ class Map():
         return self.js.get_data("Map")
 
     def get_spe_map(self,map):
-        dict_hg = {}
-        dict_dg = {}
+        list_hg = []
+        list_dg = []
         if not self.js.check_key('Map', map)['result']:
             s.prt_log('No map data',2)
-
-        hg,dg = self.js.get_data('Map').get(map)
-        host = self.js.get_data('HostGroup').get(hg)
-        disk = self.js.get_data('DiskGroup').get(dg)
-        for i in host:
-            iqn = self.js.get_data('Host').get(i)
-            dict_hg.update({i:iqn})
-        for i in disk:
-            path = self.js.get_data('Disk').get(i)
-            dict_dg.update({i:path})
-        return [{map:[hg,dg]},dict_dg,dict_hg]
+        # {map1: {"HostGroup": [hg1, hg2], "DiskGroup": [dg1, dg2]}
+        map_data = self.js.get_data('Map').get(map)
+        hg_list = map_data["HostGroup"]
+        dg_list = map_data["DiskGroup"]
+        for hg in hg_list:
+            host = self.js.get_data('HostGroup').get(hg)
+            for i in host:
+                iqn = self.js.get_data('Host').get(i)
+                list_hg.append([hg, i, iqn])
+        for dg in dg_list:
+            disk = self.js.get_data('DiskGroup').get(dg)
+            for i in disk:
+                path = self.js.get_data('Disk').get(i)
+                list_dg.append([dg, i, path])
+        return [{map:map_data}, list_hg, list_dg]
 
 
     def show_all_map(self):
@@ -380,14 +390,13 @@ class Map():
 
     def show_spe_map(self, map):
         list_data = self.get_spe_map(map)
-        hg, dg = self.js.get_data('Map').get(map)
         header_map = ["MapName", "HostGroup","DiskGroup"]
-        header_host = ["HostName", "IQN"]
-        header_disk = ["DiskName", "Disk"]
+        header_host = ["HostGroup", "HostName", "IQN"]
+        header_disk = ["DiskGroup", "DiskName", "Disk"]
         table_map = s.show_map_data(header_map, list_data[0])
-        table_hg = s.show_iscsi_data(header_host, list_data[1])
-        table_dg = s.show_iscsi_data(header_disk, list_data[2])
-        result = [f'Map:{map}',str(table_map),f'Host Group:{hg}',str(table_hg),f'Disk Group:{dg}',str(table_dg)]
+        table_hg = s.show_spe_map_data(header_host, list_data[1])
+        table_dg = s.show_spe_map_data(header_disk, list_data[2])
+        result = [str(table_map), str(table_hg), str(table_dg)]
         s.prt_log('\n'.join(result),0)
         return list_data
 
@@ -405,12 +414,16 @@ class Map():
         obj_crm = CRMConfig()
         crm_data = CRMData()
         crm_config_statu = crm_data.crm_conf_data
-        dg = self.js.get_data('Map').get(map)[1]
-        resname = self.js.get_data('DiskGroup').get(dg)
+        map_data = self.js.get_data('Map').get(map)
+        dg_list = map_data['DiskGroup']
+        resname = []
+        for dg in dg_list:
+            resname = resname + self.js.get_data('DiskGroup').get(dg)
         if 'ERROR' in crm_config_statu:
             s.prt_log("Could not perform requested operations, are you root?",1)
         else:
-            for disk in resname:
+            # set()去重
+            for disk in set(resname):
                 if obj_crm.delete_res(disk) != True:
                     return False
             self.js.delete_data('Map', map)
@@ -425,7 +438,7 @@ class Map():
             if answer in ['y', 'yes', 'Y', 'YES']:
                 obj_crm = CRMConfig()
                 disk_list = self.get_disk_data(dg)
-                initiator = self.merge_initiator(hg, dg)
+                initiator = self.change_merge_initiator(hg, dg)
                 for disk in disk_list:
                     obj_crm.change_initiator(disk, initiator)
                 self.js.add_data('Map', map, [hg, dg])
@@ -443,15 +456,13 @@ class Map():
                 hg_list.append(i[0])
         return hg_list
 
-    # 将hg的iqn合并
-    def merge_initiator(self, hg, dg):
+    # 修改map的hg，将hg的iqn合并
+    def change_merge_initiator(self, hg, dg):
         initiator_new = self.get_initiator(hg)
-        initiator_old = ''
         hg_list = self.get_hg_by_dg(dg)
-        for i in hg_list:
-            initiator_old = f'{initiator_old} {self.get_initiator(i)}'
+        initiator_old = self.get_all_initiator(hg_list)
         initiator = f'{initiator_old} {initiator_new}'
-        return initiator[1:]
+        return initiator
 
 
     def add_hg(self,map,list_hg):
@@ -511,3 +522,18 @@ class Map():
     #     }
     # }
 
+
+
+
+    def get_all_initiator(self, hg_list):
+        initiator = ''
+        for hg in hg_list:
+            initiator = f'{initiator} {self.get_initiator(hg)}'
+        return initiator[1:]
+
+    def get_all_disk(self, dg_list):
+        all_disk = {}
+        for dg in dg_list:
+            dgdata = self.get_disk_data(dg)
+            all_disk.update(dgdata)
+        return all_disk
