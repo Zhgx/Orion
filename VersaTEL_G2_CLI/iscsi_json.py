@@ -61,9 +61,77 @@ class JsonOperation():
     @s.deco_json_operation('JSON检查key值的结果')
     def check_key(self,first_key,data_key):
         if data_key in self.json_data[first_key]:
-            return {'type':first_key,'alias':data_key, 'result':True}
+            return {'type': first_key, 'alias': data_key, 'result': True}
         else:
-            return {'type':first_key,'alias':data_key, 'result':False}
+            return {'type': first_key, 'alias': data_key, 'result': False}
+
+        # if not isinstance(data_key,list):
+        #     if data_key in self.json_data[first_key]:
+        #         return {'type':first_key,'alias':data_key, 'result':True}
+        #     else:
+        #         return {'type':first_key,'alias':data_key, 'result':False}
+        # else:
+        #     for i in data_key:
+        #         if i in self.json_data[first_key]:
+        #             pass
+        #         else:
+        #             return
+        # return True
+
+
+
+    def check_value_in_key(self, type, key, value):
+        """
+        检查某个key值是否存在某个value值
+        """
+        if key in self.json_data[type]:
+            if value in self.json_data[type][key]:
+                return {'type': type, 'key': key, 'value': value, 'result': True}
+            else:
+                return {'type': type, 'key': key, 'value': value, 'result': False}
+
+    def check_map_member(self,map,member,type):
+        """
+        检查某个member是否存在指定的map中
+        :param map:
+        :param hg:
+        :param type: "HostGroup"/"DiskGroup"
+        :return:
+        """
+        if member in self.json_data["Map"][map][type]:
+            return True
+        else:
+            return False
+
+    def get_hg_by_host(self,host):
+        """
+        通过host取到使用这个host的所有hg
+        :param host:
+        :return:list
+        """
+        list_host = []
+        for hg,hg_member in self.json_data["HostGroup"].items():
+            if host in hg_member:
+                list_host.append(hg)
+        return list_host
+
+
+    def get_map_by_hg(self,hg):
+        """
+        通过hg取到使用这个hg的所有map
+        :param hg:
+        :return:list
+        """
+        list_map = []
+        for map,map_member in self.json_data['Map'].items():
+            if hg in map_member['HostGroup']:
+                list_map.append(map)
+        return list_map
+
+
+
+
+
 
 
     # 检查value值是否存在
@@ -84,6 +152,7 @@ class JsonOperation():
         return self.json_data[first_key]
 
 
+
     # 更新crm configure资源的信息
     @s.deco_json_operation('JSON更新CRM资源信息')
     def update_crm_conf(self, resource,vip,target):
@@ -96,4 +165,7 @@ class JsonOperation():
         return self.json_data['crm']
 
 
-
+    # # 获取组成员中有host的所有hg
+    #
+    # def
+    #

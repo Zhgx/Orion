@@ -136,11 +136,11 @@ class HostGroupCommands():
 
     @sd.deco_record_exception
     def modify(self, args):
-        if args.remove:
-            print('需要删除：',args.remove)
-
+        hostgroup = ex.HostGroup()
         if args.add:
-            print('需要删除：',args.add)
+            hostgroup.add_host(args.hostgroup,args.add)
+        if args.remove:
+            hostgroup.remove_host(args.hostgroup,args.remove)
 
 
     def print_hg_help(self, *args):
