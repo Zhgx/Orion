@@ -33,8 +33,6 @@ function get_vlpx_ip(){
 		dataType : "json",
 		async:false,
 		success : function(data) {
-			console.log("okokok");
-			console.log(data["ip"]);
 			obj =  "http://"+data["ip"];
 		}
 	});
@@ -93,7 +91,8 @@ $('#host_group').selectpicker({
 	width : 200
 });
 
-function all_hg_result_select() {
+hg_table();
+function hg_table() {
 	$.ajax({
 		url : vplxIp + "/hg/show/oprt",
 		type : "get",
@@ -103,7 +102,7 @@ function all_hg_result_select() {
 			ip : mgtIp
 		},
 		success : function(status) {
-			write_to_log(tid, 'OPRT', 'ROUTE', vplxIp, '/hg/show/oprt', status);
+			//write_to_log(tid, 'OPRT', 'ROUTE', vplxIp, '/hg/show/oprt', status);
 			$.ajax({
 				url : vplxIp + "/hg/show/data",
 				type : "get",
@@ -114,42 +113,32 @@ function all_hg_result_select() {
 						},
 				success : function(host_group_result) {
 					// var _data = data.data; //由于后台传过来的json有个data，在此重命名
-					write_to_log(tid, 'DATA', 'ROUTE', vplxIp, '/hg/show/data',JSON.stringify( host_group_result));
-					$('#host_group').html("");
-					var html = "";
+					//write_to_log(tid, 'DATA', 'ROUTE', vplxIp, '/hg/show/data',JSON.stringify( host_group_result));
 					for (i in host_group_result) {
-						html += '<option value=' + i + '>' + i + '</option>'
+						tr = '<td >'
+							+ i
+							+ '</td>'
+							$("#Hg_T").append(
+									'<tr>'
+									+ tr + '</tr>')
 					}
-					$('#host_group').append(html);
-					// 缺一不可
-					$('#host_group').selectpicker('refresh');
-					$('#host_group').selectpicker('render');
 				},
 				error : function() {
-					write_to_log(tid, 'DATA', 'ROUTE', vplxIp, '/hg/show/data', 'error');
+					//write_to_log(tid, 'DATA', 'ROUTE', vplxIp, '/hg/show/data', 'error');
 				}
 				
 			});
 
 		},
 		error : function() {
-			write_to_log(tid, 'OPRT', 'ROUTE', vplxIp, '/hg/show/oprt', 'error');
+			//write_to_log(tid, 'OPRT', 'ROUTE', vplxIp, '/hg/show/oprt', 'error');
 		}
 	});
 
 };
-all_hg_result_select();
-$(window).on('load', function() {
-	$('#host_group').selectpicker({
-		'selectedText' : 'cat'
-	});
-});
 
-$('#disk_group').selectpicker({
-	width : 200
-});
-
-function all_dg_result_select() {
+Dg_Table();
+function Dg_Table() {
 	$.ajax({
 		url : vplxIp + "/dg/show/oprt",
 		type : "get",
@@ -159,7 +148,7 @@ function all_dg_result_select() {
 			ip : mgtIp
 		},
 		success : function(status) {
-			write_to_log(tid, 'OPRT', 'ROUTE', vplxIp, '/dg/show/oprt',status);
+			//write_to_log(tid, 'OPRT', 'ROUTE', vplxIp, '/dg/show/oprt',status);
 			$.ajax({
 				url : vplxIp + "/dg/show/data",
 				type : "get",
@@ -169,34 +158,27 @@ function all_dg_result_select() {
 							ip : mgtIp
 						},
 				success : function(all_dg_result) {
-					write_to_log(tid, 'DATA', 'ROUTE', vplxIp, '/dg/show/data',JSON.stringify(all_dg_result));
-					$('#disk_group').html("");
-					var html = "";
+					//write_to_log(tid, 'DATA', 'ROUTE', vplxIp, '/dg/show/data',JSON.stringify(all_dg_result));
 					for (i in all_dg_result) {
-						$('#disk_group').append(
-								'<option value=' + i + '>' + i + '</option>')
+						tr = '<td >'
+							+ i
+							+ '</td>'
+							$("#Dg_T").append(
+									'<tr>'
+									+ tr + '</tr>')
 					}
-					// 缺一不可
-					$('#disk_group').selectpicker('refresh');
-					$('#disk_group').selectpicker('render');
 				},
 				error : function(){
-					write_to_log(tid, 'DATA', 'ROUTE', vplxIp, '/dg/show/data', 'error');
+					//write_to_log(tid, 'DATA', 'ROUTE', vplxIp, '/dg/show/data', 'error');
 				}
 			});
 		},
 		error : function() {
-			write_to_log(tid, 'OPRT', 'ROUTE', vplxIp, '/dg/show/oprt', 'error');
+			//write_to_log(tid, 'OPRT', 'ROUTE', vplxIp, '/dg/show/oprt', 'error');
 		}
 		
 	});
 };
-all_dg_result_select();
-$(window).on('load', function() {
-	$('#disk_group').selectpicker({
-		'selectedText' : 'cat'
-	});
-});
 
 function write_to_log(tid, t1, t2, d1, d2, data) {
 	$.ajax({
@@ -278,9 +260,3 @@ function map_name_myfunction() {
 		}
 	}
 }
-$("#host_group").on("change", function(a, b, c) {
-	$("#Hg_Show_Input_All").val($("#host_group option:selected").text());
-});
-$("#disk_group").on("change", function(a, b, c) {
-	$("#Dg_Show_Input_All").val($("#disk_group option:selected").text());
-});

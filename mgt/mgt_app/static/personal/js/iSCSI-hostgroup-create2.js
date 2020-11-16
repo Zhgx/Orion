@@ -61,94 +61,73 @@ function write_to_log(tid, t1, t2, d1, d2, data) {
 
 host_table();
 function host_table() {
-	$
-			.ajax({
-				url : vplxIp + "/host/show/oprt",
+	$.ajax({
+		url : vplxIp + "/host/show/oprt",
+		type : "GET",
+		dataType : "json",
+		data : {
+			tid : tid,
+			ip : mgtIp
+		},
+		success : function(status) {
+			write_to_log(tid, 'OPRT', 'ROUTE', vplxIp, '/host/show/oprt',
+					status);
+			$.ajax({
+				url : vplxIp + "/host/show/data",
 				type : "GET",
 				dataType : "json",
 				data : {
 					tid : tid,
 					ip : mgtIp
 				},
-				success : function(status) {
-					write_to_log(tid, 'OPRT', 'ROUTE', vplxIp,
-							'/host/show/oprt', status);
-					$
-							.ajax({
-								url : vplxIp + "/host/show/data",
-								type : "GET",
-								dataType : "json",
-								data : {
-									tid : tid,
-									ip : mgtIp
-								},
-								success : function(host_result) {
-									write_to_log(tid, 'DATA', 'ROUTE', vplxIp,
-											'/host/show/data', JSON
-													.stringify(host_result));
-									for (i in host_result) {
-										tr = '<td >'
-												+ '<input type="checkbox" id="checkbox" name="checkbox"  checked＝"false";"/>'
-												+ '</td>' + '<td name="id">' + i
-												+ '</td>'
-										$("#H_T").append(
-												'<tr>'
-														+ tr + '</tr>')
-									}
-								},
-								error : function() {
-									write_to_log(tid, 'DATA', 'ROUTE', vplxIp,
-											'/host/show/data', 'error');
-								}
-
-							});
+				success : function(host_result) {
+					write_to_log(tid, 'DATA', 'ROUTE', vplxIp,
+							'/host/show/data', JSON.stringify(host_result));
+					for (i in host_result) {
+						tr = '<td >' + i + '</td>'
+						$("#H_T").append('<tr class="aa">' + tr + '</tr>')
+					}
 				},
 				error : function() {
 					write_to_log(tid, 'DATA', 'ROUTE', vplxIp,
-							'/host/show/oprt', 'error');
+							'/host/show/data', 'error');
 				}
+
 			});
-};
-
-
-
-$(function() {
-	$("#btn").on('click', function() {
-		
-		var products = [];  
-		var ordernums = [];  
-		var ordernums1 = []; 
-		var $span = $("input[name=checkbox]:checked");
-		var $tds = $("td").has($span);     //定义选中复选框的单元格 
-		var $trs = $("tr").has($tds);  
-		for(var i=0; i<$trs.length;i++){  
-		var product = $("td:eq(1)",$($trs[i])).html();   //获取选中的C3单元格的值
-		products.push(product);     //将选中的值放到数组中
-		$("#H_T_Show").html("");
-		for (i in products) {
-			tr = '<td >'
-				+ '<input type="checkbox" id="checkbox1" name="checkbox1"  checked＝"false";"/>'
-				+ '</td>' + '<td>' + products[i]
-			+ '</td>' 
-			$("#H_T_Show").append(
-					'<tr>'
-					+ tr + '</tr>')
-		}
+		},
+		error : function() {
+			write_to_log(tid, 'DATA', 'ROUTE', vplxIp, '/host/show/oprt',
+					'error');
 		}
 	});
-});
+};
 
-$(function() {
-			  var obt=document.getElementById("btn1");
-			  var otb=document.getElementById("HTable_Show");
-			  var tbody=otb.getElementsByTagName("tbody")[0];  
-			  obt.onclick=function(){
-			    var cks=document.getElementsByName("checkbox1");
-			    for(var index=0;index<cks.length;index++){
-			      if(cks[index].checked==true){
-			        tbody.removeChild(cks[index].parentNode.parentNode);
-			      }
-			    }
-			  }
-});
+function demo() {
+	var aa = $("#table1_hidden").val();
+	var tb = document.getElementById('HTable_Show');    // table 的 id
+	var rows = tb.rows;                           // 获取表格所有行
+	for(var i = 0; i<rows.length; i++ ){
+	   for(var j = 0; j<rows[i].cells.length; j++ ){
+		   alert("ss",rows[i].cells[j].innerHTML);
+		   if (rows[i].cells[j].innerHTML != aa) {
+			   	tr = '<td >'+aa+'</td>'
+				$("#H_T_Show").append('<tr >'+tr+'</tr>')
+		   }
+	   }
+	}
+	
+}
 
+$("#HTable tr").click(function(){
+	if($(this).hasClass("focus"))
+	{
+	$(this).siblings("tr").removeClass("focus");
+	}
+	else
+	{
+	$(this).addClass("focus");
+	$(this).siblings("tr").removeClass("focus");
+	var td = $( this ).find( "td" );
+	$("#table1_hidden").val(td.text());
+	}
+	})

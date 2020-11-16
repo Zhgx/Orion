@@ -66,7 +66,10 @@
         "hos12": "iqn.2323-232.xx",
         "host33": "iqn.3233-23.xx",
         "hosee2e": "iqn.2323-232.xx",
-        "hose2323": "iqn.2323-32.xx"
+        "hose2323": "iqn.2323-32.xx",
+        "Host12323": "iqn.2323-23.xx",
+        "hsot11": "iqn.2323-32.xxx",
+        "host_s": "iqn.1111-111:single"
     },
     "Disk": {
         "res_a": "/dev/drbd1000",
