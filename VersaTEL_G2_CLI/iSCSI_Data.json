@@ -31,12 +31,12 @@
             "res_b"
         ],
         "dg2": [
-            "res_a",
+            "res_c",
             "res_b"
         ]
     },
 
-     "Map": {
+    "Map": {
         "map1": {
             "HostGroup": [
                 "hg1",
@@ -46,16 +46,23 @@
                 "dg1",
                 "dg2"
             ]
-        },
-        "map2": {
-            "HostGroup": [
-                "hg2",
-                "hg4"
-            ],
-            "DiskGroup": [
-                "dg3",
-                "dg4"
-            ]
         }
+    },
+    "crm": {
+        "resource": [],
+        "vip": [
+            [
+                "vip",
+                "10.203.1.75",
+                "24"
+            ]
+        ],
+        "target": [
+            [
+                "t_test",
+                "iqn.2020-04.feixitek.com:versaplx00",
+                "10.203.1.75"
+            ]
+        ]
     }
 }
