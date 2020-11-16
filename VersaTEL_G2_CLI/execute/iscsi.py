@@ -96,16 +96,27 @@ class Host():
 
     def modify_host(self,host,iqn):
         if self.js.check_key('Host', host)['result']:
-            # self.check_iqn(iqn)
-            # self.js.add_data('Host', host, iqn)
+            disk = Disk()
+            disk.get_all_disk()
+            self.check_iqn(iqn)
             # 添加map处理的代码
+            iqn_before = self.js.get_data('Host')[host]
+            obj_crm = CRMConfig()
+            obj_map = Map()
 
-            list_hg = self.js.get_hg_by_host(host)
+            map_inuse = self.js.get_map_by_host(host)
 
-            self.js.get_map_by_hg('hg1')
-
-
-
+            print(f'修改该{host}的iqn为{iqn}会影响到已存在的map：{",".join(map_inuse)}? yes/no')
+            answer = input()
+            if not answer in ['y', 'yes', 'Y', 'YES']:
+                print('退出')
+                return
+            for map in map_inuse:
+                iqn_all = obj_map.get_all_initiator(self.js.get_data('Map')[map]['HostGroup'])
+                iqns = iqn_all.replace(iqn_before, iqn)
+                for disk in self.js.get_disk_by_dg(self.js.get_data('Map')[map]['DiskGroup']):
+                    obj_crm.change_initiator(disk,iqns)
+            self.js.add_data('Host', host, iqn)
         else:
             s.prt_log("不存在这个host可以去进行修改",1)
 
@@ -226,9 +237,34 @@ class HostGroup():
             if not self.js.check_key("Host", host)['result']:
                 print(f'json文件中不存在{host}，无法进行添加')
                 return
-            else:
-                print(f'add {host}')
-        print(f'添加{list_host}')
+
+        obj_map = Map()
+        obj_crm = CRMConfig()
+        iqn_new = ''
+        map_inuse = self.js.get_map_by_hg(hg)
+
+        # 获取新添加的iqn
+        for host in list_host:
+            iqn_new = f"{self.js.get_data('Host')[host]} {iqn_new}"
+
+        print(f'修改该{hg}会影响到已存在的map：{",".join(map_inuse)}? yes/no')
+        answer = input()
+        if not answer in ['y', 'yes', 'Y', 'YES']:
+            print('退出')
+            return
+        for map in map_inuse:
+            iqn_all = obj_map.get_all_initiator(self.js.get_data('Map')[map]['HostGroup'])
+
+            iqns = f'{iqn_all} {iqn_new}'
+            for disk in self.js.get_disk_by_dg(self.js.get_data('Map')[map]['DiskGroup']):
+                obj_crm.change_initiator(disk, iqns)
+
+        # 最后在配置文件中添加
+        hg_member = self.js.get_data('HostGroup')[hg] + list_host
+        self.js.add_data('HostGroup',hg,hg_member)
+
+
+
 
     def remove_host(self,hg,list_host):
         for host in list_host:
@@ -238,6 +274,36 @@ class HostGroup():
             else:
                 print(f'remove {host}')
 
+        obj_map = Map()
+        obj_crm = CRMConfig()
+        iqn_new = ''
+        map_inuse = self.js.get_map_by_hg(hg)
+
+
+        # 获取新添加的iqn
+        for host in list_host:
+            iqn_new = f"{self.js.get_data('Host')[host]} {iqn_new}"
+
+        print(f'修改该{hg}会影响到已存在的map：{",".join(map_inuse)}? yes/no')
+        answer = input()
+        if not answer in ['y', 'yes', 'Y', 'YES']:
+            print('退出')
+            return
+        for map in map_inuse:
+            iqn_all = obj_map.get_all_initiator(self.js.get_data('Map')[map]['HostGroup'])
+            list_iqn = iqn_all.split(' ')
+            for host in list_host:
+                list_iqn.remove(self.js.get_data('Host')[host])
+
+            iqns = ' '.join(list_iqn)
+
+            for disk in self.js.get_disk_by_dg(self.js.get_data('Map')[map]['DiskGroup']):
+                obj_crm.change_initiator(disk, iqns)
+
+        # 最后在配置文件中删除
+        hg_member = self.js.get_data('HostGroup')[hg]
+        hg_member = list(set(hg_member) - set(list_host))
+        self.js.add_data('HostGroup',hg,hg_member)
 
 
 
@@ -465,6 +531,22 @@ class Map():
         return initiator
 
 
+
+
+    def get_all_initiator(self, hg_list):
+        initiator = ''
+        for hg in hg_list:
+            initiator = f'{initiator} {self.get_initiator(hg)}'
+        return initiator[1:]
+
+    def get_all_disk(self, dg_list):
+        all_disk = {}
+        for dg in dg_list:
+            dgdata = self.get_disk_data(dg)
+            all_disk.update(dgdata)
+        return all_disk
+
+
     def add_hg(self,map,list_hg):
         for hg in list_hg:
             if self.js.check_map_member(map,hg,"HostGroup"):
@@ -525,15 +607,3 @@ class Map():
 
 
 
-    def get_all_initiator(self, hg_list):
-        initiator = ''
-        for hg in hg_list:
-            initiator = f'{initiator} {self.get_initiator(hg)}'
-        return initiator[1:]
-
-    def get_all_disk(self, dg_list):
-        all_disk = {}
-        for dg in dg_list:
-            dgdata = self.get_disk_data(dg)
-            all_disk.update(dgdata)
-        return all_disk

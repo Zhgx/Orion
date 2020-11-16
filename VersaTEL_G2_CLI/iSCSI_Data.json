@@ -1,10 +1,11 @@
 {
     "Host": {
-        "h1": "iqn.2020-11.com.example:pytest01",
+        "h1": "iqn.2222-22.test1",
         "h2": "iqn.2020-11.com.example:pytest02",
         "h3": "iqn.2020-11.com.example:pytest03",
         "h4": "iqn.2020-11.com.example:pytest04",
-        "h5": "iqn.2020-11.com.example:pytest09"
+        "h5": "iqn.2020-11.com.example:pytest09",
+        "h6": "iqn.2222-22.test2"
     },
     "Disk": {
         "res_a": "/dev/drbd1000",
@@ -13,8 +14,9 @@
     },
     "HostGroup": {
         "hg1": [
-            "h1",
-            "h2"
+            "h4",
+            "h5",
+            "h6"
         ],
         "hg2": [
             "h3",
@@ -35,12 +37,21 @@
             "res_b"
         ]
     },
-
     "Map": {
         "map1": {
             "HostGroup": [
                 "hg1",
                 "hg2"
+            ],
+            "DiskGroup": [
+                "dg1",
+                "dg2"
+            ]
+        },
+        "map2": {
+            "HostGroup": [
+                "hg1",
+                "hg3"
             ],
             "DiskGroup": [
                 "dg1",

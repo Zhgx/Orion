@@ -131,9 +131,6 @@ class JsonOperation():
 
 
 
-
-
-
     # 检查value值是否存在
     @s.deco_json_operation('JSON检查value值的结果')
     def check_value(self, first_key, data_value):
@@ -165,7 +162,64 @@ class JsonOperation():
         return self.json_data['crm']
 
 
-    # # 获取组成员中有host的所有hg
-    #
-    # def
-    #
+
+    def get_disk_by_dg(self,list_dg):
+        """
+        通过list_dg获取到所有disk
+        :param list_dg:
+        :return:
+        """
+        list_disk = []
+        for dg in list_dg:
+            list_disk+=self.get_data('DiskGroup')[dg]
+        return set(list_disk)
+
+
+    def get_map_by_host(self,host):
+        list_map = []
+        list_hg = self.get_hg_by_host(host)
+        for hg in list_hg:
+            list_map+=self.get_map_by_hg(hg)
+        return list_map
+
+    def get_map_by_disk(self, disk):
+        dg_dict = self.get_data("DiskGroup")
+        map_dict = self.get_data("Map")
+        # 根据disk获取dg
+        dg_list = []
+        for dg in dg_dict.items():
+            if disk in dg[1]:
+                dg_list.append(dg[0])
+        # 根据dg获取map
+        map_list = []
+        for dg in dg_list:
+            for map in map_dict.items():
+                if dg in map[1]['DiskGroup']:
+                    map_list.append(map[0])
+        return set(map_list)
+
+
+    def get_res_initiator(self,disk):
+        """
+        通过disk获取到对应iSCSILogicalUnit的allowed initiators
+        :param disk:str
+        :return:list
+        """
+        # 通过disk获取dg
+        list_initiator = []
+        list_hg = []
+        list_host = []
+        list_map = self.get_map_by_disk(disk)
+        for map in list_map:
+            list_hg+=self.get_data('Map')[map]['HostGroup']
+
+        for hg in set(list_hg):
+            for host in self.get_data('HostGroup')[hg]:
+                list_host.append(host)
+
+        for host in set(list_host):
+            list_initiator.append(self.get_data('Host')[host])
+
+        return set(list_initiator)
+
+
