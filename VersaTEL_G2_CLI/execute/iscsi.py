@@ -96,8 +96,27 @@ class Host():
 
     def modify_host(self,host,iqn):
         if self.js.check_key('Host', host)['result']:
+            disk = Disk()
+            disk.get_all_disk()
             self.check_iqn(iqn)
+            # 添加map处理的代码
+            iqn_before = self.js.get_data('Host')[host]
+            obj_crm = CRMConfig()
+            obj_map = Map()
 
+            map_inuse = self.js.get_map_by_host(host)
+
+            print(f'修改该{host}的iqn为{iqn}会影响到已存在的map：{",".join(map_inuse)}? yes/no')
+            answer = input()
+            if not answer in ['y', 'yes', 'Y', 'YES']:
+                print('退出')
+                return
+            for map in map_inuse:
+                iqn_all = obj_map.get_all_initiator(self.js.get_data('Map')[map]['HostGroup'])
+                iqns = iqn_all.replace(iqn_before, iqn)
+                for disk in self.js.get_disk_by_dg(self.js.get_data('Map')[map]['DiskGroup']):
+                    obj_crm.change_initiator(disk,iqns)
+            self.js.add_data('Host', host, iqn)
         else:
             s.prt_log("不存在这个host可以去进行修改",1)
 
@@ -210,9 +229,88 @@ class HostGroup():
         else:
             s.prt_log(f"Fail! Can't find {hg}",1)
 
+    def add_host(self,hg,list_host):
+        for host in list_host:
+            if self.js.check_value_in_key("HostGroup", hg, host)['result']:
+                print(f'{host}已存在{hg}中')
+                return
+            if not self.js.check_key("Host", host)['result']:
+                print(f'json文件中不存在{host}，无法进行添加')
+                return
+
+        obj_map = Map()
+        obj_crm = CRMConfig()
+        iqn_new = ''
+        map_inuse = self.js.get_map_by_hg(hg)
+
+        # 获取新添加的iqn
+        for host in list_host:
+            iqn_new = f"{self.js.get_data('Host')[host]} {iqn_new}"
+
+        print(f'修改该{hg}会影响到已存在的map：{",".join(map_inuse)}? yes/no')
+        answer = input()
+        if not answer in ['y', 'yes', 'Y', 'YES']:
+            print('退出')
+            return
+        for map in map_inuse:
+            iqn_all = obj_map.get_all_initiator(self.js.get_data('Map')[map]['HostGroup'])
+
+            iqns = f'{iqn_all} {iqn_new}'
+            for disk in self.js.get_disk_by_dg(self.js.get_data('Map')[map]['DiskGroup']):
+                obj_crm.change_initiator(disk, iqns)
+
+        # 最后在配置文件中添加
+        hg_member = self.js.get_data('HostGroup')[hg] + list_host
+        self.js.add_data('HostGroup',hg,hg_member)
+
+
+
+
+    def remove_host(self,hg,list_host):
+        for host in list_host:
+            if not self.js.check_value_in_key("HostGroup", hg, host)['result']:
+                print(f'{hg}中不存在成员{host}，无法进行移除')
+                return
+            else:
+                print(f'remove {host}')
+
+        obj_map = Map()
+        obj_crm = CRMConfig()
+        iqn_new = ''
+        map_inuse = self.js.get_map_by_hg(hg)
+
+
+        # 获取新添加的iqn
+        for host in list_host:
+            iqn_new = f"{self.js.get_data('Host')[host]} {iqn_new}"
+
+        print(f'修改该{hg}会影响到已存在的map：{",".join(map_inuse)}? yes/no')
+        answer = input()
+        if not answer in ['y', 'yes', 'Y', 'YES']:
+            print('退出')
+            return
+        for map in map_inuse:
+            iqn_all = obj_map.get_all_initiator(self.js.get_data('Map')[map]['HostGroup'])
+            list_iqn = iqn_all.split(' ')
+            for host in list_host:
+                list_iqn.remove(self.js.get_data('Host')[host])
+
+            iqns = ' '.join(list_iqn)
+
+            for disk in self.js.get_disk_by_dg(self.js.get_data('Map')[map]['DiskGroup']):
+                obj_crm.change_initiator(disk, iqns)
+
+        # 最后在配置文件中删除
+        hg_member = self.js.get_data('HostGroup')[hg]
+        hg_member = list(set(hg_member) - set(list_host))
+        self.js.add_data('HostGroup',hg,hg_member)
+
+
+
     """
     map操作
     """
+
 
 class Map():
     def __init__(self):
@@ -432,6 +530,9 @@ class Map():
         initiator = f'{initiator_old} {initiator_new}'
         return initiator
 
+
+
+
     def get_all_initiator(self, hg_list):
         initiator = ''
         for hg in hg_list:
@@ -444,3 +545,65 @@ class Map():
             dgdata = self.get_disk_data(dg)
             all_disk.update(dgdata)
         return all_disk
+
+
+    def add_hg(self,map,list_hg):
+        for hg in list_hg:
+            if self.js.check_map_member(map,hg,"HostGroup"):
+                print(f'{hg}已存在{map}中')
+                return
+            if not self.js.check_key("HostGroup", hg)['result']:
+                print(f'json文件中不存在{hg}，无法进行添加')
+                return
+
+        for hg in list_hg:
+            print(f'添加{hg}')
+
+
+    def add_dg(self,map,list_dg):
+        for dg in list_dg:
+            if self.js.check_map_member(map,dg,"DiskGroup"):
+                print(f'{dg}已存在{map}中')
+                return
+            if not self.js.check_key("DiskGroup", dg)['result']:
+                print(f'json文件中不存在{dg}，无法进行添加')
+                return
+
+        for dg in list_dg:
+            print(f'添加{dg}')
+
+
+    def remove_hg(self,map,list_hg):
+        for hg in list_hg:
+            if not self.js.check_map_member(map, hg, "HostGroup"):
+                print(f'{map}中不存在成员{hg}，无法进行移除')
+                return
+        for hg in list_hg:
+            print(f'remove {hg}')
+
+
+    def remove_dg(self,map,list_dg):
+        for dg in list_dg:
+            if not self.js.check_map_member(map, dg, "DiskGroup"):
+                print(f'{map}中不存在成员{dg}，无法进行移除')
+                return
+        for dg in list_dg:
+            print(f'remove {dg}')
+
+    #
+    # "Map": {
+    #     "map1": {
+    #         "HostGroup": [
+    #             "hg1",
+    #             "hg2"
+    #         ],
+    #         "DiskGroup": [
+    #             "dg1",
+    #             "dg2"
+    #         ]
+    #     }
+    # }
+
+
+
+
