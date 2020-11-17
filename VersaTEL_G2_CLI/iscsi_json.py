@@ -70,20 +70,6 @@ class JsonOperation():
 
 
 
-
-
-
-
-    #
-    # def modify_data(self,target,key,list_value,oprt_type):
-    #     # 修改HG，DG，Map
-    #     list_member = self.get_data(target)[key]
-    #     if oprt_type == 'add'
-    #     list_member.extend(list_value)
-    #     self.add_data(target,key,list(set(list_member)))
-
-
-
     # 删除Host、HostGroup、DiskGroup、Map
     @s.deco_json_operation('JSON删除后的资源信息')
     def delete_data(self, first_key, data_key):
@@ -211,7 +197,7 @@ class JsonOperation():
         list_disk = []
         for dg in list_dg:
             list_disk+=self.get_data('DiskGroup')[dg]
-        return set(list_disk)
+        return list(set(list_disk))
 
 
     def get_map_by_host(self,host):
@@ -235,7 +221,7 @@ class JsonOperation():
             for map in map_dict.items():
                 if dg in map[1]['DiskGroup']:
                     map_list.append(map[0])
-        return set(map_list)
+        return list(set(map_list))
 
 
     def get_res_initiator(self,disk):
@@ -260,7 +246,7 @@ class JsonOperation():
         for host in set(list_host):
             list_initiator.append(self.get_data('Host')[host])
 
-        return set(list_initiator)
+        return list(set(list_initiator))
 
 
     def get_res_initiator_by_hg(self,hg):
@@ -272,11 +258,7 @@ class JsonOperation():
                 iqn = self.get_data('Host')[h]
                 list_iqn.append(iqn)
 
-        return set(list_iqn)
-
-    def get_res_initiator_by_map(self,map):
-        list_iqn = []
-
+        return list(set(list_iqn))
 
 
     def get_disk_by_map(self,map):
@@ -291,11 +273,12 @@ class JsonOperation():
         iqn_list = self.get_iqn_by_hglist(hg_list)
         return iqn_list
 
+
     def get_iqn_by_hglist(self,hg_list):
         iqn_list = []
         for hg in hg_list:
             for host in self.get_data('HostGroup')[hg]:
                 iqn = self.get_data('Host')[host]
                 iqn_list.append(iqn)
-        return set(iqn_list)
+        return list(set(iqn_list))
 
