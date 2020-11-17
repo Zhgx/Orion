@@ -86,7 +86,7 @@ function host_table() {
 					for (i in host_result) {
 						tr = '<td >' + i + '</td>'
 						$("#H_T").append(
-								'<tr onClick="change(this)" >' + tr + '</tr>')
+								'<tr onClick="change_host(this)" >' + tr + '</tr>')
 					}
 				},
 				error : function() {
@@ -103,12 +103,12 @@ function host_table() {
 	});
 };
 
-function change(obj) {
+function change_host(obj) {
 	if (event.srcElement.tagName == "TD") {
 		curRow = event.srcElement.parentElement;
 		tr = curRow.innerHTML;
 		$("#H_T_Show").append(
-				'<tr onClick="change_second(this)">' + tr + '</tr>');
+				'<tr onClick="change_host_second(this)">' + tr + '</tr>');
 		curRow.remove();// 删除
 	}
 }
@@ -125,12 +125,12 @@ function change(obj) {
 // curRow.style.background="blue";
 // }
 //
-function change_second() {
+function change_host_second() {
 	var obj = [];
 	if (event.srcElement.tagName == "TD") {
 		curRow = event.srcElement.parentElement;
 		tr = curRow.innerHTML
-		$("#H_T").append('<tr onClick="change(this)" >' + tr + '</tr>')
+		$("#H_T").append('<tr onClick="change_host(this)" >' + tr + '</tr>')
 		curRow.remove();
 	}
 }
@@ -138,7 +138,6 @@ function change_second() {
 // 输入框验证
 
 function hg_name_myfunction() {
-	$("#hg_name_verify_status").val("1");
 	document.getElementById("hg_name_examine").className = "hidden";
 	document.getElementById("hg_name_format").className = "hidden";
 	var input_result = $('#host_group_name').val();
@@ -146,12 +145,14 @@ function hg_name_myfunction() {
 	match_result = hg_name_match_regular.test(input_result)
 	if (!input_result) {
 		$("#hg_name_hid").val("0");
+		$("#hg_name_verify_status").val("0");
 		document.getElementById("hg_name_examine").className = "hidden";
 		document.getElementById("hg_name_format").className = "hidden";
 
 	} else {
 		if (!match_result) {
 			$("#hg_name_hid").val("0");
+			$("#hg_name_verify_status").val("0");
 			document.getElementById("hg_name_format").className = "";
 		} else {
 			document.getElementById("hg_name_format").className = "hidden";
@@ -187,6 +188,7 @@ function hg_name_myfunction() {
 															.stringify(HG_result_data));
 											if (input_result in HG_result_data) {
 												$("#hg_name_hid").val("0");
+												$("#hg_name_verify_status").val("0");
 												document
 														.getElementById("hg_name_examine").className = "";
 											} else {
@@ -195,6 +197,7 @@ function hg_name_myfunction() {
 														'host_group_name', 'T',
 														input_result);
 												$("#hg_name_hid").val("1");
+												$("#hg_name_verify_status").val("1");
 											}
 										},
 										error : function() {
@@ -236,10 +239,9 @@ $("#host_group_create").click(
 //			alert(dict_data);
 			if (hg_name_verify_status == "0") {
 				hg_name_myfunction();
-			}
-			;
+			};
 			if (hg_name_hid == "1") {
-				write_to_log(tid, 'DATA', 'RADIO', 'host', '', obj_host);
+				write_to_log(tid, 'DATA', 'RADIO', 'host', '', obj_host_str);
 				write_to_log(tid, 'OPRT', 'CLICK', 'host_group_create',
 						'accept', dict_data);
 				$.ajax({
@@ -254,22 +256,9 @@ $("#host_group_create").click(
 					success : function(operation_feedback_prompt) {
 						write_to_log(tid, 'OPRT', 'ROUTE', vplxIp,
 								'/hg/create', operation_feedback_prompt);
-//						alert(operation_feedback_prompt);
 						$("#hg_name_verify_status").val("0");
 						$("#host_group_name").val("");
-						$('#host_group').selectpicker({
-							width : 200
-						});
 						$("#hg_name_hid").val("0");
-						all_hg_result_select();
-						$(window).on('load', function() {
-							$('#host_group').selectpicker({
-								'selectedText' : 'cat'
-							});
-						});
-
-						// $("#double").val(data);
-						// 赋值
 					},
 					error : function() {
 						write_to_log(tid, 'OPRT', 'ROUTE', vplxIp,

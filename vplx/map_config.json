@@ -74,7 +74,8 @@
     "Disk": {
         "res_a": "/dev/drbd1000",
         "res_b": "/dev/drbd1001",
-        "res_c": "/dev/drbd1002"
+        "res_c": "/dev/drbd1002",
+        "res_d": "/dev/drbd1003"
     },
     "HostGroup": {
         "hg1": [
@@ -101,6 +102,11 @@
             "Host_test1",
             "Host_test133",
             "Host_test2"
+        ],
+        "Hg1232323": [
+            "Host12323",
+            "Host_test1",
+            "Host_test133"
         ]
     },
     "DiskGroup": {
@@ -144,6 +150,32 @@
         "dsd": [
             "res_a",
             "res_b"
+        ],
+        "dg3323": [
+            "res_a",
+            "res_c"
+        ],
+        "hg1": [
+            "res_a",
+            "res_b",
+            "res_c"
+        ],
+        "dd": [
+            "res_a",
+            "res_b"
+        ],
+        "dgt3232": [
+            "res_a",
+            "res_b"
+        ],
+        "dg3232323": [
+            "res_a",
+            "res_b"
+        ],
+        "dgewe23": [
+            "res_a",
+            "res_b",
+            "res_c"
         ]
     },
     "Map": {
