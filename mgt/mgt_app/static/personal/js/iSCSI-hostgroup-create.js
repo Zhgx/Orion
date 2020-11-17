@@ -233,7 +233,7 @@ $("#host_group_create").click(
 				"host_group_name" : host_group_name,
 				"host" : obj_host_str
 			});
-			alert(dict_data);
+//			alert(dict_data);
 			if (hg_name_verify_status == "0") {
 				hg_name_myfunction();
 			}
@@ -254,7 +254,7 @@ $("#host_group_create").click(
 					success : function(operation_feedback_prompt) {
 						write_to_log(tid, 'OPRT', 'ROUTE', vplxIp,
 								'/hg/create', operation_feedback_prompt);
-						alert(operation_feedback_prompt);
+//						alert(operation_feedback_prompt);
 						$("#hg_name_verify_status").val("0");
 						$("#host_group_name").val("");
 						$('#host_group').selectpicker({
