@@ -367,6 +367,10 @@ def remove_list(list_now, list_del):
     :param iqn_del:list
     :return:list
     """
+    # if set(list_now) == set(list_del):
+    #     return []
+    #
+
     for i in list_del:
         list_now.remove(i)
     return list_now

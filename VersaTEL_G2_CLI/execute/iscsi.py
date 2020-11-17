@@ -555,21 +555,77 @@ class Map():
                 print(f'json文件中不存在{dg}，无法进行添加')
                 return
 
-        for dg in list_dg:
-            print(f'添加{dg}')
+
+        print(f'确定修改{map}的hostgroup? yes/no')
+        answer = input()
+        if not answer in ['y', 'yes', 'Y', 'YES']:
+            print('退出')
+            return
+        obj_crm = CRMConfig()
+        iqn = self.js.get_iqn_by_map(map) # 获取要修改的这个map的所有iqn
+        dict_disk = self.get_all_disk(list_dg)
+
+        for disk in dict_disk:
+            list_map = self.js.get_map_by_disk(disk)
+            if list_map:
+                iqn_now = self.js.get_res_initiator(disk)
+                list_iqn = s.append_list(iqn_now, iqn)
+                obj_crm.change_initiator(disk,list_iqn)
+            else:
+                path = dict_disk[disk]
+                if self.create_res(disk,path,' '.join(iqn)) == False:
+                    return
+
+        # 配置文件添加数据
+        self.js.append_member('DiskGroup', map, list_dg, type='Map')
 
     def remove_hg(self, map, list_hg):
         for hg in list_hg:
             if not self.js.check_map_member(map, hg, "HostGroup"):
                 print(f'{map}中不存在成员{hg}，无法进行移除')
                 return
-        for hg in list_hg:
-            print(f'remove {hg}')
+
+        print(f'确定修改{map}的hostgroup? yes/no')
+        answer = input()
+        if not answer in ['y', 'yes', 'Y', 'YES']:
+            print('退出')
+            return
+
+        # 找出该map底下的所有dg => disk  disk添加该hg_list的所有iqn
+        list_disk = self.js.get_disk_by_map(map)
+        iqn_del = self.js.get_res_initiator_by_hg(list_hg)  # 要添加的iqn
+        obj_crm = CRMConfig()
+        for disk in list_disk:
+            iqn_now = self.js.get_res_initiator(disk)
+            list_iqn = s.remove_list(iqn_now, iqn_del)
+            obj_crm.change_initiator(disk, list_iqn)
+
+        # 配置文件移除成员
+        self.js.remove_member('HostGroup', map, list_hg, type='Map')
+
+
 
     def remove_dg(self, map, list_dg):
         for dg in list_dg:
             if not self.js.check_map_member(map, dg, "DiskGroup"):
                 print(f'{map}中不存在成员{dg}，无法进行移除')
                 return
-        for dg in list_dg:
-            print(f'remove {dg}')
+
+
+        obj_crm = CRMConfig()
+        iqn_del = self.js.get_iqn_by_map(map)
+        list_disk = self.js.get_disk_by_dg(list_dg)
+        #找出list_dg
+
+        for disk in list_disk:
+            iqn = self.js.get_res_initiator(disk)
+            list_iqn = s.remove_list(iqn,iqn_del)
+            print(list_iqn)
+            if not list_iqn:
+                obj_crm.delete_res(disk)
+            else:
+                obj_crm.change_initiator(disk,list_iqn)
+
+
+        # 配置文件移除成员
+        self.js.remove_member('DiskGroup', map, list_dg, type='Map')
