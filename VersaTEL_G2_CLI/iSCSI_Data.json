@@ -25,6 +25,14 @@
         "hg3": [
             "h1",
             "h3"
+        ],
+        "hg_test": [
+            "hg_test"
+        ],
+        "map_test": [
+            "hg2",
+            "hg3",
+            "hg1"
         ]
     },
     "DiskGroup": {
@@ -52,6 +60,29 @@
             "HostGroup": [
                 "hg1",
                 "hg3"
+            ],
+            "DiskGroup": [
+                "dg1",
+                "dg2"
+            ]
+        },
+        "map_3": {
+            "HostGroup": [
+                "hg3",
+
+                "hg2"
+            ],
+            "DiskGroup": [
+                "dg1",
+                "dg2"
+            ]
+        },
+
+        "map_test": {
+            "HostGroup": [
+                "hg3",
+                "hg1",
+                "hg2"
             ],
             "DiskGroup": [
                 "dg1",
