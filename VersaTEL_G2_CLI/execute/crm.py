@@ -219,6 +219,6 @@ class CRMConfig():
         cmd = f"crm config set {res}.allowed_initiators \"{iqns}\""
         result = execute_crm_cmd(cmd)
         if result['sts']:
-            s.prt_log(f"change {res} allowed_initiators success",0)
+            s.prt_log(f"Change {res} allowed_initiators success!",0)
             return True
 

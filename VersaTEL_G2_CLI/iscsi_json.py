@@ -284,3 +284,18 @@ class JsonOperation():
         for dg in self.get_data('Map')[map]["DiskGroup"]:
             list_dg.append(dg)
         return self.get_disk_by_dg(list_dg)
+
+
+    def get_iqn_by_map(self, map):
+        hg_list = self.get_data('Map')[map]['HostGroup']
+        iqn_list = self.get_iqn_by_hglist(hg_list)
+        return iqn_list
+
+    def get_iqn_by_hglist(self,hg_list):
+        iqn_list = []
+        for hg in hg_list:
+            for host in self.get_data('HostGroup')[hg]:
+                iqn = self.get_data('Host')[host]
+                iqn_list.append(iqn)
+        return set(iqn_list)
+
