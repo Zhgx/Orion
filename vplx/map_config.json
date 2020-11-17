@@ -94,6 +94,13 @@
             "host_test_111",
             "host_test_1117",
             "host_test_112"
+        ],
+        "hg22323": [
+            "Host1",
+            "Host12323",
+            "Host_test1",
+            "Host_test133",
+            "Host_test2"
         ]
     },
     "DiskGroup": {
