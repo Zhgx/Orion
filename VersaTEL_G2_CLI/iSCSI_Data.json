@@ -1,11 +1,10 @@
 {
     "Host": {
-        "h1": "iqn.2222-22.test1",
+        "h1": "iqn.2020-11.com.example:pytest01",
         "h2": "iqn.2020-11.com.example:pytest02",
         "h3": "iqn.2020-11.com.example:pytest03",
         "h4": "iqn.2020-11.com.example:pytest04",
-        "h5": "iqn.2020-11.com.example:pytest09",
-        "h6": "iqn.2222-22.test2"
+        "h5": "iqn.2020-11.com.example:pytest09"
     },
     "Disk": {
         "res_a": "/dev/drbd1000",
@@ -14,9 +13,8 @@
     },
     "HostGroup": {
         "hg1": [
-            "h4",
-            "h5",
-            "h6"
+            "h1",
+            "h2"
         ],
         "hg2": [
             "h3",
@@ -60,7 +58,32 @@
         }
     },
     "crm": {
-        "resource": [],
+        "resource": [
+            [
+                "res_a",
+                "iqn.2020-04.feixitek.com:versaplx00",
+                "0",
+                "/dev/drbd1000",
+                "iqn.2020-11.com.example:pytest04 iqn.2020-11.com.example:pytest02 iqn.2020-11.com.example:pytest01 iqn.2020-11.com.example:pytest03",
+                "Started"
+            ],
+            [
+                "res_b",
+                "iqn.2020-04.feixitek.com:versaplx00",
+                "1",
+                "/dev/drbd1001",
+                "iqn.2020-11.com.example:pytest04 iqn.2020-11.com.example:pytest02 iqn.2020-11.com.example:pytest01 iqn.2020-11.com.example:pytest03",
+                "Started"
+            ],
+            [
+                "res_c",
+                "iqn.2020-04.feixitek.com:versaplx00",
+                "2",
+                "/dev/drbd1002",
+                "iqn.2020-11.com.example:pytest04 iqn.2020-11.com.example:pytest02 iqn.2020-11.com.example:pytest01 iqn.2020-11.com.example:pytest03",
+                "Started"
+            ]
+        ],
         "vip": [
             [
                 "vip",

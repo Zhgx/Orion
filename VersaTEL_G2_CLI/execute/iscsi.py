@@ -315,6 +315,9 @@ class HostGroup():
 class Map():
     def __init__(self):
         self.js = iscsi_json.JsonOperation()
+        # 用于收集创建成功的resource
+        self.list_res_created = []
+        self.target_name, self.target_iqn = self.get_target()
 
 
     def pre_check_create_map(self, map, hg, dg):
@@ -369,7 +372,7 @@ class Map():
                     disks.update({disk_all[1]: disk_all[5]})  # 取Resource, DeviceName
         return disks
 
-    def create_map(self, map, hg, dg):
+    def create_map(self, map, hg_list, dg_list):
         """
         创建map
         :param map:
@@ -378,49 +381,58 @@ class Map():
         :return:T/F
         """
         # 创建前的检查
-        if not self.pre_check_create_map(map, hg, dg):
+        if not self.pre_check_create_map(map, hg_list, dg_list):
             return
 
         # 检查disk是否已map过
-        if self.check_dg_map(map, hg, dg):
-            return True
+        # if self.check_dg_map(map, hg, dg):
+        #     return True
 
+        initiator = self.get_all_initiator(hg_list)
+        disk_dict = self.get_all_disk(dg_list)
         obj_crm = CRMConfig()
-        initiator = self.get_all_initiator(hg)
-        target_name, target_iqn = self.get_target()
-        disk_dict = self.get_all_disk(dg)
-
-        # 用于收集创建成功的resource
-        list_res_created = []
-
         # 执行创建和启动
-        for i in disk_dict:
-            res = i
-            path = disk_dict[i]
-            # 取DeviceName后四位数字，减一千作为lun id
-            lunid = int(path[-4:]) - 1000
-            # 创建iSCSILogicalUnit
-            if obj_crm.create_crm_res(res, target_iqn, lunid, path, initiator):
-                list_res_created.append(res)
-                # 创建order，colocation
-                if obj_crm.create_set(res, target_name):
-                    # 尝试启动资源，成功失败都不影响创建
-                    s.prt_log(f"try to start {res}", 0)
-                    obj_crm.start_res(res)
-                    obj_crm.checkout_status_start(res)
-                else:
-                    for i in list_res_created:
-                        obj_crm.delete_res(i)
+        for res in disk_dict:
+            path = disk_dict[res]
+            map_list = self.js.get_map_by_disk(res)
+            if list(map_list) == []:
+                if self.create_res(res, path, initiator) == False:
                     return False
             else:
-                s.prt_log('Fail to create iSCSILogicalUnit',1)
-                for i in list_res_created:
-                    obj_crm.delete_res(i)
-                return False
+                s.prt_log(f"The {res} already map, change allowed_initiators...", 0)
+                iqn_list_new = list(self.js.get_iqn_by_hglist(hg_list))
+                iqn_list = []
+                for i in map_list:
+                    iqn_list += list(self.js.get_iqn_by_map(i))
+                iqn = ' '.join(set(iqn_list + iqn_list_new))
+                obj_crm.change_initiator(res, iqn)
 
-        self.js.add_data('Map', map, {'HostGroup':hg, 'DiskGroup':dg})
+        self.js.add_data('Map', map, {'HostGroup':hg_list, 'DiskGroup':dg_list})
         s.prt_log('Create map success!', 0)
         return True
+
+    def create_res(self, res, path, initiator):
+        obj_crm = CRMConfig()
+        # 取DeviceName后四位数字，减一千作为lun id
+        lunid = int(path[-4:]) - 1000
+        # 创建iSCSILogicalUnit
+        if obj_crm.create_crm_res(res, self.target_iqn, lunid, path, initiator):
+            self.list_res_created.append(res)
+            # 创建order，colocation
+            if obj_crm.create_set(res, self.target_name):
+                # 尝试启动资源，成功失败都不影响创建
+                s.prt_log(f"try to start {res}", 0)
+                obj_crm.start_res(res)
+                obj_crm.checkout_status_start(res)
+            else:
+                for i in self.list_res_created:
+                    obj_crm.delete_res(i)
+                return False
+        else:
+            s.prt_log('Fail to create iSCSILogicalUnit', 1)
+            for i in self.list_res_created:
+                obj_crm.delete_res(i)
+            return False
 
     def get_all_map(self):
         return self.js.get_data("Map")
@@ -489,33 +501,37 @@ class Map():
             s.prt_log("Could not perform requested operations, are you root?",1)
         else:
             for disk in set(resname):
-                map_list = self.js.get_map_by_disk(disk)
+                map_list = list(self.js.get_map_by_disk(disk))
                 if map_list == [map]:
                     if obj_crm.delete_res(disk) != True:
                         return False
                 else:
-                    iqn = self.get_initiator(disk)
+                    map_list.remove(map)
+                    iqn_list = []
+                    for i in map_list:
+                        iqn_list += list(self.js.get_iqn_by_map(i))
+                    iqn = ' '.join(set(iqn_list))
                     obj_crm.change_initiator(disk, iqn)
             self.js.delete_data('Map', map)
             s.prt_log("Delete map success!", 0)
             return True
 
-    # 对已map的dg进行二次map
-    def check_dg_map(self, map, hg, dg):
-        if self.js.check_value('Map', dg)['result']:
-            s.prt_log("The DiskGroup already map, continue the map? yes/no",0)
-            answer = input()
-            if answer in ['y', 'yes', 'Y', 'YES']:
-                obj_crm = CRMConfig()
-                disk_list = self.get_disk_data(dg)
-                initiator = self.change_merge_initiator(hg, dg)
-                for disk in disk_list:
-                    obj_crm.change_initiator(disk, initiator)
-                self.js.add_data('Map', map, [hg, dg])
-                s.prt_log('Create map success!', 0)
-            return True
-        else:
-            return False
+    # 对已map的dg进行二次map, 现传入列表，需要进行修改
+    # def check_dg_map(self, map, hg, dg):
+    #     if self.js.check_value('Map', dg)['result']:
+    #         s.prt_log("The DiskGroup already map, continue the map? yes/no",0)
+    #         answer = input()
+    #         if answer in ['y', 'yes', 'Y', 'YES']:
+    #             obj_crm = CRMConfig()
+    #             disk_list = self.get_disk_data(dg)
+    #             initiator = self.change_merge_initiator(hg, dg)
+    #             for disk in disk_list:
+    #                 obj_crm.change_initiator(disk, initiator)
+    #             self.js.add_data('Map', map, [hg, dg])
+    #             s.prt_log('Create map success!', 0)
+    #         return True
+    #     else:
+    #         return False
 
     # 获取已map的dg对应的hg
     def get_hg_by_dg(self, dg):
@@ -527,15 +543,12 @@ class Map():
         return hg_list
 
     # 修改map的hg，将hg的iqn合并
-    def change_merge_initiator(self, hg, dg):
-        initiator_new = self.get_initiator(hg)
-        hg_list = self.get_hg_by_dg(dg)
-        initiator_old = self.get_all_initiator(hg_list)
-        initiator = f'{initiator_old} {initiator_new}'
-        return initiator
-
-
-
+    # def change_merge_initiator(self, hg, dg):
+    #     initiator_new = self.get_initiator(hg)
+    #     hg_list = self.get_hg_by_dg(dg)
+    #     initiator_old = self.get_all_initiator(hg_list)
+    #     initiator = f'{initiator_old} {initiator_new}'
+    #     return initiator
 
     def get_all_initiator(self, hg_list):
         initiator = ''
@@ -593,21 +606,3 @@ class Map():
                 return
         for dg in list_dg:
             print(f'remove {dg}')
-
-    #
-    # "Map": {
-    #     "map1": {
-    #         "HostGroup": [
-    #             "hg1",
-    #             "hg2"
-    #         ],
-    #         "DiskGroup": [
-    #             "dg1",
-    #             "dg2"
-    #         ]
-    #     }
-    # }
-
-
-
-
