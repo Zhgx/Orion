@@ -1,6 +1,6 @@
 {
     "Host": {
-        "h1": "iqn.2020-11.com.example:pytest01",
+        "h1": "iqn.2020-11.com.example:pytest0111",
         "h2": "iqn.2020-11.com.example:pytest02",
         "h3": "iqn.2020-11.com.example:pytest03",
         "h4": "iqn.2020-11.com.example:pytest04",
@@ -56,8 +56,7 @@
             ],
             "DiskGroup": [
                 "dg1",
-                "dg2",
-                "dg3"
+                "dg2"
             ]
         },
         "map2": {

@@ -370,8 +370,8 @@ def remove_list(list_now, list_del):
     # if set(list_now) == set(list_del):
     #     return []
     #
-
-    for i in list_del:
+    list_now = set(list_now)
+    for i in set(list_del):
         list_now.remove(i)
     return list_now
 

@@ -180,12 +180,17 @@ class DiskGroup():
                 print(f'json文件中不存在{disk}，无法进行添加')
                 return
 
+        list_map = self.js.get_map_by_group('DiskGroup', dg)
+        print(f'在{dg}中添加新成员{",".join(list_disk)}会影响到已存在的map:{",".join(list_map)}? yes/no')
+        answer = input()
+        if not answer in ['y', 'yes', 'Y', 'YES']:
+            print('退出')
+            return
+
         obj_crm = CRMConfig()
         obj_map = Map()
-
         iqn = []
         # 找到用到dg的所有map的所有hg的所有host的iqn
-        list_map = self.js.get_map_by_group('DiskGroup',dg)
         for map in list_map:
             iqn += self.js.get_iqn_by_map(map)
         for disk in list_disk:
@@ -196,9 +201,8 @@ class DiskGroup():
                 obj_crm.change_initiator(disk,list_iqn)
             else:
                 path = self.js.get_data('Disk')[disk]
-                if obj_map.create_res(disk,path,' '.join(iqn)) == False:
+                if obj_map.create_res(disk,path,' '.join(set(iqn))) == False:
                     return
-
 
         self.js.append_member('DiskGroup',dg,list_disk)
 
@@ -209,21 +213,23 @@ class DiskGroup():
             if not self.js.check_value_in_key("DiskGroup", dg, disk)['result']:
                 print(f'{dg}中不存在成员{disk}，无法进行移除')
                 return
-            else:
-                print(f'remove {disk}')
+
+        list_map = self.js.get_map_by_group('DiskGroup', dg)
+        print(f'从{dg}移除成员{",".join(list_disk)}会影响到已存在的map:{",".join(list_map)}? yes/no')
+        answer = input()
+        if not answer in ['y', 'yes', 'Y', 'YES']:
+            print('退出')
+            return
 
         obj_crm = CRMConfig()
 
         iqn_del = []
         # 找到用到dg的所有map的所有hg的所有host的iqn
-        list_map = self.js.get_map_by_group('DiskGroup',dg)
         for map in list_map:
             iqn_del += self.js.get_iqn_by_map(map)
-
         for disk in list_disk:
             iqn = self.js.get_res_initiator(disk)
             list_iqn = s.remove_list(iqn,iqn_del)
-            print(list_iqn)
             if not list_iqn:
                 obj_crm.delete_res(disk)
             else:
@@ -673,10 +679,11 @@ class Map():
         for disk in list_disk:
             iqn = self.js.get_res_initiator(disk)
             list_iqn = s.remove_list(iqn,iqn_del)
-            print(list_iqn)
             if not list_iqn:
                 obj_crm.delete_res(disk)
             else:
+                # 存在问题
+
                 obj_crm.change_initiator(disk,list_iqn)
 
         # 配置文件移除成员
