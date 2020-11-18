@@ -682,8 +682,17 @@ class Map():
             if not list_iqn:
                 obj_crm.delete_res(disk)
             else:
-                # 存在问题
+                # 找出disk在list_dg之外还在哪些dg，然后这些dg在哪些map被使用，使用这些map的
+                # 存在问题，需要找到使用disk的所有map，去除指定的这个map，然后对这些map提取所有iqn
+                # list_other_map = self.js.get_map_by_disk(disk)
+                # list_other_map.remove(map)
+                # list_iqn = self.js.get_iqn_by_map(list_other_map)
 
+
+                list_dg_all = self.js.get_dg_by_disk(disk)
+                list_dg_other = s.remove_list(list_dg_all,list_dg)
+                list_map = self.js.get_map_by_group('DiskGroup',list_dg_other)
+                list_iqn = self.js.get_iqn_by_map(list_map)
                 obj_crm.change_initiator(disk,list_iqn)
 
         # 配置文件移除成员

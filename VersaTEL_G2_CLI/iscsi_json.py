@@ -68,6 +68,9 @@ class JsonOperation():
             list_member = self.get_data('Map')[target][iscsi_type]
         else:
             list_member = self.get_data(iscsi_type)[target]
+
+        print('1:',list_member)
+        print('2:',member)
         for i in member:
             list_member.remove(i)
 
@@ -274,6 +277,23 @@ class JsonOperation():
         return list(set(list_iqn))
 
 
+    def get_dg_by_disk(self,disk):
+        list_dg = []
+        if not isinstance(disk,list):
+            disk = [disk]
+
+        dict_dg = self.get_data('DiskGroup')
+        for disk_one in disk:
+            for dg,member in dict_dg.items():
+                if disk_one in member:
+                    list_dg.append(dg)
+
+        return list(set(list_dg))
+
+
+
+
+
     def get_disk_by_hg(self,hg):
         list_map = self.get_map_by_group('HostGroup',hg)
         list_disk = []
@@ -300,9 +320,13 @@ class JsonOperation():
         return list(set(list_disk))
 
     def get_iqn_by_map(self, map):
-        hg_list = self.get_data('Map')[map]['HostGroup']
-        iqn_list = self.get_iqn_by_hglist(hg_list)
-        return iqn_list
+        list_iqn = []
+        if not isinstance(map,list):
+            map = [map]
+        for map_one in map:
+            hg_list = self.get_data('Map')[map_one]['HostGroup']
+            list_iqn.extend(self.get_iqn_by_hglist(hg_list))
+        return list(set(list_iqn))
 
 
     def get_iqn_by_hglist(self,hg_list):
