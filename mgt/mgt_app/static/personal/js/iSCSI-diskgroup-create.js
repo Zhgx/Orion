@@ -205,12 +205,47 @@ function change_disk(obj) {
 }
 
 function change_disk_second() {
-	var obj = [];
+	var obj_list = [];
 	if (event.srcElement.tagName == "TD") {
 		curRow = event.srcElement.parentElement;
 		tr = curRow.innerHTML
 		$("#D_T").append('<tr onClick="change_disk(this)" >' + tr + '</tr>')
 		curRow.remove();
+		// var count=0;
+		for (i=1; i < window.DTable_Show.rows.length; i++) {
+		for (j=0; j < window.DTable_Show.rows[i].cells.length; j++) { 
+			obj_list.push(window.DTable_Show.rows[i].cells[j].innerHTML) 
+			}
+		}
+		console.log(obj_list);
+		$("#D_Dev_Table_Show tr:not(:first)").html("");
+			$.ajax({
+				url : vplxIp + "/disk/show/data",
+				type : "get",
+				dataType : "json",
+				data : {
+					tid : tid,
+					ip : mgtIp
+				},
+				success : function(disk_result) {
+					for ( i in obj_list) {
+						var iqn = disk_result[obj_list[i]];
+							tr = '<td >' + iqn + '</td>';
+							$("#D_Dev_T_Show").append('<tr >' + tr + '</tr>')
+					}
+					// write_to_log(tid, 'DATA', 'ROUTE', vplxIp,
+					// '/hg/show/data', JSON
+					// .stringify(host_group_result));
+				},
+				error : function() {
+					write_to_log(tid, 'DATA', 'ROUTE', vplxIp, '/dg/show/data',
+							'error');
+				}
+
+			});
+		
+		
+		
 	}
 }
 // 输入框验证
