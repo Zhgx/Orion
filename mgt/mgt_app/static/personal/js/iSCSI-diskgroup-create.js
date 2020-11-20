@@ -163,9 +163,8 @@ function change_disk(obj) {
 		curRow = event.srcElement.parentElement;
 		tr = curRow.innerHTML;
 		var td = curRow.cells
-		for (var i = 0; i < td.length; i++) {
-			var td_host = td[i].innerHTML
-			alert(td_host);
+		var td_host = td[0].innerHTML
+			console.log(td_host);
 			$.ajax({
 				url : vplxIp + "/resource/show/data",
 				type : "get",
@@ -175,19 +174,16 @@ function change_disk(obj) {
 					ip : mgtIp
 				},
 				success : function(resource_result) {
-//					console.log(resource_result);
-//					 var _data = resource_result.data; // 由于后台传过来的json有个data，在此重命名
-//					 for(i in obj_list){
-//							for (j in _data) {
-//								if (obj_list[i] == _data[j].resource) {
-//									tr = '<td >' + _data[j].size + '</td>'
-//									$("#D_Dev_T_Show").append(
-//											'<tr>' + tr
-//											+ '</tr>')
-//								}
-//							} 
-//						 
-//					 }
+					console.log(resource_result);
+					 var _data = resource_result.data; // 由于后台传过来的json有个data，在此重命名
+							for (i in _data) {
+								if (td_host == _data[i].resource) {
+									tr = '<td >' + _data[i].device_name + '</td>'
+									$("#D_Dev_T_Show").append(
+											'<tr>' + tr
+											+ '</tr>')
+								}
+							} 
 				},
 				error : function() {
 					write_to_log(tid, 'DATA', 'ROUTE', vplxIp, '/hg/show/data',
@@ -195,8 +191,6 @@ function change_disk(obj) {
 				}
 
 			});
-
-		}
 		$("#D_T_Show").append(
 				'<tr onClick="change_disk_second(this)">' + tr + '</tr>');
 		curRow.remove();// 删除
@@ -229,7 +223,7 @@ function change_disk_second() {
 					 for(i in obj_list){
 							for (j in _data) {
 								if (obj_list[i] == _data[j].resource) {
-									tr = '<td >' + _data[j].size + '</td>'
+									tr = '<td >' + _data[j].device_name + '</td>'
 									$("#D_Dev_T_Show").append(
 											'<tr>' + tr
 											+ '</tr>')

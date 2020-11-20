@@ -108,8 +108,7 @@ function change_host(obj) {
 		curRow = event.srcElement.parentElement;
 		tr = curRow.innerHTML;
 		var td = curRow.cells;
-		for (var i = 0; i < td.length; i++) {
-			var td_host = td[i].innerHTML;
+		var td_host = td[0].innerHTML;
 			$.ajax({
 				url : vplxIp + "/host/show/data",
 				type : "get",
@@ -137,8 +136,6 @@ function change_host(obj) {
 				}
 
 			});
-
-		}
 		$("#H_T_Show").append(
 				'<tr onClick="change_host_second(this)">' + tr + '</tr>');
 		curRow.remove();// 删除
