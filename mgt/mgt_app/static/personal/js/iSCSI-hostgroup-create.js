@@ -107,6 +107,38 @@ function change_host(obj) {
 	if (event.srcElement.tagName == "TD") {
 		curRow = event.srcElement.parentElement;
 		tr = curRow.innerHTML;
+		var td = curRow.cells;
+		for (var i = 0; i < td.length; i++) {
+			var td_host = td[i].innerHTML;
+			$.ajax({
+				url : vplxIp + "/host/show/data",
+				type : "get",
+				dataType : "json",
+				data : {
+					tid : tid,
+					ip : mgtIp
+				},
+				success : function(host_result) {
+					// write_to_log(tid, 'DATA', 'ROUTE', vplxIp,
+					// '/hg/show/data', JSON
+					// .stringify(host_group_result));
+					for (j in host_result) {
+						if (td_host == j) {
+							var iqn = host_result[j]
+							$("#H_IQN_Table_Show  tr:not(:first)").html("");
+								tr = '<td >' + iqn + '</td>';
+								$("#H_IQN_T_Show").append('<tr >' + tr + '</tr>')
+						}
+					}
+				},
+				error : function() {
+					write_to_log(tid, 'DATA', 'ROUTE', vplxIp, '/dg/show/data',
+							'error');
+				}
+
+			});
+
+		}
 		$("#H_T_Show").append(
 				'<tr onClick="change_host_second(this)">' + tr + '</tr>');
 		curRow.remove();// 删除
@@ -136,7 +168,6 @@ function change_host_second() {
 }
 
 // 输入框验证
-
 function hg_name_myfunction() {
 	document.getElementById("hg_name_examine").className = "hidden";
 	document.getElementById("hg_name_format").className = "hidden";
@@ -145,14 +176,12 @@ function hg_name_myfunction() {
 	match_result = hg_name_match_regular.test(input_result)
 	if (!input_result) {
 		$("#hg_name_hid").val("0");
-		$("#hg_name_verify_status").val("0");
 		document.getElementById("hg_name_examine").className = "hidden";
 		document.getElementById("hg_name_format").className = "hidden";
 
 	} else {
 		if (!match_result) {
 			$("#hg_name_hid").val("0");
-			$("#hg_name_verify_status").val("0");
 			document.getElementById("hg_name_format").className = "";
 		} else {
 			document.getElementById("hg_name_format").className = "hidden";
@@ -178,6 +207,10 @@ function hg_name_myfunction() {
 											ip : mgtIp
 										},
 										success : function(HG_result_data) {
+											var objj =[];
+											for (i in HG_result_data) {
+												objj.push(i);
+											}
 											write_to_log(
 													tid,
 													'DATA',
@@ -186,9 +219,8 @@ function hg_name_myfunction() {
 													'/hg/show/data',
 													JSON
 															.stringify(HG_result_data));
-											if (input_result in HG_result_data) {
+											if (input_result in objj) {
 												$("#hg_name_hid").val("0");
-												$("#hg_name_verify_status").val("0");
 												document
 														.getElementById("hg_name_examine").className = "";
 											} else {
@@ -197,7 +229,6 @@ function hg_name_myfunction() {
 														'host_group_name', 'T',
 														input_result);
 												$("#hg_name_hid").val("1");
-												$("#hg_name_verify_status").val("1");
 											}
 										},
 										error : function() {
@@ -214,9 +245,7 @@ function hg_name_myfunction() {
 						}
 					});
 		}
-
-	}
-
+	};
 }
 
 $("#host_group_create").click(
@@ -230,16 +259,14 @@ $("#host_group_create").click(
 			obj_host_str = obj_host.toString();
 			var host_group_name = $("#host_group_name").val()
 			// var host = $("#host").val().toString()
-			var hg_name_hid = $("#hg_name_hid").val();
-			var hg_name_verify_status = $("#hg_name_verify_status").val();
 			var dict_data = JSON.stringify({
 				"host_group_name" : host_group_name,
 				"host" : obj_host_str
 			});
-//			alert(dict_data);
-			if (hg_name_verify_status == "0") {
-				hg_name_myfunction();
-			};
+// alert(dict_data);
+			hg_name_myfunction();
+			var host_group_name = $("#hg_name_hid").val()
+			console.log(hg_name_hid);
 			if (hg_name_hid == "1") {
 				write_to_log(tid, 'DATA', 'RADIO', 'host', '', obj_host_str);
 				write_to_log(tid, 'OPRT', 'CLICK', 'host_group_create',
@@ -256,7 +283,6 @@ $("#host_group_create").click(
 					success : function(operation_feedback_prompt) {
 						write_to_log(tid, 'OPRT', 'ROUTE', vplxIp,
 								'/hg/create', operation_feedback_prompt);
-						$("#hg_name_verify_status").val("0");
 						$("#host_group_name").val("");
 						$("#hg_name_hid").val("0");
 					},
@@ -269,7 +295,27 @@ $("#host_group_create").click(
 			} else {
 				write_to_log(tid, 'OPRT', 'CLICK', 'host_group_create',
 						'refuse', dict_data);
-				alert("请输入正确值!");
 			}
 
 		});
+
+$(function () { $("[data-toggle='popover']").popover(); });
+
+$("[rel=drevil]").popover({
+    trigger:'manual',
+    html: 'true', 
+    animation: false
+}).on("mouseenter", function () {
+    var _this = this;
+    $(this).popover("show");
+    $(this).siblings(".popover").on("mouseleave", function () {
+        $(_this).popover('hide');
+    });
+}).on("mouseleave", function () {
+    var _this = this;
+    setTimeout(function () {
+        if (!$(".popover:hover").length) {
+            $(_this).popover("hide")
+        }
+    }, );
+});　

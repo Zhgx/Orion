@@ -5,44 +5,42 @@
  * */
 
 // 操作提示
-
 var vplxIp = get_vlpx_ip();
 var tid = Date.parse(new Date()).toString();// 获取到毫秒的时间戳，精确到毫秒
 var tid = tid.substr(0, 10);
 var mgtIp = get_mgt_ip();
 
-function get_mgt_ip(){
+function get_mgt_ip() {
 	var obj = new Object();
 	$.ajax({
 		url : "http://127.0.0.1:7773/mgtip",
 		type : "GET",
 		dataType : "json",
-		async:false,
+		async : false,
 		success : function(data) {
-			obj =  "http://"+data["ip"];
+			obj = "http://" + data["ip"];
 		}
 	});
 
 	return obj;
 }
 
-function get_vlpx_ip(){
+function get_vlpx_ip() {
 	var obj = new Object();
 	$.ajax({
 		url : "http://127.0.0.1:7773/vplxip",
 		type : "GET",
 		dataType : "json",
-		async:false,
+		async : false,
 		success : function(data) {
 			console.log("okokok");
 			console.log(data["ip"]);
-			obj =  "http://"+data["ip"];
+			obj = "http://" + data["ip"];
 		}
 	});
 
 	return obj;
 }
-
 
 $("#host_create").click(
 		function() {
@@ -50,22 +48,14 @@ $("#host_create").click(
 			var hostiqn = $("#host_iqn").val()
 			var host_name_hid = $("#host_name_hid").val();
 			var host_iqn_hid = $("#host_iqn_hid").val();
-			var host_name_verify_status =  $("#host_name_verify_status").val();
-			var host_iqn_verify_status = $("#host_iqn_verify_status").val();
 			var dict_data = JSON.stringify({
 				"host_alias" : hostName,
 				"host_iqn" : hostiqn
 			});
 
-			if (host_name_verify_status == "0") {
-				host_name_myfunction();
-			};
-			if (host_iqn_verify_status == "0") {
-				iqn_myfunction();
-				};
+			host_name_myfunction();
+			iqn_myfunction();
 			if (host_name_hid == "1" && host_iqn_hid == "1") {
-				$("#host_name_verify_status").val("0");
-				$("#host_iqn_verify_status").val("0");
 				write_to_log(tid, 'OPRT', 'CLICK', 'host_create', 'accept',
 						dict_data);
 				$.ajax({
@@ -130,7 +120,6 @@ function write_to_log(tid, t1, t2, d1, d2, data) {
 // 输入框验证
 
 function host_name_myfunction() {
-	$("#host_name_verify_status").val("1");
 	document.getElementById("host_name_examine").className = "hidden";
 	document.getElementById("host_name_format").className = "hidden";
 	var input_result = $('#host_name').val();
@@ -170,8 +159,7 @@ function host_name_myfunction() {
 										},
 										success : function(host_result) {
 											write_to_log(tid, 'DATA', 'ROUTE',
-													vplxIp,
-													'/host/show/data',
+													vplxIp, '/host/show/data',
 													JSON.stringify(host_result));
 											if (input_result in host_result) {
 												write_to_log(tid, 'DATA',
@@ -191,8 +179,8 @@ function host_name_myfunction() {
 										},
 										error : function() {
 											write_to_log(tid, 'DATA', 'ROUTE',
-													vplxIp,
-													'/host/show/data', 'error');
+													vplxIp, '/host/show/data',
+													'error');
 										}
 									});
 
@@ -228,8 +216,6 @@ function iqn_myfunction() {
 	}
 }
 
-
-
 $('#host').selectpicker({
 	width : 200
 });
@@ -243,17 +229,19 @@ function host_result_select() {
 			ip : mgtIp
 		},
 		success : function(status) {
-			write_to_log(tid,'OPRT','ROUTE',vplxIp,'/host/show/oprt',status);
+			write_to_log(tid, 'OPRT', 'ROUTE', vplxIp, '/host/show/oprt',
+					status);
 			$.ajax({
 				url : vplxIp + "/host/show/data",
 				type : "GET",
 				dataType : "json",
-						data : {
-							tid : tid,
-							ip : mgtIp
-						},
+				data : {
+					tid : tid,
+					ip : mgtIp
+				},
 				success : function(host_result) {
-					write_to_log(tid,'DATA','ROUTE',vplxIp,'/host/show/data',JSON.stringify(host_result));
+					write_to_log(tid, 'DATA', 'ROUTE', vplxIp,
+							'/host/show/data', JSON.stringify(host_result));
 					$('#host').html("");
 					var html = "";
 					for (i in host_result) {
@@ -263,14 +251,16 @@ function host_result_select() {
 					$('#host').selectpicker('refresh');
 					$('#host').selectpicker('render');
 				},
-				error : function(){
-					write_to_log(tid,'DATA','ROUTE',vplxIp,'/host/show/data','error');
+				error : function() {
+					write_to_log(tid, 'DATA', 'ROUTE', vplxIp,
+							'/host/show/data', 'error');
 				}
-				
+
 			});
 		},
 		error : function() {
-			write_to_log(tid,'DATA','ROUTE',vplxIp,'/host/show/oprt','error');
+			write_to_log(tid, 'DATA', 'ROUTE', vplxIp, '/host/show/oprt',
+					'error');
 		}
 	});
 };

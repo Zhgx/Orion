@@ -17,7 +17,7 @@ body {
 }
 
 .col-xs-5 {
-	width: 28.66666667%;
+	width: 32.66666667%;
 }
 
 .col-xs-1 {
@@ -62,11 +62,15 @@ table thead th {
 		</h1>
 		<div class="row">
 			<div class="col-xs-5 ">
+				<span class="text-success" style="margin-left: 35%;">可选磁盘列表</span> <span
+					class="glyphicon glyphicon-question-sign" rel="drevil"
+					data-container="body" data-toggle="popover" data-placement="bottom"
+					data-content="通过单击项目将其添加到已选列表"></span>
 				<table id="DTable" class="table  table-hover table-bordered "
 					border="1">
 					<thead>
 						<tr>
-							<th>Disks List</th>
+							<th>Disk</th>
 							<th>Size</th>
 						</tr>
 					</thead>
@@ -74,17 +78,33 @@ table thead th {
 					</tbody>
 				</table>
 			</div>
-			<div class="col-xs-2 "></div>
 			<div class="col-xs-5 ">
+				<span class="text-success" style="margin-left: 32%;">已选磁盘列表</span> <span
+					class="glyphicon glyphicon-question-sign" rel="drevil"
+					data-container="body" data-toggle="popover" data-placement="bottom"
+					data-content="通过单击项目将其移出已选列表(同时放回可选列表)"></span>
 				<table id="DTable_Show" class="table table-hover table-bordered"
 					border="1">
 					<thead>
 						<tr>
-							<th>Disks to create</th>
+							<th>Selected Disk</th>
 							<th>Size</th>
 						</tr>
 					</thead>
 					<tbody id="D_T_Show">
+					</tbody>
+				</table>
+			</div>
+			<div class="col-xs-5 ">
+			<span class="text-success" style="margin-left: 25%;">已选磁盘对应的Device</span> 
+				<table id="D_Dev_Table_Show" class="table table-hover table-bordered"
+					border="1">
+					<thead>
+						<tr>
+							<th>Selected Device</th>
+						</tr>
+					</thead>
+					<tbody id="D_Dev_T_Show">
 					</tbody>
 				</table>
 			</div>
