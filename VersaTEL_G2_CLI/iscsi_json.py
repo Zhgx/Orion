@@ -337,4 +337,29 @@ class JsonOperation():
                 iqn_list.append(iqn)
         return list(set(iqn_list))
 
+    def count_disk_data(self):
+        iscsi = self.read_json()
+
+        dict_disk_count = {}
+        list_disk_record = []
+
+        dict_disk_pair = {}
+        list_pair_record = []
+        for map in iscsi['Map'].values():
+            for dg in map['DiskGroup']:
+                list_disk_record.extend(iscsi['DiskGroup'][dg])
+                for hg in map['HostGroup']:
+                    for disk in iscsi['DiskGroup'][dg]:
+                        for host in iscsi['HostGroup'][hg]:
+                            list_pair_record.append(f'{disk}-{host}')
+
+        for disk in set(list_disk_record):
+            dict_disk_count.update({disk: list_disk_record.count(disk)})
+
+        for pair in set(list_pair_record):
+            dict_disk_pair.update({pair: list_pair_record.count(pair)})
+
+        return dict_disk_count,dict_disk_pair
+
+
 

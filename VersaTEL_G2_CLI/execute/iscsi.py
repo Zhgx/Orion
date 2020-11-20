@@ -672,53 +672,30 @@ class Map():
                 return
 
         obj_crm = CRMConfig()
-        iqn_del = self.js.get_iqn_by_map(map)
+
+        list_host = []
         list_disk = self.js.get_disk_by_dg(list_dg)
-        #找出list_dg
+        list_hg = self.js.get_data('Map')[map]['HostGroup']
+        for hg in list_hg:
+            list_host=s.append_list(list_host,self.js.get_data('HostGroup')[hg])
 
+        dict_disk_count,dict_disk_pair = self.js.count_disk_data()
 
+        for disk in list_disk:
+            if dict_disk_count[disk]-1 == 0:
+                print('删除这个disk')
+                obj_crm.delete_res(disk)
+            list_iqn_delete = []
+            for host in list_host:
+                if dict_disk_pair[f'{disk}-{host}']-1 == 0:
+                    iqn_delete = self.js.get_data('Host')[host]
+                    list_iqn_delete.append(iqn_delete)
 
+            list_iqn_before = self.js.get_res_initiator(disk)
+            iqn = s.remove_list(list_iqn_before,list_iqn_delete)
+            if list_iqn_before == iqn:
+                continue
+            obj_crm.change_initiator(disk, iqn)
 
-        # self.js.remove_member('DiskGroup', map, list_dg, type='Map')
-        # try:
-        #     pass
-        #
-        # except Exception:
-        #     self.js.append_member('DiskGroup', map, list_dg, type='Map')
-
-        # for disk in list_disk:
-            # iqn = self.js.get_res_initiator(disk)
-            # list_iqn = s.remove_list(iqn,iqn_del)
-            # if not list_iqn:
-            #     obj_crm.delete_res(disk)
-            # else:
-                # 找出disk在list_dg之外还在哪些dg，然后这些dg在哪些map被使用，使用这些map的
-                # list_dg_all = self.js.get_dg_by_disk(disk)
-                # list_dg_other = s.remove_list(list_dg_all,list_dg)
-                # list_map = self.js.get_map_by_group('DiskGroup',list_dg_other)
-                # list_iqn = self.js.get_iqn_by_map(list_map)
-        for dg in list_dg:
-            for disk in self.js.get_disk_by_dg(dg):
-                list_map_all = self.js.get_map_by_disk(disk)
-                list_dg_all = self.js.get_dg_by_disk(disk)
-
-                if list_map_all == [map] and list_dg_all != [dg]:
-                    list_dg_all.remove(dg)
-                    for i in list_dg_all:
-                        if i in self.js.get_data('Map')[map]['DiskGroup']:
-                            list_iqn = self.js.get_iqn_by_map(list_map_all)
-                            obj_crm.change_initiator(disk, list_iqn)
-                        else:
-                            list_map_all.remove(map)
-                            list_iqn = self.js.get_iqn_by_map(list_map_all)
-                            obj_crm.change_initiator(disk, list_iqn)
-                elif list_map_all == [map]:
-                    obj_crm.delete_res(disk)
-                else:
-                    list_map_all.remove(map)
-                    list_iqn = self.js.get_iqn_by_map(list_map_all)
-                    obj_crm.change_initiator(disk,list_iqn)
-
-
-        # 配置文件移除成员
+        #配置文件移除成员
         self.js.remove_member('DiskGroup', map, list_dg, type='Map')
