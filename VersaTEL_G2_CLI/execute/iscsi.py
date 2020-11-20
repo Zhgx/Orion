@@ -330,24 +330,40 @@ class HostGroup():
             else:
                 print(f'remove {host}')
 
+        # 交互提示：
+        # list_disk = self.js.get_disk_by_hg(hg) # 去重的列表
+        #
+        # print(f'在{hg}中移除{",".join(list_host)}会影响到已存在的res：{",".join(list_disk)}? yes/no')
+        # answer = input()
+        # if not answer in ['y', 'yes', 'Y', 'YES']:
+        #     print('退出')
+        #     return
+
+        # 计数的方式：
         obj_crm = CRMConfig()
-        list_disk = self.js.get_disk_by_hg(hg)
+        list_disk = []
+        # 取到跟要操作的这个hg有关系的所有disk，不进行去重
+        for map in self.js.get_data('Map'):
+            for dg in self.js.get_data('Map')[map]['DiskGroup']:
+                for disk in self.js.get_data('DiskGroup')[dg]:
+                    list_disk.append(disk)
 
-        print(f'在{hg}中移除{",".join(list_host)}会影响到已存在的res：{",".join(list_disk)}? yes/no')
-        answer = input()
-        if not answer in ['y', 'yes', 'Y', 'YES']:
-            print('退出')
-            return
+        dict_disk_count, dict_disk_pair = self.js.count_disk_data()
+        for disk in list_disk: # 用到这个hg的所有disk
+            list_iqn_delete = []
+            for host in list_host: #要删除的所有host
+                dict_disk_pair.update({f'{disk}-{host}':dict_disk_pair[f'{disk}-{host}']-1})
+                if dict_disk_pair[f'{disk}-{host}']  == 0:
+                    list_iqn_delete.append(self.js.get_data('Host')[host])
 
-        # 获取新添加的iqn
-        iqn_del = []
-        for host in list_host:
-            iqn_del.append(self.js.get_data('Host')[host])
+            #获取这个disk原来的iqn
+            list_iqn_before = self.js.get_res_initiator(disk)
+            iqn = s.remove_list(list_iqn_before, list_iqn_delete)
+            if list_iqn_before == iqn:
+                continue
+            print(f'修改{disk}的iqn为{iqn}')
+            obj_crm.change_initiator(disk, iqn)
 
-        for disk in list_disk:
-            iqn_now = self.js.get_res_initiator(disk)
-            list_iqn = s.remove_list(iqn_now,iqn_del)
-            obj_crm.change_initiator(disk, list_iqn)
 
         # 最后在配置文件中删除
         self.js.remove_member('HostGroup', hg, list_host)
@@ -593,6 +609,9 @@ class Map():
         if not answer in ['y', 'yes', 'Y', 'YES']:
             print('退出')
             return
+
+
+
 
         # 找出该map底下的所有dg => disk  disk添加该hg_list的所有iqn
         list_disk = self.js.get_disk_by_map(map)
