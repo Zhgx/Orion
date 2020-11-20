@@ -58,61 +58,61 @@ function write_to_log(tid, t1, t2, d1, d2, data) {
 	});
 }
 
-//disk_table();
-//function disk_table() {
-//	$.ajax({
-//		url : vplxIp + "/disk/show/oprt",
-//		type : "GET",
-//		dataType : "json",
-//		data : {
-//			tid : tid,
-//			ip : mgtIp
-//		},
-//		success : function(status) {
-//			write_to_log(tid, 'OPRT', 'ROUTE', vplxIp, '/disk/show/oprt',
-//					status);
-//			$.ajax({
-//				url : vplxIp + "/disk/show/data",
-//				type : "GET",
-//				dataType : "json",
-//				data : {
-//					tid : tid,
-//					ip : mgtIp
-//				},
-//				success : function(disk_result) {
-//					write_to_log(tid, 'DATA', 'ROUTE', vplxIp,
-//							'/disk/show/data', JSON.stringify(disk_result));
-//					// var _data = data.data; //由于后台传过来的json有个data，在此重命名
-//					for (i in disk_result) {
-//						tr = '<td >' + i + '</td>' + '<td >' + i + '</td>'
-//						$("#D_T").append(
-//								'<tr onClick="change_disk(this)" >' + tr
-//										+ '</tr>')
-//					}
-//				},
-//				error : function() {
-//					write_to_log(tid, 'DATA', 'ROUTE', vplxIp,
-//							'/disk/show/data', 'error');
-//				}
-//			});
-//		},
-//		error : function() {
-//			write_to_log(tid, 'OPRT', 'ROUTE', vplxIp, '/disk/show/oprt',
-//					'error');
-//		}
-//	});
-//};
+// disk_table();
+// function disk_table() {
+// $.ajax({
+// url : vplxIp + "/disk/show/oprt",
+// type : "GET",
+// dataType : "json",
+// data : {
+// tid : tid,
+// ip : mgtIp
+// },
+// success : function(status) {
+// write_to_log(tid, 'OPRT', 'ROUTE', vplxIp, '/disk/show/oprt',
+// status);
+// $.ajax({
+// url : vplxIp + "/disk/show/data",
+// type : "GET",
+// dataType : "json",
+// data : {
+// tid : tid,
+// ip : mgtIp
+// },
+// success : function(disk_result) {
+// write_to_log(tid, 'DATA', 'ROUTE', vplxIp,
+// '/disk/show/data', JSON.stringify(disk_result));
+// // var _data = data.data; //由于后台传过来的json有个data，在此重命名
+// for (i in disk_result) {
+// tr = '<td >' + i + '</td>' + '<td >' + i + '</td>'
+// $("#D_T").append(
+// '<tr onClick="change_disk(this)" >' + tr
+// + '</tr>')
+// }
+// },
+// error : function() {
+// write_to_log(tid, 'DATA', 'ROUTE', vplxIp,
+// '/disk/show/data', 'error');
+// }
+// });
+// },
+// error : function() {
+// write_to_log(tid, 'OPRT', 'ROUTE', vplxIp, '/disk/show/oprt',
+// 'error');
+// }
+// });
+// };
 
-//function change_disk(obj) {
-//	if (event.srcElement.tagName == "TD") {
-//		curRow = event.srcElement.parentElement;
-//		tr = curRow.innerHTML;
+// function change_disk(obj) {
+// if (event.srcElement.tagName == "TD") {
+// curRow = event.srcElement.parentElement;
+// tr = curRow.innerHTML;
 //		
-//		$("#D_T_Show").append(
-//				'<tr onClick="change_disk_second(this)">' + tr + '</tr>');
-//		curRow.remove();// 删除
-//	}
-//}
+// $("#D_T_Show").append(
+// '<tr onClick="change_disk_second(this)">' + tr + '</tr>');
+// curRow.remove();// 删除
+// }
+// }
 disk_table();
 function disk_table() {
 	$.ajax({
@@ -135,10 +135,9 @@ function disk_table() {
 					ip : mgtIp
 				},
 				success : function(resource_result) {
-					console.log(resource_result);
 					write_to_log(tid, 'DATA', 'ROUTE', vplxIp,
 							'/resource/show/data', JSON.stringify(resource_result));
-					 var _data = resource_result.data; //由于后台传过来的json有个data，在此重命名
+					 var _data = resource_result.data; // 由于后台传过来的json有个data，在此重命名
 					for (i in _data) {
 						tr = '<td >' + _data[i].resource + '</td>' + '<td >' + _data[i].size + '</td>'
 						$("#D_T").append(
@@ -166,6 +165,7 @@ function change_disk(obj) {
 		var td = curRow.cells
 		for (var i = 0; i < td.length; i++) {
 			var td_host = td[i].innerHTML
+			alert(td_host);
 			$.ajax({
 				url : vplxIp + "/resource/show/data",
 				type : "get",
@@ -175,20 +175,19 @@ function change_disk(obj) {
 					ip : mgtIp
 				},
 				success : function(resource_result) {
-					console.log(resource_result);
-					// write_to_log(tid, 'DATA', 'ROUTE', vplxIp,
-					// '/hg/show/data', JSON
-					// .stringify(host_group_result));
-//					for (j in host_group_result) {
-//						if (td_host == j) {
-//							var list_host = host_group_result[j]
-//							$("#HostTable  tr:not(:first)").html("");
-//							for (jj in list_host) {
-//								tr = '<td >' + list_host[jj] + '</td>';
-//								$("#Host_T").append('<tr >' + tr + '</tr>')
-//							}
-//						}
-//					}
+//					console.log(resource_result);
+//					 var _data = resource_result.data; // 由于后台传过来的json有个data，在此重命名
+//					 for(i in obj_list){
+//							for (j in _data) {
+//								if (obj_list[i] == _data[j].resource) {
+//									tr = '<td >' + _data[j].size + '</td>'
+//									$("#D_Dev_T_Show").append(
+//											'<tr>' + tr
+//											+ '</tr>')
+//								}
+//							} 
+//						 
+//					 }
 				},
 				error : function() {
 					write_to_log(tid, 'DATA', 'ROUTE', vplxIp, '/hg/show/data',
@@ -213,26 +212,31 @@ function change_disk_second() {
 		curRow.remove();
 		// var count=0;
 		for (i=1; i < window.DTable_Show.rows.length; i++) {
-		for (j=0; j < window.DTable_Show.rows[i].cells.length; j++) { 
-			obj_list.push(window.DTable_Show.rows[i].cells[j].innerHTML) 
-			}
+			obj_list.push(window.DTable_Show.rows[i].cells[0].innerHTML) 
 		}
 		console.log(obj_list);
 		$("#D_Dev_Table_Show tr:not(:first)").html("");
 			$.ajax({
-				url : vplxIp + "/disk/show/data",
+				url : vplxIp + "/resource/show/data",
 				type : "get",
 				dataType : "json",
 				data : {
 					tid : tid,
 					ip : mgtIp
 				},
-				success : function(disk_result) {
-					for ( i in obj_list) {
-						var iqn = disk_result[obj_list[i]];
-							tr = '<td >' + iqn + '</td>';
-							$("#D_Dev_T_Show").append('<tr >' + tr + '</tr>')
-					}
+				success : function(resource_result) {
+					 var _data = resource_result.data; // 由于后台传过来的json有个data，在此重命名
+					 for(i in obj_list){
+							for (j in _data) {
+								if (obj_list[i] == _data[j].resource) {
+									tr = '<td >' + _data[j].size + '</td>'
+									$("#D_Dev_T_Show").append(
+											'<tr>' + tr
+											+ '</tr>')
+								}
+							} 
+						 
+					 }
 					// write_to_log(tid, 'DATA', 'ROUTE', vplxIp,
 					// '/hg/show/data', JSON
 					// .stringify(host_group_result));
