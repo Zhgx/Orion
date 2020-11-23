@@ -327,8 +327,6 @@ class HostGroup():
             if not self.js.check_value_in_key("HostGroup", hg, host)['result']:
                 print(f'{hg}中不存在成员{host}，无法进行移除')
                 return
-            else:
-                print(f'remove {host}')
 
         # 交互提示：
         # list_disk = self.js.get_disk_by_hg(hg) # 去重的列表
@@ -339,34 +337,29 @@ class HostGroup():
         #     print('退出')
         #     return
 
-        # 计数的方式：
+        # 临时json对象进行数据的更新
+        js_temp = iscsi_json.JsonRead()
+        js_modify = iscsi_json.JsonMofidy(js_temp.json_data)
+        js_modify.remove_member('HostGroup', hg, list_host)
         obj_crm = CRMConfig()
-        list_disk = []
-        # 取到跟要操作的这个hg有关系的所有disk，不进行去重
-        for map in self.js.get_data('Map'):
-            for dg in self.js.get_data('Map')[map]['DiskGroup']:
-                for disk in self.js.get_data('DiskGroup')[dg]:
-                    list_disk.append(disk)
 
-        dict_disk_count, dict_disk_pair = self.js.count_disk_data()
-        for disk in list_disk: # 用到这个hg的所有disk
-            list_iqn_delete = []
-            for host in list_host: #要删除的所有host
-                dict_disk_pair.update({f'{disk}-{host}':dict_disk_pair[f'{disk}-{host}']-1})
-                if dict_disk_pair[f'{disk}-{host}']  == 0:
-                    list_iqn_delete.append(self.js.get_data('Host')[host])
+        # 获取所有受影响的disk
+        list_disk = self.js.get_disk_by_host(list_host)
 
-            #获取这个disk原来的iqn
-            list_iqn_before = self.js.get_res_initiator(disk)
-            iqn = s.remove_list(list_iqn_before, list_iqn_delete)
-            if list_iqn_before == iqn:
+        # 固定的一套流程，获取disk的旧iqn，和获取新的iqn，进行比较和处理
+        for disk in list_disk:
+            iqn_before = self.js.get_res_initiator(disk)
+            iqn_now = js_temp.get_res_initiator(disk)
+            if iqn_now == iqn_before:
                 continue
-            print(f'修改{disk}的iqn为{iqn}')
-            obj_crm.change_initiator(disk, iqn)
+            elif not iqn_now:
+                obj_crm.delete_res(disk)
+            else:
+                obj_crm.change_initiator(disk,iqn_now)
 
-
-        # 最后在配置文件中删除
+        #配置文件移除成员，可以考虑修改为直接用js_temp.jsondata来替换
         self.js.remove_member('HostGroup', hg, list_host)
+
 
     """
     map操作
@@ -690,31 +683,28 @@ class Map():
                 print(f'{map}中不存在成员{dg}，无法进行移除')
                 return
 
+        #交互提示
+
+
+        # 临时json对象进行数据的更新
+        js_temp = iscsi_json.JsonRead()
+        js_modify = iscsi_json.JsonMofidy(js_temp.json_data)
+        js_modify.remove_member('DiskGroup', map, list_dg, type='Map')
         obj_crm = CRMConfig()
 
-        list_host = []
+        # 获取所有受影响的disk
         list_disk = self.js.get_disk_by_dg(list_dg)
-        list_hg = self.js.get_data('Map')[map]['HostGroup']
-        for hg in list_hg:
-            list_host=s.append_list(list_host,self.js.get_data('HostGroup')[hg])
 
-        dict_disk_count,dict_disk_pair = self.js.count_disk_data()
-
+        # 固定的一套流程，获取disk的旧iqn，和获取新的iqn，进行比较和处理
         for disk in list_disk:
-            if dict_disk_count[disk]-1 == 0:
-                print('删除这个disk')
-                obj_crm.delete_res(disk)
-            list_iqn_delete = []
-            for host in list_host:
-                if dict_disk_pair[f'{disk}-{host}']-1 == 0:
-                    iqn_delete = self.js.get_data('Host')[host]
-                    list_iqn_delete.append(iqn_delete)
-
-            list_iqn_before = self.js.get_res_initiator(disk)
-            iqn = s.remove_list(list_iqn_before,list_iqn_delete)
-            if list_iqn_before == iqn:
+            iqn_before = self.js.get_res_initiator(disk)
+            iqn_now = js_temp.get_res_initiator(disk)
+            if iqn_now == iqn_before:
                 continue
-            obj_crm.change_initiator(disk, iqn)
+            elif not iqn_now:
+                obj_crm.delete_res(disk)
+            else:
+                obj_crm.change_initiator(disk,iqn_now)
 
-        #配置文件移除成员
+        #配置文件移除成员，可以考虑修改为直接用js_temp.jsondata来替换
         self.js.remove_member('DiskGroup', map, list_dg, type='Map')

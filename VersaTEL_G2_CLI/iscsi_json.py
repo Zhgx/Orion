@@ -5,10 +5,11 @@ from functools import wraps
 import sys
 
 
-class JsonOperation():
+class JsonRead():
     def __init__(self):
         self.RPL = consts.glo_rpl()
         self.json_data = self.read_json()
+
 
     # 读取json文档
     @s.deco_json_operation('读取到的JSON数据')
@@ -33,62 +34,6 @@ class JsonOperation():
             print('Failed to read json file.')
             sys.exit()
 
-
-    # 创建Host、HostGroup、DiskGroup、Map
-    @s.deco_json_operation('JSON添加后的资源信息')
-    def add_data(self, first_key, data_key, data_value):
-        self.json_data[first_key].update({data_key: data_value})
-        with open('iSCSI_Data.json', "w") as fw:
-            json.dump(self.json_data, fw, indent=4, separators=(',', ': '))
-        return self.json_data[first_key]
-
-
-
-    def append_member(self,iscsi_type,target,member,type=None):
-        if not isinstance(member,list):
-            member = [member]
-        if type == 'Map':
-            list_member = self.get_data('Map')[target][iscsi_type]
-        else:
-            list_member = self.get_data(iscsi_type)[target]
-        list_member.extend(member)
-
-        if type == 'Map':
-            dict_map = self.get_data('Map')[target]
-            dict_map.update({iscsi_type:list_member})
-            self.add_data('Map',target,dict_map)
-        else:
-            self.add_data(iscsi_type, target, list(set(list_member)))
-
-
-    def remove_member(self,iscsi_type,target,member,type=None):
-        if not isinstance(member, list):
-            member = [member]
-        if type == 'Map':
-            list_member = self.get_data('Map')[target][iscsi_type]
-        else:
-            list_member = self.get_data(iscsi_type)[target]
-
-        print('1:',list_member)
-        print('2:',member)
-        for i in member:
-            list_member.remove(i)
-
-        if type == 'Map':
-            dict_map = self.get_data('Map')[target]
-            dict_map.update({iscsi_type:list_member})
-            self.add_data('Map',target,dict_map)
-        else:
-            self.add_data(iscsi_type, target, list(set(list_member)))
-
-
-    # 删除Host、HostGroup、DiskGroup、Map
-    @s.deco_json_operation('JSON删除后的资源信息')
-    def delete_data(self, first_key, data_key):
-        self.json_data[first_key].pop(data_key)
-        with open('iSCSI_Data.json', "w") as fw:
-            json.dump(self.json_data, fw, indent=4, separators=(',', ': '))
-        return self.json_data[first_key]
 
     # 获取Host,Disk、Target，HostGroup、DiskGroup、Map的信息
     @s.deco_json_operation('JSON获取资源信息')
@@ -127,28 +72,6 @@ class JsonOperation():
         return {'type':first_key,'alias':data_value,'result':False}
 
 
-    # 更新disk 可能需要注意的地方：没有限制可以修改的key
-    @s.deco_json_operation(f'JSON更新资源信息')
-    def update_data(self, first_key, data):
-        self.json_data[first_key] = data
-        with open('iSCSI_Data.json', "w") as fw:
-            json.dump(self.json_data, fw, indent=4, separators=(',', ': '))
-        return self.json_data[first_key]
-
-
-
-    # 更新crm configure资源的信息
-    @s.deco_json_operation('JSON更新CRM资源信息')
-    def update_crm_conf(self, resource,vip,target):
-        self.json_data.update({'crm': {}})
-        self.json_data['crm'].update({'resource': resource})
-        self.json_data['crm'].update({'vip': vip})
-        self.json_data['crm'].update({'target': target})
-        with open('iSCSI_Data.json', "w") as fw:
-            json.dump(self.json_data, fw, indent=4, separators=(',', ': '))
-        return self.json_data['crm']
-
-
 
     def check_value_in_key(self, type, key, value):
         """
@@ -173,6 +96,8 @@ class JsonOperation():
         else:
             return False
 
+
+
     def get_hg_by_host(self,host):
         """
         通过host取到使用这个host的所有hg
@@ -180,9 +105,12 @@ class JsonOperation():
         :return:list
         """
         list_host = []
-        for hg,hg_member in self.json_data["HostGroup"].items():
-            if host in hg_member:
-                list_host.append(hg)
+        if not isinstance(host,list):
+            host = [host]
+        for host_one in host:
+            for hg,hg_member in self.json_data["HostGroup"].items():
+                if host_one in hg_member:
+                    list_host.append(hg)
         return list_host
 
 
@@ -218,9 +146,12 @@ class JsonOperation():
 
     def get_map_by_host(self,host):
         list_map = []
-        list_hg = self.get_hg_by_host(host)
-        for hg in list_hg:
-            list_map+=self.get_map_by_group('HostGroup',hg)
+        if not isinstance(host,list):
+            host = [host]
+        for host_one in host:
+            list_hg = self.get_hg_by_host(host_one)
+            for hg in list_hg:
+                list_map+=self.get_map_by_group('HostGroup',hg)
         return list_map
 
     def get_map_by_disk(self, disk):
@@ -312,11 +243,15 @@ class JsonOperation():
 
 
     def get_disk_by_host(self,host):
-        list_map = self.get_map_by_host(host)
         list_disk = []
-        for map in list_map:
-            for disk in self.get_disk_by_dg(self.get_data('Map')[map]['DiskGroup']):
-                list_disk.append(disk)
+        if not isinstance(host,list):
+            host = [host]
+
+        for host_one in host:
+            list_map = self.get_map_by_host(host_one)
+            for map in list_map:
+                for disk in self.get_disk_by_dg(self.get_data('Map')[map]['DiskGroup']):
+                    list_disk.append(disk)
         return list(set(list_disk))
 
     def get_iqn_by_map(self, map):
@@ -337,29 +272,141 @@ class JsonOperation():
                 iqn_list.append(iqn)
         return list(set(iqn_list))
 
-    def count_disk_data(self):
-        iscsi = self.read_json()
 
-        dict_disk_count = {}
-        list_disk_record = []
 
-        dict_disk_pair = {}
-        list_pair_record = []
-        for map in iscsi['Map'].values():
-            for dg in map['DiskGroup']:
-                list_disk_record.extend(iscsi['DiskGroup'][dg])
-                for hg in map['HostGroup']:
-                    for disk in iscsi['DiskGroup'][dg]:
-                        for host in iscsi['HostGroup'][hg]:
-                            list_pair_record.append(f'{disk}-{host}')
+class JsonMofidy():
+    def __init__(self,data):
+        self.json_data = data
 
-        for disk in set(list_disk_record):
-            dict_disk_count.update({disk: list_disk_record.count(disk)})
 
-        for pair in set(list_pair_record):
-            dict_disk_pair.update({pair: list_pair_record.count(pair)})
+    def add_data(self, first_key, data_key, data_value):
+        self.json_data[first_key].update({data_key: data_value})
+        # with open('iSCSI_Data.json', "w") as fw:
+        #     json.dump(self.json_data, fw, indent=4, separators=(',', ': '))
+        return self.json_data[first_key]
 
-        return dict_disk_count,dict_disk_pair
 
+    def append_member(self,iscsi_type,target,member,type=None):
+        data = self.json_data
+
+        if not isinstance(member,list):
+            member = [member]
+        if type == 'Map':
+            list_member = data['Map'][target][iscsi_type]
+        else:
+            list_member = data[iscsi_type][target]
+        list_member.extend(member)
+
+        if type == 'Map':
+            dict_map = data['Map'][target]
+            dict_map.update({iscsi_type:list_member})
+            self.add_data('Map',target,dict_map)
+        else:
+            self.add_data(iscsi_type, target, list(set(list_member)))
+
+
+    def remove_member(self,iscsi_type,target,member,type=None):
+        data = self.json_data
+        if not isinstance(member, list):
+            member = [member]
+
+        if type == 'Map':
+            list_member = data['Map'][target][iscsi_type]
+        else:
+            list_member = data[iscsi_type][target]
+
+        for i in member:
+            list_member.remove(i)
+
+        if type == 'Map':
+            dict_map = data['Map'][target]
+            dict_map.update({iscsi_type:list_member})
+            self.add_data('Map',target,dict_map)
+        else:
+            self.add_data(iscsi_type, target, list(set(list_member)))
+
+
+class JsonOperation(JsonRead):
+    def __init__(self):
+        super().__init__()
+
+
+    # 创建Host、HostGroup、DiskGroup、Map
+    @s.deco_json_operation('JSON添加后的资源信息')
+    def add_data(self, first_key, data_key, data_value):
+        self.json_data[first_key].update({data_key: data_value})
+        with open('iSCSI_Data.json', "w") as fw:
+            json.dump(self.json_data, fw, indent=4, separators=(',', ': '))
+        return self.json_data[first_key]
+
+
+
+    def append_member(self,iscsi_type,target,member,type=None):
+        if not isinstance(member,list):
+            member = [member]
+        if type == 'Map':
+            list_member = self.get_data('Map')[target][iscsi_type]
+        else:
+            list_member = self.get_data(iscsi_type)[target]
+        list_member.extend(member)
+
+        if type == 'Map':
+            dict_map = self.get_data('Map')[target]
+            dict_map.update({iscsi_type:list_member})
+            self.add_data('Map',target,dict_map)
+        else:
+            self.add_data(iscsi_type, target, list(set(list_member)))
+
+
+    def remove_member(self,iscsi_type,target,member,type=None):
+        if not isinstance(member, list):
+            member = [member]
+        if type == 'Map':
+            list_member = self.get_data('Map')[target][iscsi_type]
+        else:
+            list_member = self.get_data(iscsi_type)[target]
+
+        for i in member:
+            list_member.remove(i)
+
+        if type == 'Map':
+            dict_map = self.get_data('Map')[target]
+            dict_map.update({iscsi_type:list_member})
+            self.add_data('Map',target,dict_map)
+        else:
+            self.add_data(iscsi_type, target, list(set(list_member)))
+
+
+    # 删除Host、HostGroup、DiskGroup、Map
+    @s.deco_json_operation('JSON删除后的资源信息')
+    def delete_data(self, first_key, data_key):
+        self.json_data[first_key].pop(data_key)
+        with open('iSCSI_Data.json', "w") as fw:
+            json.dump(self.json_data, fw, indent=4, separators=(',', ': '))
+        return self.json_data[first_key]
+
+
+
+
+    # 更新disk 可能需要注意的地方：没有限制可以修改的key
+    @s.deco_json_operation(f'JSON更新资源信息')
+    def update_data(self, first_key, data):
+        self.json_data[first_key] = data
+        with open('iSCSI_Data.json', "w") as fw:
+            json.dump(self.json_data, fw, indent=4, separators=(',', ': '))
+        return self.json_data[first_key]
+
+
+
+    # 更新crm configure资源的信息
+    @s.deco_json_operation('JSON更新CRM资源信息')
+    def update_crm_conf(self, resource,vip,target):
+        self.json_data.update({'crm': {}})
+        self.json_data['crm'].update({'resource': resource})
+        self.json_data['crm'].update({'vip': vip})
+        self.json_data['crm'].update({'target': target})
+        with open('iSCSI_Data.json', "w") as fw:
+            json.dump(self.json_data, fw, indent=4, separators=(',', ': '))
+        return self.json_data['crm']
 
 
