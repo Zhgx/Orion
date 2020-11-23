@@ -312,7 +312,6 @@ $("#host_group_create").click(
 				"host_group_name" : host_group_name,
 				"host" : obj_host_str
 			});
-// alert(dict_data);
 			hg_name_myfunction();
 			var host_group_name = $("#hg_name_hid").val()
 			console.log(hg_name_hid);

@@ -108,47 +108,69 @@ function hg_table() {
 };
 
 function change_hostgroup(obj) {
+	// 获取点击表格的td值
 	var obj = [];
 	if (event.srcElement.tagName == "TD") {
 		curRow = event.srcElement.parentElement;
 		tr = curRow.innerHTML;
-		var td = curRow.cells
-		for (var i = 0; i < td.length; i++) {
-			var td_host = td[i].innerHTML
-			$.ajax({
-				url : vplxIp + "/hg/show/data",
-				type : "get",
-				dataType : "json",
-				data : {
-					tid : tid,
-					ip : mgtIp
-				},
-				success : function(host_group_result) {
-					// write_to_log(tid, 'DATA', 'ROUTE', vplxIp,
-					// '/hg/show/data', JSON
-					// .stringify(host_group_result));
-					for (j in host_group_result) {
-						if (td_host == j) {
-							var list_host = host_group_result[j]
-							$("#HostTable  tr:not(:first)").html("");
-							for (jj in list_host) {
-								tr = '<td >' + list_host[jj] + '</td>';
-								$("#Host_T").append('<tr >' + tr + '</tr>')
-							}
-						}
-					}
-				},
-				error : function() {
-					write_to_log(tid, 'DATA', 'ROUTE', vplxIp, '/hg/show/data',
-							'error');
-				}
-
-			});
-
-		}
 		$("#HG_T_Show").append(
 				'<tr onClick="change_hostgroup_second(this)">' + tr + '</tr>');
 		curRow.remove();// 删除
+		var td = curRow.cells
+		// for (var i = 0; i < td.length; i++) {
+		var td_host = td[0].innerHTML
+		// 获取hostgroup的值
+		$.ajax({
+			url : vplxIp + "/hg/show/data",
+			type : "get",
+			dataType : "json",
+			data : {
+				tid : tid,
+				ip : mgtIp
+			},
+			success : function(host_group_result) {
+				// write_to_log(tid, 'DATA', 'ROUTE', vplxIp,
+				// '/hg/show/data', JSON
+				// .stringify(host_group_result));
+				
+				// 获取host的数据
+				$.ajax({
+					url : vplxIp + "/host/show/data",
+					type : "get",
+					dataType : "json",
+					data : {
+						tid : tid,
+						ip : mgtIp
+					},
+					success : function(host_result) {
+						var obj_list = [];
+						var obj_host_list = [];
+						for (i=1; i < window.HGTable_Show.rows.length; i++) {
+							obj_list.push(window.HGTable_Show.rows[i].cells[0].innerHTML);
+						};
+						for( i in obj_list){
+							var aa = host_group_result[obj_list[i]];
+							for (var j = 0; j <aa.length; j++) {
+								obj_host_list.push(aa[j]);
+							}
+						}
+						 var obj_host_list_new = obj_host_list.filter((e,i)=>obj_host_list.indexOf(e)==i)
+						 $("#HostTable tr:not(:first)").html("");
+						 for (var i = 0; i < obj_host_list_new.length; i++) {
+						tr = '<td >' + obj_host_list_new[i] + '</td>' + '<td >'
+						+ host_result[obj_host_list_new[i]]
+						+ '</td>';
+						$("#Host_T").append('<tr >' + tr + '</tr>')
+						}
+					},
+				});
+			},
+			error : function() {
+				write_to_log(tid, 'DATA', 'ROUTE', vplxIp, '/hg/show/data',
+						'error');
+			}
+
+		});
 	}
 }
 
@@ -160,6 +182,57 @@ function change_hostgroup_second() {
 		$("#HG_T").append(
 				'<tr onClick="change_hostgroup(this)" >' + tr + '</tr>')
 		curRow.remove();
+		$.ajax({
+			url : vplxIp + "/hg/show/data",
+			type : "get",
+			dataType : "json",
+			data : {
+				tid : tid,
+				ip : mgtIp
+			},
+			success : function(host_group_result) {
+				// write_to_log(tid, 'DATA', 'ROUTE', vplxIp,
+				// '/hg/show/data', JSON
+				// .stringify(host_group_result));
+				
+				// 获取host的数据
+				$.ajax({
+					url : vplxIp + "/host/show/data",
+					type : "get",
+					dataType : "json",
+					data : {
+						tid : tid,
+						ip : mgtIp
+					},
+					success : function(host_result) {
+						var obj_list = [];
+						var obj_host_list = [];
+						for (i=1; i < window.HGTable_Show.rows.length; i++) {
+							obj_list.push(window.HGTable_Show.rows[i].cells[0].innerHTML);
+						};
+						for( i in obj_list){
+							var aa = host_group_result[obj_list[i]];
+							for (var j = 0; j <aa.length; j++) {
+								obj_host_list.push(aa[j]);
+							}
+						}
+						 var obj_host_list_new = obj_host_list.filter((e,i)=>obj_host_list.indexOf(e)==i)
+						 $("#HostTable tr:not(:first)").html("");
+						 for (var i = 0; i < obj_host_list_new.length; i++) {
+						tr = '<td >' + obj_host_list_new[i] + '</td>' + '<td >'
+						+ host_result[obj_host_list_new[i]]
+						+ '</td>';
+						$("#Host_T").append('<tr >' + tr + '</tr>')
+						}
+					},
+				});
+			},
+			error : function() {
+				write_to_log(tid, 'DATA', 'ROUTE', vplxIp, '/hg/show/data',
+						'error');
+			}
+
+		});
 	}
 }
 
@@ -214,9 +287,9 @@ function change_diskgroup(obj) {
 	if (event.srcElement.tagName == "TD") {
 		curRow = event.srcElement.parentElement;
 		tr = curRow.innerHTML;
-		var td = curRow.cells;
-		for (var i = 0; i < td.length; i++) {
-			var td_disk = td[i].innerHTML;
+		$("#DG_T_Show").append(
+				'<tr onClick="change_diskgroup_second(this)">' + tr + '</tr>');
+		curRow.remove();// 删除
 			$.ajax({
 				url : vplxIp + "/dg/show/data",
 				type : "get",
@@ -226,19 +299,41 @@ function change_diskgroup(obj) {
 					ip : mgtIp
 				},
 				success : function(disk_group_result) {
-					// write_to_log(tid, 'DATA', 'ROUTE', vplxIp,
-					// '/hg/show/data', JSON
-					// .stringify(host_group_result));
-					for (j in disk_group_result) {
-						if (td_disk == j) {
-							var list_disk = disk_group_result[j]
-							$("#DiskTable  tr:not(:first)").html("");
-							for (jj in list_disk) {
-								tr = '<td >' + list_disk[jj] + '</td>';
-								$("#Disk_T").append('<tr >' + tr + '</tr>')
+					$.ajax({
+						url : vplxIp + "/resource/show/data",
+						type : "get",
+						dataType : "json",
+						data : {
+							tid : tid,
+							ip : mgtIp
+						},
+						success : function(resource_result) {
+							var resource_data = resource_result.data
+							var obj_list = [];
+							var obj_disk_list = [];
+							for (i=1; i < window.DGTable_Show.rows.length; i++) {
+								obj_list.push(window.DGTable_Show.rows[i].cells[0].innerHTML);
+							};
+							for( i in obj_list){
+								var aa = disk_group_result[obj_list[i]];
+								for (var j = 0; j <aa.length; j++) {
+									obj_disk_list.push(aa[j]);
+								}
+							}
+							 var obj_disk_list_new = obj_disk_list.filter((e,i)=>obj_disk_list.indexOf(e)==i)
+							 $("#DiskTable tr:not(:first)").html("");
+							 for (var i = 0; i < obj_disk_list_new.length; i++) {
+								 for (var  j= 0;  j< resource_data.length; j++) {
+									 if (obj_disk_list_new[i] == resource_data[j].resource) {
+										 tr = '<td >' + resource_data[j].resource + '</td>' +'<td >'
+										 + resource_data[j].device_name
+										 + '</td>';
+										 $("#Disk_T").append('<tr >' + tr + '</tr>')
+									}
+								}
 							}
 						}
-					}
+					});
 				},
 				error : function() {
 					write_to_log(tid, 'DATA', 'ROUTE', vplxIp, '/dg/show/data',
@@ -246,12 +341,6 @@ function change_diskgroup(obj) {
 				}
 
 			});
-
-		}
-
-		$("#DG_T_Show").append(
-				'<tr onClick="change_diskgroup_second(this)">' + tr + '</tr>');
-		curRow.remove();// 删除
 	}
 }
 
@@ -263,6 +352,60 @@ function change_diskgroup_second() {
 		$("#DG_T").append(
 				'<tr onClick="change_diskgroup(this)" >' + tr + '</tr>')
 		curRow.remove();
+		$.ajax({
+			url : vplxIp + "/dg/show/data",
+			type : "get",
+			dataType : "json",
+			data : {
+				tid : tid,
+				ip : mgtIp
+			},
+			success : function(disk_group_result) {
+				$.ajax({
+					url : vplxIp + "/resource/show/data",
+					type : "get",
+					dataType : "json",
+					data : {
+						tid : tid,
+						ip : mgtIp
+					},
+					success : function(resource_result) {
+						var resource_data = resource_result.data
+						var obj_list = [];
+						var obj_disk_list = [];
+						for (i=1; i < window.DGTable_Show.rows.length; i++) {
+							obj_list.push(window.DGTable_Show.rows[i].cells[0].innerHTML);
+						};
+						for( i in obj_list){
+							var aa = disk_group_result[obj_list[i]];
+							for (var j = 0; j <aa.length; j++) {
+								obj_disk_list.push(aa[j]);
+							}
+						}
+						 var obj_disk_list_new = obj_disk_list.filter((e,i)=>obj_disk_list.indexOf(e)==i)
+						 $("#DiskTable tr:not(:first)").html("");
+						 for (var i = 0; i < obj_disk_list_new.length; i++) {
+							 for (var  j= 0;  j< resource_data.length; j++) {
+								 if (obj_disk_list_new[i] == resource_data[j].resource) {
+									 tr = '<td >' + resource_data[j].resource + '</td>' +'<td >'
+									 + resource_data[j].device_name
+									 + '</td>';
+									 $("#Disk_T").append('<tr >' + tr + '</tr>')
+								}
+							}
+						}
+					}
+				});
+			},
+			error : function() {
+				write_to_log(tid, 'DATA', 'ROUTE', vplxIp, '/dg/show/data',
+						'error');
+			}
+
+		});
+		
+		
+		
 	}
 }
 
@@ -351,7 +494,7 @@ $("#map_create").click(
 				obj_hostgroup.push(tableId.rows[i].cells[0].innerHTML)
 			}
 			obj_hostgroup_str = obj_hostgroup.toString();
-			
+
 			var map_name = $("#map_name").val()
 			var dict_data = JSON.stringify({
 				"map_name" : map_name,
