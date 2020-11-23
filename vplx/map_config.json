@@ -66,12 +66,17 @@
         "hos12": "iqn.2323-232.xx",
         "host33": "iqn.3233-23.xx",
         "hosee2e": "iqn.2323-232.xx",
-        "hose2323": "iqn.2323-32.xx"
+        "hose2323": "iqn.2323-32.xx",
+        "Host12323": "iqn.2323-23.xx",
+        "hsot11": "iqn.2323-32.xxx",
+        "host_s": "iqn.1111-111:single",
+        "safasdf": "iqn.7777-33.sadf"
     },
     "Disk": {
         "res_a": "/dev/drbd1000",
         "res_b": "/dev/drbd1001",
-        "res_c": "/dev/drbd1002"
+        "res_c": "/dev/drbd1002",
+        "res_d": "/dev/drbd1003"
     },
     "HostGroup": {
         "hg1": [
@@ -91,6 +96,75 @@
             "host_test_111",
             "host_test_1117",
             "host_test_112"
+        ],
+        "hg22323": [
+            "Host1",
+            "Host12323",
+            "Host_test1",
+            "Host_test133",
+            "Host_test2"
+        ],
+        "Hg1232323": [
+            "Host12323",
+            "Host_test1",
+            "Host_test133"
+        ],
+        "nihaoya": [
+            "Host12323",
+            "hos12"
+        ],
+        "hg2e323232": [
+            "Host12323",
+            "Host_test1",
+            "Host_test133"
+        ],
+        "hg323231": [
+            "Host1",
+            "Host12323",
+            "Host_test1"
+        ],
+        "232ds": [
+            "Host12323",
+            "Host_test1",
+            "Host_test133"
+        ],
+        "dsds323": [
+            "Host12323",
+            "Host_test1",
+            "Host_test133"
+        ],
+        "2323": [
+            "Host1",
+            "Host12323",
+            "Host_test1"
+        ],
+        "hg231212": [
+            "Host1",
+            "Host12323",
+            "Host_test1"
+        ],
+        "werqwq": [
+            "Host12323",
+            "Host_test1",
+            "Host_test133"
+        ],
+        "hf23232": [
+            "Host1",
+            "Host12323",
+            "Host_test1"
+        ],
+        "sdsd2": [
+            "Host1",
+            "Host12323"
+        ],
+        "hge22": [
+            "Host1",
+            "Host12323"
+        ],
+        "hg3223": [
+            "Host1",
+            "Host12323",
+            "Host_test1"
         ]
     },
     "DiskGroup": {
@@ -132,6 +206,48 @@
             "res_d"
         ],
         "dsd": [
+            "res_a",
+            "res_b"
+        ],
+        "dg3323": [
+            "res_a",
+            "res_c"
+        ],
+        "hg1": [
+            "res_a",
+            "res_b",
+            "res_c"
+        ],
+        "dd": [
+            "res_a",
+            "res_b"
+        ],
+        "dgt3232": [
+            "res_a",
+            "res_b"
+        ],
+        "dg3232323": [
+            "res_a",
+            "res_b"
+        ],
+        "dgewe23": [
+            "res_a",
+            "res_b",
+            "res_c"
+        ],
+        "dg_m1": [
+            "res_d",
+            "res_a"
+        ],
+        "aabbcc": [
+            "res_d",
+            "res_a"
+        ],
+        "dg2323": [
+            "res_a",
+            "res_b"
+        ],
+        "212": [
             "res_a",
             "res_b"
         ]

@@ -49,6 +49,7 @@ class HostGroupCreate(views.MethodView):
 
     def get(self):
         dict_data = get_request_data()
+        print(dict_data)
         logger = consts.glo_log()
         host = dict_data['host'].split(',')
         host_group_name = dict_data["host_group_name"]

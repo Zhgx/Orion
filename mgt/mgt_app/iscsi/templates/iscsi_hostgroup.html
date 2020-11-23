@@ -7,67 +7,133 @@
 <link
 	href="{{url_for('static',filename='bootstrap-3.3.7/dist/css/bootstrap.min.css')}}"
 	rel="stylesheet" type="text/css" />
-<link
-	href="{{url_for('static',filename='bootstrap-select-1.12.4/dist/css/bootstrap-select.min.css')}}"
-	rel="stylesheet" type="text/css" />
-<link href="{{url_for('static',filename='personal/css/style.css')}}"
-	rel="stylesheet" type="text/css" />
 <style type="text/css">
+.red {
+	color: #FF0000;
+}
+
 body {
 	padding: 10px;
 }
-table.table tr th, td {
+
+.col-xs-5 {
+	width: 32.66666667%;
+}
+
+.col-xs-1 {
+	width: 15.66666667%;
+}
+
+.col-sm-8 {
+	width: 400px;
+	right: 30px;
+}
+
+table tbody {
+	display: block;
+	height: 195px;
+	overflow-y: scroll;
+}
+
+table thead, tbody tr {
+	display: table;
+	width: 100%;
+	table-layout: fixed;
+}
+
+table thead {
+	width: calc(100%)
+}
+
+table thead th {
+	background: #ccc;
 	text-align: center;
-	cursor: pointer;
 }
 </style>
 </head>
 
 <body>
 	<div class="container">
+		<h1>
+			<small>Create</small>
+		</h1>
 		<div class="row">
-		
+
 			<div class="col-xs-5 ">
-				<div class=".table-responsive">
-					<table id="HTable" class="table table-hover table-bordered">
-						<thead>
-							<tr>
-								<th></th>
-								<th>Host</th>
-							</tr>
-						</thead>
-						<tbody id="H_T">
-						</tbody>
-					</table>
-				</div>
-			</div>
-			<div class="col-xs-1 ">
-				<button class="btn btn-primary btn-large btn-block" type="button"
-					id="btn" data-method="append">--></button>
-				<button id="btn1" class="btn btn-primary btn-large btn-block"
-					type="button"><---</button>
+				<span class="text-success" style="margin-left: 35%;">可选主机列表</span> <span
+					class="glyphicon glyphicon-question-sign" rel="drevil"
+					data-container="body" data-toggle="popover" data-placement="bottom"
+					data-content="通过单击项目将其添加到已选列表"></span>
+				<table id="HTable" class="table  table-hover table-bordered "
+					border="1">
+					<thead>
+						<tr>
+							<th>Host</th>
+						</tr>
+					</thead>
+					<tbody id="H_T">
+					</tbody>
+				</table>
 			</div>
 			<div class="col-xs-5 ">
-				<div class=".table-responsive">
-					<table id="HTable_Show" class="table table-hover table-bordered">
-						<thead>
-							<tr>
-								<th></th>
-								<th>Host</th>
-							</tr>
-						</thead>
-						<tbody id="H_T_Show">
-						</tbody>
-					</table>
-				</div>
+				<span class="text-success" style="margin-left: 32%;">已选主机列表</span> <span
+					class="glyphicon glyphicon-question-sign" rel="drevil"
+					data-container="body" data-toggle="popover" data-placement="bottom"
+					data-content="通过单击项目将其移出已选列表(同时放回可选列表)"></span>
+				<table id="HTable_Show" class="table table-hover table-bordered"
+					border="1">
+					<thead>
+						<tr>
+							<th>Selected Host</th>
+						</tr>
+					</thead>
+					<tbody id="H_T_Show">
+					</tbody>
+				</table>
+			</div>
+			<div class="col-xs-5 ">
+				<span class="text-success" style="margin-left: 30%;">已选主机对应的IQN</span>
+				<table id="H_IQN_Table_Show" class="table table-hover table-bordered"
+					border="1">
+					<thead>
+						<tr>
+							<th>Selected IQN</th>
+						</tr>
+					</thead>
+					<tbody id="H_IQN_T_Show">
+					</tbody>
+				</table>
 			</div>
 		</div>
+		<div class="col-xs-6 ">
+			<div class="col-sm-8">
+				<div class="form-group">
+					<input type="text" class="form-control" id="host_group_name"
+						placeholder="请输入HostGroup名称" style="width: 180px;" value=""
+						onchange="hg_name_myfunction()"> <input id="hg_name_hid"
+						hidden="hidden" value="0"> <input
+						id="hg_name_verify_status" hidden="hidden" value="0"> <span
+						class="red"> <span id="hg_name_examine" class="hidden">HostGroup
+							Name已存在！</span> <span id="hg_name_format" class="hidden">开头只能输入字母，仅包含字母，数字，以及下划线</span>
+					</span>
+					<button type="submit" class="btn btn-default" data-toggle="modal"
+						name="host_group_create" id="host_group_create"
+						data-target="#myModal1">Create</button>
+				</div>
+			</div>
+			<div class="col-sm-2"></div>
+
+		</div>
+		<div class="col-xs-5 "></div>
 	</div>
+</body>
 <script type="text/javascript"
 	src="{{url_for('static',filename='personal/js/JQuery.js')}}"></script>
 <script type="text/javascript"
 	src="{{url_for('static',filename='bootstrap-3.3.7/dist/js/bootstrap.min.js')}}"></script>
 <script type="text/javascript"
-	src="{{url_for('static',filename='personal/js/iSCSI-hostgroup-create2.js')}}"></script>
-</body>
+	src="{{url_for('static',filename='personal/js/iSCSI-hostgroup-create.js')}}"></script>
+<script type="text/javascript">
+
+	</script>
 </html>
