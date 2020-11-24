@@ -19,10 +19,11 @@ class usage():
 
     # 待完善
     node_modify = '''
-    node(n) modify(m) NODE ...'''
+    node(n) modify(m) NODE [-ip IP] [-nt NODETYPE]'''
 
     node_show = '''
     node(n) show(s) [NODE]'''
+
 
 
 class NodeCommands():
@@ -75,7 +76,13 @@ class NodeCommands():
         """
         Modify LINSTOR Node
         """
-        pass
+        p_modify_node = node_subp.add_parser(
+            'modify',
+            aliases='m',
+            help='Modify the node',
+            usage=usage.node_create)
+
+        p_modify_node.set_defaults(func=self.modify)
 
         """
         Delete LINSTOR Node
@@ -158,6 +165,11 @@ class NodeCommands():
             else:
                 node.show_all_node()
                 return ExitCode.OK
+
+
+    @sd.deco_record_exception
+    def modify(self, args):
+        pass
 
     def print_node_help(self, *args):
         self.node_parser.print_help()

@@ -104,7 +104,7 @@ class Host():
         print(f'修改该{host}的iqn为{iqn}会影响到已存在的disk:{",".join(list_disk)}? yes/no')
         answer = input()
         if not answer in ['y', 'yes', 'Y', 'YES']:
-            s.prt_log('退出',2)
+            s.prt_log('取消修改,退出',2)
 
     def modify_host(self, host, iqn):
         js_temp = iscsi_json.JsonRead()
@@ -197,8 +197,8 @@ class DiskGroup():
         print(f'在{dg}中添加新成员{",".join(list_disk)}会影响到已存在的map:{",".join(list_map)}? yes/no')
         answer = input()
         if not answer in ['y', 'yes', 'Y', 'YES']:
-            print('退出')
-            return
+            s.prt_log('取消修改,退出',2)
+
 
     def add_disk(self,dg,list_disk):
 
@@ -334,7 +334,7 @@ class HostGroup():
         print(f'在{hg}中添加{",".join(list_host)}会影响到已存在的res：{",".join(list_disk)}? yes/no')
         answer = input()
         if not answer in ['y', 'yes', 'Y', 'YES']:
-            s.prt_log('退出',2)
+            s.prt_log('取消修改,退出',2)
 
     def add_host(self, hg, list_host):
         js_temp = iscsi_json.JsonRead()
@@ -677,7 +677,7 @@ class Map():
         print(f'确定修改{map}的hostgroup? yes/no')
         answer = input()
         if not answer in ['y', 'yes', 'Y', 'YES']:
-            s.prt_log('中断修改，退出',2)
+            s.prt_log('取消修改，退出',2)
 
 
     def add_dg(self, map, list_dg):
@@ -715,7 +715,7 @@ class Map():
         print(f'确定修改{map}的hostgroup? yes/no')
         answer = input()
         if not answer in ['y', 'yes', 'Y', 'YES']:
-            s.prt_log('中断修改，退出',2)
+            s.prt_log('取消修改，退出',2)
 
     def remove_hg(self, map, list_hg):
         # 临时json对象进行数据的更新
@@ -751,7 +751,7 @@ class Map():
         print(f'确定修改{map}的diskgroup? yes/no')
         answer = input()
         if not answer in ['y', 'yes', 'Y', 'YES']:
-            s.prt_log('中断修改，退出',2)
+            s.prt_log('取消修改，退出',2)
 
 
     def remove_dg(self, map, list_dg):

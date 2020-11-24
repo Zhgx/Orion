@@ -4,6 +4,25 @@ import sundry as sd
 import consts
 
 
+class usage():
+    # host部分使用手册
+    host = '''
+    host(h) {create(c)/modify(m)/delete(d)/show(s)}'''
+
+    host_create = '''
+    host(h) create(c) NODE -ip IP -nt NODETYPE'''
+
+    host_delete = '''
+    host(h) delete(d) NODE'''
+
+    # 待完善
+    host_modify = '''
+    host(h) modify(m) HOST IQN'''
+
+    host_show = '''
+    host(h) show(s) [HOST]'''
+
+
 class HostCommands():
     def __init__(self):
         self.logger = consts.glo_log()

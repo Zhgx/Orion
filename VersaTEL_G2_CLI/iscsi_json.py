@@ -263,8 +263,6 @@ class JsonMofidy():
 
     def add_data(self, first_key, data_key, data_value):
         self.json_data[first_key].update({data_key: data_value})
-        # with open('iSCSI_Data.json', "w") as fw:
-        #     json.dump(self.json_data, fw, indent=4, separators=(',', ': '))
         return self.json_data[first_key]
 
 
