@@ -436,6 +436,7 @@ function map_name_myfunction() {
 							tid : tid,
 							ip : mgtIp
 						},
+						async : false,
 						success : function(map_result) {
 							write_to_log(tid, 'OPRT', 'ROUTE', vplxIp,
 									'/map/show/oprt', map_result);
@@ -448,16 +449,19 @@ function map_name_myfunction() {
 											tid : tid,
 											ip : mgtIp
 										},
+										async : false,
 										success : function(Map_result) {
 											write_to_log(tid, 'DATA', 'ROUTE',
 													vplxIp, '/map/show/data',
 													JSON.stringify(Map_result));
-											if (input_result in Map_result) {
-												$("#map_name_hid").val("0");
-												document
-														.getElementById("map_name_examine").className = "";
-											} else {
-												$("#map_name_hid").val("1");
+											for ( var i in Map_result) {
+												if (input_result == i) {
+													$("#map_name_hid").val("0");
+													document
+															.getElementById("map_name_examine").className = "";
+												} else {
+													$("#map_name_hid").val("1");
+												}
 											}
 										},
 										error : function() {
@@ -478,8 +482,7 @@ function map_name_myfunction() {
 	}
 }
 
-$("#map_create").click(
-		function() {
+$("#map_create").mousedown(function(){
 			var obj_diskgroup = [];
 			var tableId = document.getElementById("HGTable_Show");
 			var str = "";
@@ -502,8 +505,8 @@ $("#map_create").click(
 				"host_group" : obj_hostgroup_str
 			});
 			map_name_myfunction();
-			var map_name_hid = $("#map_name_hid").val();
-			if (map_name_hid == "1") {
+			var map_name_hid_value = $("#map_name_hid").val();
+			if (map_name_hid_value == "1") {
 				write_to_log(tid, 'DATA', 'CHECKBOX', 'host group', '',
 						obj_hostgroup_str);
 				write_to_log(tid, 'DATA', 'CHECKBOX', 'disk group', '',
@@ -521,6 +524,7 @@ $("#map_create").click(
 						host_group : obj_hostgroup_str
 					},
 					success : function(operation_feedback_prompt) {
+						alert(operation_feedback_prompt);
 						write_to_log(tid, 'OPRT', 'ROUTE', vplxIp,
 								'/map/create', JSON
 										.stringify(operation_feedback_prompt));

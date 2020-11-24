@@ -23,9 +23,11 @@ body {
 .col-xs-1 {
 	width: 15.66666667%;
 }
+.col-sm-2 {
+	right: 25%;
+}
 
 .col-sm-8 {
-	width: 400px;
 	right: 30px;
 }
 
@@ -107,21 +109,20 @@ table thead th {
 		</div>
 		<div class="col-xs-6 ">
 			<div class="col-sm-8">
-				<div class="form-group">
 					<input type="text" class="form-control" id="host_group_name"
-						placeholder="请输入HostGroup名称" style="width: 180px;" value=""
-						onchange="hg_name_myfunction()"> <input id="hg_name_hid"
+						placeholder="请输入HostGroup名称" style="width: 200px;" value=""
+						onblur="hg_name_myfunction()"> <input id="hg_name_hid"
 						hidden="hidden" value="0"> <input
 						id="hg_name_verify_status" hidden="hidden" value="0"> <span
 						class="red"> <span id="hg_name_examine" class="hidden">HostGroup
 							Name已存在！</span> <span id="hg_name_format" class="hidden">开头只能输入字母，仅包含字母，数字，以及下划线</span>
 					</span>
-					<button type="submit" class="btn btn-default" data-toggle="modal"
-						name="host_group_create" id="host_group_create"
-						data-target="#myModal1">Create</button>
-				</div>
 			</div>
-			<div class="col-sm-2"></div>
+			<div class="col-sm-2">
+			<button type="button" class="btn btn-default" 
+						name="host_group_create" id="host_group_create"
+						>Create</button>
+			</div>
 
 		</div>
 		<div class="col-xs-5 "></div>

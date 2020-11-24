@@ -247,7 +247,6 @@ function change_disk_second() {
 	}
 }
 // 输入框验证
-
 function dg_name_myfunction() {
 	document.getElementById("dg_name_examine").className = "hidden";
 	document.getElementById("dg_name_format").className = "hidden";
@@ -263,6 +262,7 @@ function dg_name_myfunction() {
 			$("#dg_name_hid").val("0");
 			document.getElementById("dg_name_format").className = "";
 		} else {
+			console.log(1);
 			document.getElementById("dg_name_format").className = "hidden";
 			$
 					.ajax({
@@ -273,9 +273,10 @@ function dg_name_myfunction() {
 							tid : tid,
 							ip : mgtIp
 						},
+						async : false,
 						success : function(DG_result) {
-							write_to_log(tid, 'OPRT', 'ROUTE', vplxIp,
-									'/dg/show/oprt', DG_result);
+//							write_to_log(tid, 'OPRT', 'ROUTE', vplxIp,
+//									'/dg/show/oprt', DG_result);
 							$
 									.ajax({
 										url : vplxIp + "/dg/show/data",
@@ -285,16 +286,24 @@ function dg_name_myfunction() {
 											tid : tid,
 											ip : mgtIp
 										},
+										async : false,
 										success : function(DG_result) {
-											write_to_log(tid, 'DATA', 'ROUTE',
-													vplxIp, '/dg/show/data',
-													JSON.stringify(DG_result));
-											if (input_result in DG_result) {
+											console.log(2);
+//											write_to_log(tid, 'DATA', 'ROUTE',
+//													vplxIp, '/dg/show/data',
+//													JSON.stringify(DG_result));
+											var ss= [];
+											for ( var i in DG_result) {
+												ss.push(i);
+											}
+											if (ss.includes(input_result)) {
 												$("#dg_name_hid").val("0");
 												document
 														.getElementById("dg_name_examine").className = "";
+												console.log(3);
 											} else {
 												$("#dg_name_hid").val("1");
+												console.log(4);
 											}
 										},
 										error : function() {
@@ -313,8 +322,7 @@ function dg_name_myfunction() {
 	}
 }
 
-$("#disk_group_create").click(
-		function() {
+$("#disk_group_create").mousedown(function(){
 			var obj_disk = [];
 			var tableId = document.getElementById("DTable_Show");
 			var str = "";
@@ -328,8 +336,10 @@ $("#disk_group_create").click(
 				"disk" : obj_disk_str
 			});
 			dg_name_myfunction();
-			var dg_name_hid = $("#dg_name_hid").val();
-			if (dg_name_hid == "1") {
+			
+			var dg_name_hid_value = $("#dg_name_hid").val();
+			console.log(dg_name_hid_value);
+			if (dg_name_hid_value == "1") {
 				write_to_log(tid, 'DATA', 'RADIO', 'disk', '', obj_disk_str);
 				write_to_log(tid, 'OPRT', 'CLICK', 'disk_group_create',
 						'accept', dict_data);
@@ -343,6 +353,7 @@ $("#disk_group_create").click(
 						disk : obj_disk_str
 					},
 					success : function(operation_feedback_prompt) {
+						alert(operation_feedback_prompt);
 						write_to_log(tid, 'OPRT', 'ROUTE', vplxIp,
 								'/dg/create', operation_feedback_prompt);
 						$("#disk_group_name").val("");
