@@ -70,7 +70,30 @@
         "Host12323": "iqn.2323-23.xx",
         "hsot11": "iqn.2323-32.xxx",
         "host_s": "iqn.1111-111:single",
-        "safasdf": "iqn.7777-33.sadf"
+        "safasdf": "iqn.7777-33.sadf",
+        "host323": "iqn.3233-232.xxx",
+        "wewe": "iqn.2323-323.xx",
+        "wew": "iqn.2323-2323.xxx",
+        "sdsd": "iqn.2323-23.xsx",
+        "hostqq": "iqn.2322-23.xx",
+        "wewe22": "iqn.2323-223.xx",
+        "wwww": "iqn.2323-23.xx",
+        "a123": "iqn.2321-13.iqn",
+        "sdddsa": "iqn.2333-323.xx",
+        "host2323": "iqn.3233-23.xss",
+        "iqnsdsd": "iqn.2323-23.xsxs",
+        "dsdsd": "iqn.2332-33.xsx",
+        "cxcxc": "iqn.3233-232.xs",
+        "hjhj": "iqn.2323-23.xx",
+        "dsd": "iqn.2323-23.xx",
+        "gfgfg": "iqn.2323-23.xx",
+        "hsdosdo": "iqn.2323-23.xx",
+        "wezd": "iqn.2323-23.xx",
+        "dfda": "iqn.3233-23.xx",
+        "sdsd2": "iqn.2323-32.xx",
+        "dsdsd23": "iqn.2333-23.xx",
+        "sdsddssd": "iqn.2323-23.xx",
+        "ytyty": "iqn.2323-32.xx"
     },
     "Disk": {
         "res_a": "/dev/drbd1000",
@@ -165,6 +188,42 @@
             "Host1",
             "Host12323",
             "Host_test1"
+        ],
+        "1": [
+            "Host1",
+            "Host12323",
+            "Host_test1"
+        ],
+        "sdsd": [
+            "Host1",
+            "Host12323",
+            "Host_test1"
+        ],
+        "aa": [
+            "Host1",
+            "Host12323",
+            "Host_test1"
+        ],
+        "asd": [
+            "Host1",
+            "Host12323",
+            "Host_test1",
+            "Host_test133"
+        ],
+        "weqweqwe": [
+            "Host1",
+            "Host12323",
+            "Host_test1"
+        ],
+        "sdsdsd": [
+            "Host1",
+            "Host12323",
+            "Host_test1"
+        ],
+        "bvcsdsd": [
+            "Host1",
+            "Host12323",
+            "Host_test1"
         ]
     },
     "DiskGroup": {
@@ -250,6 +309,43 @@
         "212": [
             "res_a",
             "res_b"
+        ],
+        "dg12323": [
+            "res_a",
+            "res_b"
+        ],
+        "dg123dsd": [
+            "res_a",
+            "res_b"
+        ],
+        "sdsd": [
+            "res_a",
+            "res_b"
+        ],
+        "wewewe": [
+            "res_a",
+            "res_b",
+            "res_c"
+        ],
+        "sdsdsda": [
+            "res_a",
+            "res_b",
+            "res_c"
+        ],
+        "vvcvcv": [
+            "res_a",
+            "res_b",
+            "res_c"
+        ],
+        "cvcvx": [
+            "res_a",
+            "res_b",
+            "res_c"
+        ],
+        "nmbbbv": [
+            "res_a",
+            "res_b",
+            "res_c"
         ]
     },
     "Map": {

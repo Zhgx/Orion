@@ -34,7 +34,7 @@ body {
 					<div class="col-sm-10">
 						<input type="text" class="form-control" id="host_name"
 							placeholder="请输入Alias" style="width: 200px;" value=""
-							onchange="host_name_myfunction()"> <input
+							onblur="host_name_myfunction()"> <input
 							id="host_name_hid" hidden="hidden" value="0"> <input
 							id="host_name_verify_status" hidden="hidden" value="0"> <span
 							class="red"> <span id="host_name_examine" class="hidden">Host已存在！</span>
@@ -46,7 +46,7 @@ body {
 						<div class="col-sm-10">
 							<input type="text" class="form-control" id="host_iqn"
 								placeholder="请输入IQN" style="width: 200px;" value=""
-								onchange="iqn_myfunction()"> <input id="host_iqn_hid"
+								onblur="iqn_myfunction()"> <input id="host_iqn_hid"
 								hidden="hidden" value="0"> <input
 								id="host_iqn_verify_status" hidden="hidden" value="0"> <span
 								class="red"> <span id="iqn_format" class="hidden">IQN正确格式:
@@ -55,9 +55,9 @@ body {
 						</div>
 					</div>
 					<div class="form-group">
-						<div class="col-sm-offset-2 col-sm-10">
-							<button type="submit" class="btn btn-default" data-toggle="modal"
-								name="host_create" id="host_create" data-target="#myModal1">Create</button>
+						<div class="col-sm-offset-2 col-sm-10" >
+							<button type="button" class="btn btn-default" 
+								name="host_create" id="host_create" >Create</button>
 						</div>
 					</div>
 				</div>

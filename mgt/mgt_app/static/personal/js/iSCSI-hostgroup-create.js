@@ -33,8 +33,6 @@ function get_vlpx_ip() {
 		dataType : "json",
 		async : false,
 		success : function(data) {
-			console.log("okokok");
-			console.log(data["ip"]);
 			obj = "http://" + data["ip"];
 		}
 	});
@@ -211,6 +209,53 @@ function change_host_second() {
 // alert(obj_list);
 // }
 
+$("#host_group_create").mousedown(function(){
+		hg_name_myfunction();
+			var obj_host = [];
+			var tableId = document.getElementById("HTable_Show");
+			var str = "";
+			for (var i = 1; i < HTable_Show.rows.length; i++) {
+				obj_host.push(HTable_Show.rows[i].cells[0].innerHTML)
+			}
+			obj_host_str = obj_host.toString();
+			var host_group_name = $("#host_group_name").val()
+			// var host = $("#host").val().toString()
+			var dict_data = JSON.stringify({
+				"host_group_name" : host_group_name,
+				"host" : obj_host_str
+			});
+			var hg_name_hid_value = $("#hg_name_hid").val();
+			console.log(hg_name_hid_value);
+			if (hg_name_hid_value == "1") {
+				$.ajax({
+					url : vplxIp + "/hg/create",
+					type : "GET",
+					data : {
+						tid : tid,
+						ip : mgtIp,
+						host_group_name : host_group_name,
+						host : obj_host_str
+					},
+					success : function(operation_feedback_prompt) {
+						alert(operation_feedback_prompt);
+						write_to_log(tid, 'OPRT', 'ROUTE', vplxIp,
+								'/hg/create', operation_feedback_prompt);
+						$("#host_group_name").val("");
+						$("#hg_name_hid").val("0");
+					},
+					error : function() {
+						write_to_log(tid, 'OPRT', 'ROUTE', vplxIp,
+								'/hg/create', 'error');
+
+					}
+				})
+			} else {
+				write_to_log(tid, 'OPRT', 'CLICK', 'host_group_create',
+						'refuse', dict_data);
+			}
+
+		});
+
 
 
 
@@ -243,9 +288,10 @@ function hg_name_myfunction() {
 							tid : tid,
 							ip : mgtIp
 						},
+						async : false,
 						success : function(HG_result) {
-							write_to_log(tid, 'OPRT', 'ROUTE', vplxIp,
-									'/hg/show/oprt', HG_result);
+// write_to_log(tid, 'OPRT', 'ROUTE', vplxIp,
+// '/hg/show/oprt', HG_result);
 							$
 									.ajax({
 										url : vplxIp + "/hg/show/data",
@@ -255,29 +301,30 @@ function hg_name_myfunction() {
 											tid : tid,
 											ip : mgtIp
 										},
+										async : false,
 										success : function(HG_result_data) {
-											var objj =[];
-											for (i in HG_result_data) {
-												objj.push(i);
-											}
-											write_to_log(
-													tid,
-													'DATA',
-													'ROUTE',
-													vplxIp,
-													'/hg/show/data',
-													JSON
-															.stringify(HG_result_data));
-											if (input_result in objj) {
-												$("#hg_name_hid").val("0");
-												document
-														.getElementById("hg_name_examine").className = "";
-											} else {
-												write_to_log(tid, 'DATA',
-														'INPUT_TEXT',
-														'host_group_name', 'T',
-														input_result);
-												$("#hg_name_hid").val("1");
+											
+//											write_to_log(
+//													tid,
+//													'DATA',
+//													'ROUTE',
+//													vplxIp,
+//													'/hg/show/data',
+//													JSON
+//															.stringify(HG_result_data));
+											for ( var i in HG_result_data) {
+												if (input_result == i) {
+													$("#hg_name_hid").val("0");
+													document
+															.getElementById("hg_name_examine").className = "";
+												} else {
+//													write_to_log(tid, 'DATA',
+//															'INPUT_TEXT',
+//															'host_group_name', 'T',
+//															input_result);
+													$("#hg_name_hid").val("1");
+												}
+												
 											}
 										},
 										error : function() {
@@ -296,56 +343,6 @@ function hg_name_myfunction() {
 		}
 	};
 }
-
-$("#host_group_create").click(
-		function() {
-			var obj_host = [];
-			var tableId = document.getElementById("HTable_Show");
-			var str = "";
-			for (var i = 1; i < tableId.rows.length; i++) {
-				obj_host.push(tableId.rows[i].cells[0].innerHTML)
-			}
-			obj_host_str = obj_host.toString();
-			var host_group_name = $("#host_group_name").val()
-			// var host = $("#host").val().toString()
-			var dict_data = JSON.stringify({
-				"host_group_name" : host_group_name,
-				"host" : obj_host_str
-			});
-			hg_name_myfunction();
-			var host_group_name = $("#hg_name_hid").val()
-			console.log(hg_name_hid);
-			if (hg_name_hid == "1") {
-				write_to_log(tid, 'DATA', 'RADIO', 'host', '', obj_host_str);
-				write_to_log(tid, 'OPRT', 'CLICK', 'host_group_create',
-						'accept', dict_data);
-				$.ajax({
-					url : vplxIp + "/hg/create",
-					type : "GET",
-					data : {
-						tid : tid,
-						ip : mgtIp,
-						host_group_name : host_group_name,
-						host : obj_host_str
-					},
-					success : function(operation_feedback_prompt) {
-						write_to_log(tid, 'OPRT', 'ROUTE', vplxIp,
-								'/hg/create', operation_feedback_prompt);
-						$("#host_group_name").val("");
-						$("#hg_name_hid").val("0");
-					},
-					error : function() {
-						write_to_log(tid, 'OPRT', 'ROUTE', vplxIp,
-								'/hg/create', 'error');
-
-					}
-				})
-			} else {
-				write_to_log(tid, 'OPRT', 'CLICK', 'host_group_create',
-						'refuse', dict_data);
-			}
-
-		});
 
 $(function () { $("[data-toggle='popover']").popover(); });
 
