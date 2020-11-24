@@ -380,4 +380,10 @@ def append_list(list_now, list_append):
     return list(set(list_now))
 
 
+def confirm_modify(words):
+    print(words)
+    answer = input()
+    if not answer in ['y', 'yes', 'Y', 'YES']:
+        prt_log('中断修改，退出',2)
+
 

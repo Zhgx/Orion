@@ -134,8 +134,10 @@ class DiskGroupCommands():
     def modify(self, args):
         diskgroup = ex.DiskGroup()
         if args.add:
+            diskgroup.verf_add_disk(args.diskgroup,args.add)
             diskgroup.add_disk(args.diskgroup,args.add)
         if args.remove:
+            diskgroup.verf_remove_disk(args.diskgroup,args.remove)
             diskgroup.remove_disk(args.diskgroup,args.remove)
 
 

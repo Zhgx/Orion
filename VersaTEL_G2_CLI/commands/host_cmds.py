@@ -102,6 +102,7 @@ class HostCommands():
     @sd.deco_record_exception
     def modify(self, args):
         host = ex.Host()
+        host.verf_modify_host(args.host,args.iqn)
         host.modify_host(args.host,args.iqn)
 
     def print_host_help(self, *args):

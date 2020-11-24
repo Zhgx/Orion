@@ -49,18 +49,6 @@ class JsonRead():
         else:
             return {'type': first_key, 'alias': data_key, 'result': False}
 
-        # if not isinstance(data_key,list):
-        #     if data_key in self.json_data[first_key]:
-        #         return {'type':first_key,'alias':data_key, 'result':True}
-        #     else:
-        #         return {'type':first_key,'alias':data_key, 'result':False}
-        # else:
-        #     for i in data_key:
-        #         if i in self.json_data[first_key]:
-        #             pass
-        #         else:
-        #             return
-        # return True
 
 
     # 检查value值是否存在
@@ -73,6 +61,7 @@ class JsonRead():
 
 
 
+    @s.deco_json_operation('JSON检查某个key值是否存在于某个value值')
     def check_value_in_key(self, type, key, value):
         """
         检查某个key值是否存在某个value值
@@ -82,6 +71,7 @@ class JsonRead():
                 return {'type': type, 'key': key, 'value': value, 'result': True}
             else:
                 return {'type': type, 'key': key, 'value': value, 'result': False}
+
 
     def check_map_member(self,map,member,type):
         """
@@ -196,17 +186,6 @@ class JsonRead():
         return list(set(list_initiator))
 
 
-    def get_res_initiator_by_hg(self,hg):
-        list_iqn = []
-        if not isinstance(hg,list):
-            hg = [hg]
-        for hg_one in hg:
-            for h in self.get_data('HostGroup')[hg_one]:
-                iqn = self.get_data('Host')[h]
-                list_iqn.append(iqn)
-
-        return list(set(list_iqn))
-
 
     def get_dg_by_disk(self,disk):
         list_dg = []
@@ -260,17 +239,20 @@ class JsonRead():
             map = [map]
         for map_one in map:
             hg_list = self.get_data('Map')[map_one]['HostGroup']
-            list_iqn.extend(self.get_iqn_by_hglist(hg_list))
+            list_iqn.extend(self.get_iqn_by_hg(hg_list))
         return list(set(list_iqn))
 
 
-    def get_iqn_by_hglist(self,hg_list):
-        iqn_list = []
-        for hg in hg_list:
-            for host in self.get_data('HostGroup')[hg]:
+    def get_iqn_by_hg(self,hg):
+        list_iqn = []
+        if not isinstance(hg,list):
+            hg = [hg]
+        for hg_one in hg:
+            for host in self.get_data('HostGroup')[hg_one]:
                 iqn = self.get_data('Host')[host]
-                iqn_list.append(iqn)
-        return list(set(iqn_list))
+                list_iqn.append(iqn)
+
+        return list(set(list_iqn))
 
 
 

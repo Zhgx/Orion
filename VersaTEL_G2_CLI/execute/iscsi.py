@@ -93,34 +93,47 @@ class Host():
         else:
             s.prt_log(f"Fail! Can't find {host}", 1)
 
+
+
+    def verf_modify_host(self,host,iqn):
+        if not self.js.check_key('Host',host)['result']:
+            s.prt_log("不存在这个host可以去进行修改", 2)
+
+        list_disk = self.js.get_disk_by_host(host)
+
+        print(f'修改该{host}的iqn为{iqn}会影响到已存在的disk:{",".join(list_disk)}? yes/no')
+        answer = input()
+        if not answer in ['y', 'yes', 'Y', 'YES']:
+            s.prt_log('退出',2)
+
     def modify_host(self, host, iqn):
-        if self.js.check_key('Host', host)['result']:
-            disk = Disk()
-            disk.get_all_disk()
-            self.check_iqn(iqn)
-            # 添加map处理的代码
-            iqn_before = self.js.get_data('Host')[host]
-            obj_crm = CRMConfig()
-            list_disk = self.js.get_disk_by_host(host)
-            print(f'修改该{host}的iqn为{iqn}会影响到已存在的disk:{",".join(list_disk)}? yes/no')
-            answer = input()
-            if not answer in ['y', 'yes', 'Y', 'YES']:
-                print('退出')
-                return
-            for disk in list_disk:
-                list_iqn = self.js.get_res_initiator(disk)
-                list_iqn.remove(iqn_before)
-                list_iqn.append(iqn)
-                list_iqn = list(set(list_iqn))
-                obj_crm.change_initiator(disk, list_iqn)
-            self.js.add_data('Host', host, iqn)
-        else:
-            s.prt_log("不存在这个host可以去进行修改", 1)
+        js_temp = iscsi_json.JsonRead()
+        js_modify = iscsi_json.JsonMofidy(js_temp.json_data)
+        js_modify.add_data('Host', host, iqn)
+        obj_crm = CRMConfig()
+
+        list_disk = self.js.get_disk_by_host(host)
+
+        # 固定的一套流程，获取disk的旧iqn，和获取新的iqn，进行比较和处理
+        for disk in list_disk:
+            iqn_before = self.js.get_res_initiator(disk)
+            iqn_now = js_temp.get_res_initiator(disk)
+            if iqn_now == iqn_before:
+                continue
+            elif not iqn_now:
+                print(f'删除{disk}')
+                obj_crm.delete_res(disk)
+            else:
+                print(f'修改{disk}的iqn为{iqn_now}')
+                obj_crm.change_initiator(disk, iqn_now)
+
+        self.js.add_data('Host', host, iqn)
+
+
 
     """
     diskgroup 操作
     """
-
 
 class DiskGroup():
     def __init__(self):
@@ -171,14 +184,14 @@ class DiskGroup():
         else:
             s.prt_log(f"Fail! Can't find {dg}", 1)
 
-    def add_disk(self,dg,list_disk):
+
+    def verf_add_disk(self,dg,list_disk):
         for disk in list_disk:
             if self.js.check_value_in_key("DiskGroup", dg, disk)['result']:
-                print(f'{disk}已存在{dg}中')
-                return
+                s.prt_log(f'{disk}已存在{dg}中',2)
             if not self.js.check_key("Disk", disk)['result']:
-                print(f'json文件中不存在{disk}，无法进行添加')
-                return
+                s.prt_log(f'json文件中不存在{disk}，无法进行添加',2)
+
 
         list_map = self.js.get_map_by_group('DiskGroup', dg)
         print(f'在{dg}中添加新成员{",".join(list_disk)}会影响到已存在的map:{",".join(list_map)}? yes/no')
@@ -187,53 +200,72 @@ class DiskGroup():
             print('退出')
             return
 
+    def add_disk(self,dg,list_disk):
+
+        js_temp = iscsi_json.JsonRead()
+        js_modify = iscsi_json.JsonMofidy(js_temp.json_data)
+        js_modify.append_member('DiskGroup',dg,list_disk)
         obj_crm = CRMConfig()
         obj_map = Map()
-        iqn = []
-        # 找到用到dg的所有map的所有hg的所有host的iqn
-        for map in list_map:
-            iqn += self.js.get_iqn_by_map(map)
+
+
+        # 固定的一套流程，获取disk的旧iqn，和获取新的iqn，进行比较和处理
         for disk in list_disk:
-            list_map = self.js.get_map_by_disk(disk)
-            if list_map:
-                iqn_now = self.js.get_res_initiator(disk)
-                list_iqn = s.append_list(iqn_now,iqn)
-                obj_crm.change_initiator(disk,list_iqn)
-            else:
+            iqn_before = self.js.get_res_initiator(disk)
+            iqn_now = js_temp.get_res_initiator(disk)
+            if iqn_now == iqn_before:
+                continue
+            elif not iqn_now:
+                print(f'删除{disk}')
+                obj_crm.delete_res(disk)
+            elif not iqn_before:
+                print(f'新建{disk}的iqn为{iqn_now}')
                 path = self.js.get_data('Disk')[disk]
-                if obj_map.create_res(disk,path,' '.join(set(iqn))) == False:
-                    return
+                obj_map.create_res(disk,path,iqn_now)
+            else:
+                print(f'修改{disk}的iqn为{iqn_now}')
+                obj_crm.change_initiator(disk, iqn_now)
+
 
         self.js.append_member('DiskGroup',dg,list_disk)
 
 
-
-    def remove_disk(self,dg,list_disk):
+    def verf_remove_disk(self,dg,list_disk):
         for disk in list_disk:
             if not self.js.check_value_in_key("DiskGroup", dg, disk)['result']:
-                print(f'{dg}中不存在成员{disk}，无法进行移除')
-                return
+                s.prt_log(f'{dg}中不存在成员{disk}，无法进行移除',2)
 
         list_map = self.js.get_map_by_group('DiskGroup', dg)
         print(f'从{dg}移除成员{",".join(list_disk)}会影响到已存在的map:{",".join(list_map)}? yes/no')
         answer = input()
         if not answer in ['y', 'yes', 'Y', 'YES']:
-            print('退出')
-            return
+            s.prt_log('取消修改，退出',2)
+
+
+    def remove_disk(self,dg,list_disk):
+        js_temp = iscsi_json.JsonRead()
+        js_modify = iscsi_json.JsonMofidy(js_temp.json_data)
+        js_modify.remove_member('DiskGroup', dg, list_disk)
 
         obj_crm = CRMConfig()
+        obj_map = Map()
 
-        iqn_del = []
-        # 找到用到dg的所有map的所有hg的所有host的iqn
-        for map in list_map:
-            iqn_del += self.js.get_iqn_by_map(map)
+        # 固定的一套流程，获取disk的旧iqn，和获取新的iqn，进行比较和处理
         for disk in list_disk:
-            iqn = self.js.get_res_initiator(disk)
-            list_iqn = s.remove_list(iqn,iqn_del)
-            if not list_iqn:
+            iqn_before = self.js.get_res_initiator(disk)
+            iqn_now = js_temp.get_res_initiator(disk)
+            if iqn_now == iqn_before:
+                continue
+            elif not iqn_now:
+                print(f'删除{disk}')
                 obj_crm.delete_res(disk)
+            elif not iqn_before:
+                print(f'新建{disk}的iqn为{iqn_now}')
+                path = self.js.get_data('Disk')[disk]
+                obj_map.create_res(disk, path, iqn_now)
             else:
-                obj_crm.change_initiator(disk,list_iqn)
+                print(f'修改{disk}的iqn为{iqn_now}')
+                obj_crm.change_initiator(disk, iqn_now)
 
         # 配置文件移除成员
         self.js.remove_member('DiskGroup', dg, list_disk)
@@ -290,53 +322,60 @@ class HostGroup():
         else:
             s.prt_log(f"Fail! Can't find {hg}", 1)
 
-    def add_host(self, hg, list_host):
+
+    def verf_add_host(self, hg, list_host):
         for host in list_host:
             if self.js.check_value_in_key("HostGroup", hg, host)['result']:
-                print(f'{host}已存在{hg}中')
-                return
+                s.prt_log(f'{host}已存在{hg}中',2)
             if not self.js.check_key("Host", host)['result']:
-                print(f'json文件中不存在{host}，无法进行添加')
-                return
+                s.prt_log(f'json文件中不存在{host}，无法进行添加',2)
 
-        obj_crm = CRMConfig()
         list_disk = self.js.get_disk_by_hg(hg)
-
         print(f'在{hg}中添加{",".join(list_host)}会影响到已存在的res：{",".join(list_disk)}? yes/no')
         answer = input()
         if not answer in ['y', 'yes', 'Y', 'YES']:
-            print('退出')
-            return
+            s.prt_log('退出',2)
 
-        # 获取新添加的iqn
-        iqn_new = []
-        for host in list_host:
-            iqn_new.append(self.js.get_data('Host')[host])
+    def add_host(self, hg, list_host):
+        js_temp = iscsi_json.JsonRead()
+        js_modify = iscsi_json.JsonMofidy(js_temp.json_data)
+        js_modify.append_member('HostGroup', hg, list_host)
 
-        list_disk = self.js.get_disk_by_hg(hg)
+        obj_crm = CRMConfig()
+
+        list_disk = self.js.get_disk_by_host(list_host)
+
+        # 固定的一套流程，获取disk的旧iqn，和获取新的iqn，进行比较和处理
         for disk in list_disk:
-            iqn_now = self.js.get_res_initiator(disk)
-            list_iqn = s.append_list(iqn_now, iqn_new)
-            obj_crm.change_initiator(disk, list_iqn)
+            iqn_before = self.js.get_res_initiator(disk)
+            iqn_now = js_temp.get_res_initiator(disk)
+            if iqn_now == iqn_before:
+                continue
+            elif not iqn_now:
+                print(f'删除{disk}')
+                obj_crm.delete_res(disk)
+            else:
+                print(f'修改{disk}的iqn为{iqn_now}')
+                obj_crm.change_initiator(disk, iqn_now)
 
         # 配置文件更新修改的资源
         self.js.append_member('HostGroup', hg, list_host)
 
-    def remove_host(self, hg, list_host):
+
+    def verf_remove_host(self, hg ,list_host):
         for host in list_host:
             if not self.js.check_value_in_key("HostGroup", hg, host)['result']:
-                print(f'{hg}中不存在成员{host}，无法进行移除')
-                return
+                s.prt_log(f'{hg}中不存在成员{host}，无法进行移除',2)
 
         # 交互提示：
-        # list_disk = self.js.get_disk_by_hg(hg) # 去重的列表
-        #
-        # print(f'在{hg}中移除{",".join(list_host)}会影响到已存在的res：{",".join(list_disk)}? yes/no')
-        # answer = input()
-        # if not answer in ['y', 'yes', 'Y', 'YES']:
-        #     print('退出')
-        #     return
+        list_disk = self.js.get_disk_by_hg(hg) # 去重的列表
 
+        print(f'在{hg}中移除{",".join(list_host)}会影响到已存在的res：{",".join(list_disk)}? yes/no')
+        answer = input()
+        if not answer in ['y', 'yes', 'Y', 'YES']:
+            s.prt_log('取消修改，退出',2)
+
+    def remove_host(self, hg, list_host):
         # 临时json对象进行数据的更新
         js_temp = iscsi_json.JsonRead()
         js_modify = iscsi_json.JsonMofidy(js_temp.json_data)
@@ -453,7 +492,7 @@ class Map():
                     return False
             else:
                 s.prt_log(f"The {res} already map, change allowed_initiators...", 0)
-                iqn_list_new = self.js.get_iqn_by_hglist(hg_list)
+                iqn_list_new = self.js.get_iqn_by_hg(hg_list)
                 iqn_list = []
                 for i in map_list:
                     iqn_list += self.js.get_iqn_by_map(i)
@@ -588,104 +627,134 @@ class Map():
             all_disk.update(dgdata)
         return all_disk
 
-    def add_hg(self, map, list_hg):
+
+    def verf_add_hg(self, map, list_hg):
         for hg in list_hg:
             if self.js.check_map_member(map, hg, "HostGroup"):
-                print(f'{hg}已存在{map}中')
-                return
+                s.prt_log(f'{hg}已存在{map}中',2)
             if not self.js.check_key("HostGroup", hg)['result']:
-                print(f'json文件中不存在{hg}，无法进行添加')
-                return
+                s.prt_log(f'json文件中不存在{hg}，无法进行添加',2)
 
         print(f'确定修改{map}的hostgroup? yes/no')
         answer = input()
         if not answer in ['y', 'yes', 'Y', 'YES']:
-            print('退出')
-            return
+            s.prt_log('取消修改，退出',2)
 
-
-
-
-        # 找出该map底下的所有dg => disk  disk添加该hg_list的所有iqn
-        list_disk = self.js.get_disk_by_map(map)
-        iqn_new = self.js.get_res_initiator_by_hg(list_hg)  # 要添加的iqn
+    def add_hg(self, map, list_hg):
+        js_temp = iscsi_json.JsonRead()
+        js_modify = iscsi_json.JsonMofidy(js_temp.json_data)
+        js_modify.append_member('HostGroup', map, list_hg, type='Map')
         obj_crm = CRMConfig()
+
+        # 获取所有受影响的disk
+        list_disk = self.js.get_disk_by_hg(list_hg)
+
+        # 固定的一套流程，获取disk的旧iqn，和获取新的iqn，进行比较和处理
         for disk in list_disk:
-            iqn_now = self.js.get_res_initiator(disk)
-            list_iqn = s.append_list(iqn_now,iqn_new)
-            obj_crm.change_initiator(disk, list_iqn)
+            iqn_before = self.js.get_res_initiator(disk)
+            iqn_now = js_temp.get_res_initiator(disk)
+            if iqn_now == iqn_before:
+                continue
+            elif not iqn_now:
+                obj_crm.delete_res(disk)
+            elif not iqn_before:
+                path = self.js.get_data('Disk')[disk]
+                self.create_res(disk, path, iqn_now)
+            else:
+                obj_crm.change_initiator(disk, iqn_now)
 
         # 配置文件添加数据
         self.js.append_member('HostGroup', map, list_hg, type='Map')
 
-    def add_dg(self, map, list_dg):
+
+    def verf_add_dg(self, map, list_dg):
         for dg in list_dg:
             if self.js.check_map_member(map, dg, "DiskGroup"):
-                print(f'{dg}已存在{map}中')
-                return
+                s.prt_log(f'{dg}已存在{map}中', 2)
             if not self.js.check_key("DiskGroup", dg)['result']:
-                print(f'json文件中不存在{dg}，无法进行添加')
-                return
-
+                s.prt_log(f'json文件中不存在{dg}，无法进行添加', 2)
 
         print(f'确定修改{map}的hostgroup? yes/no')
         answer = input()
         if not answer in ['y', 'yes', 'Y', 'YES']:
-            print('退出')
-            return
+            s.prt_log('中断修改，退出',2)
+
+
+    def add_dg(self, map, list_dg):
+        js_temp = iscsi_json.JsonRead()
+        js_modify = iscsi_json.JsonMofidy(js_temp.json_data)
+        js_modify.remove_member('DiskGroup', map, list_dg, type='Map')
         obj_crm = CRMConfig()
-        iqn = self.js.get_iqn_by_map(map) # 获取要修改的这个map的所有iqn
-        dict_disk = self.get_all_disk(list_dg)
 
-        for disk in dict_disk:
-            list_map = self.js.get_map_by_disk(disk)
-            if list_map:
-                iqn_now = self.js.get_res_initiator(disk)
-                list_iqn = s.append_list(iqn_now, iqn)
-                obj_crm.change_initiator(disk,list_iqn)
+        # 获取所有受影响的disk
+        list_disk = self.js.get_disk_by_dg(list_dg)
+
+        # 固定的一套流程，获取disk的旧iqn，和获取新的iqn，进行比较和处理
+        for disk in list_disk:
+            iqn_before = self.js.get_res_initiator(disk)
+            iqn_now = js_temp.get_res_initiator(disk)
+            if iqn_now == iqn_before:
+                continue
+            elif not iqn_now:
+                obj_crm.delete_res(disk)
+            elif not iqn_before:
+                path = self.js.get_data('Disk')[disk]
+                self.create_res(disk,path,iqn_now)
             else:
-                path = dict_disk[disk]
-                if self.create_res(disk,path,' '.join(iqn)) == False:
-                    return
+                obj_crm.change_initiator(disk,iqn_now)
 
-        # 配置文件添加数据
-        self.js.append_member('DiskGroup', map, list_dg, type='Map')
+        #配置文件移除成员，可以考虑修改为直接用js_temp.jsondata来替换
+        self.js.remove_member('DiskGroup', map, list_dg, type='Map')
 
-    def remove_hg(self, map, list_hg):
+
+    def verf_remove_hg(self, map, list_hg):
         for hg in list_hg:
             if not self.js.check_map_member(map, hg, "HostGroup"):
-                print(f'{map}中不存在成员{hg}，无法进行移除')
-                return
+                s.prt_log(f'{map}中不存在成员{hg}，无法进行移除',2)
 
         print(f'确定修改{map}的hostgroup? yes/no')
         answer = input()
         if not answer in ['y', 'yes', 'Y', 'YES']:
-            print('退出')
-            return
+            s.prt_log('中断修改，退出',2)
 
-        # 找出该map底下的所有dg => disk  disk添加该hg_list的所有iqn
-        list_disk = self.js.get_disk_by_map(map)
-        iqn_del = self.js.get_res_initiator_by_hg(list_hg)  # 要添加的iqn
+    def remove_hg(self, map, list_hg):
+        # 临时json对象进行数据的更新
+        js_temp = iscsi_json.JsonRead()
+        js_modify = iscsi_json.JsonMofidy(js_temp.json_data)
+        js_modify.remove_member('HostGroup', map, list_hg, type='Map')
         obj_crm = CRMConfig()
+
+        # 获取所有受影响的disk
+        list_disk = self.js.get_disk_by_hg(list_hg)
+
+        # 固定的一套流程，获取disk的旧iqn，和获取新的iqn，进行比较和处理
         for disk in list_disk:
-            iqn_now = self.js.get_res_initiator(disk)
-            list_iqn = s.remove_list(iqn_now, iqn_del)
-            obj_crm.change_initiator(disk, list_iqn)
+            iqn_before = self.js.get_res_initiator(disk)
+            iqn_now = js_temp.get_res_initiator(disk)
+            if iqn_now == iqn_before:
+                continue
+            elif not iqn_now:
+                obj_crm.delete_res(disk)
+            else:
+                obj_crm.change_initiator(disk, iqn_now)
 
         # 配置文件移除成员
         self.js.remove_member('HostGroup', map, list_hg, type='Map')
 
 
 
-    def remove_dg(self, map, list_dg):
+    def verf_remove_dg(self,map,list_dg):
         for dg in list_dg:
             if not self.js.check_map_member(map, dg, "DiskGroup"):
-                print(f'{map}中不存在成员{dg}，无法进行移除')
-                return
+                s.prt_log(f'{map}中不存在成员{dg}，无法进行移除',2)
 
-        #交互提示
+        print(f'确定修改{map}的diskgroup? yes/no')
+        answer = input()
+        if not answer in ['y', 'yes', 'Y', 'YES']:
+            s.prt_log('中断修改，退出',2)
 
 
+    def remove_dg(self, map, list_dg):
         # 临时json对象进行数据的更新
         js_temp = iscsi_json.JsonRead()
         js_modify = iscsi_json.JsonMofidy(js_temp.json_data)

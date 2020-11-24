@@ -138,8 +138,10 @@ class HostGroupCommands():
     def modify(self, args):
         hostgroup = ex.HostGroup()
         if args.add:
+            hostgroup.verf_add_host(args.hostgroup,args.add)
             hostgroup.add_host(args.hostgroup,args.add)
         if args.remove:
+            hostgroup.verf_remove_host(args.hostgroup,args.remove)
             hostgroup.remove_host(args.hostgroup,args.remove)
 
 

@@ -142,13 +142,17 @@ class MapCommands():
         map = ex.Map()
         if args.hg:
             if args.add:
+                map.verf_add_hg(args.map,args.add)
                 map.add_hg(args.map,args.add)
             if args.remove:
+                map.verf_remove_hg(args.map,args.remove)
                 map.remove_hg(args.map,args.remove)
         elif args.dg:
             if args.add:
+                map.verf_add_dg(args.map,args.add)
                 map.add_dg(args.map,args.add)
             if args.remove:
+                map.verf_remove_dg(args.map, args.remove)
                 map.remove_dg(args.map,args.remove)
         else:
             print('请执行一个要进行修改的资源类型-hg/-dg')
