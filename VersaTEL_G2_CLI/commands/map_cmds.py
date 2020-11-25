@@ -5,6 +5,22 @@ import execute as ex
 import sundry as sd
 import consts
 
+class Usage():
+    # host部分使用手册
+    map = '''
+    Map(m) {create(c)/modify(m)/delete(d)/show(s)}'''
+
+    map_create = '''
+    Map(m) create(c) MAP -dg DISKGROUP[DISKGROUP...] -hg HOSTGROUP[HOSTGROUP...]'''
+
+    map_delete = '''
+    Map(m) delete(d) MAP '''
+
+    map_modify = '''
+    Map(m) modify(m) MAP -hg|-dg [-a HOSTGROUP|DISKGROUP [HOSTGROUP|DISKGROUP ...]] [-r HOSTGROUP|DISKGROUP [HOSTGROUP|DISKGROUP ...]]'''
+
+    map_show = '''
+    Map(m) show(s) [MAP]'''
 
 class MapCommands():
 
@@ -16,7 +32,7 @@ class MapCommands():
         Add commands for the host group management:create,delete,show
         """
         map_parser = parser.add_parser(
-            'map', aliases='m', help='map operation')
+            'map', aliases='m', help='map operation', usage=Usage.map)
         map_subp = map_parser.add_subparsers(dest='map')
         self.map_parser = map_parser
 
@@ -26,7 +42,8 @@ class MapCommands():
         p_create_map = map_subp.add_parser(
             'create',
             aliases='c',
-            help='map create [map_name] -hg [hostgroup_name] -dg [diskgroup_name]')
+            help='Create the map',
+            usage=Usage.map_create)
 
         p_create_map.add_argument(
             'map', action='store', help='map_name')
@@ -41,7 +58,7 @@ class MapCommands():
         Delete map
         """
         p_delete_map = map_subp.add_parser(
-            'delete', aliases='d', help='map delete [map_name]')
+            'delete', aliases='d', help='Delete the map',usage=Usage.map_delete)
 
         p_delete_map.add_argument(
             'map',
@@ -55,12 +72,12 @@ class MapCommands():
         Show map
         """
         p_show_map = map_subp.add_parser(
-            'show', aliases='s', help='map show / map show [map_name]')
+            'show', aliases='s', help='Show the map', usage=Usage.map_show)
 
         p_show_map.add_argument(
             'map',
             action='store',
-            help='map show [map_name]',
+            help='map name',
             nargs='?',
             default='all')
 
@@ -72,7 +89,8 @@ class MapCommands():
         p_modify_map = map_subp.add_parser(
             'modify',
             aliases='m',
-            help='map modify [hg] -a [hostgroup_name] -r [diskgroup_name]')
+            help='Modify the map',
+            usage=Usage.map_modify)
 
         p_modify_map.add_argument(
             'map',

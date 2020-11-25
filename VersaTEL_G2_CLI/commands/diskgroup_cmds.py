@@ -3,6 +3,23 @@ import execute as ex
 import sundry as sd
 import consts
 
+class Usage():
+    # host部分使用手册
+    dg = '''
+    diskgroup(dg) {create(c)/modify(m)/delete(d)/show(s)}'''
+
+    dg_create = '''
+    diskgroup(dg) create(c) DISKGROUP DISK[DISK]'''
+
+    dg_delete = '''
+    diskgroup(dg) delete(d) DISKGROUP'''
+
+    dg_modify = '''
+    diskgroup(dg) modify(m) DISKGROUP DISK[]'''
+
+    dg_show = '''
+    diskgroup(dg) show(s) [DISKGROUP]'''
+
 
 class DiskGroupCommands():
 
@@ -15,7 +32,7 @@ class DiskGroupCommands():
         """
         # dg:diskgroup
         dg_parser = parser.add_parser(
-            'diskgroup', aliases=['dg'], help='diskgroup operation')
+            'diskgroup', aliases=['dg'], help='diskgroup operation',usage=Usage.dg)
         self.dg_parser = dg_parser
 
         dg_subp = dg_parser.add_subparsers(dest='diskgroup')
@@ -26,7 +43,7 @@ class DiskGroupCommands():
         p_create_dg = dg_subp.add_parser(
             'create',
             aliases='c',
-            help='diskgroup create [diskgroup_name] [disk_name1] [disk_name2] ...')
+            help='Create the DiskGroup')
 
         # add arguments of diskgroup create
         p_create_dg.add_argument(
@@ -36,7 +53,7 @@ class DiskGroupCommands():
         p_create_dg.add_argument(
             'disk',
             action='store',
-            help='disk_name',
+            help='disk name',
             nargs='+')
 
         self.p_create_dg = p_create_dg
@@ -48,13 +65,14 @@ class DiskGroupCommands():
         p_show_dg = dg_subp.add_parser(
             'show',
             aliases='s',
-            help='diskgroup show / diskgroup show [diskgroup_name]')
+            help='Show the DiskGroup',
+            usage=Usage.dg_show)
 
         # add arguments of diskgroup show
         p_show_dg.add_argument(
             'diskgroup',
             action='store',
-            help='diskgroup show [diskgroup_name]',
+            help='diskgroup name',
             nargs='?',
             default='all')
 
@@ -65,7 +83,7 @@ class DiskGroupCommands():
         """
         # add arguments of diskgroup delete
         P_delete_dg = dg_subp.add_parser(
-            'delete', aliases='d', help='diskgroup delete [diskgroup_name]')
+            'delete', aliases='d', help='Delete the DiskGroup',usage=Usage.dg_delete)
 
         P_delete_dg.add_argument(
             'diskgroup',
@@ -79,17 +97,18 @@ class DiskGroupCommands():
 
 
         """
-        Modify HostGroup
+        Modify Disk Group
         """
         p_modify_dg = dg_subp.add_parser(
             'modify',
             aliases='m',
-            help='diskgroup modify [hostgroup_name] [-a disk_name1] [-d disk_name2] ...')
+            help='Modify the DiskGroup',
+            usage=Usage.dg_modify)
 
 
         p_modify_dg.add_argument(
             'diskgroup',
-            help='diskgroup_name')
+            help='diskgroup name')
 
         p_modify_dg.add_argument(
             '-a',

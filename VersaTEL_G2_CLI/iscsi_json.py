@@ -4,8 +4,7 @@ import sundry as s
 from functools import wraps
 import sys
 
-
-class JsonRead():
+class JsonOperation():
     def __init__(self):
         self.RPL = consts.glo_rpl()
         self.json_data = self.read_json()
@@ -36,7 +35,7 @@ class JsonRead():
 
 
     # 获取Host,Disk、Target，HostGroup、DiskGroup、Map的信息
-    @s.deco_json_operation('JSON获取资源信息')
+    # @s.deco_json_operation('JSON获取资源信息')
     def get_data(self, first_key):
         all_data = self.json_data[first_key]
         return all_data
@@ -255,62 +254,6 @@ class JsonRead():
         return list(set(list_iqn))
 
 
-
-class JsonMofidy():
-    def __init__(self,data):
-        self.json_data = data
-
-
-    def add_data(self, first_key, data_key, data_value):
-        self.json_data[first_key].update({data_key: data_value})
-        return self.json_data[first_key]
-
-
-    def append_member(self,iscsi_type,target,member,type=None):
-        data = self.json_data
-
-        if not isinstance(member,list):
-            member = [member]
-        if type == 'Map':
-            list_member = data['Map'][target][iscsi_type]
-        else:
-            list_member = data[iscsi_type][target]
-        list_member.extend(member)
-
-        if type == 'Map':
-            dict_map = data['Map'][target]
-            dict_map.update({iscsi_type:list_member})
-            self.add_data('Map',target,dict_map)
-        else:
-            self.add_data(iscsi_type, target, list(set(list_member)))
-
-
-    def remove_member(self,iscsi_type,target,member,type=None):
-        data = self.json_data
-        if not isinstance(member, list):
-            member = [member]
-
-        if type == 'Map':
-            list_member = data['Map'][target][iscsi_type]
-        else:
-            list_member = data[iscsi_type][target]
-
-        for i in member:
-            list_member.remove(i)
-
-        if type == 'Map':
-            dict_map = data['Map'][target]
-            dict_map.update({iscsi_type:list_member})
-            self.add_data('Map',target,dict_map)
-        else:
-            self.add_data(iscsi_type, target, list(set(list_member)))
-
-
-class JsonOperation(JsonRead):
-    def __init__(self):
-        super().__init__()
-
-
     # 创建Host、HostGroup、DiskGroup、Map
     @s.deco_json_operation('JSON添加后的资源信息')
     def add_data(self, first_key, data_key, data_value):
@@ -388,5 +331,79 @@ class JsonOperation(JsonRead):
         with open('iSCSI_Data.json', "w") as fw:
             json.dump(self.json_data, fw, indent=4, separators=(',', ': '))
         return self.json_data['crm']
+
+
+class JsonMofidy(JsonOperation):
+    def __init__(self):
+        super().__init__()
+
+    def read_json(self):
+        try:
+            json_data = open("iSCSI_Data.json", encoding='utf-8')
+            json_dict = json.load(json_data)
+            json_data.close()
+            return json_dict
+
+        except FileNotFoundError:
+            with open('iSCSI_Data.json', "w") as fw:
+                json_dict = {
+                    "Host": {},
+                    "Disk": {},
+                    "HostGroup": {},
+                    "DiskGroup": {},
+                    "Map": {}}
+                json.dump(json_dict, fw, indent=4, separators=(',', ': '))
+            return json_dict
+        except json.decoder.JSONDecodeError:
+            print('Failed to read json file.')
+            sys.exit()
+
+
+    def add_data(self, first_key, data_key, data_value):
+        self.json_data[first_key].update({data_key: data_value})
+        return self.json_data[first_key]
+
+
+    def append_member(self,iscsi_type,target,member,type=None):
+        data = self.json_data
+        if not isinstance(member,list):
+            member = [member]
+        if type == 'Map':
+            list_member = data['Map'][target][iscsi_type]
+            list_member.extend(member)
+            dict_map = data['Map'][target]
+            dict_map.update({iscsi_type:list_member})
+            self.add_data('Map',target,dict_map)
+        else:
+            list_member = data[iscsi_type][target]
+            list_member.extend(member)
+            self.add_data(iscsi_type, target, list(set(list_member)))
+
+
+    def remove_member(self,iscsi_type,target,member,type=None):
+        data = self.json_data
+        if not isinstance(member, list):
+            member = [member]
+
+        if type == 'Map':
+            list_member = data['Map'][target][iscsi_type]
+            for i in member:
+                list_member.remove(i)
+            dict_map = data['Map'][target]
+            dict_map.update({iscsi_type:list_member})
+            self.add_data('Map',target,dict_map)
+
+        else:
+            list_member = data[iscsi_type][target]
+            for i in member:
+                list_member.remove(i)
+            self.add_data(iscsi_type, target, list(set(list_member)))
+
+
+
+
+
+
+
 
 

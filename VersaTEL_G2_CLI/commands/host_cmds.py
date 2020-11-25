@@ -4,18 +4,17 @@ import sundry as sd
 import consts
 
 
-class usage():
+class Usage():
     # host部分使用手册
     host = '''
     host(h) {create(c)/modify(m)/delete(d)/show(s)}'''
 
     host_create = '''
-    host(h) create(c) NODE -ip IP -nt NODETYPE'''
+    host(h) create(c) HOST IQN'''
 
     host_delete = '''
-    host(h) delete(d) NODE'''
+    host(h) delete(d) HOST'''
 
-    # 待完善
     host_modify = '''
     host(h) modify(m) HOST IQN'''
 
@@ -32,7 +31,7 @@ class HostCommands():
         Add commands for the hosw management:create,delete,show
         """
         host_parser = parser.add_parser(
-            'host', aliases='h', help='host operation')
+            'host', aliases='h', help='host operation' ,usage=Usage.host)
         self.host_parser = host_parser
         host_subp = host_parser.add_subparsers(dest='host')
 
@@ -40,7 +39,7 @@ class HostCommands():
         Create iSCSI Host
         """
         p_create_host = host_subp.add_parser(
-            'create', aliases='c', help='host create [host_name] [host_iqn]')
+            'create', aliases='c', help='Create the host', usage=Usage.host_create)
 
         # add arguments of host create
         p_create_host.add_argument(
@@ -53,7 +52,7 @@ class HostCommands():
         Delete iSCSI Host
         """
         p_delete_host = host_subp.add_parser(
-            'delete', aliases='d', help='host delete [host_name]')
+            'delete', aliases='d', help='Delelte the host' , usage=Usage.host_delete)
 
         # add arguments of host delete
         p_delete_host.add_argument(
@@ -68,7 +67,7 @@ class HostCommands():
         Show iSCSI Host
         """
         p_show_host = host_subp.add_parser(
-            'show', aliases='s', help='host show / host show [host_name]')
+            'show', aliases='s', help='Displays the host data', usage=Usage.host_modify)
 
         # add arguments of host show
         p_show_host.add_argument(
@@ -87,7 +86,7 @@ class HostCommands():
         Modify iSCSI Host
         """
         p_modify_host = host_subp.add_parser(
-            'modify', aliases='m', help='host modify / host modify [host_name]')
+            'modify', aliases='m', help='Modify the iqn of host', usage=Usage.host_modify)
 
         # add arguments of host modify
         p_modify_host.add_argument(

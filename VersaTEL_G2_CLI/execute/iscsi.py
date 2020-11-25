@@ -107,8 +107,7 @@ class Host():
             s.prt_log('取消修改,退出',2)
 
     def modify_host(self, host, iqn):
-        js_temp = iscsi_json.JsonRead()
-        js_modify = iscsi_json.JsonMofidy(js_temp.json_data)
+        js_modify = iscsi_json.JsonMofidy()
         js_modify.add_data('Host', host, iqn)
         obj_crm = CRMConfig()
 
@@ -117,7 +116,7 @@ class Host():
         # 固定的一套流程，获取disk的旧iqn，和获取新的iqn，进行比较和处理
         for disk in list_disk:
             iqn_before = self.js.get_res_initiator(disk)
-            iqn_now = js_temp.get_res_initiator(disk)
+            iqn_now = js_modify.get_res_initiator(disk)
             if iqn_now == iqn_before:
                 continue
             elif not iqn_now:
@@ -201,9 +200,7 @@ class DiskGroup():
 
 
     def add_disk(self,dg,list_disk):
-
-        js_temp = iscsi_json.JsonRead()
-        js_modify = iscsi_json.JsonMofidy(js_temp.json_data)
+        js_modify = iscsi_json.JsonMofidy()
         js_modify.append_member('DiskGroup',dg,list_disk)
         obj_crm = CRMConfig()
         obj_map = Map()
@@ -212,7 +209,7 @@ class DiskGroup():
         # 固定的一套流程，获取disk的旧iqn，和获取新的iqn，进行比较和处理
         for disk in list_disk:
             iqn_before = self.js.get_res_initiator(disk)
-            iqn_now = js_temp.get_res_initiator(disk)
+            iqn_now = js_modify.get_res_initiator(disk)
             if iqn_now == iqn_before:
                 continue
             elif not iqn_now:
@@ -243,8 +240,7 @@ class DiskGroup():
 
 
     def remove_disk(self,dg,list_disk):
-        js_temp = iscsi_json.JsonRead()
-        js_modify = iscsi_json.JsonMofidy(js_temp.json_data)
+        js_modify = iscsi_json.JsonMofidy()
         js_modify.remove_member('DiskGroup', dg, list_disk)
 
         obj_crm = CRMConfig()
@@ -253,7 +249,7 @@ class DiskGroup():
         # 固定的一套流程，获取disk的旧iqn，和获取新的iqn，进行比较和处理
         for disk in list_disk:
             iqn_before = self.js.get_res_initiator(disk)
-            iqn_now = js_temp.get_res_initiator(disk)
+            iqn_now = js_modify.get_res_initiator(disk)
             if iqn_now == iqn_before:
                 continue
             elif not iqn_now:
@@ -337,8 +333,7 @@ class HostGroup():
             s.prt_log('取消修改,退出',2)
 
     def add_host(self, hg, list_host):
-        js_temp = iscsi_json.JsonRead()
-        js_modify = iscsi_json.JsonMofidy(js_temp.json_data)
+        js_modify = iscsi_json.JsonMofidy()
         js_modify.append_member('HostGroup', hg, list_host)
 
         obj_crm = CRMConfig()
@@ -348,7 +343,7 @@ class HostGroup():
         # 固定的一套流程，获取disk的旧iqn，和获取新的iqn，进行比较和处理
         for disk in list_disk:
             iqn_before = self.js.get_res_initiator(disk)
-            iqn_now = js_temp.get_res_initiator(disk)
+            iqn_now = js_modify.get_res_initiator(disk)
             if iqn_now == iqn_before:
                 continue
             elif not iqn_now:
@@ -377,8 +372,7 @@ class HostGroup():
 
     def remove_host(self, hg, list_host):
         # 临时json对象进行数据的更新
-        js_temp = iscsi_json.JsonRead()
-        js_modify = iscsi_json.JsonMofidy(js_temp.json_data)
+        js_modify = iscsi_json.JsonMofidy()
         js_modify.remove_member('HostGroup', hg, list_host)
         obj_crm = CRMConfig()
 
@@ -388,7 +382,7 @@ class HostGroup():
         # 固定的一套流程，获取disk的旧iqn，和获取新的iqn，进行比较和处理
         for disk in list_disk:
             iqn_before = self.js.get_res_initiator(disk)
-            iqn_now = js_temp.get_res_initiator(disk)
+            iqn_now = js_modify.get_res_initiator(disk)
             if iqn_now == iqn_before:
                 continue
             elif not iqn_now:
@@ -396,7 +390,7 @@ class HostGroup():
             else:
                 obj_crm.change_initiator(disk,iqn_now)
 
-        #配置文件移除成员，可以考虑修改为直接用js_temp.jsondata来替换
+        #配置文件移除成员，可以考虑修改为直接用js_modify.jsondata来替换
         self.js.remove_member('HostGroup', hg, list_host)
 
 
@@ -641,8 +635,7 @@ class Map():
             s.prt_log('取消修改，退出',2)
 
     def add_hg(self, map, list_hg):
-        js_temp = iscsi_json.JsonRead()
-        js_modify = iscsi_json.JsonMofidy(js_temp.json_data)
+        js_modify = iscsi_json.JsonMofidy()
         js_modify.append_member('HostGroup', map, list_hg, type='Map')
         obj_crm = CRMConfig()
 
@@ -652,7 +645,7 @@ class Map():
         # 固定的一套流程，获取disk的旧iqn，和获取新的iqn，进行比较和处理
         for disk in list_disk:
             iqn_before = self.js.get_res_initiator(disk)
-            iqn_now = js_temp.get_res_initiator(disk)
+            iqn_now = js_modify.get_res_initiator(disk)
             if iqn_now == iqn_before:
                 continue
             elif not iqn_now:
@@ -681,8 +674,7 @@ class Map():
 
 
     def add_dg(self, map, list_dg):
-        js_temp = iscsi_json.JsonRead()
-        js_modify = iscsi_json.JsonMofidy(js_temp.json_data)
+        js_modify = iscsi_json.JsonMofidy()
         js_modify.remove_member('DiskGroup', map, list_dg, type='Map')
         obj_crm = CRMConfig()
 
@@ -692,7 +684,7 @@ class Map():
         # 固定的一套流程，获取disk的旧iqn，和获取新的iqn，进行比较和处理
         for disk in list_disk:
             iqn_before = self.js.get_res_initiator(disk)
-            iqn_now = js_temp.get_res_initiator(disk)
+            iqn_now = js_modify.get_res_initiator(disk)
             if iqn_now == iqn_before:
                 continue
             elif not iqn_now:
@@ -703,7 +695,7 @@ class Map():
             else:
                 obj_crm.change_initiator(disk,iqn_now)
 
-        #配置文件移除成员，可以考虑修改为直接用js_temp.jsondata来替换
+        #配置文件移除成员，可以考虑修改为直接用js_modify.jsondata来替换
         self.js.remove_member('DiskGroup', map, list_dg, type='Map')
 
 
@@ -719,8 +711,7 @@ class Map():
 
     def remove_hg(self, map, list_hg):
         # 临时json对象进行数据的更新
-        js_temp = iscsi_json.JsonRead()
-        js_modify = iscsi_json.JsonMofidy(js_temp.json_data)
+        js_modify = iscsi_json.JsonMofidy()
         js_modify.remove_member('HostGroup', map, list_hg, type='Map')
         obj_crm = CRMConfig()
 
@@ -730,7 +721,7 @@ class Map():
         # 固定的一套流程，获取disk的旧iqn，和获取新的iqn，进行比较和处理
         for disk in list_disk:
             iqn_before = self.js.get_res_initiator(disk)
-            iqn_now = js_temp.get_res_initiator(disk)
+            iqn_now = js_modify.get_res_initiator(disk)
             if iqn_now == iqn_before:
                 continue
             elif not iqn_now:
@@ -750,14 +741,15 @@ class Map():
 
         print(f'确定修改{map}的diskgroup? yes/no')
         answer = input()
+        #[2020/11/25 13:35:47] [1606282545] [root] [DATA] [INPUT] [confirm_input] [confirm deletion] [n]|
+
         if not answer in ['y', 'yes', 'Y', 'YES']:
             s.prt_log('取消修改，退出',2)
 
 
     def remove_dg(self, map, list_dg):
         # 临时json对象进行数据的更新
-        js_temp = iscsi_json.JsonRead()
-        js_modify = iscsi_json.JsonMofidy(js_temp.json_data)
+        js_modify = iscsi_json.JsonMofidy()
         js_modify.remove_member('DiskGroup', map, list_dg, type='Map')
         obj_crm = CRMConfig()
 
@@ -767,7 +759,7 @@ class Map():
         # 固定的一套流程，获取disk的旧iqn，和获取新的iqn，进行比较和处理
         for disk in list_disk:
             iqn_before = self.js.get_res_initiator(disk)
-            iqn_now = js_temp.get_res_initiator(disk)
+            iqn_now = js_modify.get_res_initiator(disk)
             if iqn_now == iqn_before:
                 continue
             elif not iqn_now:
@@ -775,5 +767,5 @@ class Map():
             else:
                 obj_crm.change_initiator(disk,iqn_now)
 
-        #配置文件移除成员，可以考虑修改为直接用js_temp.jsondata来替换
+        #配置文件移除成员，可以考虑修改为直接用js_modify.jsondata来替换
         self.js.remove_member('DiskGroup', map, list_dg, type='Map')
