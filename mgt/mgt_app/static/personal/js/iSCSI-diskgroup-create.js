@@ -13,7 +13,7 @@ var mgtIp = get_mgt_ip();
 function get_mgt_ip() {
 	var obj = new Object();
 	$.ajax({
-		url : "http://127.0.0.1:7773/mgtip",
+		url : "/mgtip",
 		type : "GET",
 		dataType : "json",
 		async : false,
@@ -28,7 +28,7 @@ function get_mgt_ip() {
 function get_vlpx_ip() {
 	var obj = new Object();
 	$.ajax({
-		url : "http://127.0.0.1:7773/vplxip",
+		url : "/vplxip",
 		type : "GET",
 		dataType : "json",
 		async : false,
@@ -262,7 +262,6 @@ function dg_name_myfunction() {
 			$("#dg_name_hid").val("0");
 			document.getElementById("dg_name_format").className = "";
 		} else {
-			console.log(1);
 			document.getElementById("dg_name_format").className = "hidden";
 			$
 					.ajax({
@@ -275,8 +274,8 @@ function dg_name_myfunction() {
 						},
 						async : false,
 						success : function(DG_result) {
-//							write_to_log(tid, 'OPRT', 'ROUTE', vplxIp,
-//									'/dg/show/oprt', DG_result);
+// write_to_log(tid, 'OPRT', 'ROUTE', vplxIp,
+// '/dg/show/oprt', DG_result);
 							$
 									.ajax({
 										url : vplxIp + "/dg/show/data",
@@ -288,22 +287,17 @@ function dg_name_myfunction() {
 										},
 										async : false,
 										success : function(DG_result) {
-											console.log(2);
-//											write_to_log(tid, 'DATA', 'ROUTE',
-//													vplxIp, '/dg/show/data',
-//													JSON.stringify(DG_result));
-											var ss= [];
+// write_to_log(tid, 'DATA', 'ROUTE',
+// vplxIp, '/dg/show/data',
+// JSON.stringify(DG_result));
 											for ( var i in DG_result) {
-												ss.push(i);
-											}
-											if (ss.includes(input_result)) {
-												$("#dg_name_hid").val("0");
-												document
-														.getElementById("dg_name_examine").className = "";
-												console.log(3);
-											} else {
-												$("#dg_name_hid").val("1");
-												console.log(4);
+												if (input_result == i) {
+													$("#dg_name_hid").val("0");
+													document
+													.getElementById("dg_name_examine").className = "";
+												} else {
+													$("#dg_name_hid").val("1");
+												}
 											}
 										},
 										error : function() {
@@ -336,9 +330,7 @@ $("#disk_group_create").mousedown(function(){
 				"disk" : obj_disk_str
 			});
 			dg_name_myfunction();
-			
 			var dg_name_hid_value = $("#dg_name_hid").val();
-			console.log(dg_name_hid_value);
 			if (dg_name_hid_value == "1") {
 				write_to_log(tid, 'DATA', 'RADIO', 'disk', '', obj_disk_str);
 				write_to_log(tid, 'OPRT', 'CLICK', 'disk_group_create',
@@ -353,7 +345,7 @@ $("#disk_group_create").mousedown(function(){
 						disk : obj_disk_str
 					},
 					success : function(operation_feedback_prompt) {
-						alert(operation_feedback_prompt);
+						$('.alert').html(operation_feedback_prompt).addClass('alert-success').show().delay(1500).fadeOut();
 						write_to_log(tid, 'OPRT', 'ROUTE', vplxIp,
 								'/dg/create', operation_feedback_prompt);
 						$("#disk_group_name").val("");
@@ -392,3 +384,4 @@ $("[rel=drevil]").popover({
         }
     }, );
 });　
+

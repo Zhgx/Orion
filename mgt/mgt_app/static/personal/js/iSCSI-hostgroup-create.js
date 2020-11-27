@@ -13,7 +13,7 @@ var mgtIp = get_mgt_ip();
 function get_mgt_ip() {
 	var obj = new Object();
 	$.ajax({
-		url : "http://127.0.0.1:7773/mgtip",
+		url : "/mgtip",
 		type : "GET",
 		dataType : "json",
 		async : false,
@@ -28,7 +28,7 @@ function get_mgt_ip() {
 function get_vlpx_ip() {
 	var obj = new Object();
 	$.ajax({
-		url : "http://127.0.0.1:7773/vplxip",
+		url : "/vplxip",
 		type : "GET",
 		dataType : "json",
 		async : false,
@@ -52,6 +52,7 @@ function write_to_log(tid, t1, t2, d1, d2, data) {
 			d2 : d2,
 			data : data
 		},
+		async : false,
 		success : function(write_log_result) {
 		}
 	});
@@ -67,6 +68,7 @@ function host_table() {
 			tid : tid,
 			ip : mgtIp
 		},
+		async : false,
 		success : function(status) {
 			write_to_log(tid, 'OPRT', 'ROUTE', vplxIp, '/host/show/oprt',
 					status);
@@ -78,6 +80,7 @@ function host_table() {
 					tid : tid,
 					ip : mgtIp
 				},
+				async : false,
 				success : function(host_result) {
 					write_to_log(tid, 'DATA', 'ROUTE', vplxIp,
 							'/host/show/data', JSON.stringify(host_result));
@@ -115,6 +118,7 @@ function change_host(obj) {
 					tid : tid,
 					ip : mgtIp
 				},
+				async : false,
 				success : function(host_result) {
 					// write_to_log(tid, 'DATA', 'ROUTE', vplxIp,
 					// '/hg/show/data', JSON
@@ -175,6 +179,7 @@ function change_host_second() {
 					tid : tid,
 					ip : mgtIp
 				},
+				async : false,
 				success : function(host_result) {
 					for ( i in obj_list) {
 						var iqn = host_result[obj_list[i]];
@@ -208,9 +213,19 @@ function change_host_second() {
 // }
 // alert(obj_list);
 // }
+function div_btn() {
+	document.getElementById('light').style.display='block';
+	document.getElementById('fade').style.display='block';
+	setTimeout("light.style.display='none'",3000);
+	setTimeout("fade.style.display='none'",3000);
+}
+function btn_none() {
+	document.getElementById('light').style.display='none';
+	document.getElementById('fade').style.display='none';
+}
 
 $("#host_group_create").mousedown(function(){
-		hg_name_myfunction();
+			hg_name_myfunction();
 			var obj_host = [];
 			var tableId = document.getElementById("HTable_Show");
 			var str = "";
@@ -219,13 +234,11 @@ $("#host_group_create").mousedown(function(){
 			}
 			obj_host_str = obj_host.toString();
 			var host_group_name = $("#host_group_name").val()
-			// var host = $("#host").val().toString()
 			var dict_data = JSON.stringify({
 				"host_group_name" : host_group_name,
 				"host" : obj_host_str
 			});
 			var hg_name_hid_value = $("#hg_name_hid").val();
-			console.log(hg_name_hid_value);
 			if (hg_name_hid_value == "1") {
 				$.ajax({
 					url : vplxIp + "/hg/create",
@@ -236,8 +249,9 @@ $("#host_group_create").mousedown(function(){
 						host_group_name : host_group_name,
 						host : obj_host_str
 					},
+					async : false,
 					success : function(operation_feedback_prompt) {
-						alert(operation_feedback_prompt);
+						$('#P_text').text(operation_feedback_prompt);
 						write_to_log(tid, 'OPRT', 'ROUTE', vplxIp,
 								'/hg/create', operation_feedback_prompt);
 						$("#host_group_name").val("");
@@ -270,12 +284,16 @@ function hg_name_myfunction() {
 	match_result = hg_name_match_regular.test(input_result)
 	if (!input_result) {
 		$("#hg_name_hid").val("0");
+		var text = "格式验证失败:命名不能为空";
+		$('#P_text').text(text);
 		document.getElementById("hg_name_examine").className = "hidden";
 		document.getElementById("hg_name_format").className = "hidden";
 
 	} else {
 		if (!match_result) {
 			$("#hg_name_hid").val("0");
+			var text = "格式验证失败:仅支持字母数字以及下划线，且以字母开头";
+			$('#P_text').text(text);
 			document.getElementById("hg_name_format").className = "";
 		} else {
 			document.getElementById("hg_name_format").className = "hidden";
@@ -303,25 +321,25 @@ function hg_name_myfunction() {
 										},
 										async : false,
 										success : function(HG_result_data) {
-											
-//											write_to_log(
-//													tid,
-//													'DATA',
-//													'ROUTE',
-//													vplxIp,
-//													'/hg/show/data',
-//													JSON
-//															.stringify(HG_result_data));
+										document.getElementById('light').show().delay(1500).fadeOut();
+// write_to_log(
+// tid,
+// 'DATA',
+// 'ROUTE',
+// vplxIp,
+// '/hg/show/data',
+// JSON
+// .stringify(HG_result_data));
 											for ( var i in HG_result_data) {
 												if (input_result == i) {
 													$("#hg_name_hid").val("0");
 													document
 															.getElementById("hg_name_examine").className = "";
 												} else {
-//													write_to_log(tid, 'DATA',
-//															'INPUT_TEXT',
-//															'host_group_name', 'T',
-//															input_result);
+// write_to_log(tid, 'DATA',
+// 'INPUT_TEXT',
+// 'host_group_name', 'T',
+// input_result);
 													$("#hg_name_hid").val("1");
 												}
 												
@@ -364,5 +382,7 @@ $("[rel=drevil]").popover({
         }
     }, );
 });　
+
+
 
 

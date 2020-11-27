@@ -13,7 +13,7 @@ var mgtIp = get_mgt_ip();
 function get_mgt_ip() {
 	var obj = new Object();
 	$.ajax({
-		url : "http://127.0.0.1:7773/mgtip",
+		url : "/mgtip",
 		type : "GET",
 		dataType : "json",
 		async : false,
@@ -28,7 +28,7 @@ function get_mgt_ip() {
 function get_vlpx_ip() {
 	var obj = new Object();
 	$.ajax({
-		url : "http://127.0.0.1:7773/vplxip",
+		url : "/vplxip",
 		type : "GET",
 		dataType : "json",
 		async : false,
@@ -69,6 +69,7 @@ function hg_table() {
 					tid : tid,
 					ip : mgtIp
 				},
+				async : false,
 				success : function(status) {
 					write_to_log(tid, 'OPRT', 'ROUTE', vplxIp, '/hg/show/oprt',
 							status);
@@ -80,6 +81,7 @@ function hg_table() {
 							tid : tid,
 							ip : mgtIp
 						},
+						async : false,
 						success : function(host_group_result) {
 							write_to_log(tid, 'DATA', 'ROUTE', vplxIp,
 									'/hg/show/data', JSON

@@ -224,6 +224,23 @@
             "Host1",
             "Host12323",
             "Host_test1"
+        ],
+        "vcbcxcx": [
+            "Host1",
+            "Host12323",
+            "Host_test1",
+            "Host_test133"
+        ],
+        "bzczc": [
+            "Host1",
+            "Host12323",
+            "Host_test1",
+            "Host_test133"
+        ],
+        "wewqe": [
+            "Host1",
+            "Host12323",
+            "Host_test1"
         ]
     },
     "DiskGroup": {
@@ -343,6 +360,72 @@
             "res_c"
         ],
         "nmbbbv": [
+            "res_a",
+            "res_b",
+            "res_c"
+        ],
+        "vccxc": [
+            "res_a",
+            "res_b",
+            "res_c"
+        ],
+        "xcxxzxc": [
+            "res_a",
+            "res_b",
+            "res_c"
+        ],
+        "cxcxcz": [
+            "res_a",
+            "res_b",
+            "res_c"
+        ],
+        "zxczc": [
+            "res_a",
+            "res_b",
+            "res_c"
+        ],
+        "zczxcx": [
+            "res_a",
+            "res_b",
+            "res_c",
+            "res_d"
+        ],
+        "bvbvb": [
+            "res_c",
+            "res_d"
+        ],
+        "cswqewe": [
+            "res_d",
+            "res_a",
+            "res_b"
+        ],
+        "kjjkjk": [
+            "res_a",
+            "res_b",
+            "res_c"
+        ],
+        "bnbn": [
+            "res_b",
+            "res_c"
+        ],
+        "bnbnbn": [
+            "res_a",
+            "res_b"
+        ],
+        "klklkl": [
+            "res_a",
+            "res_b"
+        ],
+        "cvcvb": [
+            "res_a",
+            "res_b",
+            "res_c"
+        ],
+        "bvbvcx": [
+            "res_a",
+            "res_b"
+        ],
+        "dgewen": [
             "res_a",
             "res_b",
             "res_c"
