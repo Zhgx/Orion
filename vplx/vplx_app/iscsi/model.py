@@ -37,9 +37,9 @@ class HostCreate(views.MethodView):
         host_create_results = host_obj.create_host(host, iqn)
         logger.write_to_log('DATA', 'RESULT', 'HostCreate', 'result', host_create_results)
         if host_create_results == True:
-            result = "create success"
+            result = "0"
         else:
-            result = "create failed"
+            result = "1"
         logger.write_to_log('DATA', 'RETURN', 'HostCreate', 'result', result)
         return cors_data(result)
 
@@ -58,9 +58,9 @@ class HostGroupCreate(views.MethodView):
         host_group_create_results = host_group_obj.create_hostgroup(host_group_name, host)
         logger.write_to_log('DATA', 'RESULT', 'HostGroupCreate', 'result', host_group_create_results)
         if host_group_create_results == True:
-            result = "create success"
+            result = "0"
         else:
-            result = "create failed"
+            result = "1"
         logger.write_to_log('DATA', 'RETURN', 'HostGroupCreate', 'result', result)
         return cors_data(result)
 
@@ -78,9 +78,9 @@ class DiskGroupCreate(views.MethodView):
         disk_group_create_results = disk_group_obj.create_diskgroup(disk_group_name, disk)
         logger.write_to_log('DATA', 'RESULT', 'DiskGroupCreate', 'result', disk_group_create_results)
         if disk_group_create_results == True:
-            result = "create success"
+            result = "0"
         else:
-            result = "create failed"
+            result = "1"
         logger.write_to_log('DATA', 'RETURN', 'DiskGroupCreate', 'result', result)
         return cors_data(result)
 
@@ -98,9 +98,9 @@ class MapCreate(views.MethodView):
         map_create_results = map_obj.create_map(map_name, host_group_name,disk_group_name)
         logger.write_to_log('DATA', 'RESULT', 'MapCreate', 'result', map_create_results)
         if map_create_results == True:
-            result = "create success"
+            result = "0"
         else:
-            result = "create failed"
+            result = "1"
         logger.write_to_log('DATA', 'RETURN', 'MapCreate', 'result', result)
         return cors_data(result)
 

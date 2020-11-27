@@ -241,6 +241,19 @@
             "Host1",
             "Host12323",
             "Host_test1"
+        ],
+        "dadasd": [
+            "Host1",
+            "Host12323",
+            "Host_test1"
+        ],
+        "asdsd": [
+            "Host1"
+        ],
+        "rtrtrt": [
+            "Host1",
+            "Host12323",
+            "Host_test1"
         ]
     },
     "DiskGroup": {
@@ -428,6 +441,35 @@
         "dgewen": [
             "res_a",
             "res_b",
+            "res_c"
+        ],
+        "dddd": [
+            "res_d",
+            "res_c"
+        ],
+        "sdsdds": [
+            "res_d",
+            "res_c"
+        ],
+        "sssdd": [
+            "res_d",
+            "res_c"
+        ],
+        "ddf": [
+            "res_d",
+            "res_c"
+        ],
+        "sss": [
+            "res_d",
+            "res_c"
+        ],
+        "x": [
+            "res_c"
+        ],
+        "sdsdf": [
+            "res_d"
+        ],
+        "sd": [
             "res_c"
         ]
     },

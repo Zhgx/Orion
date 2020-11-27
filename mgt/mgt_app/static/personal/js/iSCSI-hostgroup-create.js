@@ -108,6 +108,9 @@ function change_host(obj) {
 	if (event.srcElement.tagName == "TD") {
 		curRow = event.srcElement.parentElement;
 		tr = curRow.innerHTML;
+		$("#H_T_Show").append(
+				'<tr onClick="change_host_second(this)">' + tr + '</tr>');
+		curRow.remove();// 删除
 		var td = curRow.cells;
 		var td_host = td[0].innerHTML;
 			$.ajax({
@@ -138,9 +141,6 @@ function change_host(obj) {
 				}
 
 			});
-		$("#H_T_Show").append(
-				'<tr onClick="change_host_second(this)">' + tr + '</tr>');
-		curRow.remove();// 删除
 	}
 }
 // var td = curRow.cells
@@ -213,16 +213,23 @@ function change_host_second() {
 // }
 // alert(obj_list);
 // }
-function div_btn() {
-	document.getElementById('light').style.display='block';
+function div_success() {
+	document.getElementById('light_success').style.display='block';
+	setTimeout("light_success.style.display='none'",2000);
+}
+
+function div_failed() {
+	document.getElementById('light_failed').style.display='block';
 	document.getElementById('fade').style.display='block';
-	setTimeout("light.style.display='none'",3000);
-	setTimeout("fade.style.display='none'",3000);
+	setTimeout("light_failed.style.display='none'",4000);
+	setTimeout("fade.style.display='none'",4000);
 }
-function btn_none() {
-	document.getElementById('light').style.display='none';
-	document.getElementById('fade').style.display='none';
-}
+
+//
+//function btn_none() {
+//	document.getElementById('light_success').style.display='none';
+//	document.getElementById('fade').style.display='none';
+//}
 
 $("#host_group_create").mousedown(function(){
 			hg_name_myfunction();
@@ -251,7 +258,19 @@ $("#host_group_create").mousedown(function(){
 					},
 					async : false,
 					success : function(operation_feedback_prompt) {
-						$('#P_text').text(operation_feedback_prompt);
+						if (operation_feedback_prompt == '0') {
+							var text = "创建成功!";
+							$('#P_text_success').text(text);
+							div_success();
+						}else {
+							var text = "创建失败!";
+							$('#P_text_failed').text(text);
+							 div_failed();
+						}
+						
+						
+						
+					
 						write_to_log(tid, 'OPRT', 'ROUTE', vplxIp,
 								'/hg/create', operation_feedback_prompt);
 						$("#host_group_name").val("");
@@ -284,8 +303,6 @@ function hg_name_myfunction() {
 	match_result = hg_name_match_regular.test(input_result)
 	if (!input_result) {
 		$("#hg_name_hid").val("0");
-		var text = "格式验证失败:命名不能为空";
-		$('#P_text').text(text);
 		document.getElementById("hg_name_examine").className = "hidden";
 		document.getElementById("hg_name_format").className = "hidden";
 
@@ -321,7 +338,6 @@ function hg_name_myfunction() {
 										},
 										async : false,
 										success : function(HG_result_data) {
-										document.getElementById('light').show().delay(1500).fadeOut();
 // write_to_log(
 // tid,
 // 'DATA',
