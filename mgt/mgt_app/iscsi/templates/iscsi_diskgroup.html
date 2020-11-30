@@ -24,12 +24,12 @@ body {
 	width: 15.66666667%;
 }
 
-.col-sm-8 {
-	right: 30px;
-}
-
 .col-sm-2 {
 	right: 25%;
+}
+
+.col-sm-8 {
+	right: 30px;
 }
 
 table tbody {
@@ -54,42 +54,49 @@ table thead th {
 }
 </style>
 <style type="text/css">
-.alert {
+.black_overlay {
 	display: none;
-	position: fixed;
+	position: absolute;
+	top: 0%;
+	left: 0%;
+	width: 100%;
+	height: 100%;
+	background-color: black;
+	z-index: 1001;
+	-moz-opacity: 0.8;
+	opacity: .80;
+	filter: alpha(opacity = 80);
+}
+
+.white_content {
+	display: none;
+	position: absolute;
 	top: 50%;
-	left: 50%;
-	min-width: 300px;
-	max-width: 600px;
-	transform: translate(-50%,-50%);
-	z-index: 99999;
-	text-align: center;
-	padding: 15px;
-	border-radius: 3px;
+	left: 36%;
+	width: 27%;
+	height: 70px;
+	padding: 12px;
+	/* border: 3px solid orange; */
+	background-color: #66CC00;
+	z-index: 1002;
+	overflow: hidden;
 }
 
-.alert-success {
-    color: #3c763d;
-    background-color: #dff0d8;
-    border-color: #d6e9c6;
-}
-
-.alert-info {
-    color: #31708f;
-    background-color: #d9edf7;
-    border-color: #bce8f1;
-}
-
-.alert-warning {
-    color: #8a6d3b;
-    background-color: #fcf8e3;
-    border-color: #faebcc;
-}
-
-.alert-danger {
-    color: #a94442;
-    background-color: #f2dede;
-    border-color: #ebccd1;
+.failed_content {
+	display: none;
+	position: absolute;
+	top: 50%;
+	left: 36%;
+	width: 27%;
+	height: 70px;
+	padding: 12px;
+	/* border: 3px solid orange; */
+	background-color: #993333;
+	z-index: 1002;
+	overflow: hidden;
+	width: 27%;
+	height: 70px;
+	padding: 12px;
 }
 </style>
 </head>
@@ -151,23 +158,31 @@ table thead th {
 			<div class="col-sm-8">
 				<input type="text" class="form-control" id="disk_group_name"
 					placeholder="请输入DiskGroup名称" style="width: 200px;" value=""
-					onblur="dg_name_myfunction()"> <input id="dg_name_hid" hidden="hidden"
-					 value="0"> <input
+					onblur="dg_name_myfunction()"> <input id="dg_name_hid"
+					hidden="hidden" value="0"> <input
 					id="dg_name_verify_status" hidden="hidden" value="0"> <span
-					class="red"> <span id="dg_name_examine" class="hidden" >DiskGroup
+					class="red"> <span id="dg_name_examine" class="hidden">DiskGroup
 						Name已存在！</span> <span id="dg_name_format" class="hidden">格式验证失败:仅支持字母数字以及下划线，且以字母开头</span>
 				</span>
 			</div>
 			<div class="col-sm-2">
-				<button type="submit" class="btn btn-default" 
-					name="disk_group_create" id="disk_group_create"
-					>Create</button>
-					<div class="alert"></div>
+				<button type="submit" class="btn btn-default"
+					name="disk_group_create" id="disk_group_create">Create</button>
 			</div>
-
 		</div>
 		<div class="col-xs-5 "></div>
 	</div>
+	<div id="light_success" class="white_content">
+		<p id="P_text_success"
+			style="text-align: center; font-size: 30px; color: gray;"></p>
+	</div>
+	<div id="light_failed" class="failed_content">
+		<p id="P_text_failed"
+			style="text-align: center; font-size: 30px; color: oldlace;"></p>
+	</div>
+	<div id="fade" class="black_overlay"></div>
+
+
 </body>
 <script type="text/javascript"
 	src="{{url_for('static',filename='personal/js/JQuery.js')}}"></script>

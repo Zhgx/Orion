@@ -59,6 +59,53 @@ table thead th {
 }
 </style>
 
+<style type="text/css">
+.black_overlay {
+	display: none;
+	position: absolute;
+	top: 0%;
+	left: 0%;
+	width: 100%;
+	height: 150%;
+	background-color: black;
+	z-index: 1001;
+	-moz-opacity: 0.8;
+	opacity: .80;
+	filter: alpha(opacity = 80);
+}
+
+.white_content {
+	display: none;
+	position: absolute;
+	top: 50%;
+	left: 36%;
+	width: 27%;
+	height: 70px;
+	padding: 12px;
+	/* border: 3px solid orange; */
+	background-color: #66CC00;
+	z-index: 1002;
+	overflow: hidden;
+}
+
+.failed_content {
+	display: none;
+	position: absolute;
+	top: 50%;
+	left: 36%;
+	width: 27%; height : 70px; padding : 12px;
+	/* border: 3px solid orange; */
+	background-color: #993333;
+	z-index: 1002;
+	overflow: hidden;
+	width: 27%;
+	height: 70px;
+	padding: 12px;
+	height: 70px;
+	padding: 12px;
+}
+</style>
+
 </head>
 <body>
 	<div class="container">
@@ -67,6 +114,10 @@ table thead th {
 		</h1>
 		<div class="row">
 			<div class="col-xs-5 ">
+				<span class="text-success" style="margin-left: 35%;">可选主机组列表</span>
+				<span class="glyphicon glyphicon-question-sign" rel="drevil"
+					data-container="body" data-toggle="popover" data-placement="bottom"
+					data-content="通过单击项目将其添加到已选列表"></span>
 				<table id="HGTable" class="table  table-hover table-bordered "
 					border="1">
 					<thead>
@@ -79,6 +130,10 @@ table thead th {
 				</table>
 			</div>
 			<div class="col-xs-5 ">
+				<span class="text-success" style="margin-left: 32%;">已选主机组列表</span> <span
+					class="glyphicon glyphicon-question-sign" rel="drevil"
+					data-container="body" data-toggle="popover" data-placement="bottom"
+					data-content="通过单击项目将其移出已选列表(同时放回可选列表)"></span>
 				<table id="HGTable_Show" class="table table-hover table-bordered"
 					border="1">
 					<thead>
@@ -91,6 +146,7 @@ table thead th {
 				</table>
 			</div>
 			<div class="col-xs-4 ">
+			<span class="text-success" style="margin-left: 30%;">已选主机组中所以主机</span>
 				<table id="HostTable" class="table  table-hover table-bordered "
 					border="1">
 					<thead>
@@ -106,6 +162,10 @@ table thead th {
 		</div>
 		<div class="row">
 			<div class="col-xs-5 ">
+			<span class="text-success" style="margin-left: 35%;">可选磁盘组列表</span>
+				<span class="glyphicon glyphicon-question-sign" rel="drevil"
+					data-container="body" data-toggle="popover" data-placement="bottom"
+					data-content="通过单击项目将其添加到已选列表"></span>
 				<table id="DGTable" class="table  table-hover table-bordered "
 					border="1">
 					<thead>
@@ -118,6 +178,10 @@ table thead th {
 				</table>
 			</div>
 			<div class="col-xs-5 ">
+			<span class="text-success" style="margin-left: 32%;">已选磁盘组列表</span> <span
+					class="glyphicon glyphicon-question-sign" rel="drevil"
+					data-container="body" data-toggle="popover" data-placement="bottom"
+					data-content="通过单击项目将其移出已选列表(同时放回可选列表)"></span>
 				<table id="DGTable_Show" class="table table-hover table-bordered"
 					border="1">
 					<thead>
@@ -130,6 +194,7 @@ table thead th {
 				</table>
 			</div>
 			<div class="col-xs-4 ">
+			<span class="text-success" style="margin-left: 30%;">已选磁盘组中所有磁盘</span>
 				<table id="DiskTable" class="table  table-hover table-bordered "
 					border="1">
 					<thead>
@@ -154,16 +219,25 @@ table thead th {
 					class="red"> <span id="map_name_examine" class="hidden">Map
 						Name已存在！</span> <span id="map_name_format" class="hidden">格式验证失败:仅支持字母数字以及下划线，且以字母开头</span>
 				</span>
-
 			</div>
 			<div class="col-sm-2">
-				<button type="submit" class="btn btn-default" 
-					name="map_create" id="map_create">Create</button>
+				<button type="submit" class="btn btn-default" name="map_create"
+					id="map_create">Create</button>
 			</div>
 
 		</div>
 		<div class="col-xs-5 "></div>
 	</div>
+	<div id="light_success" class="white_content">
+		<p id="P_text_success"
+			style="text-align: center; font-size: 30px; color: gray;"></p>
+	</div>
+	<div id="light_failed" class="failed_content">
+		<p id="P_text_failed"
+			style="text-align: center; font-size: 30px; color: oldlace;"></p>
+	</div>
+	<div id="fade" class="black_overlay"></div>
+
 </body>
 <script type="text/javascript"
 	src="{{url_for('static',filename='personal/js/JQuery.js')}}"></script>

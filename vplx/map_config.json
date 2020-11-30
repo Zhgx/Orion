@@ -93,7 +93,8 @@
         "sdsd2": "iqn.2323-32.xx",
         "dsdsd23": "iqn.2333-23.xx",
         "sdsddssd": "iqn.2323-23.xx",
-        "ytyty": "iqn.2323-32.xx"
+        "ytyty": "iqn.2323-32.xx",
+        "sdd": "iqn.2332-23.xx"
     },
     "Disk": {
         "res_a": "/dev/drbd1000",
@@ -254,6 +255,53 @@
             "Host1",
             "Host12323",
             "Host_test1"
+        ],
+        "add": [
+            "Host_test133",
+            "Host_test2"
+        ],
+        "dfdfd": [
+            "Host1",
+            "Host12323"
+        ],
+        "cxcx": [
+            "Host1",
+            "Host12323",
+            "Host_test1",
+            "Host_test133",
+            "Host_test2"
+        ],
+        "sdsdd": [
+            "Host1",
+            "Host12323",
+            "Host_test1",
+            "Host_test133",
+            "Host_test2",
+            "a123",
+            "asdasd",
+            "cxcxc",
+            "dfda",
+            "dsd",
+            "dsdsd",
+            "dsdsd23",
+            "gfgfg"
+        ],
+        "xcxc": [
+            "hjhj",
+            "hos12",
+            "hos2323"
+        ],
+        "a222": [
+            "Host1",
+            "Host_test1"
+        ],
+        "a12312": [
+            "Host1",
+            "Host_test1"
+        ],
+        "wewe": [
+            "Host1",
+            "Host12323"
         ]
     },
     "DiskGroup": {
@@ -471,6 +519,9 @@
         ],
         "sd": [
             "res_c"
+        ],
+        "cxcx": [
+            "res_d"
         ]
     },
     "Map": {

@@ -40,7 +40,21 @@ function get_vlpx_ip() {
 	return obj;
 }
 
+function div_success() {
+	document.getElementById('light_success').style.display='block';
+	setTimeout("light_success.style.display='none'",2000);
+}
+
+function div_failed() {
+	document.getElementById('light_failed').style.display='block';
+	document.getElementById('fade').style.display='block';
+	setTimeout("light_failed.style.display='none'",4000);
+	setTimeout("fade.style.display='none'",4000);
+}
+
 $("#host_create").mousedown(function(){
+	host_name_myfunction();
+	iqn_myfunction();
 	var hostName = $("#host_name").val()
 	var hostiqn = $("#host_iqn").val()
 
@@ -49,12 +63,8 @@ $("#host_create").mousedown(function(){
 		"host_iqn" : hostiqn
 	});
 
-	host_name_myfunction();
-	iqn_myfunction();
 	var host_name_hid_value = $("#host_name_hid").val();
 	var host_iqn_hid_value = $("#host_iqn_hid").val();
-	console.log(host_name_hid_value);
-	console.log(host_iqn_hid_value);
 	if (host_name_hid_value == "1" && host_iqn_hid_value == "1") {
 		write_to_log(tid, 'OPRT', 'CLICK', 'host_create', 'accept',
 				dict_data);
@@ -68,7 +78,15 @@ $("#host_create").mousedown(function(){
 				host_iqn : hostiqn
 			},
 			success : function(operation_feedback_prompt) {
-				alert(operation_feedback_prompt);
+				if (operation_feedback_prompt == '0') {
+					var text = "创建成功!";
+					$('#P_text_success').text(text);
+					div_success();
+				}else {
+					var text = "创建失败!";
+					$('#P_text_failed').text(text);
+					 div_failed();
+				}
 				write_to_log(tid, 'OPRT', 'ROUTE', vplxIp,
 						'/host/create', operation_feedback_prompt);
 				$("#host_name").val("");
@@ -85,7 +103,6 @@ $("#host_create").mousedown(function(){
 	} else {
 		write_to_log(tid, 'OPRT', 'CLICK', 'host_create', 'refuse',
 				dict_data);
-		alert("请输入正确值!")
 	}
 	
 });
@@ -103,6 +120,7 @@ function write_to_log(tid, t1, t2, d1, d2, data) {
 			d2 : d2,
 			data : data
 		},
+		async : false,
 		success : function(write_log_result) {
 		}
 	});
@@ -144,12 +162,14 @@ function host_name_myfunction() {
 											tid : tid,
 											ip : mgtIp
 										},
+										async : false,
 										success : function(host_result) {
 											for ( var i in host_result) {
 												if (input_result == i) {
 													$("#host_name_hid").val("0");
 													document
 															.getElementById("host_name_examine").className = "";
+													break;
 												} else {
 													$("#host_name_hid").val("1");
 												}

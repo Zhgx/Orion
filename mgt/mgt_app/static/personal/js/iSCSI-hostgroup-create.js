@@ -186,9 +186,9 @@ function change_host_second() {
 							tr = '<td >' + iqn + '</td>';
 							$("#H_IQN_T_Show").append('<tr >' + tr + '</tr>')
 					}
-					// write_to_log(tid, 'DATA', 'ROUTE', vplxIp,
-					// '/hg/show/data', JSON
-					// .stringify(host_group_result));
+					 write_to_log(tid, 'DATA', 'ROUTE', vplxIp,
+					 '/hg/show/data', JSON
+					 .stringify(host_result));
 				},
 				error : function() {
 					write_to_log(tid, 'DATA', 'ROUTE', vplxIp, '/dg/show/data',
@@ -225,11 +225,6 @@ function div_failed() {
 	setTimeout("fade.style.display='none'",4000);
 }
 
-//
-//function btn_none() {
-//	document.getElementById('light_success').style.display='none';
-//	document.getElementById('fade').style.display='none';
-//}
 
 $("#host_group_create").mousedown(function(){
 			hg_name_myfunction();
@@ -246,6 +241,7 @@ $("#host_group_create").mousedown(function(){
 				"host" : obj_host_str
 			});
 			var hg_name_hid_value = $("#hg_name_hid").val();
+			
 			if (hg_name_hid_value == "1") {
 				$.ajax({
 					url : vplxIp + "/hg/create",
@@ -267,8 +263,6 @@ $("#host_group_create").mousedown(function(){
 							$('#P_text_failed').text(text);
 							 div_failed();
 						}
-						
-						
 						
 					
 						write_to_log(tid, 'OPRT', 'ROUTE', vplxIp,
@@ -309,8 +303,6 @@ function hg_name_myfunction() {
 	} else {
 		if (!match_result) {
 			$("#hg_name_hid").val("0");
-			var text = "格式验证失败:仅支持字母数字以及下划线，且以字母开头";
-			$('#P_text').text(text);
 			document.getElementById("hg_name_format").className = "";
 		} else {
 			document.getElementById("hg_name_format").className = "hidden";
@@ -325,8 +317,8 @@ function hg_name_myfunction() {
 						},
 						async : false,
 						success : function(HG_result) {
-// write_to_log(tid, 'OPRT', 'ROUTE', vplxIp,
-// '/hg/show/oprt', HG_result);
+							write_to_log(tid, 'OPRT', 'ROUTE', vplxIp,
+									'/hg/show/oprt', HG_result);
 							$
 									.ajax({
 										url : vplxIp + "/hg/show/data",
@@ -338,24 +330,21 @@ function hg_name_myfunction() {
 										},
 										async : false,
 										success : function(HG_result_data) {
-// write_to_log(
-// tid,
-// 'DATA',
-// 'ROUTE',
-// vplxIp,
-// '/hg/show/data',
-// JSON
-// .stringify(HG_result_data));
+											write_to_log(
+													tid,
+													'DATA',
+													'ROUTE',
+													vplxIp,
+													'/hg/show/data',
+													JSON
+													.stringify(HG_result_data));
 											for ( var i in HG_result_data) {
 												if (input_result == i) {
 													$("#hg_name_hid").val("0");
 													document
 															.getElementById("hg_name_examine").className = "";
+													break;
 												} else {
-// write_to_log(tid, 'DATA',
-// 'INPUT_TEXT',
-// 'host_group_name', 'T',
-// input_result);
 													$("#hg_name_hid").val("1");
 												}
 												
