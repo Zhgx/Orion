@@ -1,74 +1,29 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-<title>index_preview</title>
+<title>VersaTEL</title>
 <meta charset="utf-8" />
 <meta name="viewport"
 	content="width=device-width, initial-scale=1, user-scalable=no" />
-<!--<link href="{{url_for('static',filename='assets/css/main.css')}}"-->
-<!--	rel="stylesheet" type="text/css" />-->
-<noscript>
-	<link href="{{url_for('static',filename='assets/css/noscript.css')}}"
-		rel="stylesheet" type="text/css" />
-</noscript>
+<link
+	href="{{url_for('static',filename='bootstrap-3.3.7/dist/css/bootstrap.min.css')}}"
+	rel="stylesheet" type="text/css" />
 </head>
-<!--11.5 mattie：当前就显示空白页面，不展示什么信息，之后再看显示什么信息补充上来-->
-<body class="is-preload">
+<body>
 
-	<div id="wrapper">
-
-		<header id="header">
-			<div class="logo">
-				<span class="icon fa-gem"></span>
-			</div>
-			<div class="content">
-				<div class="inner">
-<!--					<h1>VersaTEL</h1>-->
-				</div>
-			</div>
-		
-		</header>
-
-		<div id="main">
-
-			<article id="Create">
-				<h2 class="major">Create</h2>
-			</article>
-
-			<article id="Show">
-				<h2 class="major">Show</h2>
-			</article>
-
-			<article id="Delete">
-				<h2 class="major">Delete</h2>
-
-			</article>
+	<div class="jumbotron" style="height: 430px;">
+		<div class="container" align="center" style="margin-top: 100px;">
+			<h2 class="text-info"
+				style="font-family: 宋体; font-weight: bold; font-size: 49px">VersaTEL</h2>
+			<br>
+			<div class="text-muted">安全、稳定</div>
+			<br> <br>
 		</div>
-
-		<!-- Footer -->
-		<footer id="footer">
-			<p class="copyright">
-<!--				&copy; FeixiTek-->
-			</p>
-		</footer>
-
 	</div>
 
-	<!-- BG -->
-	<div id="bg"></div>
-
-	<!-- Scripts -->
 	<script type="text/javascript"
 		src="{{url_for('static',filename='assets/js/jquery.min.js')}}"></script>
 	<script type="text/javascript"
-		src="{{url_for('static',filename='assets/js/browser.min.js')}}"></script>
-	<script type="text/javascript"
-		src="{{url_for('static',filename='assets/js/breakpoints.min.js')}}"></script>
-	<script type="text/javascript"
-		src="{{url_for('static',filename='assets/js/util.js')}}"></script>
-	<script type="text/javascript"
-		src="{{url_for('static',filename='assets/js/main.js')}}"></script>
-
-
+		src="{{url_for('static',filename='bootstrap-3.3.7/dist/js/bootstrap.js')}}"></script>
 </body>
 </html>

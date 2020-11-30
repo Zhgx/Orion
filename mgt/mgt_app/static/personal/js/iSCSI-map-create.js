@@ -13,7 +13,7 @@ var mgtIp = get_mgt_ip();
 function get_mgt_ip() {
 	var obj = new Object();
 	$.ajax({
-		url : "http://127.0.0.1:7773/mgtip",
+		url : "/mgtip",
 		type : "GET",
 		dataType : "json",
 		async : false,
@@ -28,7 +28,7 @@ function get_mgt_ip() {
 function get_vlpx_ip() {
 	var obj = new Object();
 	$.ajax({
-		url : "http://127.0.0.1:7773/vplxip",
+		url : "/vplxip",
 		type : "GET",
 		dataType : "json",
 		async : false,
@@ -69,6 +69,7 @@ function hg_table() {
 					tid : tid,
 					ip : mgtIp
 				},
+				async : false,
 				success : function(status) {
 					write_to_log(tid, 'OPRT', 'ROUTE', vplxIp, '/hg/show/oprt',
 							status);
@@ -80,6 +81,7 @@ function hg_table() {
 							tid : tid,
 							ip : mgtIp
 						},
+						async : false,
 						success : function(host_group_result) {
 							write_to_log(tid, 'DATA', 'ROUTE', vplxIp,
 									'/hg/show/data', JSON
@@ -459,6 +461,7 @@ function map_name_myfunction() {
 													$("#map_name_hid").val("0");
 													document
 															.getElementById("map_name_examine").className = "";
+													break;
 												} else {
 													$("#map_name_hid").val("1");
 												}
@@ -482,19 +485,34 @@ function map_name_myfunction() {
 	}
 }
 
+
+function div_success() {
+	document.getElementById('light_success').style.display='block';
+	setTimeout("light_success.style.display='none'",2000);
+}
+
+function div_failed() {
+	document.getElementById('light_failed').style.display='block';
+	document.getElementById('fade').style.display='block';
+	setTimeout("light_failed.style.display='none'",4000);
+	setTimeout("fade.style.display='none'",4000);
+}
+
+
 $("#map_create").mousedown(function(){
+			map_name_myfunction();
 			var obj_diskgroup = [];
 			var tableId = document.getElementById("HGTable_Show");
 			var str = "";
-			for (var i = 1; i < tableId.rows.length; i++) {
-				obj_diskgroup.push(tableId.rows[i].cells[0].innerHTML)
+			for (var i = 1; i < DGTable_Show.rows.length; i++) {
+				obj_diskgroup.push(DGTable_Show.rows[i].cells[0].innerHTML)
 			}
 			obj_diskgroup_str = obj_diskgroup.toString();
 			var obj_hostgroup = [];
 			var tableId = document.getElementById("DGTable_Show");
 			var str = "";
-			for (var i = 1; i < tableId.rows.length; i++) {
-				obj_hostgroup.push(tableId.rows[i].cells[0].innerHTML)
+			for (var i = 1; i < HGTable_Show.rows.length; i++) {
+				obj_hostgroup.push(HGTable_Show.rows[i].cells[0].innerHTML)
 			}
 			obj_hostgroup_str = obj_hostgroup.toString();
 
@@ -504,7 +522,6 @@ $("#map_create").mousedown(function(){
 				"disk_group" : obj_diskgroup_str,
 				"host_group" : obj_hostgroup_str
 			});
-			map_name_myfunction();
 			var map_name_hid_value = $("#map_name_hid").val();
 			if (map_name_hid_value == "1") {
 				write_to_log(tid, 'DATA', 'CHECKBOX', 'host group', '',
@@ -524,7 +541,15 @@ $("#map_create").mousedown(function(){
 						host_group : obj_hostgroup_str
 					},
 					success : function(operation_feedback_prompt) {
-						alert(operation_feedback_prompt);
+						if (operation_feedback_prompt == '0') {
+							var text = "创建成功!";
+							$('#P_text_success').text(text);
+							div_success();
+						}else {
+							var text = "创建失败!";
+							$('#P_text_failed').text(text);
+							 div_failed();
+						}
 						write_to_log(tid, 'OPRT', 'ROUTE', vplxIp,
 								'/map/create', JSON
 										.stringify(operation_feedback_prompt));
@@ -539,6 +564,25 @@ $("#map_create").mousedown(function(){
 			} else {
 				write_to_log(tid, 'OPRT', 'CLICK', 'map_create', 'refuse',
 						dict_data);
-				alert("请输入正确值!")
 			}
 		});
+$(function () { $("[data-toggle='popover']").popover(); });
+
+$("[rel=drevil]").popover({
+    trigger:'manual',
+    html: 'true', 
+    animation: false
+}).on("mouseenter", function () {
+    var _this = this;
+    $(this).popover("show");
+    $(this).siblings(".popover").on("mouseleave", function () {
+        $(_this).popover('hide');
+    });
+}).on("mouseleave", function () {
+    var _this = this;
+    setTimeout(function () {
+        if (!$(".popover:hover").length) {
+            $(_this).popover("hide")
+        }
+    }, );
+});　
