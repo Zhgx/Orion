@@ -94,7 +94,8 @@
         "dsdsd23": "iqn.2333-23.xx",
         "sdsddssd": "iqn.2323-23.xx",
         "ytyty": "iqn.2323-32.xx",
-        "sdd": "iqn.2332-23.xx"
+        "sdd": "iqn.2332-23.xx",
+        "hosta12312": "iqn.1234-123.com"
     },
     "Disk": {
         "res_a": "/dev/drbd1000",
@@ -302,6 +303,14 @@
         "wewe": [
             "Host1",
             "Host12323"
+        ],
+        "HG1": [
+            "Host1",
+            "Host_test1"
+        ],
+        "HG11": [
+            "asdasd",
+            "dfda"
         ]
     },
     "DiskGroup": {

@@ -7,6 +7,8 @@
 <link
 	href="{{url_for('static',filename='bootstrap-3.3.7/dist/css/bootstrap.min.css')}}"
 	rel="stylesheet" type="text/css" />
+	<link href="{{url_for('static',filename='personal/css/style.css')}}"
+	rel="stylesheet" type="text/css" />
 <style type="text/css">
 .red {
 	color: #FF0000;
@@ -102,9 +104,12 @@ table thead th {
 </head>
 <body>
 	<div class="container">
-		<h1>
-			<small>Create</small>
-		</h1>
+		<div class="row clearfix">
+			<div class="page-header">
+				<h1>
+					<small>Create</small>
+				</h1>
+			</div>
 		<div class="row">
 			<div class="col-xs-5 ">
 				<span class="text-success" style="margin-left: 35%;">可选磁盘列表</span> <span
@@ -171,6 +176,7 @@ table thead th {
 			</div>
 		</div>
 		<div class="col-xs-5 "></div>
+	</div>
 	</div>
 	<div id="light_success" class="white_content">
 		<p id="P_text_success"
