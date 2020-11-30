@@ -311,6 +311,11 @@
         "HG11": [
             "asdasd",
             "dfda"
+        ],
+        "hg233": [
+            "Host1",
+            "Host12323",
+            "Host_test1"
         ]
     },
     "DiskGroup": {
