@@ -129,6 +129,12 @@
 								<dd>
 									<a onclick="selectItem(this)" id="Map">**Map</a>
 								</dd>
+								<dd>
+									<a onclick="selectItem(this)" id="Map2">**Map2</a>
+								</dd>
+								<dd>
+									<a onclick="selectItem(this)" id="iSCSICreate">Create</a>
+								</dd>
 							</dl></li>
 					</ul>
 				</div>
@@ -149,22 +155,14 @@
 	</div>
 		<script type="text/javascript"
 		src="{{url_for('static',filename='personal/js/JQuery.js')}}"></script>
-
 	<script type="text/javascript"
 		src="{{url_for('static',filename='layui/layui.all.js')}}"></script>
 	<script type="text/javascript">
-
-
-
-
     function selectItem(obj) {
         $('.active.item').removeClass("active");
         obj.className += " active";
         if(obj.id=='StorShow'){
             $('#mainpage iframe').attr('src',"/stor/resource/show");
-            $('#mainpage iframe').css({ "margin-left": "15%","max-width":"1700px"});
-        }else if(obj.id=='iSCSICreate'){
-            $('#mainpage iframe').attr('src',"/iscsi/create");
             $('#mainpage iframe').css({ "margin-left": "15%","max-width":"1700px"});
         }else if(obj.id=='Host'){
             $('#mainpage iframe').attr('src',"/iscsi/host");
@@ -180,6 +178,12 @@
                 $('#mainpage iframe').css({ "margin-left": "15%","max-width":"1700px"});
         }else if(obj.id=='Resource'){
                 $('#mainpage iframe').attr('src',"/stor/resource/show");
+                $('#mainpage iframe').css({ "margin-left": "15%","max-width":"1700px"});
+        }else if(obj.id=='Map2'){
+                $('#mainpage iframe').attr('src',"/iscsi/map2");
+                $('#mainpage iframe').css({ "margin-left": "15%","max-width":"1700px"});
+        }else if(obj.id=='iSCSICreate'){
+                $('#mainpage iframe').attr('src',"iscsi/create");
                 $('#mainpage iframe').css({ "margin-left": "15%","max-width":"1700px"});
         }
         }

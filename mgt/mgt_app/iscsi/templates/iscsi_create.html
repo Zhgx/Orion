@@ -4,230 +4,450 @@
 <meta charset="UTF-8">
 <title>iSCSI Configure</title>
 
-<link href="{{url_for('static',filename='bootstrap-3.3.7/dist/css/bootstrap.min.css')}}" rel="stylesheet" type="text/css" />
-<link href="{{url_for('static',filename='bootstrap-select-1.12.4/dist/css/bootstrap-select.min.css')}}" rel="stylesheet" type="text/css" />
-<link href="{{url_for('static',filename='personal/css/style.css')}}" rel="stylesheet" type="text/css" />
+<link
+	href="{{url_for('static',filename='bootstrap-3.3.7/dist/css/bootstrap.min.css')}}"
+	rel="stylesheet" type="text/css" />
+<link
+	href="{{url_for('static',filename='bootstrap-select-1.12.4/dist/css/bootstrap-select.min.css')}}"
+	rel="stylesheet" type="text/css" />
 <style type="text/css">
 body {
 	padding: 10px;
+}
+</style>
+<style type="text/css">
+.red {
+	color: #FF0000;
+}
+
+body {
+	padding: 10px;
+}
+
+.col-xs-5 {
+	width: 32.66666667%;
+}
+
+.col-xs-1 {
+	width: 15.66666667%;
+}
+
+.col-sm-8 {
+	right: 30px;
+}
+
+table tbody {
+	display: block;
+	height: 195px;
+	overflow-y: scroll;
+}
+
+table thead, tbody tr {
+	display: table;
+	width: 100%;
+	table-layout: fixed;
+}
+
+table thead {
+	width: calc(100%)
+}
+
+table thead th {
+	background: #ccc;
+	text-align: center;
+}
+</style>
+<style type="text/css">
+.black_overlay {
+	display: none;
+	position: absolute;
+	top: 0%;
+	left: 0%;
+	width: 100%;
+	height: 100%;
+	background-color: black;
+	z-index: 1001;
+	-moz-opacity: 0.8;
+	opacity: .80;
+	filter: alpha(opacity = 80);
+}
+
+.white_content {
+	display: none;
+	position: absolute;
+	top: 50%;
+	left: 36%;
+	width: 27%;
+	height: 70px;
+	padding: 12px;
+	/* border: 3px solid orange; */
+	background-color: #66CC00;
+	z-index: 1002;
+	overflow: hidden;
+}
+
+.failed_content {
+	display: none;
+	position: absolute;
+	top: 50%;
+	left: 36%;
+	width: 27%;
+	height: 70px;
+	padding: 12px;
+	/* border: 3px solid orange; */
+	background-color: #993333;
+	z-index: 1002;
+	overflow: hidden;
+	width: 27%;
+	height: 70px;
+	padding: 12px;
+	height: 70px;
+	padding: 12px;
 }
 </style>
 
 </head>
 
 <body>
-	<div class="container">
-		<div class="row clearfix">
-
-			<!-- ------------------------ -->
-			<div class="col-md-12 ">
-				<div class="page-header">
-					<h1>
-					<small>Host</small>
-					</h1>
-				</div>
-				<div class="form-group">
-					<label for="host_name" class="col-sm-2 control-label">Alias</label>
-					<div class="col-sm-10">
-						<input type="text" class="form-control" id="host_name"
-							placeholder="请输入" style="width: 200px;" value=""
-							onchange="host_name_myfunction()">
-							<input id="host_name_hid" hidden="hidden"   value="0">							
-							 <span class="red">
-							<span id="host_name_examine" class="hidden">Host已存在！</span>
-							<span id="host_name_format" class="hidden">开头只能输入字母，仅包含字母，数字，以及下划线</span>
-						</span>
-					</div>
-				</div>
-				<div class="form-group">
-					<label for="host_iqn" class="col-sm-2 control-label">IQN</label>
-					<div class="col-sm-10">
-						<input type="text" class="form-control" id="host_iqn"
-							placeholder="请输入" style="width: 200px;" value="" onchange="iqn_myfunction()" >
-							<input id="host_iqn_hid" hidden="hidden"   value="0">
-							<span class="red">
-						<span id="iqn_format" class="hidden">IQN正确格式: iqn.yyyy-mm.naming-authority:unique name</span>
-					</span>
-					</div>
-				</div>
-				<div class="form-group">
-					<div class="col-sm-offset-2 col-sm-10">
-						<button type="submit" class="btn btn-default" data-toggle="modal"
-							name="host_create" id="host_create" data-target="#myModal1" >Create</button>
-					</div>
-				</div>
-			</div>
-			<script type="text/javascript" src="{{url_for('static',filename='personal/js/jquery.min.js')}}"></script>
-			<!-- ------------------------ -->
-			<div class="col-md-12 column">
-				<div class="page-header">
-					<h1>
-						<small>HostGroup</small>
-					</h1>
-				</div>
-				<div class="form-group">
-					<label for="host_group_name" class="col-sm-2 control-label">Name</label>
-					<div class="col-sm-10">
-						<input type="text" class="form-control" id="host_group_name"
-							placeholder="请输入" style="width: 200px;" value=""
-							onchange="hg_name_myfunction()">
-							<input id="hg_name_hid"  hidden="hidden" value="0">
-							 <span class="red">
-							<span id="hg_name_examine" class="hidden">HostGroup
-								Name已存在！</span>
-								<span id="hg_name_format" class="hidden">开头只能输入字母，仅包含字母，数字，以及下划线</span>
-						</span>
-					</div>
-				</div>
-				<div class="form-group">
-					<label class="col-sm-2 ">Host</label>
-
-					<div style="width: 340px;" class="col-sm-10 ">
-						<select id='host' name="host" multiple class="selectpicker"
-							data-live-search="true">
-						</select>
-					</div>
-				</div>
-				<div class="form-group">
-					<div class="col-sm-offset-2 col-sm-10">
-						<button type="submit" class="btn btn-default" data-toggle="modal"
-							name="host_group_create" id="host_group_create"
-							data-target="#myModal1" >Create</button>
-					</div>
-				</div>
-			</div>
-
-			<div class="col-md-12 ">
-				<div class="page-header">
-					<h1>
-					<small>DiskGroup</small>
-					</h1>
-				</div>
-				<div class="form-group">
-					<label for="disk_group_name" class="col-sm-2 control-label">Name</label>
-					<div class="col-sm-10">
-						<input type="text" class="form-control" id="disk_group_name"
-							placeholder="请输入" style="width: 200px;" value=""
-							onchange="dg_name_myfunction()"> 
-							<input id="dg_name_hid"  hidden="hidden" value="0">
-							<span class="red">
-							<span id="dg_name_examine" class="hidden">DiskGroup
-								Name已存在！</span>
-								<span id="dg_name_format" class="hidden">开头只能输入字母，仅包含字母，数字，以及下划线</span>
-						</span>
-					</div>
-					<div class="form-group">
-						<label for="disk" class="col-sm-2 c">Disk</label>
-
-						<div style="width: 340px;" class="col-sm-10 ">
-							<select id='disk' name="disk" multiple class="selectpicker"
-								data-live-search="true">
-							</select>
-						</div>
-					</div>
-					<div class="form-group">
-						<div class="col-sm-offset-2 col-sm-10">
-							<button type="submit" class="btn btn-default" data-toggle="modal"
-								name="disk_group_create" id="disk_group_create"
-								data-target="#myModal1">Create</button>
-						</div>
-					</div>
-				</div>
-
-				<!-- ------------------------ -->
-				<div class="col-md-12 column">
-
-					<div class="page-header">
-						<h1>
-							<small>Map</small>
-						</h1>
-					</div>
-					<div class="form-group">
-						<label for="map_name" class="col-sm-2 control-label">Name</label>
+	<div class="tabbable">
+		<ul class="nav nav-tabs">
+			<li class="active"><a href="#host_tab" data-toggle="tab">Host
+					1</a></li>
+			<li><a href="#hostgroup_tab" data-toggle="tab">HostGroup</a></li>
+			<li><a href="#diskgroup_tab" data-toggle="tab">DiskGroup</a></li>
+			<li><a href="#map_tab" data-toggle="tab">Map</a></li>
+		</ul>
+		<div class="tab-content">
+			<!-- host-->
+			<div class="tab-pane fade in active" id="host_tab">
+				<br> <br>
+				<div class="row">
+					<div class="col-xs-6 ">
+						<label for="host_name" class="col-sm-2 control-label">Alias</label>
 						<div class="col-sm-10">
-							<input type="text" class="form-control" id="map_name"
-								placeholder="请输入" style="width: 200px;" value=""
-								onchange="map_name_myfunction()"> 
-								<input id="map_name_hid"  hidden="hidden" value="0">
-								<span class="red">
-								<span id="map_name_examine" class="hidden">Map Name已存在！</span>
-									<span id="map_name_format" class="hidden">开头只能输入字母，仅包含字母，数字，以及下划线</span>
+							<input type="text" class="form-control" id="host_name"
+								placeholder="请输入Alias" style="width: 200px;" value=""
+								onblur="host_name_myfunction()"> <input
+								id="host_name_hid" hidden="hidden" value="0"> <input
+								id="host_name_verify_status" hidden="hidden" value="0">
+							<span class="red"> <span id="host_name_examine"
+								class="hidden">Host已存在！</span> <span id="host_name_format"
+								class="hidden">格式验证失败:仅支持字母数字以及下划线，且以字母开头</span>
 							</span>
 						</div>
-					</div>
-					<div class="form-group">
-						<label for="host_group" class="col-sm-2 control-label">HostGroup</label>
-
-						<div style="width: 340px;" class="col-sm-10 ">
-							<select id='host_group' name="host_group" class="selectpicker"
-								data-live-search="true">
-							</select>
-						</div>
-					</div>
-					<div class="form-group">
-						<label for="disk_group" class="col-sm-2 control-label">DiskGroup</label>
-
-						<div style="width: 340px;" class="col-sm-10 ">
-							<select id='disk_group' name="disk_group" class="selectpicker"
-								data-live-search="true">
-							</select>
-						</div>
-					</div>
-
-					<div class="form-group">
-						<div class="col-sm-offset-2 col-sm-10">
-							<button type="submit" class="btn btn-default" data-toggle="modal"
-								name="map_create" id="map_create" data-target="#myModal1" >Create</button>
-						</div>
-					</div>
-				</div>
-			</div>
-			<!-- 模态框 -->
-			<div class="modal fade" id="myModal" tabindex="-1" role="dialog"
-				aria-labelledby="myModalLabel" aria-hidden="true">
-				<div class="modal-dialog">
-					<div class="modal-content">
-						<div class="modal-header">
-							<button type="button" class="close" data-dismiss="modal"
-								aria-hidden="true">×</button>
-							<h4 class="modal-title" id="myModalLabel">模态框（Modal）标题</h4>
-						</div>
-						<div class="modal-body">
-							<div class="progress progress-striped active">
-								<div id="prog" class="progress-bar" role="progressbar"
-									aria-valuenow="" aria-valuemin="0" aria-valuemax="100"
-									style="width: 0%;">
-									<span id="monthTotal">${itsmStatisticMonth.sumCount}</span>
-								</div>
+						<div class="form-group">
+							<label for="host_iqn" class="col-sm-2 control-label">IQN</label>
+							<div class="col-sm-10">
+								<input type="text" class="form-control" id="host_iqn"
+									placeholder="请输入IQN" style="width: 200px;" value=""
+									onblur="iqn_myfunction()"> <input id="host_iqn_hid"
+									hidden="hidden" value="0"> <input
+									id="host_iqn_verify_status" hidden="hidden" value="0">
+								<span class="red"> <span id="iqn_format" class="hidden">IQN正确格式:
+										iqn.yyyy-mm.naming-authority:unique name</span>
+								</span>
 							</div>
-							<input type="text" id="double" name="double" value="">
 						</div>
-						<div class="modal-footer">
-							<button type="button" id="newcreate" class="btn btn-default"
-								data-dismiss="modal">再次创建</button>
-							<input type="button" class="btn btn-default" value="查看表格"
-								id="see">
+						<div class="form-group">
+							<div class="col-sm-offset-2 col-sm-10">
+								<button type="button" class="btn btn-default" name="host_create"
+									id="host_create">Create</button>
+							</div>
 						</div>
-
 					</div>
-					<!-- /.modal-content -->
+					<div class="col-xs-6 "></div>
 				</div>
-				<!-- /.modal-dialog -->
 			</div>
-			<!-- /.modal -->
+			<!-- hostgroup-->
+			<div class="tab-pane fade " id="hostgroup_tab">
+				<br> <br>
+				<div class="row">
+					<div class="col-xs-5 ">
+						<span class="text-success" style="margin-left: 35%;">可选主机列表</span>
+						<span class="glyphicon glyphicon-question-sign" rel="drevil"
+							data-container="body" data-toggle="popover"
+							data-placement="bottom" data-content="通过单击项目将其添加到已选列表"></span>
+						<table id="HTable" class="table  table-hover table-bordered "
+							border="1">
+							<thead>
+								<tr>
+									<th>Host</th>
+								</tr>
+							</thead>
+							<tbody id="H_T">
+							</tbody>
+						</table>
+					</div>
+					<div class="col-xs-5 ">
+						<span class="text-success" style="margin-left: 32%;">已选主机列表</span>
+						<span class="glyphicon glyphicon-question-sign" rel="drevil"
+							data-container="body" data-toggle="popover"
+							data-placement="bottom" data-content="通过单击项目将其移出已选列表(同时放回可选列表)"></span>
+						<table id="HTable_Show" class="table table-hover table-bordered"
+							border="1">
+							<thead>
+								<tr>
+									<th>Selected Host</th>
+								</tr>
+							</thead>
+							<tbody id="H_T_Show">
+							</tbody>
+						</table>
+					</div>
+					<div class="col-xs-5 ">
+						<span class="text-success" style="margin-left: 30%;">已选主机对应的IQN</span>
+						<table id="H_IQN_Table_Show"
+							class="table table-hover table-bordered" border="1">
+							<thead>
+								<tr>
+									<th>Selected IQN</th>
+								</tr>
+							</thead>
+							<tbody id="H_IQN_T_Show">
+							</tbody>
+						</table>
+					</div>
+				</div>
+				<div class="col-xs-6 ">
+					<div class="col-sm-8">
+						<input type="text" class="form-control" id="host_group_name"
+							placeholder="请输入HostGroup名称" style="width: 200px;" value=""
+							onblur="hg_name_myfunction()"> <input id="hg_name_hid"
+							hidden="hidden" value="0"> <input
+							id="hg_name_verify_status" hidden="hidden" value="0"> <span
+							class="red"> <span id="hg_name_examine" class="hidden">HostGroup
+								Name已存在！</span> <span id="hg_name_format" class="hidden">格式验证失败:仅支持字母数字以及下划线，且以字母开头</span>
+						</span>
+					</div>
+					<div class="col-sm-2">
+						<button type="button" class="btn btn-default"
+							name="host_group_create" id="host_group_create">Create</button>
+					</div>
+				</div>
+				<div class="col-xs-5 "></div>
+
+
+			</div>
+
+			<!-- disk -->
+
+			<div class="tab-pane fade" id="diskgroup_tab">
+				<br> <br>
+				<div class="row">
+					<div class="col-xs-5 ">
+						<span class="text-success" style="margin-left: 35%;">可选磁盘列表</span>
+						<span class="glyphicon glyphicon-question-sign" rel="drevil"
+							data-container="body" data-toggle="popover"
+							data-placement="bottom" data-content="通过单击项目将其添加到已选列表"></span>
+						<table id="DTable" class="table  table-hover table-bordered "
+							border="1">
+							<thead>
+								<tr>
+									<th>Disk</th>
+									<th>Size</th>
+								</tr>
+							</thead>
+							<tbody id="D_T">
+							</tbody>
+						</table>
+					</div>
+					<div class="col-xs-5 ">
+						<span class="text-success" style="margin-left: 32%;">已选磁盘列表</span>
+						<span class="glyphicon glyphicon-question-sign" rel="drevil"
+							data-container="body" data-toggle="popover"
+							data-placement="bottom" data-content="通过单击项目将其移出已选列表(同时放回可选列表)"></span>
+						<table id="DTable_Show" class="table table-hover table-bordered"
+							border="1">
+							<thead>
+								<tr>
+									<th>Selected Disk</th>
+									<th>Size</th>
+								</tr>
+							</thead>
+							<tbody id="D_T_Show">
+							</tbody>
+						</table>
+					</div>
+					<div class="col-xs-5 ">
+						<span class="text-success" style="margin-left: 25%;">已选磁盘对应的Device</span>
+						<table id="D_Dev_Table_Show"
+							class="table table-hover table-bordered" border="1">
+							<thead>
+								<tr>
+									<th>Selected Device</th>
+								</tr>
+							</thead>
+							<tbody id="D_Dev_T_Show">
+							</tbody>
+						</table>
+					</div>
+				</div>
+				<div class="col-xs-6 ">
+					<div class="col-sm-8">
+						<input type="text" class="form-control" id="disk_group_name"
+							placeholder="请输入DiskGroup名称" style="width: 200px;" value=""
+							onblur="dg_name_myfunction()"> <input id="dg_name_hid"
+							hidden="hidden" value="0"> <input
+							id="dg_name_verify_status" hidden="hidden" value="0"> <span
+							class="red"> <span id="dg_name_examine" class="hidden">DiskGroup
+								Name已存在！</span> <span id="dg_name_format" class="hidden">格式验证失败:仅支持字母数字以及下划线，且以字母开头</span>
+						</span>
+					</div>
+					<div class="col-sm-2">
+						<button type="submit" class="btn btn-default"
+							name="disk_group_create" id="disk_group_create">Create</button>
+					</div>
+				</div>
+				<div class="col-xs-5 "></div>
+
+
+			</div>
+			<!-- map -->
+			<div class="tab-pane fade" id="map_tab">
+				<br> <br>
+				<div class="row">
+					<div class="col-xs-5 ">
+						<span class="text-success" style="margin-left: 35%;">可选主机组列表</span>
+						<span class="glyphicon glyphicon-question-sign" rel="drevil"
+							data-container="body" data-toggle="popover"
+							data-placement="bottom" data-content="通过单击项目将其添加到已选列表"></span>
+						<table id="HGTable" class="table  table-hover table-bordered "
+							border="1">
+							<thead>
+								<tr>
+									<th>HostGroups List</th>
+								</tr>
+							</thead>
+							<tbody id="HG_T">
+							</tbody>
+						</table>
+					</div>
+					<div class="col-xs-5 ">
+						<span class="text-success" style="margin-left: 32%;">已选主机组列表</span>
+						<span class="glyphicon glyphicon-question-sign" rel="drevil"
+							data-container="body" data-toggle="popover"
+							data-placement="bottom" data-content="通过单击项目将其移出已选列表(同时放回可选列表)"></span>
+						<table id="HGTable_Show" class="table table-hover table-bordered"
+							border="1">
+							<thead>
+								<tr>
+									<th>HostGroups to create</th>
+								</tr>
+							</thead>
+							<tbody id="HG_T_Show">
+							</tbody>
+						</table>
+					</div>
+					<div class="col-xs-4 ">
+						<span class="text-success" style="margin-left: 30%;">已选主机组中所有主机</span>
+						<table id="HostTable" class="table  table-hover table-bordered "
+							border="1">
+							<thead>
+								<tr>
+									<th>Host</th>
+								</tr>
+							</thead>
+							<tbody id="Host_T">
+							</tbody>
+						</table>
+					</div>
+				</div>
+				<div class="row">
+					<div class="col-xs-5 ">
+						<span class="text-success" style="margin-left: 35%;">可选磁盘组列表</span>
+						<span class="glyphicon glyphicon-question-sign" rel="drevil"
+							data-container="body" data-toggle="popover"
+							data-placement="bottom" data-content="通过单击项目将其添加到已选列表"></span>
+						<table id="DGTable" class="table  table-hover table-bordered "
+							border="1">
+							<thead>
+								<tr>
+									<th>DiskGroups List</th>
+								</tr>
+							</thead>
+							<tbody id="DG_T">
+							</tbody>
+						</table>
+					</div>
+					<div class="col-xs-5 ">
+						<span class="text-success" style="margin-left: 32%;">已选磁盘组列表</span>
+						<span class="glyphicon glyphicon-question-sign" rel="drevil"
+							data-container="body" data-toggle="popover"
+							data-placement="bottom" data-content="通过单击项目将其移出已选列表(同时放回可选列表)"></span>
+						<table id="DGTable_Show" class="table table-hover table-bordered"
+							border="1">
+							<thead>
+								<tr>
+									<th>DiskGroups to create</th>
+								</tr>
+							</thead>
+							<tbody id="DG_T_Show">
+							</tbody>
+						</table>
+					</div>
+					<div class="col-xs-4 ">
+						<span class="text-success" style="margin-left: 30%;">已选磁盘组中所有磁盘</span>
+						<table id="DiskTable" class="table  table-hover table-bordered "
+							border="1">
+							<thead>
+								<tr>
+									<th>Disk</th>
+								</tr>
+							</thead>
+							<tbody id="Disk_T">
+							</tbody>
+						</table>
+					</div>
+				</div>
+
+				<div class="col-xs-6 ">
+					<div class="col-sm-8">
+						<input type="text" class="form-control" id="map_name"
+							placeholder="请输入" style="width: 200px;" value=""
+							onblur="map_name_myfunction()"> <input id="map_name_hid"
+							hidden="hidden" value="0"> <input
+							id="map_name_verify_status" hidden="hidden" value="0"> <span
+							class="red"> <span id="map_name_examine" class="hidden">Map
+								Name已存在！</span> <span id="map_name_format" class="hidden">格式验证失败:仅支持字母数字以及下划线，且以字母开头</span>
+						</span>
+					</div>
+					<div class="col-sm-2">
+						<button type="submit" class="btn btn-default" name="map_create"
+							id="map_create">Create</button>
+					</div>
+
+				</div>
+				<div class="col-xs-5 "></div>
+
+			</div>
 		</div>
 	</div>
-	<script type="text/javascript" src="{{url_for('static',filename='personal/js/JQuery.js')}}"></script>
-	<script type="text/javascript" src="{{url_for('static',filename='bootstrap-3.3.7/dist/js/bootstrap.js')}}"></script>
-	<script type="text/javascript" src="{{url_for('static',filename='bootstrap-select-1.12.4/dist/js/bootstrap-select.js')}}"></script>
-	<script type="text/javascript" src="{{url_for('static',filename='personal/js/iSCSI-Confirm-update-box.js')}}"></script>
-	<script type="text/javascript" src="{{url_for('static',filename='layui/layui.all.js')}}"></script>
-	
-	<script type="text/javascript">
-$("#newcreate").click(function(){
- 	$("input[type=text]").val('');
-});
-</script>
+	<div id="light_success" class="white_content">
+		<p id="P_text_success"
+			style="text-align: center; font-size: 30px; color: gray;"></p>
+	</div>
+	<div id="light_failed" class="failed_content">
+		<p id="P_text_failed"
+			style="text-align: center; font-size: 30px; color: oldlace;"></p>
+	</div>
+	<div id="fade" class="black_overlay"></div>
 
+
+
+
+	<script type="text/javascript"
+		src="{{url_for('static',filename='personal/js/JQuery.js')}}"></script>
+	<script type="text/javascript"
+		src="{{url_for('static',filename='bootstrap-3.3.7/dist/js/bootstrap.js')}}"></script>
+	<script type="text/javascript"
+		src="{{url_for('static',filename='personal/js/iSCSI-host-create.js')}}"></script>
+	<script type="text/javascript"
+		src="{{url_for('static',filename='personal/js/iSCSI-hostgroup-create.js')}}"></script>
+	<script type="text/javascript"
+		src="{{url_for('static',filename='personal/js/iSCSI-diskgroup-create.js')}}"></script>
+	<script type="text/javascript"
+		src="{{url_for('static',filename='personal/js/iSCSI-map-create2.js')}}"></script>
+	<script type="text/javascript"
+		src="{{url_for('static',filename='layui/layui.all.js')}}"></script>
 </body>
 </html>

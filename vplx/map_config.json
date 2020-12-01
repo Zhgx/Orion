@@ -316,6 +316,11 @@
             "Host1",
             "Host12323",
             "Host_test1"
+        ],
+        "klklk": [
+            "Host1",
+            "Host12323",
+            "Host_test1"
         ]
     },
     "DiskGroup": {
@@ -536,6 +541,10 @@
         ],
         "cxcx": [
             "res_d"
+        ],
+        "vnv": [
+            "res_a",
+            "res_b"
         ]
     },
     "Map": {
