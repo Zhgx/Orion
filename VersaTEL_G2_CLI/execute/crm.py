@@ -225,6 +225,7 @@ class CRMConfig():
 
 
 
+
 class CRMSet(CRMConfig):
     def __init__(self,dict_current,dict_changed):
         CRMConfig.__init__(self)
@@ -232,6 +233,10 @@ class CRMSet(CRMConfig):
         self.delete = diff['delete']
         self.create = diff['create']
         self.modify = diff['modify']
+
+        if any([self.delete,self.create,self.modify]):
+            pass
+
 
         # 记载需要进行恢复的disk
         self.recovery_list = {'delete': [], 'create': {}, 'modify': {}}
@@ -294,6 +299,8 @@ class CRMSet(CRMConfig):
     def create_iscsilogicalunit(self):
         for disk,iqn in self.create.items():
             self.recovery_list['delete'].append(disk)
+
+
             print(f'执行创建{disk},iqn为{iqn}')
 
     def delete_iscsilogicalunit(self):

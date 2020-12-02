@@ -485,10 +485,9 @@ class Map():
         obj_crm_set = CRMSet(dict_before,dict_now)
 
         # 已经被使用过的disk(ilu)需不需要提示
-
         dict_disk_inuse = obj_crm_set.modify
         if dict_disk_inuse:
-            print(f"{','.join(dict_disk_inuse.keys())}")
+            print(f"{','.join(dict_disk_inuse.keys())}已被map")
 
         obj_crm_set.create_iscsilogicalunit()
         obj_crm_set.modify_iscsilogicalunit()
@@ -821,3 +820,114 @@ class Map():
             obj_crm_set.restore()
 
         # self.js.remove_member('DiskGroup', map, list_dg, type='Map')
+
+
+class IscsiConfig():
+    def __init__(self,dict_current,dict_changed):
+        diff,self.recover= self.get_dict_diff(dict_current,dict_changed)
+        self.delete = diff['delete']
+        self.create = diff['create']
+        self.modify = diff['modify']
+
+        if any([self.create,self.modify]):
+            self.obj_map = Map()
+
+        if self.delete:
+            self.obj_crm = CRMConfig()
+
+
+        # 记载需要进行恢复的disk
+        self.recovery_list = {'delete': [], 'create': {}, 'modify': {}}
+
+
+
+    def get_dict_diff(self,dict1, dict2):
+
+        # 判断dict2是有有dict1没有的key，如有dict1进行补充
+        ex_key = dict2.keys() - dict1.keys()
+        if ex_key:
+            for i in ex_key:
+                dict1.update({i:[]})
+
+        diff = {'delete': [], 'create': {}, 'modify': {}}
+        recover = {'delete': [], 'create': {}, 'modify': {}}
+        for key in dict1:
+            if set(dict1[key]) != set(dict2[key]):
+                if not dict2[key]:
+                    diff['delete'].append(key)
+                    recover['create'].update({key:dict1[key]})
+                elif not dict1[key]:
+                    diff['create'].update({key:dict2[key]})
+                    recover['delete'].append(key)
+                else:
+                    diff['modify'].update({key:dict2[key]})
+                    recover['modify'].update({key: dict1[key]})
+        print(diff,recover)
+        return diff,recover
+
+
+    def show_info(self):
+        if self.create:
+            print('新增：')
+            for disk,iqn in self.create.items():
+                print(f'{disk},iqn设置为：{",".join(iqn)}')
+        if self.delete:
+            print('删除：')
+            print(f'{",".join(self.delete)}')
+        if self.modify:
+            print('修改：')
+            for disk,iqn in self.modify.items():
+                print(f'{disk},iqn设置为：{",".join(iqn)}')
+
+
+    # def change(self):
+    #     flag = 1
+    #     for i in self.create:
+    #         self.recover['delete'].append((i))
+    #         print(f'执行创建{i[0]},iqn为{i[2]}')
+    #
+    #     for i in self.delete:
+    #         self.recover['create'].append((i))
+    #         print(f'执行创建{i[0]},iqn为{i[2]}')
+    #         flag+=1
+    #         if flag == 2:
+    #             raise Exception('创建失败')
+    #
+    #     for i in self.modify:
+    #         self.recover['modify'].append((i))
+    #         print(f'执行创建{i[0]},iqn为{i[2]}')
+    #         flag+=1
+    #         if flag == 2:
+    #             raise Exception('修改失败')
+
+
+    def create_iscsilogicalunit(self):
+        for disk,iqn in self.create.items():
+            self.recovery_list['delete'].append(disk)
+            self.obj_map.create_res(disk,iqn)
+            print(f'执行创建{disk},iqn为{iqn}')
+
+    def delete_iscsilogicalunit(self):
+        for disk in self.delete:
+            self.recovery_list['create'].update({disk:self.recover['create'][disk]})
+            self.obj_crm.delete_res(disk)
+            print(f'执行删除{disk}')
+
+
+    def modify_iscsilogicalunit(self):
+        for disk,iqn in self.modify.items():
+            self.recovery_list['modify'].update({disk:self.recover['modify'][disk]})
+            self.obj_crm.change_initiator(disk,iqn)
+            print(f'修改{disk},iqn{iqn}')
+
+
+    def restore(self):
+        for disk,iqn in self.recovery_list['create'].items():
+            # self.obj_map.create_res(disk,iqn)
+            print(f'执行创建{disk},iqn为{iqn}')
+
+        for disk in self.recovery_list['delete']:
+            print(f'执行删除{disk[0]}')
+
+        for i in self.recovery_list['modify']:
+            print(f'执行修改{i[0]},iqn为{i[1]}')
