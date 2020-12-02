@@ -24,6 +24,11 @@ class ReplayExit(Exception):
     pass
 
 
+class CmdError(Exception):
+    "执行命令出错"
+    pass
+
+
 def init():
     global _GLOBAL_DICT
     _GLOBAL_DICT = {}

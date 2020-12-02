@@ -170,7 +170,7 @@ class MapCommands():
                 map.verf_add_dg(args.map,args.add)
                 map.add_dg(args.map,args.add)
             if args.remove:
-                map.verf_remove_dg(args.map, args.remove)
+                # map.verf_remove_dg(args.map, args.remove)
                 map.remove_dg(args.map,args.remove)
         else:
             print('请执行一个要进行修改的资源类型-hg/-dg')

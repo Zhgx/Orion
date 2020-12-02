@@ -298,6 +298,8 @@ def deco_json_operation(str):
         @wraps(func)
         def wrapper(self, *args):
             RPL = consts.glo_rpl()
+            # print(traceback.extract_stack()[-2])
+            # print(traceback.extract_stack()[-3])
             if RPL == 'no':
                 logger = consts.glo_log()
                 oprt_id = create_oprt_id()
@@ -387,3 +389,22 @@ def confirm_modify(words):
         prt_log('中断修改，退出',2)
 
 
+
+
+
+    # diff = []
+    #     if set(dict1[key]) != set(dict2[key]):
+    #         diff.append((key,dict1[key],dict2[key]))
+
+# def get_dict_diff(dict1,dict2):
+#     diff = [[],{},{}]
+#     for key in dict1:
+#         if set(dict1[key]) != set(dict2[key]):
+#             if not dict2[key]:
+#                 diff[0].append(key)
+#             elif not dict1[key]:
+#                 diff[1].update({key:dict2[key]})
+#             else:
+#                 diff[2].update({key:dict2[key]})
+#     print(diff)
+#     return diff
