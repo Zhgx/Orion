@@ -84,6 +84,10 @@ class IscsiMap2(views.MethodView):
 
     def get(self):
         return render_template("iscsi_map2.html")
+class IscsiMapModify(views.MethodView):
+
+    def get(self):
+        return render_template("iscsi_map_modify.html")
     
     
 class IscsiHost(views.MethodView):

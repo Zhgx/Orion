@@ -20,6 +20,7 @@ iscsi_blueprint.add_url_rule('/iscsi/create', view_func=model.IscsiCreate.as_vie
 
 iscsi_blueprint.add_url_rule('/iscsi/map', view_func=model.IscsiMap.as_view('iscsi_map'))
 iscsi_blueprint.add_url_rule('/iscsi/map2', view_func=model.IscsiMap2.as_view('iscsi_map2'))
+iscsi_blueprint.add_url_rule('/iscsi/map/modify', view_func=model.IscsiMapModify.as_view('iscsi_map_modify'))
 
 iscsi_blueprint.add_url_rule('/iscsi/host', view_func=model.IscsiHost.as_view('iscsi_host'))
 
