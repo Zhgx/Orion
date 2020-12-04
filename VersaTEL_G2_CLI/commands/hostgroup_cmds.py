@@ -96,6 +96,12 @@ class HostGroupCommands():
             action='store',
             help='hostgroup_name',
             default=None)
+        p_delete_hg.add_argument(
+            '-y',
+            dest='yes',
+            action='store_true',
+            help='Skip to confirm selection',
+            default=False)
 
         p_delete_hg.set_defaults(func=self.delete)
 
@@ -151,6 +157,7 @@ class HostGroupCommands():
             hostgroup.show_spe_hostgroup(args.hostgroup)
 
     @sd.deco_record_exception
+    @sd.deco_comfirm_del('hostgroup')
     def delete(self, args):
         hostgroup = ex.HostGroup()
         hostgroup.delete_hostgroup(args.hostgroup)
@@ -160,10 +167,8 @@ class HostGroupCommands():
     def modify(self, args):
         hostgroup = ex.HostGroup()
         if args.add:
-            hostgroup.verf_add_host(args.hostgroup,args.add)
             hostgroup.add_host(args.hostgroup,args.add)
         if args.remove:
-            hostgroup.verf_remove_host(args.hostgroup,args.remove)
             hostgroup.remove_host(args.hostgroup,args.remove)
 
 

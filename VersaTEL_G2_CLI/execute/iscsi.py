@@ -2,8 +2,115 @@
 import iscsi_json
 import sundry as s
 from execute.linstor import Linstor
-from execute.crm import CRMData, CRMConfig, CRMSet
+from execute.crm import CRMData, CRMConfig
 import consts
+
+
+class IscsiConfig():
+    def __init__(self, dict_current, dict_changed):
+        self.logger = consts.glo_log()
+        diff, self.recover = self.get_dict_diff(dict_current, dict_changed)
+        self.delete = diff['delete']
+        self.create = diff['create']
+        self.modify = diff['modify']
+
+        if any([self.modify, self.delete]):
+            self.obj_crm = CRMConfig()
+
+        if self.create:
+            self.obj_map = Map()
+
+        # 记载需要进行恢复的disk
+        self.recovery_list = {'delete': [], 'create': {}, 'modify': {}}
+
+
+    def get_dict_diff(self, dict1, dict2):
+        # 判断dict2是有有dict1没有的key，如有dict1进行补充
+        ex_key = dict2.keys() - dict1.keys()
+        if ex_key:
+            for i in ex_key:
+                dict1.update({i: []})
+
+        diff = {'delete': [], 'create': {}, 'modify': {}}
+        recover = {'delete': [], 'create': {}, 'modify': {}}
+        for key in dict1:
+            if set(dict1[key]) != set(dict2[key]):
+                if not dict2[key]:
+                    diff['delete'].append(key)
+                    recover['create'].update({key: dict1[key]})
+                elif not dict1[key]:
+                    diff['create'].update({key: dict2[key]})
+                    recover['delete'].append(key)
+                else:
+                    diff['modify'].update({key: dict2[key]})
+                    recover['modify'].update({key: dict1[key]})
+
+        self.logger.write_to_log('DATA','iSCSILogicalUnit','Data to be modified','',diff)
+        return diff, recover
+
+    def show_info(self):
+        if self.create:
+            print('新增：')
+            for disk, iqn in self.create.items():
+                print(f'{disk}，其allowed_initiators将被设置为：{",".join(iqn)}')
+        if self.delete:
+            print('删除：')
+            print(f'{",".join(self.delete)}')
+        if self.modify:
+            print('修改：')
+            for disk, iqn in self.modify.items():
+                print(f'{disk}，其allowed_initiators将被设置为：{",".join(iqn)}')
+
+    def create_iscsilogicalunit(self):
+        for disk, iqn in self.create.items():
+            self.recovery_list['delete'].append(disk)
+            self.obj_map.create_res(disk, iqn)
+            print(f'执行创建{disk}')
+
+    def delete_iscsilogicalunit(self):
+        for disk in self.delete:
+            self.recovery_list['create'].update({disk: self.recover['create'][disk]})
+            self.obj_crm.delete_res(disk)
+            print(f'执行删除{disk}')
+
+    def modify_iscsilogicalunit(self):
+        for disk, iqn in self.modify.items():
+            self.recovery_list['modify'].update({disk: self.recover['modify'][disk]})
+            self.obj_crm.change_initiator(disk, iqn)
+            print(f'修改{disk}')
+
+    def restore(self):
+        for disk, iqn in self.recovery_list['create'].items():
+            self.obj_map.create_res(disk, iqn)
+            print(f'执行创建{disk},iqn为{iqn}')
+
+        for disk in self.recovery_list['delete']:
+            self.obj_crm.delete_res(disk)
+            print(f'执行删除{disk}')
+
+        for disk, iqn in self.recovery_list['modify'].items():
+            self.obj_crm.change_initiator(disk, iqn)
+            print(f'执行修改{disk},iqn为{iqn}')
+
+    def crm_conf_change(self):
+        self.show_info()
+        print('是否确认修改?y/n')
+        answer = s.get_answer()
+        if not answer in ['y', 'yes', 'Y', 'YES']:
+            s.prt_log('Modify canceled', 2)
+
+        try:
+            self.create_iscsilogicalunit()
+            self.delete_iscsilogicalunit()
+            self.modify_iscsilogicalunit()
+        except consts.CmdError:
+            print('执行命令失败')
+            self.restore()
+        except Exception:
+            print('未知异常')
+            self.restore()
+
+
 
 
 class Disk():
@@ -95,47 +202,23 @@ class Host():
             s.prt_log(f"Fail! Can't find {host}", 1)
 
 
-
-    def verf_modify_host(self,host,iqn):
-        if not self.js.check_key('Host',host)['result']:
-            s.prt_log("不存在这个host可以去进行修改", 2)
-
-        list_disk = self.js.get_disk_by_host(host)
-
-        print(f'修改该{host}的iqn为{iqn}会影响到已存在的disk:{",".join(list_disk)}? yes/no')
-        answer = input()
-        if not answer in ['y', 'yes', 'Y', 'YES']:
-            s.prt_log('取消修改,退出',2)
-
     def modify_host(self, host, iqn):
-
+        if not self.js.check_key('Host', host)['result']:
+            s.prt_log("不存在这个host可以去进行修改", 2)
 
         js_modify = iscsi_json.JsonMofidy()
         js_modify.update_data('Host', host, iqn)
-        obj_crm = CRMConfig()
-
-        list_disk = self.js.get_disk_by_host(host)
-
-        # 固定的一套流程，获取disk的旧iqn，和获取新的iqn，进行比较和处理
-        for disk in list_disk:
-            iqn_before = self.js.get_iqn_by_disk(disk)
-            iqn_now = js_modify.get_iqn_by_disk(disk)
-            if iqn_now == iqn_before:
-                continue
-            elif not iqn_now:
-                print(f'删除{disk}')
-                obj_crm.delete_res(disk)
-            else:
-                print(f'修改{disk}的iqn为{iqn_now}')
-                obj_crm.change_initiator(disk, iqn_now)
+        dict_current = self.js.get_disk_with_iqn()
+        dict_changed = js_modify.get_disk_with_iqn()
+        obj_iscsi = IscsiConfig(dict_current, dict_changed)
+        obj_iscsi.crm_conf_change()
 
         self.js.update_data('Host', host, iqn)
-
-
 
     """
     diskgroup 操作
     """
+
 
 class DiskGroup():
     def __init__(self):
@@ -187,86 +270,42 @@ class DiskGroup():
             s.prt_log(f"Fail! Can't find {dg}", 1)
 
 
-    def verf_add_disk(self,dg,list_disk):
+    def add_disk(self, dg, list_disk):
         for disk in list_disk:
             if self.js.check_value_in_key("DiskGroup", dg, disk)['result']:
-                s.prt_log(f'{disk}已存在{dg}中',2)
+                s.prt_log(f'{disk}已存在{dg}中', 2)
             if not self.js.check_key("Disk", disk)['result']:
-                s.prt_log(f'json文件中不存在{disk}，无法进行添加',2)
+                s.prt_log(f'json文件中不存在{disk}，无法进行添加', 2)
 
-
-        list_map = self.js.get_map_by_group('DiskGroup', dg)
-        print(f'在{dg}中添加新成员{",".join(list_disk)}会影响到已存在的map:{",".join(list_map)}? yes/no')
-        answer = input()
-        if not answer in ['y', 'yes', 'Y', 'YES']:
-            s.prt_log('取消修改,退出',2)
-
-
-    def add_disk(self,dg,list_disk):
         js_modify = iscsi_json.JsonMofidy()
-        js_modify.append_member('DiskGroup',dg,list_disk)
-        obj_crm = CRMConfig()
-        obj_map = Map()
+        js_modify.append_member('DiskGroup', dg, list_disk)
+        dict_current = self.js.get_disk_with_iqn()
+        dict_changed = js_modify.get_disk_with_iqn()
+        obj_iscsi = IscsiConfig(dict_current, dict_changed)
+        obj_iscsi.crm_conf_change()
+
+        self.js.append_member('DiskGroup', dg, list_disk)
 
 
-        # 固定的一套流程，获取disk的旧iqn，和获取新的iqn，进行比较和处理
-        for disk in list_disk:
-            iqn_before = self.js.get_iqn_by_disk(disk)
-            iqn_now = js_modify.get_iqn_by_disk(disk)
-            if iqn_now == iqn_before:
-                continue
-            elif not iqn_now:
-                print(f'删除{disk}')
-                obj_crm.delete_res(disk)
-            elif not iqn_before:
-                print(f'新建{disk}的iqn为{iqn_now}')
-                obj_map.create_res(disk,iqn_now)
-            else:
-                print(f'修改{disk}的iqn为{iqn_now}')
-                obj_crm.change_initiator(disk, iqn_now)
-
-
-        self.js.append_member('DiskGroup',dg,list_disk)
-
-
-    def verf_remove_disk(self,dg,list_disk):
+    def remove_disk(self, dg, list_disk):
         for disk in list_disk:
             if not self.js.check_value_in_key("DiskGroup", dg, disk)['result']:
-                s.prt_log(f'{dg}中不存在成员{disk}，无法进行移除',2)
-
-        list_map = self.js.get_map_by_group('DiskGroup', dg)
-        print(f'从{dg}移除成员{",".join(list_disk)}会影响到已存在的map:{",".join(list_map)}? yes/no')
-        answer = input()
-        if not answer in ['y', 'yes', 'Y', 'YES']:
-            s.prt_log('取消修改，退出',2)
+                s.prt_log(f'{dg}中不存在成员{disk}，无法进行移除', 2)
 
 
-    def remove_disk(self,dg,list_disk):
+        print(self.js.get_iqn_by_disk('res_d'))
         js_modify = iscsi_json.JsonMofidy()
         js_modify.remove_member('DiskGroup', dg, list_disk)
 
-        obj_crm = CRMConfig()
-        obj_map = Map()
+        dict_current = self.js.get_disk_with_iqn()
+        dict_changed = js_modify.get_disk_with_iqn()
+        print(dict_changed)
 
-        # 固定的一套流程，获取disk的旧iqn，和获取新的iqn，进行比较和处理
-        for disk in list_disk:
-            iqn_before = self.js.get_iqn_by_disk(disk)
-            iqn_now = js_modify.get_iqn_by_disk(disk)
-            if iqn_now == iqn_before:
-                continue
-            elif not iqn_now:
-                print(f'删除{disk}')
-                obj_crm.delete_res(disk)
-            elif not iqn_before:
-                print(f'新建{disk}的iqn为{iqn_now}')
-                obj_map.create_res(disk, iqn_now)
-            else:
-                print(f'修改{disk}的iqn为{iqn_now}')
-                obj_crm.change_initiator(disk, iqn_now)
+        obj_iscsi = IscsiConfig(dict_current, dict_changed)
+        obj_iscsi.crm_conf_change()
 
         # 配置文件移除成员
         self.js.remove_member('DiskGroup', dg, list_disk)
-
 
     """
     hostgroup 操作
@@ -320,84 +359,39 @@ class HostGroup():
             s.prt_log(f"Fail! Can't find {hg}", 1)
 
 
-    def verf_add_host(self, hg, list_host):
+    def add_host(self, hg, list_host):
         for host in list_host:
             if self.js.check_value_in_key("HostGroup", hg, host)['result']:
-                s.prt_log(f'{host}已存在{hg}中',2)
+                s.prt_log(f'{host}已存在{hg}中', 2)
             if not self.js.check_key("Host", host)['result']:
-                s.prt_log(f'json文件中不存在{host}，无法进行添加',2)
+                s.prt_log(f'json文件中不存在{host}，无法进行添加', 2)
 
-        list_disk = self.js.get_disk_by_hg(hg)
-        print(f'在{hg}中添加{",".join(list_host)}会影响到已存在的res：{",".join(list_disk)}? yes/no')
-        answer = input()
-        if not answer in ['y', 'yes', 'Y', 'YES']:
-            s.prt_log('取消修改,退出',2)
 
-    def add_host(self, hg, list_host):
         js_modify = iscsi_json.JsonMofidy()
         js_modify.append_member('HostGroup', hg, list_host)
-
-        obj_crm = CRMConfig()
-
-        list_disk = []
-        for host in list_host:
-            list_disk = s.append_list(list_disk,self.js.get_disk_by_host(host))
-
-        # 固定的一套流程，获取disk的旧iqn，和获取新的iqn，进行比较和处理
-        for disk in list_disk:
-            iqn_before = self.js.get_iqn_by_disk(disk)
-            iqn_now = js_modify.get_iqn_by_disk(disk)
-            if iqn_now == iqn_before:
-                continue
-            elif not iqn_now:
-                print(f'删除{disk}')
-                obj_crm.delete_res(disk)
-            else:
-                print(f'修改{disk}的iqn为{iqn_now}')
-                obj_crm.change_initiator(disk, iqn_now)
-
+        dict_current = self.js.get_disk_with_iqn()
+        dict_changed = js_modify.get_disk_with_iqn()
+        obj_iscsi = IscsiConfig(dict_current, dict_changed)
+        obj_iscsi.crm_conf_change()
         # 配置文件更新修改的资源
         self.js.append_member('HostGroup', hg, list_host)
 
 
-    def verf_remove_host(self, hg ,list_host):
+    def remove_host(self, hg, list_host):
         for host in list_host:
             if not self.js.check_value_in_key("HostGroup", hg, host)['result']:
-                s.prt_log(f'{hg}中不存在成员{host}，无法进行移除',2)
+                s.prt_log(f'{hg}中不存在成员{host}，无法进行移除', 2)
 
-        # 交互提示：
-        list_disk = self.js.get_disk_by_hg(hg) # 去重的列表
-
-        print(f'在{hg}中移除{",".join(list_host)}会影响到已存在的res：{",".join(list_disk)}? yes/no')
-        answer = input()
-        if not answer in ['y', 'yes', 'Y', 'YES']:
-            s.prt_log('取消修改，退出',2)
-
-    def remove_host(self, hg, list_host):
         # 临时json对象进行数据的更新
         js_modify = iscsi_json.JsonMofidy()
         js_modify.remove_member('HostGroup', hg, list_host)
-        obj_crm = CRMConfig()
+        dict_current = self.js.get_disk_with_iqn()
+        dict_changed = js_modify.get_disk_with_iqn()
+        obj_iscsi = IscsiConfig(dict_current, dict_changed)
+        obj_iscsi.crm_conf_change()
 
-        # 获取所有受影响的disk
-        list_disk = []
-        for host in list_host:
-            list_disk = s.append_list(list_disk,self.js.get_disk_by_host(host))
-
-        # 固定的一套流程，获取disk的旧iqn，和获取新的iqn，进行比较和处理
-        for disk in list_disk:
-            iqn_before = self.js.get_iqn_by_disk(disk)
-            iqn_now = js_modify.get_iqn_by_disk(disk)
-            if iqn_now == iqn_before:
-                continue
-            elif not iqn_now:
-                obj_crm.delete_res(disk)
-            else:
-                obj_crm.change_initiator(disk,iqn_now)
-
-        #配置文件移除成员，可以考虑修改为直接用js_modify.jsondata来替换
+        # 配置文件移除成员，可以考虑修改为直接用js_modify.jsondata来替换
         self.js.remove_member('HostGroup', hg, list_host)
-
 
     """
     map操作
@@ -475,59 +469,32 @@ class Map():
         if not self.pre_check_create_map(map, hg_list, dg_list):
             return
 
-
         js_modify = iscsi_json.JsonMofidy()
         js_modify.update_data('Map', map, {'HostGroup': hg_list, 'DiskGroup': dg_list})
 
         dict_before = self.js.get_disk_with_iqn()
         dict_now = js_modify.get_disk_with_iqn()
-
-        obj_crm_set = CRMSet(dict_before,dict_now)
+        obj_iscsi = IscsiConfig(dict_before, dict_now)
 
         # 已经被使用过的disk(ilu)需不需要提示
-        dict_disk_inuse = obj_crm_set.modify
+        dict_disk_inuse = obj_iscsi.modify
         if dict_disk_inuse:
-            print(f"{','.join(dict_disk_inuse.keys())}已被map")
+            print(f"{','.join(dict_disk_inuse.keys())}已被map,将会修改其allowed initiators")
 
-        obj_crm_set.create_iscsilogicalunit()
-        obj_crm_set.modify_iscsilogicalunit()
+        obj_iscsi.create_iscsilogicalunit()
+        obj_iscsi.modify_iscsilogicalunit()
 
         self.js.update_data('Map', map, {'HostGroup': hg_list, 'DiskGroup': dg_list})
         s.prt_log('Create map success!', 0)
         return True
 
 
-
-
-
-        # initiator = self.get_all_initiator(hg_list)
-        # disk_dict = self.get_all_disk(dg_list)
-        # obj_crm = CRMConfig()
-        # # 执行创建和启动
-        # for res in disk_dict:
-        #     map_list = self.js.get_map_by_disk(res)
-        #     if map_list == []:
-        #         if self.create_res(res, initiator) == False:
-        #             return False
-        #
-        #     else:
-        #         s.prt_log(f"The {res} already map, change allowed_initiators...", 0)
-        #         iqn_list_new = self.js.get_iqn_by_hg(hg_list)
-        #         iqn_list = []
-        #         for i in map_list:
-        #             iqn_list += self.js.get_iqn_by_map(i)
-        #         list_iqn = s.append_list(iqn_list,iqn_list_new)
-        #         obj_crm.change_initiator(res, list_iqn)
-        #
-        # self.js.update_data('Map', map, {'HostGroup': hg_list, 'DiskGroup': dg_list})
-        # s.prt_log('Create map success!', 0)
-        # return True
-
-    def create_res(self, res, initiator):
+    def create_res(self, res, list_iqn):
         obj_crm = CRMConfig()
         # 取DeviceName后四位数字，减一千作为lun id
         path = self.js.get_data('Disk')[res]
         lunid = int(path[-4:]) - 1000
+        initiator = ' '.join(list_iqn)
         # 创建iSCSILogicalUnit
         if obj_crm.create_crm_res(res, self.target_iqn, lunid, path, initiator):
             self.list_res_created.append(res)
@@ -599,31 +566,48 @@ class Map():
     def delete_map(self, map):
         if not self.pre_check_delete_map(map):
             return
-        obj_crm = CRMConfig()
-        crm_data = CRMData()
-        crm_config_statu = crm_data.crm_conf_data
-        map_data = self.js.get_data('Map').get(map)
-        dg_list = map_data['DiskGroup']
-        resname = []
-        for dg in dg_list:
-            resname = resname + self.js.get_data('DiskGroup').get(dg)
-        if 'ERROR' in crm_config_statu:
-            s.prt_log("Could not perform requested operations, are you root?", 1)
-        else:
-            for disk in set(resname):
-                map_list = self.js.get_map_by_disk(disk)
-                if map_list == [map]:
-                    if obj_crm.delete_res(disk) != True:
-                        return False
-                else:
-                    map_list.remove(map)
-                    iqn_list = []
-                    for i in map_list:
-                        iqn_list += self.js.get_iqn_by_map(i)
-                    obj_crm.change_initiator(disk, iqn_list)
-            self.js.delete_data('Map', map)
-            s.prt_log("Delete map success!", 0)
-            return True
+
+        js_modify = iscsi_json.JsonMofidy()
+        js_modify.delete_data('Map', map)
+
+        dict_before = self.js.get_disk_with_iqn()
+        dict_now = js_modify.get_disk_with_iqn()
+
+
+        obj_iscsi = IscsiConfig(dict_before, dict_now)
+        obj_iscsi.delete_iscsilogicalunit()
+        obj_iscsi.modify_iscsilogicalunit()
+
+        self.js.delete_data('Map', map)
+        s.prt_log("Delete map success!", 0)
+        return True
+
+
+        # obj_crm = CRMConfig()
+        # crm_data = CRMData()
+        # crm_config_statu = crm_data.crm_conf_data
+        # map_data = self.js.get_data('Map').get(map)
+        # dg_list = map_data['DiskGroup']
+        # resname = []
+        # for dg in dg_list:
+        #     resname = resname + self.js.get_data('DiskGroup').get(dg)
+        # if 'ERROR' in crm_config_statu:
+        #     s.prt_log("Could not perform requested operations, are you root?", 1)
+        # else:
+        #     for disk in set(resname):
+        #         map_list = self.js.get_map_by_disk(disk)
+        #         if map_list == [map]:
+        #             if obj_crm.delete_res(disk) != True:
+        #                 return False
+        #         else:
+        #             map_list.remove(map)
+        #             iqn_list = []
+        #             for i in map_list:
+        #                 iqn_list += self.js.get_iqn_by_map(i)
+        #             obj_crm.change_initiator(disk, iqn_list)
+        #     self.js.delete_data('Map', map)
+        #     s.prt_log("Delete map success!", 0)
+        #     return True
 
     # 获取已map的dg对应的hg
     def get_hg_by_dg(self, dg):
@@ -633,7 +617,6 @@ class Map():
             if dg in i:
                 hg_list.append(i[0])
         return hg_list
-
 
     def get_all_initiator(self, hg_list):
         initiator = ''
@@ -649,142 +632,56 @@ class Map():
         return all_disk
 
 
-    def verf_add_hg(self, map, list_hg):
+    def add_hg(self, map, list_hg):
         for hg in list_hg:
             if self.js.check_map_member(map, hg, "HostGroup")['result']:
-                s.prt_log(f'{hg}已存在{map}中',2)
+                s.prt_log(f'{hg}已存在{map}中', 2)
             if not self.js.check_key("HostGroup", hg)['result']:
-                s.prt_log(f'json文件中不存在{hg}，无法进行添加',2)
+                s.prt_log(f'json文件中不存在{hg}，无法进行添加', 2)
 
-        print(f'确定修改{map}的hostgroup? yes/no')
-        answer = input()
-        if not answer in ['y', 'yes', 'Y', 'YES']:
-            s.prt_log('取消修改，退出',2)
-
-    def add_hg(self, map, list_hg):
         js_modify = iscsi_json.JsonMofidy()
         js_modify.append_member('HostGroup', map, list_hg, type='Map')
-        obj_crm = CRMConfig()
-
-        # 获取所有受影响的disk
-        list_disk = []
-        for hg in list_hg:
-            list_disk = s.append_list(list_disk,self.js.get_disk_by_hg(hg))
-
-        # 固定的一套流程，获取disk的旧iqn，和获取新的iqn，进行比较和处理
-        for disk in list_disk:
-            iqn_before = self.js.get_iqn_by_disk(disk)
-            iqn_now = js_modify.get_iqn_by_disk(disk)
-            if iqn_now == iqn_before:
-                continue
-            elif not iqn_now:
-                obj_crm.delete_res(disk)
-            elif not iqn_before:
-                self.create_res(disk, iqn_now)
-            else:
-                obj_crm.change_initiator(disk, iqn_now)
-
+        dict_current = self.js.get_disk_with_iqn()
+        dict_changed = js_modify.get_disk_with_iqn()
+        obj_iscsi = IscsiConfig(dict_current, dict_changed)
+        obj_iscsi.crm_conf_change()
         # 配置文件添加数据
         self.js.append_member('HostGroup', map, list_hg, type='Map')
 
 
-    def verf_add_dg(self, map, list_dg):
+
+    def add_dg(self, map, list_dg):
         for dg in list_dg:
             if self.js.check_map_member(map, dg, "DiskGroup")['result']:
                 s.prt_log(f'{dg}已存在{map}中', 2)
             if not self.js.check_key("DiskGroup", dg)['result']:
                 s.prt_log(f'json文件中不存在{dg}，无法进行添加', 2)
 
-        print(f'确定修改{map}的hostgroup? yes/no')
-        answer = input()
-        if not answer in ['y', 'yes', 'Y', 'YES']:
-            s.prt_log('取消修改，退出',2)
-
-
-    def add_dg(self, map, list_dg):
         js_modify = iscsi_json.JsonMofidy()
         js_modify.append_member('DiskGroup', map, list_dg, type='Map')
-        obj_crm = CRMConfig()
+        dict_current = self.js.get_disk_with_iqn()
+        dict_changed = js_modify.get_disk_with_iqn()
+        obj_iscsi = IscsiConfig(dict_current, dict_changed)
+        obj_iscsi.crm_conf_change()
 
-        # 获取所有受影响的disk
-        list_disk = self.js.get_disk_by_dg(list_dg)
-
-        # 固定的一套流程，获取disk的旧iqn，和获取新的iqn，进行比较和处理
-        for disk in list_disk:
-            iqn_before = self.js.get_iqn_by_disk(disk)
-            iqn_now = js_modify.get_iqn_by_disk(disk)
-            if iqn_now == iqn_before:
-                continue
-            elif not iqn_now:
-                obj_crm.delete_res(disk)
-                self.create_res(disk,iqn_now)
-            else:
-                obj_crm.change_initiator(disk,iqn_now)
-
-        #配置文件移除成员，可以考虑修改为直接用js_modify.jsondata来替换
+        # 配置文件移除成员，可以考虑修改为直接用js_modify.jsondata来替换
         self.js.append_member('DiskGroup', map, list_dg, type='Map')
 
-
-    def verf_remove_hg(self, map, list_hg):
+    def remove_hg(self, map, list_hg):
         for hg in list_hg:
             if not self.js.check_map_member(map, hg, "HostGroup")['result']:
-                s.prt_log(f'{map}中不存在成员{hg}，无法进行移除',2)
+                s.prt_log(f'{map}中不存在成员{hg}，无法进行移除', 2)
 
-        print(f'确定修改{map}的hostgroup? yes/no')
-        answer = input()
-        if not answer in ['y', 'yes', 'Y', 'YES']:
-            s.prt_log('取消修改，退出',2)
-
-    def remove_hg(self, map, list_hg):
         # 临时json对象进行数据的更新
         js_modify = iscsi_json.JsonMofidy()
         js_modify.remove_member('HostGroup', map, list_hg, type='Map')
-        obj_crm = CRMConfig()
-
-        # 获取所有受影响的disk
-        list_disk = []
-        for hg in list_hg:
-            list_disk = s.append_list(list_disk, self.js.get_disk_by_hg(hg))
-
-        # 固定的一套流程，获取disk的旧iqn，和获取新的iqn，进行比较和处理
-        for disk in list_disk:
-            iqn_before = self.js.get_iqn_by_disk(disk)
-            iqn_now = js_modify.get_iqn_by_disk(disk)
-            if iqn_now == iqn_before:
-                continue
-            elif not iqn_now:
-                obj_crm.delete_res(disk)
-            else:
-                obj_crm.change_initiator(disk, iqn_now)
+        dict_before = self.js.get_disk_with_iqn()
+        dict_now = js_modify.get_disk_with_iqn()
+        obj_iscsi = IscsiConfig(dict_before, dict_now)
+        obj_iscsi.crm_conf_change()
 
         # 配置文件移除成员
         self.js.remove_member('HostGroup', map, list_hg, type='Map')
-
-
-
-    # def verf_remove_dg(self,map,list_dg):
-    #     for dg in list_dg:
-    #         if not self.js.check_map_member(map, dg, "DiskGroup")['result']:
-    #             s.prt_log(f'{map}中不存在成员{dg}，无法进行移除',2)
-    #
-    #
-    #     # 临时json对象进行数据的更新
-    #     js_modify = iscsi_json.JsonMofidy()
-    #     js_modify.remove_member('DiskGroup', map, list_dg, type='Map') # 对临时json对象的操作
-    #     dict_before = self.js.get_disk_with_iqn()
-    #     dict_now = js_modify.get_disk_with_iqn()
-    #     list_diff = s.get_dict_diff(dict_before, dict_now)
-    #
-    #     print(f'此次命名的执行将会对造成以下的修改：\n新增iSCSILogicalUnit：{list_diff["create"]}\n删除新增iSCSILogicalUnit：{list_diff["delete"]}\n修改iSCSILogicalUnit：{list_diff["modify"]} \nyes/no')
-    #     answer = input()
-    #     #[2020/11/25 13:35:47] [1606282545] [root] [DATA] [INPUT] [confirm_input] [confirm deletion] [n]|
-    #
-    #     if not answer in ['y', 'yes', 'Y', 'YES']:
-    #         s.prt_log('取消修改，退出',2)
-    #
-    #
-    #     return list_diff
-
 
     def remove_dg(self, map, list_dg):
         # 验证
@@ -795,139 +692,9 @@ class Map():
         # 临时json对象进行数据的更新
         js_modify = iscsi_json.JsonMofidy()
         js_modify.remove_member('DiskGroup', map, list_dg, type='Map')  # 对临时json对象的操作
-        dict_before = self.js.get_disk_with_iqn()
-        dict_now = js_modify.get_disk_with_iqn()
+        dict_current = self.js.get_disk_with_iqn()
+        dict_changed = js_modify.get_disk_with_iqn()
+        obj_iscsi = IscsiConfig(dict_current, dict_changed)
+        obj_iscsi.crm_conf_change()
 
-        obj_crm_set = CRMSet(dict_before,dict_now)
-        obj_crm_set.show_info()
-        print('是否确认修改?y/n')
-        answer = input()
-        # [2020/11/25 13:35:47] [1606282545] [root] [DATA] [INPUT] [confirm_input] [confirm deletion] [n]|
-        if not answer in ['y', 'yes', 'Y', 'YES']:
-            s.prt_log('取消修改，退出', 2)
-
-        print('执行操作：')
-
-        try:
-            obj_crm_set.create_iscsilogicalunit()
-            obj_crm_set.delete_iscsilogicalunit()
-            obj_crm_set.modify_iscsilogicalunit()
-        except consts.CmdError:
-            print('执行命令失败')
-            obj_crm_set.restore()
-        except Exception:
-            print('未知异常')
-            obj_crm_set.restore()
-
-        # self.js.remove_member('DiskGroup', map, list_dg, type='Map')
-
-
-class IscsiConfig():
-    def __init__(self,dict_current,dict_changed):
-        diff,self.recover= self.get_dict_diff(dict_current,dict_changed)
-        self.delete = diff['delete']
-        self.create = diff['create']
-        self.modify = diff['modify']
-
-        if any([self.create,self.modify]):
-            self.obj_map = Map()
-
-        if self.delete:
-            self.obj_crm = CRMConfig()
-
-
-        # 记载需要进行恢复的disk
-        self.recovery_list = {'delete': [], 'create': {}, 'modify': {}}
-
-
-
-    def get_dict_diff(self,dict1, dict2):
-
-        # 判断dict2是有有dict1没有的key，如有dict1进行补充
-        ex_key = dict2.keys() - dict1.keys()
-        if ex_key:
-            for i in ex_key:
-                dict1.update({i:[]})
-
-        diff = {'delete': [], 'create': {}, 'modify': {}}
-        recover = {'delete': [], 'create': {}, 'modify': {}}
-        for key in dict1:
-            if set(dict1[key]) != set(dict2[key]):
-                if not dict2[key]:
-                    diff['delete'].append(key)
-                    recover['create'].update({key:dict1[key]})
-                elif not dict1[key]:
-                    diff['create'].update({key:dict2[key]})
-                    recover['delete'].append(key)
-                else:
-                    diff['modify'].update({key:dict2[key]})
-                    recover['modify'].update({key: dict1[key]})
-        print(diff,recover)
-        return diff,recover
-
-
-    def show_info(self):
-        if self.create:
-            print('新增：')
-            for disk,iqn in self.create.items():
-                print(f'{disk},iqn设置为：{",".join(iqn)}')
-        if self.delete:
-            print('删除：')
-            print(f'{",".join(self.delete)}')
-        if self.modify:
-            print('修改：')
-            for disk,iqn in self.modify.items():
-                print(f'{disk},iqn设置为：{",".join(iqn)}')
-
-
-    # def change(self):
-    #     flag = 1
-    #     for i in self.create:
-    #         self.recover['delete'].append((i))
-    #         print(f'执行创建{i[0]},iqn为{i[2]}')
-    #
-    #     for i in self.delete:
-    #         self.recover['create'].append((i))
-    #         print(f'执行创建{i[0]},iqn为{i[2]}')
-    #         flag+=1
-    #         if flag == 2:
-    #             raise Exception('创建失败')
-    #
-    #     for i in self.modify:
-    #         self.recover['modify'].append((i))
-    #         print(f'执行创建{i[0]},iqn为{i[2]}')
-    #         flag+=1
-    #         if flag == 2:
-    #             raise Exception('修改失败')
-
-
-    def create_iscsilogicalunit(self):
-        for disk,iqn in self.create.items():
-            self.recovery_list['delete'].append(disk)
-            self.obj_map.create_res(disk,iqn)
-            print(f'执行创建{disk},iqn为{iqn}')
-
-    def delete_iscsilogicalunit(self):
-        for disk in self.delete:
-            self.recovery_list['create'].update({disk:self.recover['create'][disk]})
-            self.obj_crm.delete_res(disk)
-            print(f'执行删除{disk}')
-
-
-    def modify_iscsilogicalunit(self):
-        for disk,iqn in self.modify.items():
-            self.recovery_list['modify'].update({disk:self.recover['modify'][disk]})
-            self.obj_crm.change_initiator(disk,iqn)
-            print(f'修改{disk},iqn{iqn}')
-
-
-    def restore(self):
-        for disk,iqn in self.recovery_list['create'].items():
-            # self.obj_map.create_res(disk,iqn)
-            print(f'执行创建{disk},iqn为{iqn}')
-
-        for disk in self.recovery_list['delete']:
-            print(f'执行删除{disk[0]}')
-
-        for i in self.recovery_list['modify']:
-            print(f'执行修改{i[0]},iqn为{i[1]}')
+        self.js.remove_member('DiskGroup', map, list_dg, type='Map')

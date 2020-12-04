@@ -90,6 +90,12 @@ class DiskGroupCommands():
             action='store',
             help='diskgroup_name',
             default=None)
+        P_delete_dg.add_argument(
+            '-y',
+            dest='yes',
+            action='store_true',
+            help='Skip to confirm selection',
+            default=False)
 
         P_delete_dg.set_defaults(func=self.delete)
 
@@ -145,18 +151,17 @@ class DiskGroupCommands():
             diskgroup.show_spe_diskgroup(args.diskgroup)
 
     @sd.deco_record_exception
+    @sd.deco_comfirm_del('diskgroup')
     def delete(self, args):
         diskgroup = ex.DiskGroup()
         diskgroup.delete_diskgroup(args.diskgroup)
 
-
+    @sd.deco_record_exception
     def modify(self, args):
         diskgroup = ex.DiskGroup()
         if args.add:
-            diskgroup.verf_add_disk(args.diskgroup,args.add)
             diskgroup.add_disk(args.diskgroup,args.add)
         if args.remove:
-            diskgroup.verf_remove_disk(args.diskgroup,args.remove)
             diskgroup.remove_disk(args.diskgroup,args.remove)
 
 

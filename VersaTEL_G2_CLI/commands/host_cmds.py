@@ -60,6 +60,13 @@ class HostCommands():
             action='store',
             help='host_name',
             default=None)
+        p_delete_host.add_argument(
+            '-y',
+            dest='yes',
+            action='store_true',
+            help='Skip to confirm selection',
+            default=False)
+
 
         p_delete_host.set_defaults(func=self.delete)
 
@@ -113,6 +120,7 @@ class HostCommands():
             host.show_spe_host(args.host)
 
     @sd.deco_record_exception
+    @sd.deco_comfirm_del('host')
     def delete(self, args):
         host = ex.Host()
         host.delete_host(args.host)
@@ -120,7 +128,6 @@ class HostCommands():
     @sd.deco_record_exception
     def modify(self, args):
         host = ex.Host()
-        host.verf_modify_host(args.host,args.iqn)
         host.modify_host(args.host,args.iqn)
 
     def print_host_help(self, *args):

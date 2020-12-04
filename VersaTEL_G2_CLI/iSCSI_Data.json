@@ -1,6 +1,6 @@
 {
     "Host": {
-        "h1": "iqn.2020-11.com.example:pytest0111",
+        "h1": "iqn.2020-11.com.example:pytest01",
         "h2": "iqn.2020-11.com.example:pytest02",
         "h3": "iqn.2020-11.com.example:pytest03",
         "h4": "iqn.2020-11.com.example:pytest04",
@@ -17,8 +17,8 @@
     },
     "HostGroup": {
         "hg1": [
-            "h2",
-            "h1"
+            "h1",
+            "h2"
         ],
         "hg2": [
             "h3",
@@ -41,42 +41,33 @@
             "res_b"
         ],
         "dg2": [
-            "res_c",
             "res_b"
         ],
         "dg3": [
-            "res_d",
-            "res_c"
+            "res_c",
+            "res_d"
+        ],
+        "dg4": [
+            "res_e"
         ]
     },
     "Map": {
         "map1": {
             "HostGroup": [
-                "hg1",
                 "hg2"
             ],
             "DiskGroup": [
-                "dg1",
-                "dg2"
+                "dg2",
+                "dg1"
             ]
         },
         "map2": {
             "HostGroup": [
-                "hg1",
-                "hg2"
-            ],
-            "DiskGroup": [
-                "dg1",
-                "dg3"
-            ]
-        },
-        "map3": {
-            "HostGroup": [
-                "hg1",
+                "hg2",
                 "hg3"
             ],
             "DiskGroup": [
-                "dg1",
+                "dg2",
                 "dg3"
             ]
         }
@@ -88,7 +79,7 @@
                 "iqn.2020-04.feixitek.com:versaplx00",
                 "0",
                 "/dev/drbd1000",
-                "iqn.2020-11.com.example:pytest02 iqn.2020-11.com.example:pytest05 iqn.2020-11.com.example:pytest03 iqn.2020-11.com.example:pytest04 iqn.2020-11.com.example:pytest0111",
+                "iqn.2020-11.com.example:pytest01 iqn.2020-11.com.example:pytest03 iqn.2020-11.com.example:pytest02 iqn.2020-11.com.example:pytest04",
                 "Started"
             ],
             [
@@ -96,7 +87,7 @@
                 "iqn.2020-04.feixitek.com:versaplx00",
                 "1",
                 "/dev/drbd1001",
-                "iqn.2020-11.com.example:pytest02 iqn.2020-11.com.example:pytest05 iqn.2020-11.com.example:pytest03 iqn.2020-11.com.example:pytest04 iqn.2020-11.com.example:pytest0111",
+                "iqn.2020-11.com.example:pytest03 iqn.2020-11.com.example:pytest02 iqn.2020-11.com.example:pytest05 iqn.2020-11.com.example:pytest04 iqn.2020-11.com.example:pytest01",
                 "Started"
             ],
             [
@@ -104,7 +95,7 @@
                 "iqn.2020-04.feixitek.com:versaplx00",
                 "2",
                 "/dev/drbd1002",
-                "iqn.2020-11.com.example:pytest0111 iqn.2020-11.com.example:pytest05 iqn.2020-11.com.example:pytest02 iqn.2020-11.com.example:pytest03 iqn.2020-11.com.example:pytest04",
+                "iqn.2020-11.com.example:pytest03 iqn.2020-11.com.example:pytest05 iqn.2020-11.com.example:pytest04",
                 "Started"
             ],
             [
@@ -112,7 +103,7 @@
                 "iqn.2020-04.feixitek.com:versaplx00",
                 "3",
                 "/dev/drbd1003",
-                "iqn.2020-11.com.example:pytest0111 iqn.2020-11.com.example:pytest05 iqn.2020-11.com.example:pytest02 iqn.2020-11.com.example:pytest03 iqn.2020-11.com.example:pytest04",
+                "iqn.2020-11.com.example:pytest03 iqn.2020-11.com.example:pytest05 iqn.2020-11.com.example:pytest04",
                 "Started"
             ]
         ],
