@@ -310,6 +310,7 @@ def deco_json_operation(str):
             else:
                 logdb = consts.glo_db()
                 id_result = logdb.get_id(consts.glo_tsc_id(), func.__name__)
+                print('id_result:',id_result)
                 json_result = logdb.get_oprt_result(id_result['oprt_id'])
                 if json_result['result']:
                     result = eval(json_result['result'])

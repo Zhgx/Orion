@@ -259,7 +259,7 @@ class JsonOperation(object):
 
 
     # 创建Host、HostGroup、DiskGroup、Map
-    @s.deco_json_operation('JSON添加后的资源信息')
+    @s.deco_json_operation('JSON更新后的资源信息')
     def update_data(self, first_key, data_key, data_value):
         self.json_data[first_key].update({data_key: data_value})
         with open('iSCSI_Data.json', "w") as fw:
@@ -268,7 +268,7 @@ class JsonOperation(object):
     
     
     # 更新disk 可能需要注意的地方：没有限制可以修改的key
-    @s.deco_json_operation(f'JSON更新资源信息')
+    @s.deco_json_operation(f'JSON更新disk信息')
     def cover_data(self, first_key, data):
         self.json_data[first_key] = data
         with open('iSCSI_Data.json', "w") as fw:
@@ -358,7 +358,7 @@ class JsonMofidy(JsonOperation):
     def __init__(self):
         super().__init__()
 
-    @s.deco_json_operation('读取到的JSON数据(临时JSON的修改后)')
+    @s.deco_json_operation('读取到的JSON数据(临时JSON对象)')
     def read_json(self):
         try:
             json_data = open("iSCSI_Data.json", encoding='utf-8')
@@ -380,7 +380,7 @@ class JsonMofidy(JsonOperation):
             print('Failed to read json file.')
             sys.exit()
 
-
+    @s.deco_json_operation('JSON更新后的资源信息（临时JSON对象）')
     def update_data(self, first_key, data_key, data_value):
         self.json_data[first_key].update({data_key: data_value})
         return self.json_data[first_key]

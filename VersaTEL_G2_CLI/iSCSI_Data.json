@@ -60,10 +60,9 @@
     "Map": {
         "map1": {
             "HostGroup": [
-                "hg4",
-                "hg5",
                 "hg6",
-                "hg7"
+                "hg7",
+                "hg1"
             ],
             "DiskGroup": [
                 "dg2",
@@ -103,7 +102,7 @@
                 "iqn.2020-04.feixitek.com:versaplx00",
                 "0",
                 "/dev/drbd1000",
-                "iqn.2020-11.com.example:pytest06 iqn.2020-11.com.example:pytest07",
+                "iqn.2020-11.com.example:pytest02 iqn.2020-11.com.example:pytest06 iqn.2020-11.com.example:pytest01 iqn.2020-11.com.example:pytest03 iqn.2020-11.com.example:pytest04 iqn.2020-11.com.example:pytest07 iqn.2020-11.com.example:pytest05",
                 "Started"
             ],
             [
