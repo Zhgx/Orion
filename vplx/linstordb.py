@@ -123,7 +123,7 @@ class LinstorDB(Database):
         super().__init__(':memory:')
         self.cur = self.db.cursor()
 
-    def build_table(self):
+    def build_table(self,type='linstor'):
         # LINSTOR表
         crt_sptb_sql = '''
             create table if not exists storagepooltb(id integer primary key,
@@ -160,14 +160,43 @@ class LinstorDB(Database):
                 State varchar(20)
                 );'''
 
+        crt_vgtb_sql = '''
+                create table if not exists vgtb(
+                id integer primary key,
+                VG varchar(20),
+                VSize varchar(20),
+                VFree varchar(20)
+                );'''
+
+        crt_thinlvtb_sql = '''
+                create table if not exists thinlvtb(
+                id integer primary key,
+                LV varchar(20),
+                VG varchar(20),
+                LSize varchar(20)
+                );'''
+
 
         self.cur.execute(crt_ntb_sql)
         self.cur.execute(crt_rtb_sql)
         self.cur.execute(crt_sptb_sql)
+        if type == 'all':
+            self.cur.execute(crt_vgtb_sql)
+            self.cur.execute(crt_thinlvtb_sql)
+            self.insert_lvm_data()
         self.insert_linstor_data()
         self.db.commit()
 
 
+    def insert_lvm_data(self):
+        insert_vgtb_sql = '''insert into vgtb(VG,VSize,VFree)values(?,?,?)'''
+
+        insert_thinlvtb_sql = '''insert into thinlvtb(LV,VG,LSize)values(?,?,?)'''
+        lvm = ex.LVM()
+        vg = lvm.refine_vg()
+        thinlv = lvm.refine_thinlv()
+        self.insert_data(insert_vgtb_sql, vg,'vgtb')
+        self.insert_data(insert_thinlvtb_sql, thinlv,'thinlvtb')
 
 
     def insert_linstor_data(self):
@@ -201,6 +230,7 @@ class LinstorDB(Database):
                 )
             values(?,?,?,?,?,?,?,?,?)
             '''
+
         insert_ntb_sql = '''insert into nodetb(Node,NodeType,Addresses,State)values(?,?,?,?)'''
 
 
@@ -218,3 +248,169 @@ class LinstorDB(Database):
             if not list_data[i]:
                 s.prt_log('数据错误，无法插入数据表',2)
             self.cur.execute(sql, list_data[i])
+
+
+
+class CollectData(LinstorDB):
+    """
+    Provide a data interface to retrieve specific data in the LINSTOR database.
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.build_table()
+
+
+    # resource
+    def _get_resource(self):
+        res_used = []
+        result = []
+
+        res_all = self.fet_all(self.select_all(['resourcetb'],'DISTINCT Resource','Allocated','DeviceName','InUse'))
+        in_use = self.fet_all(self.select(['resourcetb'],'DISTINCT Resource','Allocated','DeviceName','InUse',InUse='InUse'))
+
+        for i in in_use:
+            res_used.append(i[0])
+
+        for res in res_all:
+            if res[3] == 'InUse':
+                result.append(res)
+            if res[0] not in res_used and res[3] == 'Unused':
+                result.append(res)
+        return result
+
+
+    def get_all_node(self):
+        data_list = []
+        node_data = self.fet_all(self.select_all(['nodetb'],'Node','NodeType','Addresses','State'))
+        for i in node_data:
+            node, node_type, addr, status = i
+            res_num = self.select_count(['resourcetb'],'Resource',Node=node)
+            sp_num = self.select_count(['storagepooltb'],'Node',Node=node)
+            list_one = [node, node_type, res_num, sp_num, addr, status]
+            data_list.append(list_one)
+        self.cur.close()
+        return data_list
+
+    # 置顶文字
+    def get_node_info(self, node):
+        n = self.fet_one(self.select(['nodetb'],'Node','NodeType','Addresses','State',Node=node))
+        if n:
+            node, node_type, addr, status = n
+            res_num = self.select_count(['resourcetb'],'Resource',Node=node)
+            sp_num = self.select_count(['storagepooltb'],'Node',Node=node)
+            list = [node, node_type, res_num, sp_num, addr, status]
+            return tuple(list)
+        else:
+            return []
+
+
+    def get_one_node(self, node):
+        date_list = []
+        res_data = self.fet_all(self.select(['resourcetb'],'Resource','StoragePool','Allocated','DeviceName','InUse','State',Node=node))
+        for res_data_one in res_data:
+            date_list.append(list(res_data_one))
+        return date_list
+
+
+    def get_sp_in_node(self, node):
+        data_list = []
+        sp_data = self.fet_all(self.select_all(['storagepooltb'],'StoragePool','Node','Driver','PoolName','FreeCapacity','TotalCapacity','SupportsSnapshots','State'))
+        for i in sp_data:
+            sp_name, node_name, driver, pool_name, free_size, total_size, snapshots, status = i
+            res_num = self.select_count(['resourcetb'],'Resource',Node=node_name,StoragePool=sp_name)
+            if node_name == node:
+                list_one = [
+                    sp_name,
+                    node_name,
+                    res_num,
+                    driver,
+                    pool_name,
+                    free_size,
+                    total_size,
+                    snapshots,
+                    status]
+                data_list.append(list_one)
+        self.cur.close()
+        return data_list
+
+
+    def get_all_res(self):
+        data_list = []
+        for i in self._get_resource():
+            if i[1]:  # 过滤size为空的resource
+                resource, size, device_name, used = i
+                mirror_way = self.select_count(['resourcetb'], 'Resource', Resource=resource)
+                list_one = [resource, mirror_way, size, device_name, used]
+                data_list.append(list_one)
+        self.cur.close()
+        return data_list
+
+    # 置顶文字
+    def get_res_info(self, resource):
+        list_one = []
+        for i in self._get_resource():
+            if i[0] == resource:
+                if i[1]:
+                    resource, size, device_name, used = i
+                    mirror_way = self.select_count(['resourcetb'],'Resource',Resource=resource)
+                    list_one = [resource, mirror_way, size, device_name, used]
+        return tuple(list_one)
+
+
+
+    def get_one_res(self, resource):
+        data_list = []
+        res_data = self.fet_all(self.select(['resourcetb'],'Node','StoragePool','InUse','State',Resource=resource))
+        for res_one in res_data:
+            node_name, sp_name, drbd_role, status = list(res_one)
+            if drbd_role == u'InUse':
+                drbd_role = u'primary'
+            elif drbd_role == u'Unused':
+                drbd_role = u'secondary'
+            list_one = [node_name, sp_name, drbd_role, status]
+            data_list.append(list_one)
+        self.cur.close()
+        return data_list
+
+
+    def get_all_sp(self):
+        date_list = []
+        sp_data = self.fet_all(self.select_all(['storagepooltb'],'StoragePool','Node','Driver','PoolName','FreeCapacity','TotalCapacity','SupportsSnapshots','State'))
+        for i in sp_data:
+            sp_name, node_name, driver, pool_name, free_size, total_size, snapshots, status = i
+            res_num = self.select_count(['resourcetb'], 'Resource', Node=node_name, StoragePool=sp_name)
+            list_one = [
+                sp_name,
+                node_name,
+                res_num,
+                driver,
+                pool_name,
+                free_size,
+                total_size,
+                snapshots,
+                status]
+            date_list.append(list_one)
+        self.cur.close()
+        return date_list
+
+
+    def get_sp_info(self,sp):
+        node_num = self.select_count(['storagepooltb'],'Node',StoragePool=sp)
+        node = self.fet_all(self.select(['storagepooltb'], 'Node', StoragePool=sp))
+        if len(node) == 1:
+            names = node[0][0]
+        else:
+            names = [n[0] for n in node]
+        return (node_num,sp,names)
+
+
+    def get_one_sp(self, sp):
+        date_list = []
+        res_data = self.select(['resourcetb'], 'Resource', 'Allocated', 'DeviceName', 'InUse', 'State', StoragePool=sp)
+        for res in res_data:
+            res_name, size, device_name, used, status = res
+            list_one = [res_name, size, device_name, used, status]
+            date_list.append(list_one)
+        self.cur.close()
+        return date_list

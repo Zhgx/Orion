@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
-from flask_vplx import create_app
+from vplx_app import create_app
 import consts
 import sundry
-import log
+import sys 
+sys.path.append("..")
+from public import log
 
 consts.init()
 consts.glo_log()

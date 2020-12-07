@@ -6,15 +6,18 @@ Created on 2020/3/2
 '''
 
 from flask import Flask, Blueprint
+from datetime import timedelta
 
 
 def create_app():
     
     app = Flask(__name__)
 
+    app.config['SEND_FILE_MAX_DEFAULT'] = timedelta(seconds=1)
+
     # 将蓝图注册到app
-    from mgt_app.show import show_blueprint
-    from mgt_app.config import config_blueprint
-    app.register_blueprint(show_blueprint)
-    app.register_blueprint(config_blueprint)
+    from mgt_app.stor import stor_blueprint
+    from mgt_app.iscsi import iscsi_blueprint
+    app.register_blueprint(stor_blueprint)
+    app.register_blueprint(iscsi_blueprint)
     return app
