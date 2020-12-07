@@ -16,6 +16,8 @@ class JsonOperation(object):
     # 读取json文档
     @s.deco_json_operation('读取到的JSON数据')
     def read_json(self):
+        print(traceback.extract_stack()[-4])
+
         try:
             json_data = open("iSCSI_Data.json", encoding='utf-8')
             json_dict = json.load(json_data)

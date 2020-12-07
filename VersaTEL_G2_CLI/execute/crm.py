@@ -73,18 +73,6 @@ class CRMData():
         result = s.re_findall(re_target, self.crm_conf_data)
         return result
 
-    # 获取并更新crm信息
-    def update_crm_conf(self):
-        # crm_config_status = obj_crm.get_crm_data()
-        if 'ERROR' in self.crm_conf_data:
-            s.prt_log("Could not perform requested operations, are you root?",1)
-        else:
-            js = iscsi_json.JsonOperation()
-            res = self.get_resource_data()
-            vip = self.get_vip_data()
-            target = self.get_target_data()
-            js.update_crm_conf(res, vip, target)
-            return True
 
 
 class CRMConfig():

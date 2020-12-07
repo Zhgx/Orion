@@ -165,7 +165,6 @@ class MapCommands():
 
     @sd.deco_record_exception
     def modify(self, args):
-        print(args)
         map = ex.Map()
         if args.hg:
             if args.add:

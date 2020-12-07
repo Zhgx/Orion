@@ -433,16 +433,21 @@ class Map():
     def get_target(self):
         # 获取target
         crm_data = CRMData()
-        if crm_data.update_crm_conf():
-            js = iscsi_json.JsonOperation()
-            crm_data_dict = js.get_data('crm')
-            if crm_data_dict['target']:
+        if 'ERROR' in crm_data.crm_conf_data:
+            s.prt_log("Could not perform requested operations, are you root?",1)
+        else:
+            res = crm_data.get_resource_data()
+            vip = crm_data.get_vip_data()
+            target = crm_data.get_target_data()
+            self.js.update_crm_conf(res,vip,target)
+            if target:
                 # 目前的设计只有一个target，所以取列表的第一个
-                target_all = crm_data_dict['target'][0]
+                target_all = target[0]
                 # 返回target_name, target_iqn
-                return target_all[0], target_all[1]
+                return target_all[0],target_all[1]
             else:
                 s.prt_log('No target，please create target first', 2)
+
 
     def get_disk_data(self, dg):
         # 根据dg去收集drbdd的三项数据：resource name，device name
