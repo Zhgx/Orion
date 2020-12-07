@@ -24,6 +24,11 @@ class ReplayExit(Exception):
     pass
 
 
+class CmdError(Exception):
+    "执行命令出错"
+    pass
+
+
 def init():
     global _GLOBAL_DICT
     _GLOBAL_DICT = {}
@@ -103,5 +108,6 @@ def glo_log_id():
 
 def glo_log_switch():
     return get_value('LOG_SWITCH')
+
 
 

@@ -1,584 +1,125 @@
 {
     "Host": {
-        "host1": "iqnxx",
-        "host2": "iqnxxx",
-        "host3": "iqn123",
-        "Host1": "iqn.2033-22.dsd",
-        "host123": "iqn.2033-232.xx",
-        "host1sd": "iqn.2032-23.dsd",
-        "host212": "iqn.2033-32.xx",
-        "host231": "iqn.2303-322.xx",
-        "host122": "iqn.2302-23.xx",
-        "host2132": "iqn.2323-23.xs",
-        "host1232": "iqn.2323-32.x",
-        "host2121": "iqn.2032-23.xx",
-        "hostwen": "iqn.2032-232.xx",
-        "host44": "iqn.2032-33.xx",
-        "host_test111": "iqn.2030-33.xxxx",
-        "host_test2": "iqn-2222-22.xx",
-        "host_test3": "iqn.2222-22.xxxx",
-        "host1212": "iqn-2233-23.xx",
-        "host132332": "iqn-2323-232.xsx",
-        "host_test4": "iqn.4444-44.xxx",
-        "host_test21": "iqn.2323-23.xx",
-        "host_test5": "iqn.2222-22.xxx",
-        "host_test6": "iqn.2222-22.casd",
-        "host_test7": "iqn.2222-77.xxxxx",
-        "host_test8": "iqn.2222-22.xxxx",
-        "host_test9": "iqn.2222-222.xxx",
-        "host_test10": "iqn-2222.222.xxx",
-        "host_test11": "iqn-2222.222.xxx",
-        "host12322": "iqn-2323-232.xsx",
-        "host_test12": "iqn.2222-222.xxx",
-        "host_test13": "iqn.2222-22.xxxx",
-        "host_test15": "iqn.2222-15.151515",
-        "asdasd": "dasdd",
-        "host_test17": "iqn.2222-22.xxxxx",
-        "host_test_1": "iqn.2222-22.xxxxx",
-        "Host_test1": "iqn.3233-23.xsxs",
-        "host_test1": "iqn.2222-22.xx",
-        "host_test213": "iqn.2323-323.xx",
-        "Host_test2": "iqn.2333-22.xss",
-        "Host_test133": "iqn.2323-22.ww",
-        "host_test1233": "iqn.2222-22.xs",
-        "host_test12323": "iqn.2333-23.xxs",
-        "host_test_test_1": "iqn.2222-22.xxxxx",
-        "host_test_2": "iqn.2323-32.xss",
-        "host_test_111": "iqn.2222-22.xxxxx",
-        "host_test_test_11": "iqn.2222-22.xxxxx",
-        "host_test_test_12": "iqn.2222-22.xxxxx",
-        "hsot1": "iqn.2023-23.xx",
-        "hos2323": "iqn.2323-232.xxx",
-        "hsot424": "iqn.2333-232.xx",
-        "hsot2": "iqn.2333-22.xxx",
-        "host242424": "iqn.2323-2323.xxx",
-        "host12323": "iqn.2333-2323.xx",
-        "hosr32": "iqn.2332-23.xx",
-        "host12123": "iqn.2323-23.xx",
-        "hose2": "iqn.2323-23.xx",
-        "host111": "iqn.2333-1223",
-        "host_test_1117": "iqn.2222-22.xxxxx",
-        "host_data_1": "iqn.2222-22.xxxx",
-        "host_iqn_test111": "iqn.2222-22.xxxxx",
-        "host_test_119": "iqn.1111-11.xxx",
-        "host_test_112": "iqn.2222-22.xxx",
-        "hosr112": "iqn.2323-32.xx",
-        "hos12": "iqn.2323-232.xx",
-        "host33": "iqn.3233-23.xx",
-        "hosee2e": "iqn.2323-232.xx",
-        "hose2323": "iqn.2323-32.xx",
-        "Host12323": "iqn.2323-23.xx",
-        "hsot11": "iqn.2323-32.xxx",
-        "host_s": "iqn.1111-111:single",
-        "safasdf": "iqn.7777-33.sadf",
-        "host323": "iqn.3233-232.xxx",
-        "wewe": "iqn.2323-323.xx",
-        "wew": "iqn.2323-2323.xxx",
-        "sdsd": "iqn.2323-23.xsx",
-        "hostqq": "iqn.2322-23.xx",
-        "wewe22": "iqn.2323-223.xx",
-        "wwww": "iqn.2323-23.xx",
-        "a123": "iqn.2321-13.iqn",
-        "sdddsa": "iqn.2333-323.xx",
-        "host2323": "iqn.3233-23.xss",
-        "iqnsdsd": "iqn.2323-23.xsxs",
-        "dsdsd": "iqn.2332-33.xsx",
-        "cxcxc": "iqn.3233-232.xs",
-        "hjhj": "iqn.2323-23.xx",
-        "dsd": "iqn.2323-23.xx",
-        "gfgfg": "iqn.2323-23.xx",
-        "hsdosdo": "iqn.2323-23.xx",
-        "wezd": "iqn.2323-23.xx",
-        "dfda": "iqn.3233-23.xx",
-        "sdsd2": "iqn.2323-32.xx",
-        "dsdsd23": "iqn.2333-23.xx",
-        "sdsddssd": "iqn.2323-23.xx",
-        "ytyty": "iqn.2323-32.xx",
-        "sdd": "iqn.2332-23.xx",
-        "hosta12312": "iqn.1234-123.com"
+        "h1": "iqn.2020-11.com.example:pytest01",
+        "h2": "iqn.2020-11.com.example:pytest02",
+        "h3": "iqn.2020-11.com.example:pytest03",
+        "h4": "iqn.2020-11.com.example:pytest04",
+        "h5": "iqn.2020-11.com.example:pytest05",
+        "h6": "iqn.2020-11.com.example:pytest06",
+        "h7": "iqn.2020-11.com.example:pytest07"
     },
     "Disk": {
         "res_a": "/dev/drbd1000",
         "res_b": "/dev/drbd1001",
         "res_c": "/dev/drbd1002",
-        "res_d": "/dev/drbd1003"
+        "res_d": "/dev/drbd1003",
+        "res_e": "/dev/drbd1005"
     },
     "HostGroup": {
         "hg1": [
-            "host1"
-        ],
-        "hg4": [
-            "host3"
+            "h1",
+            "h2"
         ],
         "hg2": [
-            "host_test12"
+            "h3",
+            "h4"
         ],
-        "hg_test_11": [
-            "Host_test1",
-            "Host_test133"
+        "hg3": [
+            "h5",
+            "h3"
         ],
-        "host_group_test1": [
-            "host_test_111",
-            "host_test_1117",
-            "host_test_112"
+        "hg4": [
+            "h6"
         ],
-        "hg22323": [
-            "Host1",
-            "Host12323",
-            "Host_test1",
-            "Host_test133",
-            "Host_test2"
+        "hg5": [
+            "h7"
         ],
-        "Hg1232323": [
-            "Host12323",
-            "Host_test1",
-            "Host_test133"
+        "hg6": [
+            "h6"
         ],
-        "nihaoya": [
-            "Host12323",
-            "hos12"
-        ],
-        "hg2e323232": [
-            "Host12323",
-            "Host_test1",
-            "Host_test133"
-        ],
-        "hg323231": [
-            "Host1",
-            "Host12323",
-            "Host_test1"
-        ],
-        "232ds": [
-            "Host12323",
-            "Host_test1",
-            "Host_test133"
-        ],
-        "dsds323": [
-            "Host12323",
-            "Host_test1",
-            "Host_test133"
-        ],
-        "2323": [
-            "Host1",
-            "Host12323",
-            "Host_test1"
-        ],
-        "hg231212": [
-            "Host1",
-            "Host12323",
-            "Host_test1"
-        ],
-        "werqwq": [
-            "Host12323",
-            "Host_test1",
-            "Host_test133"
-        ],
-        "hf23232": [
-            "Host1",
-            "Host12323",
-            "Host_test1"
-        ],
-        "sdsd2": [
-            "Host1",
-            "Host12323"
-        ],
-        "hge22": [
-            "Host1",
-            "Host12323"
-        ],
-        "hg3223": [
-            "Host1",
-            "Host12323",
-            "Host_test1"
-        ],
-        "1": [
-            "Host1",
-            "Host12323",
-            "Host_test1"
-        ],
-        "sdsd": [
-            "Host1",
-            "Host12323",
-            "Host_test1"
-        ],
-        "aa": [
-            "Host1",
-            "Host12323",
-            "Host_test1"
-        ],
-        "asd": [
-            "Host1",
-            "Host12323",
-            "Host_test1",
-            "Host_test133"
-        ],
-        "weqweqwe": [
-            "Host1",
-            "Host12323",
-            "Host_test1"
-        ],
-        "sdsdsd": [
-            "Host1",
-            "Host12323",
-            "Host_test1"
-        ],
-        "bvcsdsd": [
-            "Host1",
-            "Host12323",
-            "Host_test1"
-        ],
-        "vcbcxcx": [
-            "Host1",
-            "Host12323",
-            "Host_test1",
-            "Host_test133"
-        ],
-        "bzczc": [
-            "Host1",
-            "Host12323",
-            "Host_test1",
-            "Host_test133"
-        ],
-        "wewqe": [
-            "Host1",
-            "Host12323",
-            "Host_test1"
-        ],
-        "dadasd": [
-            "Host1",
-            "Host12323",
-            "Host_test1"
-        ],
-        "asdsd": [
-            "Host1"
-        ],
-        "rtrtrt": [
-            "Host1",
-            "Host12323",
-            "Host_test1"
-        ],
-        "add": [
-            "Host_test133",
-            "Host_test2"
-        ],
-        "dfdfd": [
-            "Host1",
-            "Host12323"
-        ],
-        "cxcx": [
-            "Host1",
-            "Host12323",
-            "Host_test1",
-            "Host_test133",
-            "Host_test2"
-        ],
-        "sdsdd": [
-            "Host1",
-            "Host12323",
-            "Host_test1",
-            "Host_test133",
-            "Host_test2",
-            "a123",
-            "asdasd",
-            "cxcxc",
-            "dfda",
-            "dsd",
-            "dsdsd",
-            "dsdsd23",
-            "gfgfg"
-        ],
-        "xcxc": [
-            "hjhj",
-            "hos12",
-            "hos2323"
-        ],
-        "a222": [
-            "Host1",
-            "Host_test1"
-        ],
-        "a12312": [
-            "Host1",
-            "Host_test1"
-        ],
-        "wewe": [
-            "Host1",
-            "Host12323"
-        ],
-        "HG1": [
-            "Host1",
-            "Host_test1"
-        ],
-        "HG11": [
-            "asdasd",
-            "dfda"
+        "hg7": [
+            "h7"
         ]
     },
     "DiskGroup": {
         "dg1": [
-            "res_c"
-        ],
-        "dg4": [
             "res_a",
-            "res_f"
+            "res_b"
         ],
         "dg2": [
             "res_b"
         ],
-        "dg_test_22": [
-            "res_b",
-            "res_c"
-        ],
-        "dg_test_test_12": [
-            "res_b",
-            "res_c"
-        ],
-        "dg_test_test_13": [
-            "res_b",
-            "res_c"
-        ],
-        "dg12": [
-            "res_a",
-            "res_b"
-        ],
-        "dg123": [
-            "res_a"
-        ],
-        "disk_group_test1": [
-            "res_a",
-            "res_b",
-            "res_c"
-        ],
-        "dg_test_1": [
-            "res_d"
-        ],
-        "dsd": [
-            "res_a",
-            "res_b"
-        ],
-        "dg3323": [
-            "res_a",
-            "res_c"
-        ],
-        "hg1": [
-            "res_a",
-            "res_b",
-            "res_c"
-        ],
-        "dd": [
-            "res_a",
-            "res_b"
-        ],
-        "dgt3232": [
-            "res_a",
-            "res_b"
-        ],
-        "dg3232323": [
-            "res_a",
-            "res_b"
-        ],
-        "dgewe23": [
-            "res_a",
-            "res_b",
-            "res_c"
-        ],
-        "dg_m1": [
-            "res_d",
-            "res_a"
-        ],
-        "aabbcc": [
-            "res_d",
-            "res_a"
-        ],
-        "dg2323": [
-            "res_a",
-            "res_b"
-        ],
-        "212": [
-            "res_a",
-            "res_b"
-        ],
-        "dg12323": [
-            "res_a",
-            "res_b"
-        ],
-        "dg123dsd": [
-            "res_a",
-            "res_b"
-        ],
-        "sdsd": [
-            "res_a",
-            "res_b"
-        ],
-        "wewewe": [
-            "res_a",
-            "res_b",
-            "res_c"
-        ],
-        "sdsdsda": [
-            "res_a",
-            "res_b",
-            "res_c"
-        ],
-        "vvcvcv": [
-            "res_a",
-            "res_b",
-            "res_c"
-        ],
-        "cvcvx": [
-            "res_a",
-            "res_b",
-            "res_c"
-        ],
-        "nmbbbv": [
-            "res_a",
-            "res_b",
-            "res_c"
-        ],
-        "vccxc": [
-            "res_a",
-            "res_b",
-            "res_c"
-        ],
-        "xcxxzxc": [
-            "res_a",
-            "res_b",
-            "res_c"
-        ],
-        "cxcxcz": [
-            "res_a",
-            "res_b",
-            "res_c"
-        ],
-        "zxczc": [
-            "res_a",
-            "res_b",
-            "res_c"
-        ],
-        "zczxcx": [
-            "res_a",
-            "res_b",
+        "dg3": [
             "res_c",
             "res_d"
         ],
-        "bvbvb": [
-            "res_c",
-            "res_d"
-        ],
-        "cswqewe": [
-            "res_d",
-            "res_a",
-            "res_b"
-        ],
-        "kjjkjk": [
-            "res_a",
-            "res_b",
-            "res_c"
-        ],
-        "bnbn": [
-            "res_b",
-            "res_c"
-        ],
-        "bnbnbn": [
-            "res_a",
-            "res_b"
-        ],
-        "klklkl": [
-            "res_a",
-            "res_b"
-        ],
-        "cvcvb": [
-            "res_a",
-            "res_b",
-            "res_c"
-        ],
-        "bvbvcx": [
-            "res_a",
-            "res_b"
-        ],
-        "dgewen": [
-            "res_a",
-            "res_b",
-            "res_c"
-        ],
-        "dddd": [
-            "res_d",
-            "res_c"
-        ],
-        "sdsdds": [
-            "res_d",
-            "res_c"
-        ],
-        "sssdd": [
-            "res_d",
-            "res_c"
-        ],
-        "ddf": [
-            "res_d",
-            "res_c"
-        ],
-        "sss": [
-            "res_d",
-            "res_c"
-        ],
-        "x": [
-            "res_c"
-        ],
-        "sdsdf": [
-            "res_d"
-        ],
-        "sd": [
-            "res_c"
-        ],
-        "cxcx": [
-            "res_d"
+        "dg4": [
+            "res_e"
         ]
     },
     "Map": {
-        "Map1": [
-            "hg4",
-            "dg4"
-        ],
-        "map_test1": [
-            "hg1",
-            "dg1"
-        ],
-        "map_test_1": [
-            "hg2",
-            "dg2"
-        ],
-        "map123": [
-            "hg1",
-            "dg123"
-        ],
-        "map_test_111": [
-            "hg1",
-            "dg_test_1"
-        ]
+        "map1": {
+            "HostGroup": [
+                "hg1",
+                "hg2",
+                "hg4",
+                "hg5",
+                "hg6",
+                "hg7"
+            ],
+            "DiskGroup": [
+                "dg2",
+                "dg1"
+            ]
+        },
+        "map2": {
+            "HostGroup": [
+                "hg2",
+                "hg1",
+                "hg3",
+                "hg4",
+                "hg5",
+                "hg6",
+                "hg7"
+            ],
+            "DiskGroup": [
+                "dg2",
+                "dg3"
+            ]
+        }
     },
     "crm": {
         "resource": [
             [
+                "res_a",
+                "iqn.2020-04.feixitek.com:versaplx00",
+                "0",
+                "/dev/drbd1000",
+                "iqn.2020-11.com.example:pytest02 iqn.2020-11.com.example:pytest06 iqn.2020-11.com.example:pytest07 iqn.2020-11.com.example:pytest03 iqn.2020-11.com.example:pytest04 iqn.2020-11.com.example:pytest01",
+                "Started"
+            ],
+            [
                 "res_b",
                 "iqn.2020-04.feixitek.com:versaplx00",
-                "01",
+                "1",
                 "/dev/drbd1001",
-                "iqn.2222-222.xxx ",
+                "iqn.2020-11.com.example:pytest04 iqn.2020-11.com.example:pytest02 iqn.2020-11.com.example:pytest07 iqn.2020-11.com.example:pytest01 iqn.2020-11.com.example:pytest06 iqn.2020-11.com.example:pytest03 iqn.2020-11.com.example:pytest05",
                 "Started"
             ],
             [
                 "res_c",
                 "iqn.2020-04.feixitek.com:versaplx00",
-                "02",
+                "2",
                 "/dev/drbd1002",
-                "iqnxx ",
+                "iqn.2020-11.com.example:pytest05 iqn.2020-11.com.example:pytest01 iqn.2020-11.com.example:pytest02 iqn.2020-11.com.example:pytest04 iqn.2020-11.com.example:pytest06 iqn.2020-11.com.example:pytest07 iqn.2020-11.com.example:pytest03",
                 "Started"
             ],
             [
-                "thinlv_test",
+                "res_d",
                 "iqn.2020-04.feixitek.com:versaplx00",
-                "04",
-                "/dev/drbd1004",
-                "iqn123 ",
+                "3",
+                "/dev/drbd1003",
+                "iqn.2020-11.com.example:pytest05 iqn.2020-11.com.example:pytest01 iqn.2020-11.com.example:pytest02 iqn.2020-11.com.example:pytest04 iqn.2020-11.com.example:pytest06 iqn.2020-11.com.example:pytest07 iqn.2020-11.com.example:pytest03",
                 "Started"
             ]
         ],

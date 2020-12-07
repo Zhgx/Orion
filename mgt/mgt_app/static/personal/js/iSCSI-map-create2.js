@@ -159,9 +159,7 @@ function change_hostgroup(obj) {
 						 var obj_host_list_new = obj_host_list.filter((e,i)=>obj_host_list.indexOf(e)==i)
 						 $("#HostTable tr:not(:first)").html("");
 						 for (var i = 0; i < obj_host_list_new.length; i++) {
-						tr = '<td >' + obj_host_list_new[i] + '</td>' + '<td >'
-						+ host_result[obj_host_list_new[i]]
-						+ '</td>';
+						tr = '<td class="pop-title" title='+host_result[obj_host_list_new[i]]+'>' + obj_host_list_new[i] + '</td>';
 						$("#Host_T").append('<tr >' + tr + '</tr>')
 						}
 					},
@@ -327,9 +325,7 @@ function change_diskgroup(obj) {
 							 for (var i = 0; i < obj_disk_list_new.length; i++) {
 								 for (var  j= 0;  j< resource_data.length; j++) {
 									 if (obj_disk_list_new[i] == resource_data[j].resource) {
-										 tr = '<td>' + resource_data[j].resource + '</td>' +'<td >'
-										 + resource_data[j].device_name
-										 + '</td>';
+										 tr = '<td title='+resource_data[j].device_name+'>' + resource_data[j].resource + '</td>';
 										 $("#Disk_T").append('<tr >' + tr + '</tr>')
 									}
 								}
@@ -586,3 +582,4 @@ $("[rel=drevil]").popover({
         }
     }, );
 });　
+

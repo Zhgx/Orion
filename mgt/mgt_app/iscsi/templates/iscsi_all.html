@@ -1,102 +1,57 @@
-<HTML>   
-  <HEAD>   
-  <META   http-equiv="Content-Type"   content="text/html;   charset=utf-8">   
-  <TITLE>table</TITLE>   
-  <STYLE>   
-  table {   
-	  border-top:1px   solid   black;   
-	  border-left:1px   solid   black;   
-	  cursor:default;   
-  }   
-  td {   
-	  border-bottom:1px   solid   black;   
-	  border-right:1px   solid   black;   
-	  height:23px;   
-  }   
-  </STYLE>
- </HEAD>   
-  <BODY>   
-  <table   id="table1"   width="50%"   border="0"   cellpadding="0"   cellspacing="0">   
-      <tr   style="background-color:#999999;   border-bottom:2px   solid   black;   height:25px"   align="center">   
-          <td   width="25%">one</td>   
-          <td   width="25%">two</td>   
-          <td   width="25%">three</td>   
-          <td   width="25%">four</td>   
-      </tr>   
-      <tr   onMouseOver="over()"   onClick="change()"   onMouseOut="out()">   
-          <td>管理员1</td>   
-          <td>管理员1</td>   
-          <td>管理员1</td>   
-          <td>管理员1</td>   
-      </tr>   
-      <tr   onMouseOver="over()"   onClick="change()"   onMouseOut="out()">   
-          <td>管理员2</td>   
-          <td> </td>   
-          <td> </td>   
-          <td> </td>   
-      </tr>   
-      <tr   onMouseOver="over()"   onClick="change()"   onMouseOut="out()">   
-          <td> </td>   
-          <td> </td>   
-          <td> </td>   
-          <td> </td>   
-      </tr>   
-      <tr   onMouseOver="over()"   onClick="change()"   onMouseOut="out()">   
-          <td> </td>   
-          <td> </td>   
-          <td> </td>   
-          <td> </td>   
-      </tr>   
-      <tr   onMouseOver="over()"   onClick="change()"   onMouseOut="out()">   
-          <td> </td>   
-          <td> </td>   
-          <td> </td>   
-          <td> </td>   
-      </tr>   
-      <tr   onMouseOver="over()"   onClick="change()"   onMouseOut="out()">   
-          <td> </td>   
-          <td> </td>   
-          <td> </td>   
-          <td> </td>   
-      </tr>   
-      <tr   onMouseOver="over()"   onClick="change()"   onMouseOut="out()">   
-          <td> </td>   
-          <td> </td>   
-          <td> </td>   
-          <td> </td>   
-      </tr>               
-  </table>
-  </BODY> 
-  <SCRIPT language="JavaScript">     
-   //鼠标点击选择行时候变色  
-function change(change) {  
-    var oObj = window.event.srcElement;  
-    //alert(change.tagName.toLowerCase());  
-    if(oObj.tagName.toLowerCase() == "td"){     
-        var oTr = oObj.parentNode;     
-        for(var i=1; i<document.all.table1.rows.length; i++)   {     
-            document.all.table1.rows[i].style.backgroundColor   =   "";     
-            document.all.table1.rows[i].tag = false;     
-        }  
-        oTr.style.backgroundColor = "#CCCCFF";     
-        oTr.tag = true;     
-    }  
-}  
-   //鼠标点击另外一行时关闭已选行变色  
-function out() {  
-    var oObj = event.srcElement;  
-    if(oObj.tagName.toLowerCase() == "td"){  
-        var oTr = oObj.parentNode;  
-        if(!oTr.tag) oTr.style.backgroundColor = "";  
-    }  
-}  
-//鼠标移动到选择行上时的行变色  
-function over(){     
-    var oObj = event.srcElement;  
-    if(oObj.tagName.toLowerCase() == "td"){     
-    var oTr = oObj.parentNode;  
-    if(!oTr.tag) oTr.style.backgroundColor = "#E1E9FD";  
-    }  
-}  
-</SCRIPT>   
-  </HTML>
+<html>
+	<head>
+	<script type="text/javascript"
+	src="{{url_for('static',filename='personal/js/JQuery.js')}}"></script>
+		<script type="text/javascript">
+		$(function(){
+			var d = $("<div id='d' style='background-color:white;border:1px solid #DCE6F5;display:none;padding:10px 20px 10px 20px;}'/> <div>");// 获取<div id="d">的
+			var tableTag = $("table");
+			tableTag.append(d);
+			var dTag = d.get(0);
+			var timer = null;
+			$("td[name$='_td']").each(
+				function(i){
+					var tdTag = $(this);
+					var offset = tdTag.offset();
+					var left = offset.left;
+					var top = offset.top;
+					tdTag.mouseover(function(){
+							timer=setTimeout(
+								function(){
+									timer=0;d.css("display","");
+									dTag.style.position="absolute";
+									dTag.style.left=left+10;
+									dTag.style.top=top+3;
+									d.text(tdTag.text());
+								},1100
+							);
+						}
+					);
+					tdTag.mouseout(function(){
+						if(timer)  {
+							clearTimeout(timer);
+							timer=0;
+							return;
+						}
+						d.blur(function(){
+							d.css("display","none");
+						});
+					});
+				}
+			);
+		});
+		</script>
+		<title>悬浮</title>
+	</head>
+	<body>
+		
+		<table border="1" cellpadding="0" cellspacing="0" align="center">
+			<tr height="30px">
+				<td name="one_td">aaaaaaaaaa</td><td name="two_td">bbbbbbbbbbbbbbbbbbbbbbb</td>
+			</tr>
+			<tr height="30px">
+				<td name="one_td">cccccccccc</td><td name="two_td">ddddddddd</td>
+			</tr>
+		</table>
+	<body>
+</html>
