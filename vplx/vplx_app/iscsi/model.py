@@ -2,7 +2,9 @@
 from flask import Flask, jsonify, render_template, request, make_response, views
 from flask_cors import *
 from execute import iscsi
+import iscsi_json
 import consts
+
 
 def cors_data(data_dict):
     response = make_response(jsonify(data_dict))
@@ -10,7 +12,6 @@ def cors_data(data_dict):
     response.headers['Access-Control-Allow-Methods'] = 'OPTIONS,HEAD,GET,POST'
     response.headers['Access-Control-Allow-Headers'] = 'x-requested-with'
     return response
-
 
 
 def get_request_data():
@@ -42,7 +43,6 @@ class HostCreate(views.MethodView):
             result = "1"
         logger.write_to_log('DATA', 'RETURN', 'HostCreate', 'result', result)
         return cors_data(result)
-
 
     
 class HostGroupCreate(views.MethodView):
@@ -95,7 +95,7 @@ class MapCreate(views.MethodView):
         disk_group_name = dict_data["disk_group"]
         logger.write_to_log('OPRT', 'ROUTE', '/map/create', dict_data['ip'], dict_data)
         map_obj = iscsi.Map()
-        map_create_results = map_obj.create_map(map_name, host_group_name,disk_group_name)
+        map_create_results = map_obj.create_map(map_name, host_group_name, disk_group_name)
         logger.write_to_log('DATA', 'RESULT', 'MapCreate', 'result', map_create_results)
         if map_create_results == True:
             result = "0"
@@ -111,8 +111,11 @@ def get_tid():
         dict_transaction = dict(str_transaction_id)
         return dict_transaction["transaction_id"]
 
+
 # host
 HOST_RESULT = None
+
+
 def update_host():
     global HOST_RESULT
    
@@ -120,6 +123,7 @@ def update_host():
     HOST_RESULT = host.get_all_host()
     
     return True
+
 
 class OprtAllHost(views.MethodView):
 
@@ -149,12 +153,15 @@ class AllHostResult(views.MethodView):
 
 # disk   
 DISK_RESULT = None
+
+
 def update_disk():
     global DISK_RESULT
     
     disk = iscsi.Disk()
     DISK_RESULT = disk.get_all_disk()
     return True
+
 
 class OprtAllDisk(views.MethodView):
 
@@ -171,6 +178,7 @@ class OprtAllDisk(views.MethodView):
 
     
 class AllDiskResult(views.MethodView):
+
     def get(self):
         dict_data = get_request_data()
         logger = consts.glo_log()
@@ -183,13 +191,14 @@ class AllDiskResult(views.MethodView):
 
 # hostgroup
 HOSTGROUP_RESULT = None
+
+
 def update_hg():
     global HOSTGROUP_RESULT
     
     host_group = iscsi.HostGroup()
     HOSTGROUP_RESULT = host_group.get_all_hostgroup()
     return True
-
 
 
 class OprtAllHg(views.MethodView):
@@ -221,6 +230,7 @@ class AllHgResult(views.MethodView):
 # diskgroup
 DISKGROUP_RESULT = None
 
+
 def update_dg():
     global DISKGROUP_RESULT
     
@@ -251,12 +261,13 @@ class AllDgResult(views.MethodView):
         logger.write_to_log('DATA', 'ROUTE', '/dg/show/data', dict_data['ip'], '')
         if not DISKGROUP_RESULT:
             update_dg()
-        logger.write_to_log('DATA', 'RETURN', 'AllDgResult', 'result',DISKGROUP_RESULT)
+        logger.write_to_log('DATA', 'RETURN', 'AllDgResult', 'result', DISKGROUP_RESULT)
         return cors_data(DISKGROUP_RESULT)
     
     
 # map
 MAP_RESULT = None
+
 
 def update_map():
     global MAP_RESULT
@@ -264,7 +275,6 @@ def update_map():
     map = iscsi.Map()
     MAP_RESULT = map.get_all_map()
     return True
-
 
 
 class OprtAllMap(views.MethodView):
@@ -283,7 +293,6 @@ class OprtAllMap(views.MethodView):
     
 class AllMapResult(views.MethodView):
 
-
     def get(self):
         dict_data = get_request_data()
         logger = consts.glo_log()
@@ -292,3 +301,46 @@ class AllMapResult(views.MethodView):
            update_map()
         logger.write_to_log('DATA', 'RETURN', 'AllMapResult', 'result', MAP_RESULT)
         return cors_data(MAP_RESULT)
+    
+    
+class CheckMapModify(views.MethodView):
+
+    def get(self):
+        dict_data = get_request_data()
+        map = dict_data['map']
+        hg = dict_data['hg']
+        js = iscsi_json.JsonOperation()
+        js_modify = iscsi_json.JsonMofidy()
+        js_modify.remove_member('HostGroup', map, [hg], type='Map')
+        dict_before = js.get_disk_with_iqn()
+        dict_now = js_modify.get_disk_with_iqn()
+        obj_ilu = iscsi.IscsiConfig(dict_before, dict_now)
+
+        info = f"删除：{','.join(obj_ilu.delete)}\n新增：{','.join(obj_ilu.create)}\n修改：{','.join(obj_ilu.modify)}"
+        
+        return cors_data(info)
+
+    
+class MapModify(views.MethodView):
+
+    def get(self):
+        dict_data = get_request_data()
+        print(dict_data)
+        map = dict_data['map']
+        hg = dict_data['hg']
+        js = iscsi_json.JsonOperation()
+        js_modify = iscsi_json.JsonMofidy()
+        js_modify.remove_member('HostGroup', map, [hg], type='Map')
+        dict_before = js.get_disk_with_iqn()
+        dict_now = js_modify.get_disk_with_iqn()
+        obj_ilu = iscsi.IscsiConfig(dict_before, dict_now)
+        try:
+            obj_ilu.create_iscsilogicalunit()
+            obj_ilu.delete_iscsilogicalunit()
+            obj_ilu.modify_iscsilogicalunit()
+        except Exception:
+            print('异常,暂无回退')
+            return cors_data(False)
+        js.remove_member('HostGroup', map, [hg], type='Map')
+        return cors_data(True)
+    
