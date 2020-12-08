@@ -210,7 +210,7 @@ def execute_cmd(cmd, timeout=60):
 
 
 
-def prt(str, warning_level=0):
+def prt(str_, warning_level=0):
     if isinstance(warning_level, int):
         warning_str = '*' * warning_level
     else:
@@ -218,7 +218,7 @@ def prt(str, warning_level=0):
     rpl = consts.glo_rpl()
 
     if rpl == 'no':
-        print(str)
+        print(str(str_))
     else:
         db = consts.glo_db()
         time,cmd_output = db.get_cmd_output(consts.glo_tsc_id())
@@ -228,7 +228,7 @@ def prt(str, warning_level=0):
         print(f'RE:{"":<20} 此次执行输出：{warning_str:<4}\n{str}')
 
 
-def prt_log(str, warning_level):
+def prt_log(str_, warning_level):
     """
     print, write to log and exit.
     :param logger: Logger object for logging
@@ -238,16 +238,16 @@ def prt_log(str, warning_level):
     RPL = consts.glo_rpl()
     if RPL == 'yes':
         # pass
-        prt(str, warning_level)
+        prt(str_, warning_level)
     elif RPL == 'no':
-        prt(str, warning_level)
+        prt(str_, warning_level)
 
     if warning_level == 0:
-        logger.write_to_log('INFO', 'INFO', 'finish', 'output', str)
+        logger.write_to_log('INFO', 'INFO', 'finish', 'output', str_)
     elif warning_level == 1:
-        logger.write_to_log('INFO', 'WARNING', 'fail', 'output', str)
+        logger.write_to_log('INFO', 'WARNING', 'fail', 'output', str_)
     elif warning_level == 2:
-        logger.write_to_log('INFO', 'ERROR', 'exit', 'output', str)
+        logger.write_to_log('INFO', 'ERROR', 'exit', 'output', str_)
         if RPL == 'no':
             sys.exit()
         else:

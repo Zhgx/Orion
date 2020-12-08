@@ -202,6 +202,7 @@ class CRMConfig():
             return True
 
     def start_res(self, res):
+        s.prt_log(f"try to start {res}", 0)
         cmd = f'crm res start {res}'
         result = execute_crm_cmd(cmd)
         if result['sts']:
