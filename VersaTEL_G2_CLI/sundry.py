@@ -111,7 +111,7 @@ def re_search(re_string, tgt_stirng):
     return re_result
 
 
-def show_iscsi_data(list_header,dict_data):
+def show_iscsi_data(list_header, dict_data):
     table = prettytable.PrettyTable()
     table.field_names = list_header
     if dict_data:
@@ -122,14 +122,28 @@ def show_iscsi_data(list_header,dict_data):
         pass
     return table
 
-def show_map_data(list_header,dict_data):
+
+def show_spe_map_data(list_header, list_data):
+    table = prettytable.PrettyTable()
+    table.field_names = list_header
+    if list_data:
+        for i in list_data:
+            table.add_row(i)
+    else:
+        pass
+    return table
+
+
+def show_map_data(list_header, dict_data):
     table = prettytable.PrettyTable()
     table.field_names = list_header
     if dict_data:
-        # {map1:[hg1,dg1] => [map1,hg1,dg1]}
+        # {map1:{"HostGroup":[hg1,hg2],"DiskGroup":[dg1,dg2]} => [map1,"hg1 hg2","dg1 dg2"]}
         for i, j in dict_data.items():
-            j.insert(0,i)
-            table.add_row(j)
+            data_list = [i,
+                         (' '.join(j["HostGroup"]) if isinstance(j["HostGroup"], list) == True else j["HostGroup"]),
+                         (' '.join(j["DiskGroup"]) if isinstance(j["DiskGroup"], list) == True else j["DiskGroup"])]
+            table.add_row(data_list)
     return table
 
 
@@ -284,6 +298,8 @@ def deco_json_operation(str):
         @wraps(func)
         def wrapper(self, *args):
             RPL = consts.glo_rpl()
+            # print(traceback.extract_stack()[-2])
+            # print(traceback.extract_stack()[-3])
             if RPL == 'no':
                 logger = consts.glo_log()
                 oprt_id = create_oprt_id()
@@ -294,6 +310,7 @@ def deco_json_operation(str):
             else:
                 logdb = consts.glo_db()
                 id_result = logdb.get_id(consts.glo_tsc_id(), func.__name__)
+                print('id_result:',id_result)
                 json_result = logdb.get_oprt_result(id_result['oprt_id'])
                 if json_result['result']:
                     result = eval(json_result['result'])
@@ -345,3 +362,50 @@ def handle_exception():
 
 
 
+# 删除指定的initiator
+def remove_list(list_now, list_del):
+    """
+    删除指定的iqn
+    :param iqn_now:list
+    :param iqn_del:list
+    :return:list
+    """
+    # if set(list_now) == set(list_del):
+    #     return []
+    #
+    list_now = set(list_now)
+    for i in set(list_del):
+        list_now.remove(i)
+    return list(list_now)
+
+def append_list(list_now, list_append):
+    list_now.extend(list_append)
+    return list(set(list_now))
+
+
+def confirm_modify(words):
+    print(words)
+    answer = input()
+    if not answer in ['y', 'yes', 'Y', 'YES']:
+        prt_log('中断修改，退出',2)
+
+
+
+
+
+    # diff = []
+    #     if set(dict1[key]) != set(dict2[key]):
+    #         diff.append((key,dict1[key],dict2[key]))
+
+# def get_dict_diff(dict1,dict2):
+#     diff = [[],{},{}]
+#     for key in dict1:
+#         if set(dict1[key]) != set(dict2[key]):
+#             if not dict2[key]:
+#                 diff[0].append(key)
+#             elif not dict1[key]:
+#                 diff[1].update({key:dict2[key]})
+#             else:
+#                 diff[2].update({key:dict2[key]})
+#     print(diff)
+#     return diff

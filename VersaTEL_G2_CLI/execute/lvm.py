@@ -21,8 +21,10 @@ class LVM():
         result = s.execute_cmd(cmd)
         if result:
             return result
-        else:
-            s.handle_exception()
+
+        # lvs为空的情况下会执行下面的分支，但是lvs为空是正常情况
+        #else:
+            #s.handle_exception()
 
     def refine_thinlv(self):
         all_lv = self.data_lv.splitlines()

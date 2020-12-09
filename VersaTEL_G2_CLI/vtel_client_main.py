@@ -52,7 +52,7 @@ class VtelCLI(object):
     Vtel command line client
     """
     def __init__(self):
-        consts._init()
+        consts.init()
         self.username = sundry.get_username()
         self.transaction_id = sundry.create_transaction_id()
         self.logger = log.Log(self.username,self.transaction_id)
@@ -74,12 +74,15 @@ class VtelCLI(object):
         """
         Set parser vtel sub-parser
         """
-        #parser.add_argument('--version','-v',action='version',version='%(prog)s ' + VERSION + '; ')
-
 
         subp = parser.add_subparsers(metavar='',
                                      dest='subargs_vtel')
 
+        parser.add_argument('-v',
+                            '--version',
+                            dest='version',
+                            help='Show current version',
+                            action='store_true')
 
         parser_stor = subp.add_parser(
             'stor',
@@ -137,13 +140,15 @@ class VtelCLI(object):
         self._hostgroup_commands.setup_commands(subp_iscsi)
         self._map_commands.setup_commands(subp_iscsi)
 
-        parser.set_defaults(func=self.print_vtel_help)
-
+        parser.set_defaults(func=self.func_vtel)
         return parser
 
 
-    def print_vtel_help(self,*args):
-        self._parser.print_help()
+    def func_vtel(self,args):
+        if args.version:
+            print(f'VersaTEL G2 {consts.VERSION}')
+        else:
+            self._parser.print_help()
 
     def replay_one(self,dict_input):
         if not dict_input:
@@ -182,7 +187,7 @@ class VtelCLI(object):
             elif answer == 'all':
                 for dict_cmd in dict_input:
                     self.replay_one(dict_cmd)
-            else:
+            elif answer != 'exit':
                 print('输入的序号不正确')
 
 
