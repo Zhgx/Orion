@@ -90,10 +90,6 @@ def glo_db():
     return get_value('LOG_DB')
 
 
-def glo_str():
-    return get_value('STR')
-
-
 def glo_rpl():
     return get_value('RPL')
 
