@@ -151,7 +151,8 @@ class Disk():
 
     def get_all_disk(self):
         linstor = Linstor()
-        linstor_res = linstor.get_linstor_data('linstor --no-color --no-utf8 r lv')
+        linstor_res = linstor.get_linstor_data(
+            'linstor --no-color --no-utf8 r lv')
         disks = {}
         for d in linstor_res:
             disks.update({d[1]: d[5]})
@@ -497,6 +498,19 @@ class Map():
         for i in data_list:
             if self.js.check_key(key, i)['result'] == False:
                 return False
+
+    def pre_check_create_map(self, map, hg, dg):
+        if self.js.check_key('Map', map)['result']:
+            s.prt_log(f'The Map "{map}" already existed.', 1)
+        elif self.js.check_key('HostGroup', hg)['result'] == False:
+            s.prt_log(f"Can't find {hg}", 1)
+        elif self.js.check_key('DiskGroup', dg)['result'] == False:
+            s.prt_log(f"Can't find {dg}", 1)
+        else:
+            if self.js.check_value('Map', dg)['result']:
+                s.prt_log("The diskgroup already map", 1)
+            else:
+                return True
 
     def get_initiator(self, hg):
         # 根据hg去获取hostiqn，返回由hostiqn组成的initiator

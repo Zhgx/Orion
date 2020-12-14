@@ -49,7 +49,7 @@ class LVM():
         if vg in self.data_vg:
             return True
 
-    def is_thinlv_exists(self,thinlv):
+    def is_thinlv_exists(self, thinlv):
         """
         参数thinlv的正常格式：vg_name/thinlv_name
         判断传入的thinlv，跟系统存在的thinlv信息是否能够匹配，thinlv和vg都要一一对应
@@ -60,5 +60,5 @@ class LVM():
         if '/' in thinlv:
             vg, thinlv = thinlv.split('/')
             for one in all_tlv_list:
-                if thinlv ==one[0] and vg == one[1]:
+                if thinlv == one[0] and vg == one[1]:
                     return True
