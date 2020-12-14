@@ -11,13 +11,13 @@ class JsonOperation(object):
     def __init__(self):
         self.RPL = consts.glo_rpl()
         self.json_data = self.read_json()
+        self.iscsi_data = self.json_data.copy()
+        self.iscsi_data.pop('crm')
 
 
     # 读取json文档
     @s.deco_json_operation('读取到的JSON数据')
     def read_json(self):
-        print(traceback.extract_stack()[-4])
-
         try:
             json_data = open("iSCSI_Data.json", encoding='utf-8')
             json_dict = json.load(json_data)
@@ -352,6 +352,26 @@ class JsonOperation(object):
                     dict_disk_iqn[disk] = s.append_list(dict_disk_iqn[disk], list_iqn)
 
         return dict_disk_iqn
+
+
+    # 集合的方式
+    # def get_disk_with_iqn(self):
+    #
+    #     data = self.json_data
+    #     dict_disk_iqn = {}
+    #     for disk in data['Disk']:
+    #         dict_disk_iqn.update({disk: set()})
+    #
+    #     for map in data['Map'].values():
+    #         for dg in map['DiskGroup']:
+    #             for disk in data['DiskGroup'][dg]:
+    #                 set_iqn = set()
+    #                 for hg in map['HostGroup']:
+    #                     for host in data['HostGroup'][hg]:
+    #                         set_iqn.add(data['Host'][host])
+    #                 dict_disk_iqn[disk] = dict_disk_iqn[disk] | set_iqn
+    #
+    #     return dict_disk_iqn
 
 
 class JsonMofidy(JsonOperation):
