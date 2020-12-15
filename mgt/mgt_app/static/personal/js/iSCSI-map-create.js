@@ -53,6 +53,7 @@ function write_to_log(tid, t1, t2, d1, d2, data) {
 			d2 : d2,
 			data : data
 		},
+		async : false,
 		success : function(write_log_result) {
 		}
 	});
@@ -540,6 +541,7 @@ $("#map_create").mousedown(function(){
 						disk_group : obj_diskgroup_str,
 						host_group : obj_hostgroup_str
 					},
+					async : false,
 					success : function(operation_feedback_prompt) {
 						if (operation_feedback_prompt == '0') {
 							var text = "创建成功!";

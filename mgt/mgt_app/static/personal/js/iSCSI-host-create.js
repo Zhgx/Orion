@@ -77,7 +77,10 @@ $("#host_create").mousedown(function(){
 				host_name : hostName,
 				host_iqn : hostiqn
 			},
+			async : false,
 			success : function(operation_feedback_prompt) {
+				console.log(operation_feedback_prompt);
+				console.log(typeof(operation_feedback_prompt));
 				if (operation_feedback_prompt == '0') {
 					var text = "创建成功!";
 					$('#P_text_success').text(text);

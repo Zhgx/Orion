@@ -11,6 +11,8 @@ class JsonOperation(object):
     def __init__(self):
         self.RPL = consts.glo_rpl()
         self.json_data = self.read_json()
+        self.iscsi_data = self.json_data.copy()
+        self.iscsi_data.pop("crm")
 
 
     # 读取json文档
@@ -45,6 +47,7 @@ class JsonOperation(object):
     # 检查key值是否存在
     @s.deco_json_operation('JSON检查key值的结果')
     def check_key(self, first_key, data_key):
+        print(self.json_data)
         if data_key in self.json_data[first_key]:
             return {'type': first_key, 'alias': data_key, 'result': True}
         else:
@@ -336,12 +339,17 @@ class JsonOperation(object):
     def get_disk_with_iqn(self):
 
         data = self.json_data
+        import pprint
+        pprint.pprint(data)
         dict_disk_iqn = {}
         for disk in data['Disk']:
             dict_disk_iqn.update({disk: []})
 
         for map in data['Map'].values():
+            print("map",map)
             for dg in map['DiskGroup']:
+                print("dg",dg)
+                print("---------")
                 for disk in data['DiskGroup'][dg]:
                     list_iqn = []
                     for hg in map['HostGroup']:
