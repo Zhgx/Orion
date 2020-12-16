@@ -24,30 +24,6 @@ class IscsiConfig():
         # self.recovery_list = {'delete': [], 'create': {}, 'modify': {}}
         self.recovery_list = {'delete': set(), 'create': {}, 'modify': {}}
 
-    # def get_dict_diff(self, dict1, dict2):
-    #     # 判断dict2有没有dict1没有的key，如有dict1进行补充
-    #     ex_key = dict2.keys() - dict1.keys()
-    #     if ex_key:
-    #         for i in ex_key:
-    #             dict1.update({i: set()})
-    #
-    #     diff = {'delete': set(), 'create': {}, 'modify': {}}
-    #     recover = {'delete': set(), 'create': {}, 'modify': {}}
-    #     for key in dict1:
-    #         if set(dict1[key]) != set(dict2[key]):
-    #             if not dict2[key]:
-    #                 diff['delete'].add(key)
-    #                 recover['create'].update({key: dict1[key]})
-    #             elif not dict1[key]:
-    #                 diff['create'].update({key: dict2[key]})
-    #                 recover['delete'].add(key)
-    #             else:
-    #                 diff['modify'].update({key: dict2[key]})
-    #                 recover['modify'].update({key: dict1[key]})
-    #
-    #     self.logger.write_to_log('DATA','iSCSILogicalUnit','Data to be modified','',diff)
-    #     return diff, recover
-
 
     def get_dict_diff(self, dict1, dict2):
         # 判断dict2是有有dict1没有的key，如有dict1进行补充
