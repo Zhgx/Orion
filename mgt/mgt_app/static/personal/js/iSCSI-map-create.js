@@ -131,6 +131,7 @@ function change_hostgroup(obj) {
 				tid : tid,
 				ip : mgtIp
 			},
+			async : false,
 			success : function(host_group_result) {
 				// write_to_log(tid, 'DATA', 'ROUTE', vplxIp,
 				// '/hg/show/data', JSON
@@ -145,6 +146,7 @@ function change_hostgroup(obj) {
 						tid : tid,
 						ip : mgtIp
 					},
+					async : false,
 					success : function(host_result) {
 						var obj_list = [];
 						var obj_host_list = [];
@@ -193,6 +195,7 @@ function change_hostgroup_second() {
 				tid : tid,
 				ip : mgtIp
 			},
+			async : false,
 			success : function(host_group_result) {
 				// write_to_log(tid, 'DATA', 'ROUTE', vplxIp,
 				// '/hg/show/data', JSON
@@ -207,6 +210,7 @@ function change_hostgroup_second() {
 						tid : tid,
 						ip : mgtIp
 					},
+					async : false,
 					success : function(host_result) {
 						var obj_list = [];
 						var obj_host_list = [];
@@ -250,6 +254,7 @@ function Dg_Table() {
 					tid : tid,
 					ip : mgtIp
 				},
+				async : false,
 				success : function(status) {
 					write_to_log(tid, 'OPRT', 'ROUTE', vplxIp, '/dg/show/oprt',
 							status);
@@ -261,6 +266,7 @@ function Dg_Table() {
 							tid : tid,
 							ip : mgtIp
 						},
+						async : false,
 						success : function(all_dg_result) {
 							write_to_log(tid, 'DATA', 'ROUTE', vplxIp,
 									'/dg/show/data', JSON
@@ -301,6 +307,7 @@ function change_diskgroup(obj) {
 					tid : tid,
 					ip : mgtIp
 				},
+				async : false,
 				success : function(disk_group_result) {
 					$.ajax({
 						url : vplxIp + "/resource/show/data",
@@ -310,6 +317,7 @@ function change_diskgroup(obj) {
 							tid : tid,
 							ip : mgtIp
 						},
+						async : false,
 						success : function(resource_result) {
 							var resource_data = resource_result.data
 							var obj_list = [];
@@ -363,6 +371,7 @@ function change_diskgroup_second() {
 				tid : tid,
 				ip : mgtIp
 			},
+			async : false,
 			success : function(disk_group_result) {
 				$.ajax({
 					url : vplxIp + "/resource/show/data",
@@ -372,6 +381,7 @@ function change_diskgroup_second() {
 						tid : tid,
 						ip : mgtIp
 					},
+					async : false,
 					success : function(resource_result) {
 						var resource_data = resource_result.data
 						var obj_list = [];
@@ -543,6 +553,7 @@ $("#map_create").mousedown(function(){
 					},
 					async : false,
 					success : function(operation_feedback_prompt) {
+						console.log(typeof(operation_feedback_prompt));
 						if (operation_feedback_prompt == '0') {
 							var text = "创建成功!";
 							$('#P_text_success').text(text);
