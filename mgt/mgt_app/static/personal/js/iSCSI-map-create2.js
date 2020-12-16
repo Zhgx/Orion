@@ -53,6 +53,7 @@ function write_to_log(tid, t1, t2, d1, d2, data) {
 			d2 : d2,
 			data : data
 		},
+		async : false,
 		success : function(write_log_result) {
 		}
 	});
@@ -219,9 +220,7 @@ function change_hostgroup_second() {
 						 var obj_host_list_new = obj_host_list.filter((e,i)=>obj_host_list.indexOf(e)==i)
 						 $("#HostTable tr:not(:first)").html("");
 						 for (var i = 0; i < obj_host_list_new.length; i++) {
-						tr = '<td >' + obj_host_list_new[i] + '</td>' + '<td >'
-						+ host_result[obj_host_list_new[i]]
-						+ '</td>';
+						tr = '<td >' + obj_host_list_new[i] + '</td>';
 						$("#Host_T").append('<tr >' + tr + '</tr>')
 						}
 					},
@@ -385,9 +384,7 @@ function change_diskgroup_second() {
 						 for (var i = 0; i < obj_disk_list_new.length; i++) {
 							 for (var  j= 0;  j< resource_data.length; j++) {
 								 if (obj_disk_list_new[i] == resource_data[j].resource) {
-									 tr = '<td >' + resource_data[j].resource + '</td>' +'<td >'
-									 + resource_data[j].device_name
-									 + '</td>';
+									 tr = '<td >' + resource_data[j].resource + '</td>';
 									 $("#Disk_T").append('<tr >' + tr + '</tr>')
 								}
 							}
@@ -536,6 +533,7 @@ $("#map_create").mousedown(function(){
 						disk_group : obj_diskgroup_str,
 						host_group : obj_hostgroup_str
 					},
+					async : false,
 					success : function(operation_feedback_prompt) {
 						if (operation_feedback_prompt == '0') {
 							var text = "创建成功!";

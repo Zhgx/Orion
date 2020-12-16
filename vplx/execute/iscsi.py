@@ -19,7 +19,7 @@ class IscsiConfig():
 
         if self.create:
             self.obj_map = Map()
-
+        
         # 记载需要进行恢复的disk
         self.recovery_list = {'delete': [], 'create': {}, 'modify': {}}
 

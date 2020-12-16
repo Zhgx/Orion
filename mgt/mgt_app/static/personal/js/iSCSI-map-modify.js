@@ -115,7 +115,6 @@ function change_hostgroup(obj) {
 	}
 	td_hg = hg.split(",");
 	//		td_hg = JSON.stringify(hg);
-	console.log(td_hg);
 	// 获取hostgroup的值
 	$.ajax({
 		url : vplxIp + "/hg/show/data",
@@ -144,7 +143,7 @@ function change_hostgroup(obj) {
 								tr = '<td >' + td_map + '</td>' + '<td >'
 										+ td_hg[j] + '</td>' + '<td >'
 										+ hg_result[i] + '</td>' + '<td >'
-										+ '<button  onClick="confirm_model_btn();">删除</button>' + '</td>';
+										+ '<button  onClick="confirm_model_btn(this);">删除</button>' + '</td>';
 								//									'<td >' + '删除' + '</td>';
 								$("#HG_T").append(
 										'<tr>'
@@ -159,7 +158,7 @@ function change_hostgroup(obj) {
 	});
 }
 
-function confirm_model_btn() {
+function confirm_model_btn(obj) {
 	$('tr').each(function() {
 		$(this).on("click", function() {
 			$("#confirm_model").modal("toggle");
@@ -189,8 +188,8 @@ function confirm_model_btn() {
 		},
 		async : false,
 		success : function(map_result) {
-			console.log(map_result);
-			$("#map_result").text(map_result);
+			$("#hg_hid_data").val( JSON.stringify(map_result['iscsi_data']));
+			$("#map_result").text(map_result['info']);
 		},
 	});
 }
@@ -202,11 +201,13 @@ function confirm_model_btn() {
 //    })
 //});
 
-
-
 function hg_remove(obj) {
 	td_map = $("#map_hid").val();
 	td_hg = $("#hg_hid").val();
+	hg_hid_data = $("#hg_hid_data").val();
+	console.log(typeof(hg_hid_data));
+	console.log(typeof(td_hg));
+	console.log(td_hg);
 	$.ajax({
 		url : vplxIp + "/map/modify",
 		type : "get",
@@ -215,17 +216,14 @@ function hg_remove(obj) {
 			tid : tid,
 			ip : mgtIp,
 			map : td_map,
-			hg : td_hg
+			hg : td_hg,
+			iscsi_data:hg_hid_data
 		},
 		async : false,
 		success : function(map_result) {
 			$("#map_hid").val("");
 			$("#hg_hid").val("");
-			if (map_result == true) {
-				alert("删除成功")
-			} else {
-				alert("删除失败")
-			}
+			alert(map_result);
 		},
 	});
 }
