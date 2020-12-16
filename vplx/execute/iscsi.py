@@ -21,7 +21,6 @@ class IscsiConfig():
             self.obj_map = Map()
 
         # 记载需要进行恢复的disk
-        # self.recovery_list = {'delete': [], 'create': {}, 'modify': {}}
         self.recovery_list = {'delete': set(), 'create': {}, 'modify': {}}
 
 
@@ -110,7 +109,6 @@ class IscsiConfig():
             self.create_iscsilogicalunit()
             self.delete_iscsilogicalunit()
             self.modify_iscsilogicalunit()
-            print(self.recovery_list)
         except consts.CmdError:
             print('执行命令失败')
             self.restore()
@@ -285,6 +283,8 @@ class DiskGroup():
 
 
     def add_disk(self, dg, list_disk):
+        if not self.js.check_key('DiskGroup', dg)['result']:
+            s.prt_log(f"不存在{dg}可以去进行修改", 2)
         for disk in list_disk:
             if self.js.check_value_in_key("DiskGroup", dg, disk)['result']:
                 s.prt_log(f'{disk}已存在{dg}中', 2)
@@ -307,6 +307,8 @@ class DiskGroup():
 
 
     def remove_disk(self, dg, list_disk):
+        if not self.js.check_key('DiskGroup', dg)['result']:
+            s.prt_log(f"不存在{dg}可以去进行修改", 2)
         for disk in list_disk:
             if not self.js.check_value_in_key("DiskGroup", dg, disk)['result']:
                 s.prt_log(f'{dg}中不存在成员{disk}，无法进行移除', 2)
@@ -393,6 +395,8 @@ class HostGroup():
 
 
     def add_host(self, hg, list_host):
+        if not self.js.check_key('HostGroup', hg)['result']:
+            s.prt_log(f"不存在{hg}可以去进行修改", 2)
         for host in list_host:
             if self.js.check_value_in_key("HostGroup", hg, host)['result']:
                 s.prt_log(f'{host}已存在{hg}中', 2)
@@ -416,6 +420,8 @@ class HostGroup():
 
 
     def remove_host(self, hg, list_host):
+        if not self.js.check_key('HostGroup', hg)['result']:
+            s.prt_log(f"不存在{hg}可以去进行修改", 2)
         for host in list_host:
             if not self.js.check_value_in_key("HostGroup", hg, host)['result']:
                 s.prt_log(f'{hg}中不存在成员{host}，无法进行移除', 2)
@@ -475,18 +481,6 @@ class Map():
             if self.js.check_key(key, i)['result'] == False:
                 return False
 
-    def pre_check_create_map(self, map, hg, dg):
-        if self.js.check_key('Map', map)['result']:
-            s.prt_log(f'The Map "{map}" already existed.', 1)
-        elif self.js.check_key('HostGroup', hg)['result'] == False:
-            s.prt_log(f"Can't find {hg}", 1)
-        elif self.js.check_key('DiskGroup', dg)['result'] == False:
-            s.prt_log(f"Can't find {dg}", 1)
-        else:
-            if self.js.check_value('Map', dg)['result']:
-                s.prt_log("The diskgroup already map", 1)
-            else:
-                return True
 
     def get_initiator(self, hg):
         # 根据hg去获取hostiqn，返回由hostiqn组成的initiator
@@ -573,7 +567,6 @@ class Map():
             # 创建order，colocation
             if obj_crm.create_set(res, self.target_name):
                 # 尝试启动资源，成功失败都不影响创建
-                s.prt_log(f"try to start {res}", 0)
                 obj_crm.start_res(res)
                 obj_crm.checkout_status_start(res)
             else:
@@ -705,6 +698,8 @@ class Map():
 
 
     def add_hg(self, map, list_hg):
+        if not self.js.check_key('Map', map)['result']:
+            s.prt_log(f"不存在{map}可以去进行修改", 2)
         for hg in list_hg:
             if self.js.check_map_member(map, hg, "HostGroup")['result']:
                 s.prt_log(f'{hg}已存在{map}中', 2)
@@ -728,6 +723,8 @@ class Map():
 
 
     def add_dg(self, map, list_dg):
+        if not self.js.check_key('Map', map)['result']:
+            s.prt_log(f"不存在{map}可以去进行修改", 2)
         for dg in list_dg:
             if self.js.check_map_member(map, dg, "DiskGroup")['result']:
                 s.prt_log(f'{dg}已存在{map}中', 2)
@@ -750,6 +747,8 @@ class Map():
         self.js.append_member('DiskGroup', map, list_dg, type='Map')
 
     def remove_hg(self, map, list_hg):
+        if not self.js.check_key('Map', map)['result']:
+            s.prt_log(f"不存在{map}可以去进行修改", 2)
         for hg in list_hg:
             if not self.js.check_map_member(map, hg, "HostGroup")['result']:
                 s.prt_log(f'{map}中不存在成员{hg}，无法进行移除', 2)
@@ -776,6 +775,8 @@ class Map():
 
     def remove_dg(self, map, list_dg):
         # 验证
+        if not self.js.check_key('Map', map)['result']:
+            s.prt_log(f"不存在{map}可以去进行修改", 2)
         for dg in list_dg:
             if not self.js.check_map_member(map, dg, "DiskGroup")['result']:
                 s.prt_log(f'{map}中不存在成员{dg}，无法进行移除', 2)

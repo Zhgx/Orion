@@ -12,20 +12,21 @@ class JsonOperation(object):
         self.RPL = consts.glo_rpl()
         self.json_data = self.read_json()
         self.iscsi_data = self.json_data.copy()
-        self.iscsi_data.pop('crm')
+        if 'crm' in self.json_data.keys():
+            self.iscsi_data.pop('crm')
 
 
     # 读取json文档
     @s.deco_json_operation('读取到的JSON数据')
     def read_json(self):
         try:
-            json_data = open("../VersaTEL_G2_CLI/iSCSI_Data.json", encoding='utf-8')
+            json_data = open("../vplx/map_config.json", encoding='utf-8')
             json_dict = json.load(json_data)
             json_data.close()
             return json_dict
 
         except FileNotFoundError:
-            with open('../VersaTEL_G2_CLI/iSCSI_Data.json', "w") as fw:
+            with open('../vplx/map_config.json', "w") as fw:
                 json_dict = {
                     "Host": {},
                     "Disk": {},
@@ -262,16 +263,16 @@ class JsonOperation(object):
     @s.deco_json_operation('JSON更新后的资源信息')
     def update_data(self, first_key, data_key, data_value):
         self.json_data[first_key].update({data_key: data_value})
-        with open('../VersaTEL_G2_CLI/iSCSI_Data.json', "w") as fw:
+        with open('../vplx/map_config.json', "w") as fw:
             json.dump(self.json_data, fw, indent=4, separators=(',', ': '))
         return self.json_data[first_key]
-    
-    
+
+
     # 更新disk 可能需要注意的地方：没有限制可以修改的key
     @s.deco_json_operation(f'JSON更新disk信息')
     def cover_data(self, first_key, data):
         self.json_data[first_key] = data
-        with open('../VersaTEL_G2_CLI/iSCSI_Data.json', "w") as fw:
+        with open('../vplx/map_config.json', "w") as fw:
             json.dump(self.json_data, fw, indent=4, separators=(',', ': '))
         return self.json_data[first_key]
 
@@ -319,7 +320,7 @@ class JsonOperation(object):
     @s.deco_json_operation('JSON删除后的资源信息')
     def delete_data(self, first_key, data_key):
         self.json_data[first_key].pop(data_key)
-        with open('../VersaTEL_G2_CLI/iSCSI_Data.json', "w") as fw:
+        with open('../vplx/map_config.json', "w") as fw:
             json.dump(self.json_data, fw, indent=4, separators=(',', ': '))
         return self.json_data[first_key]
 
@@ -330,7 +331,7 @@ class JsonOperation(object):
         self.json_data['crm'].update({'resource': resource})
         self.json_data['crm'].update({'vip': vip})
         self.json_data['crm'].update({'target': target})
-        with open('../VersaTEL_G2_CLI/iSCSI_Data.json', "w") as fw:
+        with open('../vplx/map_config.json', "w") as fw:
             json.dump(self.json_data, fw, indent=4, separators=(',', ': '))
         return self.json_data['crm']
 
@@ -381,13 +382,13 @@ class JsonMofidy(JsonOperation):
     @s.deco_json_operation('读取到的JSON数据(临时JSON对象)')
     def read_json(self):
         try:
-            json_data = open("../VersaTEL_G2_CLI/iSCSI_Data.json", encoding='utf-8')
+            json_data = open("../vplx/map_config.json", encoding='utf-8')
             json_dict = json.load(json_data)
             json_data.close()
             return json_dict
 
         except FileNotFoundError:
-            with open('../VersaTEL_G2_CLI/iSCSI_Data.json', "w") as fw:
+            with open('../vplx/map_config.json', "w") as fw:
                 json_dict = {
                     "Host": {},
                     "Disk": {},

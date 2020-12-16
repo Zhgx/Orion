@@ -18,7 +18,8 @@
         "res_b": "/dev/drbd1001",
         "res_c": "/dev/drbd1002",
         "res_d": "/dev/drbd1003",
-        "res_e": "/dev/drbd1005"
+        "res_e": "/dev/drbd1005",
+        "res_f": "/dev/drbd1006"
     },
     "HostGroup": {
         "hg1": [
@@ -28,10 +29,6 @@
         "hg2": [
             "h3",
             "h4"
-        ],
-        "hg3": [
-            "h5",
-            "h3"
         ],
         "hg4": [
             "h6"
@@ -60,13 +57,6 @@
         ]
     },
     "DiskGroup": {
-        "dg1": [
-            "res_a",
-            "res_b"
-        ],
-        "dg2": [
-            "res_b"
-        ],
         "dg3": [
             "res_c",
             "res_d"
@@ -80,27 +70,7 @@
             "res_c"
         ]
     },
-    "Map": {
-        "map3": {
-            "HostGroup": [
-                "hg1",
-                "hg2"
-            ],
-            "DiskGroup": [
-                "dg1",
-                "dg2"
-            ]
-        },
-        "map2323": {
-            "HostGroup": [
-                "hg5"
-            ],
-            "DiskGroup": [
-                "dg1",
-                "dg2"
-            ]
-        }
-    },
+    "Map": {},
     "crm": {
         "resource": [],
         "vip": [
