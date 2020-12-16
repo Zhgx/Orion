@@ -19,9 +19,10 @@ class IscsiConfig():
 
         if self.create:
             self.obj_map = Map()
-        
+
         # 记载需要进行恢复的disk
-        self.recovery_list = {'delete': [], 'create': {}, 'modify': {}}
+        # self.recovery_list = {'delete': [], 'create': {}, 'modify': {}}
+        self.recovery_list = {'delete': set(), 'create': {}, 'modify': {}}
 
 
     def get_dict_diff(self, dict1, dict2):
@@ -60,10 +61,12 @@ class IscsiConfig():
             print('修改：')
             for disk, iqn in self.modify.items():
                 print(f'{disk}，其allowed_initiators将被设置为：{",".join(iqn)}')
+        if not any([self.create,self.delete,self.modify]):
+            print('不会对映射关系产生任何影响')
 
     def create_iscsilogicalunit(self):
         for disk, iqn in self.create.items():
-            self.recovery_list['delete'].append(disk)
+            self.recovery_list['delete'].add(disk)
             self.obj_map.create_res(disk, iqn)
             print(f'执行创建{disk}')
 
@@ -92,17 +95,22 @@ class IscsiConfig():
             self.obj_crm.change_initiator(disk, iqn)
             print(f'执行修改{disk},iqn为{iqn}')
 
-    def crm_conf_change(self):
+
+    def comfirm_modify(self):
         self.show_info()
         print('是否确认修改?y/n')
         answer = s.get_answer()
         if not answer in ['y', 'yes', 'Y', 'YES']:
             s.prt_log('Modify canceled', 2)
 
+
+
+    def crm_conf_change(self):
         try:
             self.create_iscsilogicalunit()
             self.delete_iscsilogicalunit()
             self.modify_iscsilogicalunit()
+            print(self.recovery_list)
         except consts.CmdError:
             print('执行命令失败')
             self.restore()
@@ -119,7 +127,8 @@ class Disk():
 
     def get_all_disk(self):
         linstor = Linstor()
-        linstor_res = linstor.get_linstor_data('linstor --no-color --no-utf8 r lv')
+        linstor_res = linstor.get_linstor_data(
+            'linstor --no-color --no-utf8 r lv')
         disks = {}
         for d in linstor_res:
             disks.update({d[1]: d[5]})
@@ -211,7 +220,12 @@ class Host():
         dict_current = self.js.get_disk_with_iqn()
         dict_changed = js_modify.get_disk_with_iqn()
         obj_iscsi = IscsiConfig(dict_current, dict_changed)
-        obj_iscsi.crm_conf_change()
+        obj_iscsi.comfirm_modify()
+        js_temp = iscsi_json.JsonOperation()
+        if self.js.iscsi_data == js_temp.iscsi_data:
+            obj_iscsi.crm_conf_change()
+        else:
+            s.prt_log('JSON已被修改，请重新操作', 2)
 
         self.js.update_data('Host', host, iqn)
 
@@ -282,7 +296,12 @@ class DiskGroup():
         dict_current = self.js.get_disk_with_iqn()
         dict_changed = js_modify.get_disk_with_iqn()
         obj_iscsi = IscsiConfig(dict_current, dict_changed)
-        obj_iscsi.crm_conf_change()
+        obj_iscsi.comfirm_modify()
+        js_temp = iscsi_json.JsonOperation()
+        if self.js.iscsi_data == js_temp.iscsi_data:
+            obj_iscsi.crm_conf_change()
+        else:
+            s.prt_log('JSON已被修改，请重新操作', 2)
 
         self.js.append_member('DiskGroup', dg, list_disk)
 
@@ -293,19 +312,33 @@ class DiskGroup():
                 s.prt_log(f'{dg}中不存在成员{disk}，无法进行移除', 2)
 
 
-        print(self.js.get_iqn_by_disk('res_d'))
         js_modify = iscsi_json.JsonMofidy()
         js_modify.remove_member('DiskGroup', dg, list_disk)
 
         dict_current = self.js.get_disk_with_iqn()
         dict_changed = js_modify.get_disk_with_iqn()
-        print(dict_changed)
 
         obj_iscsi = IscsiConfig(dict_current, dict_changed)
-        obj_iscsi.crm_conf_change()
+        obj_iscsi.comfirm_modify()
+        js_temp = iscsi_json.JsonOperation()
+        if self.js.iscsi_data == js_temp.iscsi_data:
+            obj_iscsi.crm_conf_change()
+        else:
+            s.prt_log('JSON已被修改，请重新操作', 2)
 
         # 配置文件移除成员
-        self.js.remove_member('DiskGroup', dg, list_disk)
+        if not js_modify.json_data['DiskGroup'][dg]:
+            self.js.delete_data('DiskGroup', dg)
+            list_map = self.js.get_map_by_group('DiskGroup',dg)
+            for map in list_map:
+                if len(self.js.json_data['Map'][map]['DiskGroup']) > 1:
+                    self.js.remove_member('DiskGroup', map, [dg], type='Map')
+                else:
+                    self.js.delete_data('Map', map)
+            print(f'该{dg}已删除')
+            print(f'相关的map已经修改/删除')
+        else:
+            self.js.remove_member('DiskGroup', dg, list_disk)
 
     """
     hostgroup 操作
@@ -372,7 +405,12 @@ class HostGroup():
         dict_current = self.js.get_disk_with_iqn()
         dict_changed = js_modify.get_disk_with_iqn()
         obj_iscsi = IscsiConfig(dict_current, dict_changed)
-        obj_iscsi.crm_conf_change()
+        obj_iscsi.comfirm_modify()
+        js_temp = iscsi_json.JsonOperation()
+        if self.js.iscsi_data == js_temp.iscsi_data:
+            obj_iscsi.crm_conf_change()
+        else:
+            s.prt_log('JSON已被修改，请重新操作', 2)
         # 配置文件更新修改的资源
         self.js.append_member('HostGroup', hg, list_host)
 
@@ -388,10 +426,26 @@ class HostGroup():
         dict_current = self.js.get_disk_with_iqn()
         dict_changed = js_modify.get_disk_with_iqn()
         obj_iscsi = IscsiConfig(dict_current, dict_changed)
-        obj_iscsi.crm_conf_change()
+        obj_iscsi.comfirm_modify()
+        js_temp = iscsi_json.JsonOperation()
+        if self.js.iscsi_data == js_temp.iscsi_data:
+            obj_iscsi.crm_conf_change()
+        else:
+            s.prt_log('JSON已被修改，请重新操作', 2)
 
-        # 配置文件移除成员，可以考虑修改为直接用js_modify.jsondata来替换
-        self.js.remove_member('HostGroup', hg, list_host)
+        # 配置文件的改变
+        if not js_modify.json_data['HostGroup'][hg]:
+            self.js.delete_data('HostGroup', hg)
+            list_map = self.js.get_map_by_group('HostGroup',hg)
+            for map in list_map:
+                if len(self.js.json_data['Map'][map]['HostGroup']) > 1:
+                    self.js.remove_member('HostGroup', map, [hg], type='Map')
+                else:
+                    self.js.delete_data('Map', map)
+            print(f'该{hg}已删除')
+            print(f'相关的map已经修改/删除')
+        else:
+            self.js.remove_member('HostGroup', hg, list_host)
 
     """
     map操作
@@ -421,6 +475,19 @@ class Map():
             if self.js.check_key(key, i)['result'] == False:
                 return False
 
+    def pre_check_create_map(self, map, hg, dg):
+        if self.js.check_key('Map', map)['result']:
+            s.prt_log(f'The Map "{map}" already existed.', 1)
+        elif self.js.check_key('HostGroup', hg)['result'] == False:
+            s.prt_log(f"Can't find {hg}", 1)
+        elif self.js.check_key('DiskGroup', dg)['result'] == False:
+            s.prt_log(f"Can't find {dg}", 1)
+        else:
+            if self.js.check_value('Map', dg)['result']:
+                s.prt_log("The diskgroup already map", 1)
+            else:
+                return True
+
     def get_initiator(self, hg):
         # 根据hg去获取hostiqn，返回由hostiqn组成的initiator
         hostiqn = []
@@ -433,16 +500,21 @@ class Map():
     def get_target(self):
         # 获取target
         crm_data = CRMData()
-        if crm_data.update_crm_conf():
-            js = iscsi_json.JsonOperation()
-            crm_data_dict = js.get_data('crm')
-            if crm_data_dict['target']:
+        if 'ERROR' in crm_data.crm_conf_data:
+            s.prt_log("Could not perform requested operations, are you root?",1)
+        else:
+            res = crm_data.get_resource_data()
+            vip = crm_data.get_vip_data()
+            target = crm_data.get_target_data()
+            self.js.update_crm_conf(res,vip,target)
+            if target:
                 # 目前的设计只有一个target，所以取列表的第一个
-                target_all = crm_data_dict['target'][0]
+                target_all = target[0]
                 # 返回target_name, target_iqn
-                return target_all[0], target_all[1]
+                return target_all[0],target_all[1]
             else:
                 s.prt_log('No target，please create target first', 2)
+
 
     def get_disk_data(self, dg):
         # 根据dg去收集drbdd的三项数据：resource name，device name
@@ -644,7 +716,12 @@ class Map():
         dict_current = self.js.get_disk_with_iqn()
         dict_changed = js_modify.get_disk_with_iqn()
         obj_iscsi = IscsiConfig(dict_current, dict_changed)
-        obj_iscsi.crm_conf_change()
+        obj_iscsi.comfirm_modify()
+        js_temp = iscsi_json.JsonOperation()
+        if self.js.iscsi_data == js_temp.iscsi_data:
+            obj_iscsi.crm_conf_change()
+        else:
+            s.prt_log('JSON已被修改，请重新操作', 2)
         # 配置文件添加数据
         self.js.append_member('HostGroup', map, list_hg, type='Map')
 
@@ -662,7 +739,12 @@ class Map():
         dict_current = self.js.get_disk_with_iqn()
         dict_changed = js_modify.get_disk_with_iqn()
         obj_iscsi = IscsiConfig(dict_current, dict_changed)
-        obj_iscsi.crm_conf_change()
+        obj_iscsi.comfirm_modify()
+        js_temp = iscsi_json.JsonOperation()
+        if self.js.iscsi_data == js_temp.iscsi_data:
+            obj_iscsi.crm_conf_change()
+        else:
+            s.prt_log('JSON已被修改，请重新操作', 2)
 
         # 配置文件移除成员，可以考虑修改为直接用js_modify.jsondata来替换
         self.js.append_member('DiskGroup', map, list_dg, type='Map')
@@ -678,10 +760,19 @@ class Map():
         dict_before = self.js.get_disk_with_iqn()
         dict_now = js_modify.get_disk_with_iqn()
         obj_iscsi = IscsiConfig(dict_before, dict_now)
-        obj_iscsi.crm_conf_change()
+        obj_iscsi.comfirm_modify()
+        js_temp = iscsi_json.JsonOperation()
+        if self.js.iscsi_data == js_temp.iscsi_data:
+            obj_iscsi.crm_conf_change()
+        else:
+            s.prt_log('JSON已被修改，请重新操作', 2)
 
-        # 配置文件移除成员
-        self.js.remove_member('HostGroup', map, list_hg, type='Map')
+        # 配置文件删除/移除成员
+        if not js_modify.json_data['Map'][map]['HostGroup']:
+            self.js.delete_data('Map', map)
+            print(f'该{map}已删除')
+        else:
+            self.js.remove_member('HostGroup', map, list_hg, type='Map')
 
     def remove_dg(self, map, list_dg):
         # 验证
@@ -695,6 +786,17 @@ class Map():
         dict_current = self.js.get_disk_with_iqn()
         dict_changed = js_modify.get_disk_with_iqn()
         obj_iscsi = IscsiConfig(dict_current, dict_changed)
-        obj_iscsi.crm_conf_change()
+        obj_iscsi.comfirm_modify()
 
-        self.js.remove_member('DiskGroup', map, list_dg, type='Map')
+        # 通过临时js对象进行配置文件的比对
+        js_temp = iscsi_json.JsonOperation()
+        if self.js.iscsi_data == js_temp.iscsi_data:
+            obj_iscsi.crm_conf_change()
+        else:
+            s.prt_log('JSON已被修改，请重新操作', 2)
+
+        if not js_modify.json_data['Map'][map]['DiskGroup']:
+            self.js.delete_data('Map', map)
+            print(f'该{map}已删除')
+        else:
+            self.js.remove_member('DiskGroup', map, list_dg, type='Map')

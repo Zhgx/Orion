@@ -2,11 +2,13 @@
 import logging
 import logging.handlers
 import logging.config
+import consts
+import sundry
 
 
 
 
-LOG_PATH = './'
+LOG_PATH = '../VersaTEL_G2_CLI/'
 # LOG_PATH = '/var/log/vtel/'
 CLI_LOG_NAME = 'cli.log'
 WEB_LOG_NAME = 'web.log'
@@ -72,8 +74,8 @@ class Log(object):
         vtel_logger = self.logger_input()
 
         # 获取到日志开关变量为'no'时，移除处理器，不再将数据记录到文件中
-#         if consts.glo_log_switch() == 'no':
-#             vtel_logger.logger.removeHandler(self.handler_input)
+        if consts.glo_log_switch() == 'no':
+            vtel_logger.logger.removeHandler(self.handler_input)
         vtel_logger.debug(
             '',
             extra={
