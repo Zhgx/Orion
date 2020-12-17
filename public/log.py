@@ -3,12 +3,12 @@ import logging
 import logging.handlers
 import logging.config
 import consts
-import sundry
+from vplx import sundry
 
 
 
 
-LOG_PATH = '../VersaTEL_G2_CLI/'
+LOG_PATH = '../mgt/'
 # LOG_PATH = '/var/log/vtel/'
 CLI_LOG_NAME = 'cli.log'
 WEB_LOG_NAME = 'web.log'
