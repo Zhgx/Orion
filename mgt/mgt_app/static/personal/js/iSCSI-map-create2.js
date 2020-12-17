@@ -449,14 +449,18 @@ function map_name_myfunction() {
 											write_to_log(tid, 'DATA', 'ROUTE',
 													vplxIp, '/map/show/data',
 													JSON.stringify(Map_result));
-											for ( var i in Map_result) {
-												if (input_result == i) {
-													$("#map_name_hid").val("0");
-													document
-															.getElementById("map_name_examine").className = "";
-													break;
-												} else {
-													$("#map_name_hid").val("1");
+											if (JSON.stringify(Map_result) === '{}') {
+												$("#map_name_hid").val("1");
+											}else {
+												for ( var i in Map_result) {
+													if (input_result == i) {
+														$("#map_name_hid").val("0");
+														document
+																.getElementById("map_name_examine").className = "";
+														break;
+													} else {
+														$("#map_name_hid").val("1");
+													}
 												}
 											}
 										},
