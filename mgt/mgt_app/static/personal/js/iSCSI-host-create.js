@@ -41,71 +41,75 @@ function get_vlpx_ip() {
 }
 
 function div_success() {
-	document.getElementById('light_success').style.display='block';
-	setTimeout("light_success.style.display='none'",2000);
+	document.getElementById('light_success').style.display = 'block';
+	setTimeout("light_success.style.display='none'", 2000);
 }
 
 function div_failed() {
-	document.getElementById('light_failed').style.display='block';
-	document.getElementById('fade').style.display='block';
-	setTimeout("light_failed.style.display='none'",4000);
-	setTimeout("fade.style.display='none'",4000);
+	document.getElementById('light_failed').style.display = 'block';
+	document.getElementById('fade').style.display = 'block';
+	setTimeout("light_failed.style.display='none'", 4000);
+	setTimeout("fade.style.display='none'", 4000);
 }
 
-$("#host_create").mousedown(function(){
-	host_name_myfunction();
-	iqn_myfunction();
-	var hostName = $("#host_name").val()
-	var hostiqn = $("#host_iqn").val()
+$("#host_create").mousedown(
+		function() {
+			host_name_myfunction();
+			iqn_myfunction();
+			var hostName = $("#host_name").val()
+			var hostiqn = $("#host_iqn").val()
 
-	var dict_data = JSON.stringify({
-		"host_alias" : hostName,
-		"host_iqn" : hostiqn
-	});
+			var dict_data = JSON.stringify({
+				"host_alias" : hostName,
+				"host_iqn" : hostiqn
+			});
 
-	var host_name_hid_value = $("#host_name_hid").val();
-	var host_iqn_hid_value = $("#host_iqn_hid").val();
-	if (host_name_hid_value == "1" && host_iqn_hid_value == "1") {
-		write_to_log(tid, 'OPRT', 'CLICK', 'host_create', 'accept',
-				dict_data);
-		$.ajax({
-			url : vplxIp + "/host/create",
-			type : "GET",
-			data : {
-				tid : tid,
-				ip : mgtIp,
-				host_name : hostName,
-				host_iqn : hostiqn
-			},
-			success : function(operation_feedback_prompt) {
-				if (operation_feedback_prompt == '0') {
-					var text = "创建成功!";
-					$('#P_text_success').text(text);
-					div_success();
-				}else {
-					var text = "创建失败!";
-					$('#P_text_failed').text(text);
-					 div_failed();
-				}
-				write_to_log(tid, 'OPRT', 'ROUTE', vplxIp,
-						'/host/create', operation_feedback_prompt);
-				$("#host_name").val("");
-				$("#host_iqn").val("");
-				$("#host_name_hid").val("0");
-				$("#host_iqn_hid").val("0");
-			},
-			error : function() {
-				write_to_log(tid, 'OPRT', 'ROUTE', vplxIp,
-						'/host/create', 'error');
+			var host_name_hid_value = $("#host_name_hid").val();
+			var host_iqn_hid_value = $("#host_iqn_hid").val();
+			if (host_name_hid_value == "1" && host_iqn_hid_value == "1") {
+				write_to_log(tid, 'OPRT', 'CLICK', 'host_create', 'accept',
+						dict_data);
+				$.ajax({
+					url : vplxIp + "/host/create",
+					type : "GET",
+					data : {
+						tid : tid,
+						ip : mgtIp,
+						host_name : hostName,
+						host_iqn : hostiqn
+					},
+					async : false,
+					success : function(operation_feedback_prompt) {
+						console.log(operation_feedback_prompt);
+						console.log(typeof (operation_feedback_prompt));
+						if (operation_feedback_prompt == '0') {
+							var text = "创建成功!";
+							$('#P_text_success').text(text);
+							div_success();
+						} else {
+							var text = "创建失败!";
+							$('#P_text_failed').text(text);
+							div_failed();
+						}
+						write_to_log(tid, 'OPRT', 'ROUTE', vplxIp,
+								'/host/create', operation_feedback_prompt);
+						$("#host_name").val("");
+						$("#host_iqn").val("");
+						$("#host_name_hid").val("0");
+						$("#host_iqn_hid").val("0");
+					},
+					error : function() {
+						write_to_log(tid, 'OPRT', 'ROUTE', vplxIp,
+								'/host/create', 'error');
+					}
+				})
+
+			} else {
+				write_to_log(tid, 'OPRT', 'CLICK', 'host_create', 'refuse',
+						dict_data);
 			}
-		})
 
-	} else {
-		write_to_log(tid, 'OPRT', 'CLICK', 'host_create', 'refuse',
-				dict_data);
-	}
-	
-});
+		});
 
 function write_to_log(tid, t1, t2, d1, d2, data) {
 	$.ajax({
@@ -164,15 +168,23 @@ function host_name_myfunction() {
 										},
 										async : false,
 										success : function(host_result) {
-											for ( var i in host_result) {
-												if (input_result == i) {
-													$("#host_name_hid").val("0");
-													document
-															.getElementById("host_name_examine").className = "";
-													break;
-												} else {
-													$("#host_name_hid").val("1");
+											if (JSON.stringify(host_result) === '{}') {
+												$("#host_name_hid")
+												.val("1");
+											} else {
+												for ( var i in host_result) {
+													if (input_result == i) {
+														$("#host_name_hid")
+																.val("0");
+														document
+																.getElementById("host_name_examine").className = "";
+														break;
+													} else {
+														$("#host_name_hid")
+																.val("1");
+													}
 												}
+
 											}
 										}
 									});

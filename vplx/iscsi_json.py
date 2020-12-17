@@ -11,19 +11,22 @@ class JsonOperation(object):
     def __init__(self):
         self.RPL = consts.glo_rpl()
         self.json_data = self.read_json()
+        self.iscsi_data = self.json_data.copy()
+        if 'crm' in self.json_data.keys():
+            self.iscsi_data.pop('crm')
 
 
     # 读取json文档
     @s.deco_json_operation('读取到的JSON数据')
     def read_json(self):
         try:
-            json_data = open("map_config.json", encoding='utf-8')
+            json_data = open("../vplx/map_config.json", encoding='utf-8')
             json_dict = json.load(json_data)
             json_data.close()
             return json_dict
 
         except FileNotFoundError:
-            with open('map_config.json', "w") as fw:
+            with open('../vplx/map_config.json', "w") as fw:
                 json_dict = {
                     "Host": {},
                     "Disk": {},
@@ -257,19 +260,19 @@ class JsonOperation(object):
 
 
     # 创建Host、HostGroup、DiskGroup、Map
-    @s.deco_json_operation('JSON添加后的资源信息')
+    @s.deco_json_operation('JSON更新后的资源信息')
     def update_data(self, first_key, data_key, data_value):
         self.json_data[first_key].update({data_key: data_value})
-        with open('map_config.json', "w") as fw:
+        with open('../vplx/map_config.json', "w") as fw:
             json.dump(self.json_data, fw, indent=4, separators=(',', ': '))
         return self.json_data[first_key]
-    
-    
+
+
     # 更新disk 可能需要注意的地方：没有限制可以修改的key
-    @s.deco_json_operation(f'JSON更新资源信息')
+    @s.deco_json_operation(f'JSON更新disk信息')
     def cover_data(self, first_key, data):
         self.json_data[first_key] = data
-        with open('map_config.json', "w") as fw:
+        with open('../vplx/map_config.json', "w") as fw:
             json.dump(self.json_data, fw, indent=4, separators=(',', ': '))
         return self.json_data[first_key]
 
@@ -317,7 +320,7 @@ class JsonOperation(object):
     @s.deco_json_operation('JSON删除后的资源信息')
     def delete_data(self, first_key, data_key):
         self.json_data[first_key].pop(data_key)
-        with open('map_config.json', "w") as fw:
+        with open('../vplx/map_config.json', "w") as fw:
             json.dump(self.json_data, fw, indent=4, separators=(',', ': '))
         return self.json_data[first_key]
 
@@ -328,7 +331,7 @@ class JsonOperation(object):
         self.json_data['crm'].update({'resource': resource})
         self.json_data['crm'].update({'vip': vip})
         self.json_data['crm'].update({'target': target})
-        with open('map_config.json', "w") as fw:
+        with open('../vplx/map_config.json', "w") as fw:
             json.dump(self.json_data, fw, indent=4, separators=(',', ': '))
         return self.json_data['crm']
 
@@ -342,6 +345,7 @@ class JsonOperation(object):
 
         for map in data['Map'].values():
             for dg in map['DiskGroup']:
+                print(dg)
                 for disk in data['DiskGroup'][dg]:
                     list_iqn = []
                     for hg in map['HostGroup']:
@@ -352,20 +356,40 @@ class JsonOperation(object):
         return dict_disk_iqn
 
 
+    # 集合的方式
+    # def get_disk_with_iqn(self):
+    #
+    #     data = self.json_data
+    #     dict_disk_iqn = {}
+    #     for disk in data['Disk']:
+    #         dict_disk_iqn.update({disk: set()})
+    #
+    #     for map in data['Map'].values():
+    #         for dg in map['DiskGroup']:
+    #             for disk in data['DiskGroup'][dg]:
+    #                 set_iqn = set()
+    #                 for hg in map['HostGroup']:
+    #                     for host in data['HostGroup'][hg]:
+    #                         set_iqn.add(data['Host'][host])
+    #                 dict_disk_iqn[disk] = dict_disk_iqn[disk] | set_iqn
+    #
+    #     return dict_disk_iqn
+
+
 class JsonMofidy(JsonOperation):
     def __init__(self):
         super().__init__()
 
-    @s.deco_json_operation('读取到的JSON数据(临时JSON的修改后)')
+    @s.deco_json_operation('读取到的JSON数据(临时JSON对象)')
     def read_json(self):
         try:
-            json_data = open("map_config.json", encoding='utf-8')
+            json_data = open("../vplx/map_config.json", encoding='utf-8')
             json_dict = json.load(json_data)
             json_data.close()
             return json_dict
 
         except FileNotFoundError:
-            with open('map_config.json', "w") as fw:
+            with open('../vplx/map_config.json', "w") as fw:
                 json_dict = {
                     "Host": {},
                     "Disk": {},
@@ -378,7 +402,7 @@ class JsonMofidy(JsonOperation):
             print('Failed to read json file.')
             sys.exit()
 
-
+    @s.deco_json_operation('JSON更新后的资源信息（临时JSON对象）')
     def update_data(self, first_key, data_key, data_value):
         self.json_data[first_key].update({data_key: data_value})
         return self.json_data[first_key]
@@ -399,20 +423,18 @@ class JsonMofidy(JsonOperation):
 
 
     def remove_member(self,iscsi_type,target,member,type=None):
+        data = self.json_data
         if type == 'Map':
-            print(self.get_data('Map'))
-            list_member = self.get_data('Map')[target][iscsi_type]
-        else:
-            list_member = self.get_data(iscsi_type)[target]
-
-        for i in member:
-            list_member.remove(i)
-
-        if type == 'Map':
-            dict_map = self.get_data('Map')[target]
+            list_member = data['Map'][target][iscsi_type]
+            for i in member:
+                list_member.remove(i)
+            dict_map = data['Map'][target]
             dict_map.update({iscsi_type:list_member})
             self.update_data('Map',target,dict_map)
         else:
+            list_member = data[iscsi_type][target]
+            for i in member:
+                list_member.remove(i)
             self.update_data(iscsi_type, target, list(set(list_member)))
 
 

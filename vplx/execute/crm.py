@@ -202,10 +202,28 @@ class CRMConfig():
             return True
 
     def start_res(self, res):
+        s.prt_log(f"try to start {res}", 0)
         cmd = f'crm res start {res}'
         result = execute_crm_cmd(cmd)
         if result['sts']:
             return True
+
+    # 刷新recourse状态，后续会用到
+    def refresh(self):
+        cmd = f'crm resource refresh'
+        result = execute_crm_cmd(cmd)
+        if result['sts']:
+            s.prt_log("refresh",0)
+            return True
+
+    def change_initiator(self, res, iqns):
+        iqns = ' '.join(iqns)
+        cmd = f"crm config set {res}.allowed_initiators \"{iqns}\""
+        result = execute_crm_cmd(cmd)
+        if result['sts']:
+            s.prt_log(f"Change {res} allowed_initiators success!",0)
+            return True
+
 
     # 刷新recourse状态，后续会用到
     def refresh(self):

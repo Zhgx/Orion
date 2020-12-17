@@ -294,14 +294,19 @@ function dg_name_myfunction() {
 											write_to_log(tid, 'DATA', 'ROUTE',
 													vplxIp, '/dg/show/data',
 													JSON.stringify(DG_result));
-											for ( var i in DG_result) {
-												if (input_result == i) {
-													$("#dg_name_hid").val("0");
-													document
-													.getElementById("dg_name_examine").className = "";
-													break;
-												} else {
-													$("#dg_name_hid").val("1");
+											
+											if (JSON.stringify(DG_result) === '{}') {
+												$("#dg_name_hid").val("1");
+											} else {
+												for ( var i in DG_result) {
+													if (input_result == i) {
+														$("#dg_name_hid").val("0");
+														document
+														.getElementById("dg_name_examine").className = "";
+														break;
+													} else {
+														$("#dg_name_hid").val("1");
+													}
 												}
 											}
 										},

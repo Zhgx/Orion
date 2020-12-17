@@ -29,7 +29,8 @@
 			</div>
 			<div class="col-xs-4 "></div>
 		</div>
-		<div class="modal" id="host_model">
+	</div>
+			<div class="modal fade" id="host_model" data-backdrop="static"  role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
 			<div class="modal-dialog">
 				<div class="modal-content">
 					<div class="modal-header">
@@ -58,7 +59,7 @@
 			</div>
 		</div>
 		
-			<div class="modal" id="confirm_model">
+			<div class="modal fade" id="confirm_model" data-backdrop="static"  role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
 			<div class="modal-dialog">
 				<div class="modal-content">
 					<div class="modal-header">
@@ -66,6 +67,7 @@
 					</div>
 					<input id="map_hid" hidden="hidden">
 					<input id="hg_hid" hidden="hidden">
+					<input id="hg_hid_data" hidden="hidden">
 					 <div class="modal-body"><p id="map_result"></p></div>
 					<div class="modal-footer">
 					   <button type="button" class="btn btn-default" data-dismiss="modal">撤销</button>
@@ -74,11 +76,6 @@
 				</div>
 			</div>
 		</div>
-	
-
-
-
-	</div>
 </body>
 <script type="text/javascript"
 	src="{{url_for('static',filename='personal/js/JQuery.js')}}"></script>
