@@ -309,38 +309,71 @@ class CheckMapModify(views.MethodView):
         dict_data = get_request_data()
         map = dict_data['map']
         hg = dict_data['hg']
+        type = 'remove'
         js = iscsi_json.JsonOperation()
         js_modify = iscsi_json.JsonMofidy()
-        js_modify.remove_member('HostGroup', map, [hg], type='Map')
-        dict_before = js.get_disk_with_iqn()
+        modify_json(js_modify,type,map=map,hg=hg)
+        # js_modify.remove_member('HostGroup', map, [hg], type='Map')
+        dict_before  = js.get_disk_with_iqn()
         dict_now = js_modify.get_disk_with_iqn()
         obj_ilu = iscsi.IscsiConfig(dict_before, dict_now)
+        global obj_modify
+        obj_modify = obj_ilu
 
         info = f"删除：{','.join(obj_ilu.delete)}\n新增：{','.join(obj_ilu.create)}\n修改：{','.join(obj_ilu.modify)}"
         
         return cors_data(info)
 
-    
+
 class MapModify(views.MethodView):
 
     def get(self):
         dict_data = get_request_data()
-        print(dict_data)
         map = dict_data['map']
         hg = dict_data['hg']
+        type = 'remove'
         js = iscsi_json.JsonOperation()
-        js_modify = iscsi_json.JsonMofidy()
-        js_modify.remove_member('HostGroup', map, [hg], type='Map')
-        dict_before = js.get_disk_with_iqn()
-        dict_now = js_modify.get_disk_with_iqn()
-        obj_ilu = iscsi.IscsiConfig(dict_before, dict_now)
         try:
-            obj_ilu.create_iscsilogicalunit()
-            obj_ilu.delete_iscsilogicalunit()
-            obj_ilu.modify_iscsilogicalunit()
+            obj_modify.create_iscsilogicalunit()
+            obj_modify.delete_iscsilogicalunit()
+            obj_modify.modify_iscsilogicalunit()
         except Exception:
-            print('异常,暂无回退')
+            obj_modify.restore()
             return cors_data(False)
-        js.remove_member('HostGroup', map, [hg], type='Map')
+
+        modify_json(js, type, map=map, hg=hg)
         return cors_data(True)
     
+
+def modify_json(obj_js,type,map=None,hg=None,dg=None,host=None,disk=None,iqn=None):
+
+    if type == 'append':
+        if map and hg:
+            obj_js.append_member('HostGroup', map, [hg], type='Map')
+        elif map and dg:
+            obj_js.append_member('DiskGroup', map, [dg], type='Map')
+        elif hg and host:
+            obj_js.append_member('HostGroup', dg, [disk])
+        elif dg and disk:
+            obj_js.append_member('DiskGroup', dg, [disk])
+
+    elif type == 'remove':
+        if map and hg:
+            obj_js.remove_member('HostGroup', map, [hg], type='Map')
+        elif map and dg:
+            obj_js.remove_member('DiskGroup', map, [dg], type='Map')
+        elif hg and host:
+            obj_js.remove_member('HostGroup', dg, [disk])
+        elif dg and disk:
+            obj_js.remove_member('HostGroup', dg, [disk])
+
+    else:
+        if host and iqn:
+            obj_js.update_data('Host', host, iqn)
+
+
+
+
+
+
+
