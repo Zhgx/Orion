@@ -24,14 +24,11 @@ class ReplayExit(Exception):
     pass
 
 
-<<<<<<< HEAD:mgt/consts.py
-=======
 class CmdError(Exception):
     "执行命令出错"
     pass
 
 
->>>>>>> dev:VersaTEL_G2_CLI/consts.py
 def init():
     global _GLOBAL_DICT
     _GLOBAL_DICT = {}
@@ -108,9 +105,3 @@ def glo_log_id():
 def glo_log_switch():
     return get_value('LOG_SWITCH')
 
-
-<<<<<<< HEAD:mgt/consts.py
-
-
-=======
->>>>>>> dev:VersaTEL_G2_CLI/consts.py

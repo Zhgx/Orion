@@ -93,6 +93,7 @@ class MapCreate(views.MethodView):
         map_name = dict_data["map_name"]
         host_group_name = dict_data["host_group"].split(',')
         disk_group_name = dict_data["disk_group"].split(',')
+        print(disk_group_name)
         logger.write_to_log('OPRT', 'ROUTE', '/map/create', dict_data['ip'], dict_data)
         map_obj = iscsi.Map()
         map_create_results = map_obj.create_map(map_name, host_group_name, disk_group_name)
@@ -346,7 +347,10 @@ class MapModify(views.MethodView):
             except Exception:
                 print('异常,暂无回退')
                 info = '执行失败，已回退'
-            js_now.remove_member('HostGroup', map, [hg], type='Map')
+            if not js_modify.json_data['Map'][map]['HostGroup']:
+                js_now.delete_data('Map',map)
+            else:
+                js_now.remove_member('HostGroup', map, [hg], type='Map')
             info = '删除成功'
         else:
             print('json配置文件已改变')
