@@ -5,7 +5,7 @@ import consts
 
 
 # LOG_PATH = '/var/log/vtel/'
-LOG_PATH = "../VersaTEL_G2_CLI/"
+LOG_PATH = "../vplx/"
 LOG_FILE_NAME = 'cli.log'
 
 def prepare_db():

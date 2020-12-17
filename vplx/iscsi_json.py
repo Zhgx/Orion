@@ -345,7 +345,6 @@ class JsonOperation(object):
 
         for map in data['Map'].values():
             for dg in map['DiskGroup']:
-                print(dg)
                 for disk in data['DiskGroup'][dg]:
                     list_iqn = []
                     for hg in map['HostGroup']:
