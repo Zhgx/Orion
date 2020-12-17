@@ -302,8 +302,8 @@ class AllMapResult(views.MethodView):
            update_map()
         logger.write_to_log('DATA', 'RETURN', 'AllMapResult', 'result', MAP_RESULT)
         return cors_data(MAP_RESULT)
-    
-    
+
+
 class CheckMapModify(views.MethodView):
 
     def get(self):
@@ -318,10 +318,10 @@ class CheckMapModify(views.MethodView):
         obj_ilu = iscsi.IscsiConfig(dict_before, dict_now)
 
         info = f"删除：{','.join(obj_ilu.delete)}\n新增：{','.join(obj_ilu.create)}\n修改：{','.join(obj_ilu.modify)}"
-        dict = {'iscsi_data':js.iscsi_data,'info':info}
+        dict = {'iscsi_data': js.iscsi_data, 'info': info}
         return cors_data(dict)
 
-    
+
 class MapModify(views.MethodView):
 
     def get(self):
@@ -332,8 +332,8 @@ class MapModify(views.MethodView):
         print(type(dict_data['iscsi_data']))
         iscsi_data = eval(dict_data['iscsi_data'])
         js_now = iscsi_json.JsonOperation()
-        print("1:",type(iscsi_data))
-        print("2:",type(js_now.iscsi_data))
+        print("1:", type(iscsi_data))
+        print("2:", type(js_now.iscsi_data))
         if iscsi_data == js_now.iscsi_data:
             js_modify = iscsi_json.JsonMofidy()
             js_modify.remove_member('HostGroup', map, [hg], type='Map')
@@ -348,7 +348,7 @@ class MapModify(views.MethodView):
                 print('异常,暂无回退')
                 info = '执行失败，已回退'
             if not js_modify.json_data['Map'][map]['HostGroup']:
-                js_now.delete_data('Map',map)
+                js_now.delete_data('Map', map)
             else:
                 js_now.remove_member('HostGroup', map, [hg], type='Map')
             info = '删除成功'
@@ -356,5 +356,4 @@ class MapModify(views.MethodView):
             print('json配置文件已改变')
             info = 'json配置文件已改变,请重新操作'
         return cors_data(info)
-        
-    
+

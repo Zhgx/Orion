@@ -237,7 +237,7 @@ def prt(str_, warning_level=0):
         if not time:
             time = ''
         print(f'RE:{time:<20} 日志记录输出：{warning_str:<4}\n{cmd_output}')
-        print(f'RE:{"":<20} 此次执行输出：{warning_str:<4}\n{str}')
+        print(f'RE:{"":<20} 此次执行输出：{warning_str:<4}\n{str_}')
 
 
 def prt_log(str_, warning_level):
