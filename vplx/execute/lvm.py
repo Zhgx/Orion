@@ -60,5 +60,5 @@ class LVM():
         if '/' in thinlv:
             vg, thinlv = thinlv.split('/')
             for one in all_tlv_list:
-                if thinlv ==one[0] and vg == one[1]:
+                if thinlv == one[0] and vg == one[1]:
                     return True
