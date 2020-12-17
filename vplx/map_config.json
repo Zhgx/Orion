@@ -1,0 +1,91 @@
+{
+    "Host": {
+        "h1": "iqn.2020-11.com.example:pytest01",
+        "h2": "iqn.2020-11.com.example:pytest02",
+        "h3": "iqn.2020-11.com.example:pytest03",
+        "h4": "iqn.2020-11.com.example:pytest04",
+        "h5": "iqn.2020-11.com.example:pytest05",
+        "h6": "iqn.2020-11.com.example:pytest06",
+        "h7": "iqn.2020-11.com.example:pytest07",
+        "sdsd": "iqn.2333-23.xx",
+        "host1": "iqn.2303-23.sss",
+        "host2": "iqn.2323-23.xx",
+        "host3": "iqn.2323-23.xx",
+        "host_paul": "iqn.2222-22.xxx"
+    },
+    "Disk": {
+        "res_a": "/dev/drbd1000",
+        "res_b": "/dev/drbd1001",
+        "res_c": "/dev/drbd1002",
+        "res_d": "/dev/drbd1003",
+        "res_e": "/dev/drbd1005",
+        "res_f": "/dev/drbd1006"
+    },
+    "HostGroup": {
+        "hg1": [
+            "h1",
+            "h2"
+        ],
+        "hg2": [
+            "h3",
+            "h4"
+        ],
+        "hg4": [
+            "h6"
+        ],
+        "hg5": [
+            "h7"
+        ],
+        "hg6": [
+            "h6"
+        ],
+        "hg7": [
+            "h7"
+        ],
+        "hg8": [
+            "host1",
+            "h4"
+        ],
+        "hg_p": [
+            "h1",
+            "h2"
+        ],
+        "hg_paul": [
+            "h2",
+            "h3",
+            "h1"
+        ]
+    },
+    "DiskGroup": {
+        "dg3": [
+            "res_c",
+            "res_d"
+        ],
+        "dg4": [
+            "res_e"
+        ],
+        "dg_paul": [
+            "res_a",
+            "res_b",
+            "res_c"
+        ]
+    },
+    "Map": {},
+    "crm": {
+        "resource": [],
+        "vip": [
+            [
+                "vip",
+                "10.203.1.75",
+                "24"
+            ]
+        ],
+        "target": [
+            [
+                "t_test",
+                "iqn.2020-04.feixitek.com:versaplx00",
+                "10.203.1.75"
+            ]
+        ]
+    }
+}
