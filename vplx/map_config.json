@@ -1,6 +1,8 @@
 {
     "Host": {
-        "host1": "iqn.2323-23.xx"
+        "host1": "iqn.2323-23.xx",
+        "Host2": "iqn.2333-23.xsx",
+        "Host1": "iqn.2323-23.xxx"
     },
     "Disk": {
         "res_a": "/dev/drbd1000",
@@ -89,11 +91,27 @@
     "crm": {
         "resource": [
             [
+                "res_a",
+                "iqn.2020-04.feixitek.com:versaplx00",
+                "0",
+                "/dev/drbd1000",
+                "iqn.2020-11.com.example:pytest04 iqn.2303-23.sss",
+                "Started"
+            ],
+            [
+                "res_b",
+                "iqn.2020-04.feixitek.com:versaplx00",
+                "1",
+                "/dev/drbd1001",
+                "iqn.2020-11.com.example:pytest04 iqn.2303-23.sss",
+                "Started"
+            ],
+            [
                 "res_c",
                 "iqn.2020-04.feixitek.com:versaplx00",
                 "2",
                 "/dev/drbd1002",
-                "iqn.2020-11.com.example:pytest02 iqn.2020-11.com.example:pytest01",
+                "iqn.2323-23.xx1 iqn.2323-23.xx1111 iqn.2323-23.xx4 iqn.2323-23.xx2 iqn.2323-23.xx3",
                 "Started"
             ],
             [
@@ -101,7 +119,7 @@
                 "iqn.2020-04.feixitek.com:versaplx00",
                 "3",
                 "/dev/drbd1003",
-                "iqn.2020-11.com.example:pytest02 iqn.2020-11.com.example:pytest01",
+                "iqn.2323-23.xx4 iqn.2323-23.xx2 iqn.2323-23.xx1 iqn.2323-23.xx3",
                 "Started"
             ]
         ],

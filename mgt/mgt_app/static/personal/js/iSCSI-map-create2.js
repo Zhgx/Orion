@@ -585,3 +585,54 @@ $("[rel=drevil]").popover({
     }, );
 });　
 
+
+map_table();
+function map_table() {
+	$.ajax({
+		url : vplxIp + "/map/show/oprt",
+		type : "GET",
+		dataType : "json",
+		data : {
+			tid : tid,
+			ip : mgtIp
+		},
+		async : false,
+		success : function(status) {
+			write_to_log(tid, 'OPRT', 'ROUTE', vplxIp, '/host/show/oprt',
+					status);
+			$.ajax({
+				url : vplxIp + "/map/show/data",
+				type : "GET",
+				dataType : "json",
+				data : {
+					tid : tid,
+					ip : mgtIp
+				},
+				async : false,
+				success : function(map_result) {
+					write_to_log(tid, 'DATA', 'ROUTE', vplxIp,
+							'/host/show/data', JSON.stringify(map_result));
+					for (i in map_result) {
+						tr = '<td >' + i + '</td>' + '<td >' + map_result[i]['HostGroup']
+								+ '</td>'+ '<td >' + map_result[i]['DiskGroup']
+								+ '</td>';
+						$("#Map_Table_Show").append('<tr>' + tr + '</tr>')
+					}
+				},
+				error : function() {
+					write_to_log(tid, 'DATA', 'ROUTE', vplxIp,
+							'/map/show/data', 'error');
+				}
+
+			});
+		},
+		error : function() {
+			write_to_log(tid, 'DATA', 'ROUTE', vplxIp, '/map/show/oprt',
+					'error');
+		}
+	});
+};
+
+
+
+

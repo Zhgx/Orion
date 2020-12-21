@@ -258,13 +258,13 @@ $("#host_group_create").mousedown(function(){
 							var text = "创建成功!";
 							$('#P_text_success').text(text);
 							div_success();
+							$("#HostGroup_Table tr:not(:first)").html("");
+							host_table();
 						}else {
 							var text = "创建失败!";
 							$('#P_text_failed').text(text);
 							 div_failed();
 						}
-						
-					
 						write_to_log(tid, 'OPRT', 'ROUTE', vplxIp,
 								'/hg/create', operation_feedback_prompt);
 						$("#host_group_name").val("");
@@ -394,6 +394,58 @@ $("[rel=drevil]").popover({
     }, );
 });　
 
+hg_table();
+function hg_table() {
+	$
+			.ajax({
+				url : vplxIp + "/hg/show/oprt",
+				type : "get",
+				dataType : "json",
+				data : {
+					tid : tid,
+					ip : mgtIp
+				},
+				async : false,
+				success : function(status) {
+					write_to_log(tid, 'OPRT', 'ROUTE', vplxIp, '/hg/show/oprt',
+							status);
+					$.ajax({
+						url : vplxIp + "/hg/show/data",
+						type : "get",
+						dataType : "json",
+						data : {
+							tid : tid,
+							ip : mgtIp
+						},
+						async : false,
+						success : function(host_group_result) {
+							write_to_log(tid, 'DATA', 'ROUTE', vplxIp,
+									'/hg/show/data', JSON
+											.stringify(host_group_result));
+							for (i in host_group_result) {
+								
+								tr = '<td >' + i + '</td>'+
+								'<td class="pop-title" title='+host_group_result[i]+'>' + host_group_result[i] + '</td>';
+								$("#Host_Group_Table_Show").append(
+										'<tr>'
+												+ tr + '</tr>')
+							}
+						},
+						error : function() {
+							write_to_log(tid, 'DATA', 'ROUTE', vplxIp,
+									'/hg/show/data', 'error');
+						}
+
+					});
+
+				},
+				error : function() {
+					write_to_log(tid, 'OPRT', 'ROUTE', vplxIp, '/hg/show/oprt',
+							'error');
+				}
+			});
+
+};
 
 
 

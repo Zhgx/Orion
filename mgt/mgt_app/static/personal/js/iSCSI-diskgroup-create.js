@@ -373,6 +373,8 @@ $("#disk_group_create").mousedown(function(){
 							var text = "创建成功!";
 							$('#P_text_success').text(text);
 							div_success();
+							$("#Disk_Table tr:not(:first)").html("");
+							Dg_Table();
 						}else {
 							var text = "创建失败!";
 							$('#P_text_failed').text(text);
@@ -416,4 +418,52 @@ $("[rel=drevil]").popover({
         }
     }, );
 });　
+
+Dg_Table();
+function Dg_Table() {
+	$
+			.ajax({
+				url : vplxIp + "/dg/show/oprt",
+				type : "get",
+				dataType : "json",
+				data : {
+					tid : tid,
+					ip : mgtIp
+				},
+				success : function(status) {
+					write_to_log(tid, 'OPRT', 'ROUTE', vplxIp, '/dg/show/oprt',
+							status);
+					$.ajax({
+						url : vplxIp + "/dg/show/data",
+						type : "get",
+						dataType : "json",
+						data : {
+							tid : tid,
+							ip : mgtIp
+						},
+						success : function(all_dg_result) {
+							write_to_log(tid, 'DATA', 'ROUTE', vplxIp,
+									'/dg/show/data', JSON
+											.stringify(all_dg_result));
+							for (i in all_dg_result) {
+								tr = '<td >' + i + '</td>'+
+								 '<td >' + all_dg_result[i] + '</td>';
+								$("#Disk_Table_Show").append(
+										'<tr >'
+												+ tr + '</tr>')
+							}
+						},
+						error : function() {
+							write_to_log(tid, 'DATA', 'ROUTE', vplxIp,
+									'/dg/show/data', 'error');
+						}
+					});
+				},
+				error : function() {
+					write_to_log(tid, 'OPRT', 'ROUTE', vplxIp, '/dg/show/oprt',
+							'error');
+				}
+
+			});
+};
 

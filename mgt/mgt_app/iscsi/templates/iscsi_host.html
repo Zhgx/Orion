@@ -16,6 +16,29 @@ body {
 .red {
 	color: #FF0000;
 }
+
+table tbody {
+	display: block;
+	height: 150px;
+	overflow-y: scroll;
+}
+
+table thead, tbody tr {
+	display: table;
+	width: 100%;
+	table-layout: fixed;
+}
+
+table thead {
+	width: calc(100%)
+}
+
+table thead th {
+	background: #ccc;
+	text-align: center;
+}
+</style>
+
 </style>
 <style type="text/css">
 .black_overlay {
@@ -107,6 +130,30 @@ body {
 					</div>
 				</div>
 				<div class="col-xs-6 "></div>
+			</div>
+		</div>
+		<div class="row clearfix">
+			<div class="page-header">
+				<h1>
+					<small>Show</small>
+				</h1>
+			</div>
+			<div class="row">
+				<div class="col-xs-8 ">
+					<table id="Host_Table" class="table table-hover table-bordered"
+						border="1">
+						<thead>
+							<tr>
+								<th>Host</th>
+								<th>IQN</th>
+							</tr>
+						</thead>
+						<tbody id="Host_Table_Show">
+						</tbody>
+					</table>
+
+				</div>
+				<div class="col-xs-4 "></div>
 			</div>
 		</div>
 	</div>

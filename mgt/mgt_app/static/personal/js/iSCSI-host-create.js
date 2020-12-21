@@ -86,6 +86,8 @@ $("#host_create").mousedown(
 							var text = "创建成功!";
 							$('#P_text_success').text(text);
 							div_success();
+							$("#Host_Table tr:not(:first)").html("");
+							host_table();
 						} else {
 							var text = "创建失败!";
 							$('#P_text_failed').text(text);
@@ -169,8 +171,7 @@ function host_name_myfunction() {
 										async : false,
 										success : function(host_result) {
 											if (JSON.stringify(host_result) === '{}') {
-												$("#host_name_hid")
-												.val("1");
+												$("#host_name_hid").val("1");
 											} else {
 												for ( var i in host_result) {
 													if (input_result == i) {
@@ -213,3 +214,50 @@ function iqn_myfunction() {
 		}
 	}
 }
+
+host_table();
+function host_table() {
+	$.ajax({
+		url : vplxIp + "/host/show/oprt",
+		type : "GET",
+		dataType : "json",
+		data : {
+			tid : tid,
+			ip : mgtIp
+		},
+		async : false,
+		success : function(status) {
+			write_to_log(tid, 'OPRT', 'ROUTE', vplxIp, '/host/show/oprt',
+					status);
+			$.ajax({
+				url : vplxIp + "/host/show/data",
+				type : "GET",
+				dataType : "json",
+				data : {
+					tid : tid,
+					ip : mgtIp
+				},
+				async : false,
+				success : function(host_result) {
+					write_to_log(tid, 'DATA', 'ROUTE', vplxIp,
+							'/host/show/data', JSON.stringify(host_result));
+					for (i in host_result) {
+						tr = '<td >' + i + '</td>' + '<td >' + host_result[i]
+								+ '</td>'
+						$("#Host_Table_Show").append('<tr>' + tr + '</tr>')
+					}
+				},
+				error : function() {
+					write_to_log(tid, 'DATA', 'ROUTE', vplxIp,
+							'/host/show/data', 'error');
+				}
+
+			});
+		},
+		error : function() {
+			write_to_log(tid, 'DATA', 'ROUTE', vplxIp, '/host/show/oprt',
+					'error');
+		}
+	});
+};
+
