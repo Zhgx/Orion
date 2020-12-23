@@ -37,9 +37,22 @@ table thead th {
 	background: #ccc;
 	text-align: center;
 }
-</style>
+
+table tr td {
+    overflow:hidden;
+    white-space:nowrap;
+    text-overflow:ellipsis;
+    -o-text-overflow:ellipsis;
+    -moz-text-overflow: ellipsis;
+    -webkit-text-overflow: ellipsis;
+}
+table td:hover { /* 鼠标滑过  显示隐藏的内容  伴有横向的滚动条 */
+overflow:auto; 
+text-overflow:clip; 
+} 
 
 </style>
+
 <style type="text/css">
 .black_overlay {
 	display: none;
@@ -144,8 +157,9 @@ table thead th {
 						border="1">
 						<thead>
 							<tr>
-								<th>Host</th>
-								<th>IQN</th>
+								<th style="width: 100px;">Host</th>
+								<th >IQN</th>
+								<th style="width: 200px;">操作</th>
 							</tr>
 						</thead>
 						<tbody id="Host_Table_Show">

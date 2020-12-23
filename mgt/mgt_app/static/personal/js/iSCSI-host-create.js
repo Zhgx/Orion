@@ -217,20 +217,9 @@ function iqn_myfunction() {
 
 host_table();
 function host_table() {
-	$.ajax({
-		url : vplxIp + "/host/show/oprt",
-		type : "GET",
-		dataType : "json",
-		data : {
-			tid : tid,
-			ip : mgtIp
-		},
-		async : false,
-		success : function(status) {
-			write_to_log(tid, 'OPRT', 'ROUTE', vplxIp, '/host/show/oprt',
-					status);
-			$.ajax({
-				url : vplxIp + "/host/show/data",
+	$
+			.ajax({
+				url : vplxIp + "/host/show/oprt",
 				type : "GET",
 				dataType : "json",
 				data : {
@@ -238,26 +227,60 @@ function host_table() {
 					ip : mgtIp
 				},
 				async : false,
-				success : function(host_result) {
-					write_to_log(tid, 'DATA', 'ROUTE', vplxIp,
-							'/host/show/data', JSON.stringify(host_result));
-					for (i in host_result) {
-						tr = '<td >' + i + '</td>' + '<td >' + host_result[i]
-								+ '</td>'
-						$("#Host_Table_Show").append('<tr>' + tr + '</tr>')
-					}
+				success : function(status) {
+					write_to_log(tid, 'OPRT', 'ROUTE', vplxIp,
+							'/host/show/oprt', status);
+					$
+							.ajax({
+								url : vplxIp + "/host/show/data",
+								type : "GET",
+								dataType : "json",
+								data : {
+									tid : tid,
+									ip : mgtIp
+								},
+								async : false,
+								success : function(host_result) {
+									write_to_log(tid, 'DATA', 'ROUTE', vplxIp,
+											'/host/show/data', JSON
+													.stringify(host_result));
+									for (i in host_result) {
+										tr = '<td style="width: 100px;">'
+												+ i
+												+ '</td>'
+												+ '<td>'
+												+ host_result[i]
+												+ '</td>'
+												+ '<td style="width: 200px;">'
+												+ '<button  onClick="btn_show(this);" id="btn_show">编辑</button>'+'<button id="btn_hid" onClick="btn_hid(this);" hidden="hidden">确认</button>'
+												+ '</td>';
+										$("#Host_Table_Show").append(
+												'<tr>' + tr + '</tr>')
+									}
+								},
+								error : function() {
+									write_to_log(tid, 'DATA', 'ROUTE', vplxIp,
+											'/host/show/data', 'error');
+								}
+
+							});
 				},
 				error : function() {
 					write_to_log(tid, 'DATA', 'ROUTE', vplxIp,
-							'/host/show/data', 'error');
+							'/host/show/oprt', 'error');
 				}
-
 			});
-		},
-		error : function() {
-			write_to_log(tid, 'DATA', 'ROUTE', vplxIp, '/host/show/oprt',
-					'error');
-		}
-	});
 };
+
+function btn_show(obj) {
+	$("#btn_hid").show()//table显示du
+	$("#btn_show").hide()//table隐藏zhi
+	
+}
+function btn_hid(obj) {
+	$("#btn_show").show()//table显示du
+	$("#btn_hid").hide()//table隐藏zhi
+	
+}
+
 

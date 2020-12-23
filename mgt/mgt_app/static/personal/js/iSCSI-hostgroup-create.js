@@ -423,9 +423,9 @@ function hg_table() {
 									'/hg/show/data', JSON
 											.stringify(host_group_result));
 							for (i in host_group_result) {
-								
 								tr = '<td >' + i + '</td>'+
-								'<td class="pop-title" title='+host_group_result[i]+'>' + host_group_result[i] + '</td>';
+								'<td>' + host_group_result[i] + '</td>'+'<td>'+
+								'<button  onClick="host_compile(this);">编辑</button>'+'</td>';
 								$("#Host_Group_Table_Show").append(
 										'<tr>'
 												+ tr + '</tr>')
@@ -444,8 +444,114 @@ function hg_table() {
 							'error');
 				}
 			});
-
 };
 
+function host_compile(obj) {
+	// 弹出框
+	$('tr').each(function() {
+		$(this).on("click", function() {
+			$("#host_model").modal("toggle");
+		})
+	});
+	// 获取点击表格的td值
+	var e = e || window.event;
+	var target = e.target || e.srcElement;
+	if (target.parentNode.tagName.toLowerCase() == "td") {
+	tr = target.parentNode.parentNode;
+	td = tr.cells;
+	 for(var i = 0; i<td.length; i++ ){
+	 var td_host = td[1].innerHTML
+	 }
+	}
+	td_host = td_host.split(",");
+	// td_hg = JSON.stringify(hg);
+	// 获取hostgroup的值
+	$.ajax({
+		url : vplxIp + "/host/show/data",
+		type : "get",
+		dataType : "json",
+		data : {
+			tid : tid,
+			ip : mgtIp
+		},
+		async : false,
+		success : function(host_group_result) {
+			$.ajax({
+				url : vplxIp + "/host/show/data",
+				type : "get",
+				dataType : "json",
+				data : {
+					tid : tid,
+					ip : mgtIp
+				},
+				async : false,
+				success : function(host_result) {
+					// 对象取键然后转列表
+					var list_host = []
+					for ( var i in host_result) {
+						list_host.push(i);
+					}
+					// 表格清空刷新
+					$("#HTable_second_all tr:not(:first)").html("");
+					$("#HTable_second tr:not(:first)").html("");
+					for ( var j in td_host) {
+						// 已选择
+						tr = '<td >'
+						+ td_host[j] + '</td>';
+						$("#HTable_second_T").append(
+						'<tr onClick="host_select(this)">'
+								+ tr + '</tr>')
+					}
+					// 列表对比去重
+					let new_list = list_host.filter(items => {
+						  if (!td_host.includes(items)) return items;
+						})
+						// 放入表格
+					for (var i = 0; i < new_list.length; i++) {
+						tr =  '<td >'
+							+ new_list[i] + '</td>';
+					$("#HTable_second_all_show").append(
+							'<tr onClick="host_select_second(this)">'
+									+ tr + '</tr>')
+					}
+				},
+			});
+		},
 
+	});
+}
+
+
+//返回按钮进行刷新当前页面
+
+
+
+function host_select(obj) {
+	if (event.srcElement.tagName == "TD") {
+		curRow = event.srcElement.parentElement;
+		tr = curRow.innerHTML;
+		$("#HTable_second_all_show").append(
+				'<tr onClick="host_select_second(this)">' + tr + '</tr>');
+		curRow.remove();// 删除
+	}
+}
+
+
+function host_select_second(obj) {
+	if (event.srcElement.tagName == "TD") {
+		curRow = event.srcElement.parentElement;
+		tr = curRow.innerHTML;
+		$("#HTable_second_T").append(
+				'<tr onClick="host_select(this)">' + tr + '</tr>');
+		curRow.remove();// 删除
+	}
+}
+
+function myrefresh(obj) {
+	window.location.reload();
+}
+
+function affirm_modifiy(obj){
+	window.location.reload();
+}
 
