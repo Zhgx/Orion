@@ -45,8 +45,8 @@ def test_re_search():
 
 def test_show_iscsi_data():
     list_header = ["ResourceName", "Path"]
-    data = {"pytest_disk":"/dev/sdb1"}
-    assert sundry.show_iscsi_data(list_header, data) != None
+    data = {"pytest_disk": "/dev/sdb1"}
+    assert sundry.show_iscsi_data(list_header, data)
 
 
 def test_show_map_data():

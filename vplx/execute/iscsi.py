@@ -125,6 +125,7 @@ class Disk():
 
     def get_all_disk(self):
         linstor = Linstor()
+        # linstor 有可能没有值
         linstor_res = linstor.get_linstor_data(
             'linstor --no-color --no-utf8 r lv')
         disks = {}
@@ -207,7 +208,6 @@ class Host():
                 return True
         else:
             s.prt_log(f"Fail! Can't find {host}", 1)
-
 
     def modify_host(self, host, iqn):
         if not self.js.check_key('Host', host)['result']:
@@ -480,7 +480,6 @@ class Map():
         for i in data_list:
             if self.js.check_key(key, i)['result'] == False:
                 return False
-
 
     def get_initiator(self, hg):
         # 根据hg去获取hostiqn，返回由hostiqn组成的initiator

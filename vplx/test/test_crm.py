@@ -17,7 +17,7 @@ class TestCRMData:
         assert 'primitive' in result
 
     def test_get_resource_data(self):
-        assert self.crmdata.get_resource_data() != None
+        assert self.crmdata.get_resource_data()
 
     def test_get_vip_data(self):
         assert self.crmdata.get_vip_data() != None
@@ -26,7 +26,7 @@ class TestCRMData:
         assert self.crmdata.get_target_data() != None
 
     def test_update_crm_conf(self):
-        assert self.crmdata.update_crm_conf() == True
+        assert self.crmdata.update_crm_conf()
 
 
 class TestCRMConfig:

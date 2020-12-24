@@ -1,24 +1,27 @@
 import iscsi_json
 
 
-class TestJSON_OPERATION:
+class TestJsonOperation:
 
     def setup_class(self):
         self.js = iscsi_json.JsonOperation()
 
+    # 成功返回 json_dict ，失败返回 None
     def test_read_json(self):
         assert self.js.read_json() != None
 
-    def test_add_data(self):
-        data_host = self.js.add_data('Host', 'pytest_host', 'pytest_iqn')
-        assert data_host['pytest_host'] == 'pytest_iqn'
-        data_hg = self.js.add_data('HostGroup', 'pytest_hg', ['pytest_host1', 'pytest_host2'])
-        assert data_hg['pytest_hg'] == ['pytest_host1', 'pytest_host2']
-        data_dg = self.js.add_data('DiskGroup', 'pytest_dg', ['pytest_disk1', 'pytest_disk2'])
-        assert data_dg['pytest_dg'] == ['pytest_disk1', 'pytest_disk2']
-        data_map = self.js.add_data('Map', 'pytest_map', ['pytest_hg', 'pytest_dg'])
-        assert data_map['pytest_map'] == ['pytest_hg', 'pytest_dg']
+    # 该函数已删除
+    # def test_add_data(self):
+    #     data_host = self.js.add_data('Host', 'pytest_host', 'pytest_iqn')
+    #     assert data_host['pytest_host'] == 'pytest_iqn'
+    #     data_hg = self.js.add_data('HostGroup', 'pytest_hg', ['pytest_host1', 'pytest_host2'])
+    #     assert data_hg['pytest_hg'] == ['pytest_host1', 'pytest_host2']
+    #     data_dg = self.js.add_data('DiskGroup', 'pytest_dg', ['pytest_disk1', 'pytest_disk2'])
+    #     assert data_dg['pytest_dg'] == ['pytest_disk1', 'pytest_disk2']
+    #     data_map = self.js.add_data('Map', 'pytest_map', ['pytest_hg', 'pytest_dg'])
+    #     assert data_map['pytest_map'] == ['pytest_hg', 'pytest_dg']
 
+    # pop()key值不存在呢？报错啊
     def test_delete_data(self):
         data_map = self.js.delete_data('Map', 'pytest_map')
         assert 'pytest_map' not in data_map

@@ -33,10 +33,12 @@ class TestLinstor:
         sp_result = self.ls.refine_linstor(sp)
         assert sp_result == [['pool_a', 'ubuntu', 'LVM', '', '15.94GiB', '16.00GiB', 'False', 'Ok']]
 
+    # 主要测这个函数能不能跑通？这个函数是根据cmd调用上面的函数，上面的函数已经从node/res/sp的方面都进行了读取测试
     def test_get_linstor_data(self):
         node = self.ls.get_linstor_data('linstor --no-color --no-utf8 n l')
         res = self.ls.get_linstor_data('linstor --no-color --no-utf8 r lv')
         sp = self.ls.get_linstor_data('linstor --no-color --no-utf8 sp l')
-        assert node != None
-        assert res != None
-        assert sp != None
+        # 这里的断言是看函数有没有返回值
+        assert node is not None
+        assert res is not None
+        assert sp is not None

@@ -8,7 +8,7 @@ import sundry
 
 
 
-LOG_PATH = '../vplx/'
+LOG_PATH = '../../vplx/'
 # LOG_PATH = '/var/log/vtel/'
 CLI_LOG_NAME = 'cli.log'
 WEB_LOG_NAME = 'web.log'

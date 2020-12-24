@@ -20,11 +20,13 @@ from commands import (
     MapCommands
 )
 
+
 class MyArgumentParser(argparse.ArgumentParser):
+
     def parse_args(self, args=None, namespace=None):
         args, argv = self.parse_known_args(args, namespace)
         if argv:
-            msg = ('unrecognized arguments: %s')
+            msg = 'unrecognized arguments: %s'
             self.error(msg % ' '.join(argv))
         return args
 
@@ -32,30 +34,30 @@ class MyArgumentParser(argparse.ArgumentParser):
         logger = consts.glo_log()
         cmd = ' '.join(sys.argv[1:])
         path = sundry.get_path()
-        logger.write_to_log('DATA', 'INFO', 'cmd_input', path, {'valid':'1','cmd':cmd})
-        logger.write_to_log('INFO', 'INFO', 'finish','', 'print usage')
+        logger.write_to_log('DATA', 'INFO', 'cmd_input', path, {'valid': '1', 'cmd': cmd})
+        logger.write_to_log('INFO', 'INFO', 'finish', '', 'print usage')
         if file is None:
             file = sys.stdout
         self._print_message(self.format_usage(), file)
 
     def print_help(self, file=None):
         logger = consts.glo_log()
-        logger.write_to_log('INFO', 'INFO', 'finish','', 'print help')
+        logger.write_to_log('INFO', 'INFO', 'finish', '', 'print help')
         if file is None:
             file = sys.stdout
         self._print_message(self.format_help(), file)
-
 
 
 class VtelCLI(object):
     """
     Vtel command line client
     """
+
     def __init__(self):
         consts.init()
         self.username = sundry.get_username()
         self.transaction_id = sundry.create_transaction_id()
-        self.logger = log.Log(self.username,self.transaction_id)
+        self.logger = log.Log(self.username, self.transaction_id)
         consts.set_glo_log(self.logger)
         self.replay_args_list = []
         self._node_commands = NodeCommands()
@@ -67,7 +69,6 @@ class VtelCLI(object):
         self._hostgroup_commands = HostGroupCommands()
         self._map_commands = MapCommands()
         self._parser = self.setup_parser()
-
 
     def setup_parser(self):
         parser = MyArgumentParser(prog="vtel")
@@ -90,7 +91,6 @@ class VtelCLI(object):
             add_help=False,
             formatter_class=argparse.RawTextHelpFormatter,
         )
-
 
         parser_iscsi = subp.add_parser(
             'iscsi',
@@ -119,15 +119,14 @@ class VtelCLI(object):
             nargs=2,
             help='date')
 
-
         self.parser_stor = parser_stor
         self.parser_iscsi = parser_iscsi
         self.parser_replay = parser_replay
 
         parser_replay.set_defaults(func=self.replay)
 
-        subp_stor = parser_stor.add_subparsers(dest='subargs_stor',metavar='')
-        subp_iscsi = parser_iscsi.add_subparsers(dest='subargs_iscsi',metavar='')
+        subp_stor = parser_stor.add_subparsers(dest='subargs_stor', metavar='')
+        subp_iscsi = parser_iscsi.add_subparsers(dest='subargs_iscsi', metavar='')
 
         # add all subcommands and argument
         self._node_commands.setup_commands(subp_stor)
@@ -143,14 +142,13 @@ class VtelCLI(object):
         parser.set_defaults(func=self.func_vtel)
         return parser
 
-
-    def func_vtel(self,args):
+    def func_vtel(self, args):
         if args.version:
             print(f'VersaTEL G2 {consts.VERSION}')
         else:
             self._parser.print_help()
 
-    def replay_one(self,dict_input):
+    def replay_one(self, dict_input):
         if not dict_input:
             print('不存在命令去进行replay')
             return
@@ -167,21 +165,20 @@ class VtelCLI(object):
         else:
             print(f"该命令{dict_input['cmd']}有误，无法执行")
 
-
-    def replay_more(self,dict_input):
+    def replay_more(self, dict_input):
         print('* MODE : REPLAY *')
         print(f'transaction num : {len(dict_input)}')
 
-        number_list = [str(i) for i in list(range(1,len(dict_input)+1))]
+        number_list = [str(i) for i in list(range(1, len(dict_input) + 1))]
         for i in range(len(dict_input)):
-            print(f"{i+1:<3} Transaction ID: {dict_input[i]['tid']:<12} CMD: {dict_input[i]['cmd']}")
+            print(f"{i + 1:<3} Transaction ID: {dict_input[i]['tid']:<12} CMD: {dict_input[i]['cmd']}")
 
         answer = ''
         while answer != 'exit':
             print('请输入要执行replay的序号，或者all，输入exit退出：')
             answer = input()
             if answer in number_list:
-                dict_cmd = dict_input[int(answer)-1]
+                dict_cmd = dict_input[int(answer) - 1]
                 self.replay_one(dict_cmd)
                 consts.set_glo_log_id(0)
             elif answer == 'all':
@@ -190,8 +187,7 @@ class VtelCLI(object):
             elif answer != 'exit':
                 print('输入的序号不正确')
 
-
-    def replay(self,args):
+    def replay(self, args):
         consts.set_glo_log_switch('no')
         consts.set_glo_rpl('yes')
         logdb.prepare_db()
@@ -205,15 +201,14 @@ class VtelCLI(object):
             print(f'transaction num : 1')
             self.replay_one(dict_cmd)
         elif args.date:
-            dict_cmd = obj_logdb.get_userinput_via_time(args.date[0],args.date[1])
+            dict_cmd = obj_logdb.get_userinput_via_time(args.date[0], args.date[1])
             self.replay_more(dict_cmd)
         else:
             dict_cmd = obj_logdb.get_all_transaction()
             self.replay_more(dict_cmd)
         return dict_cmd
 
-
-    def parse(self): # 调用入口
+    def parse(self):  # 调用入口
         args = self._parser.parse_args()
         path = sundry.get_path()
         cmd = ' '.join(sys.argv[1:])
@@ -221,7 +216,7 @@ class VtelCLI(object):
             if args.subargs_vtel not in ['re', 'replay']:
                 self.logger.write_to_log('DATA', 'INPUT', 'cmd_input', path, {'valid': '0', 'cmd': cmd})
         else:
-            self.logger.write_to_log('DATA','INPUT','cmd_input', path, {'valid':'0','cmd':cmd})
+            self.logger.write_to_log('DATA', 'INPUT', 'cmd_input', path, {'valid': '0', 'cmd': cmd})
         args.func(args)
 
 
