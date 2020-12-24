@@ -303,7 +303,32 @@ class AllMapResult(views.MethodView):
         logger.write_to_log('DATA', 'RETURN', 'AllMapResult', 'result', MAP_RESULT)
         return cors_data(MAP_RESULT)
     
-    
+
+
+  
+class CheckHgModify(views.MethodView):
+
+    def get(self):
+        dict_data = get_request_data()
+        hg_name = dict_data['hg_name']
+        host = dict_data['host']
+        list_host = host.split()
+        # js_modify对象更新数据{hg_name:list_host},然后跟js对象对比，返回改动的信息
+        
+        print(hg_name,host)
+        message = '返回到后台的数据是'
+        dict = {'iscsi_data':True,'info':message}
+        return cors_data(dict)
+
+class HgModify(views.MethodView):
+
+    def get(self):
+        dict_data = get_request_data()
+        hg_name = dict_data['hg_name']
+        host = dict_data['host']
+        message = '操作完成'
+        return cors_data(message)
+
 class CheckMapModify(views.MethodView):
 
     def get(self):
@@ -316,7 +341,6 @@ class CheckMapModify(views.MethodView):
         dict_before = js.get_disk_with_iqn()
         dict_now = js_modify.get_disk_with_iqn()
         obj_ilu = iscsi.IscsiConfig(dict_before, dict_now)
-
         info = f"删除：{','.join(obj_ilu.delete)}\n新增：{','.join(obj_ilu.create)}\n修改：{','.join(obj_ilu.modify)}"
         dict = {'iscsi_data':js.iscsi_data,'info':info}
         return cors_data(dict)

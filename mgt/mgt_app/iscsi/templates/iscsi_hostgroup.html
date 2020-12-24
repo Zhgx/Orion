@@ -211,39 +211,23 @@ table thead th {
 			style="text-align: center; font-size: 30px; color: oldlace;"></p>
 	</div>
 	<div id="fade" class="black_overlay"></div>
-	<!-- 模态框 -->
+	<!-- 模态框 1-->
 	<div class="modal fade" id="host_model" data-backdrop="static"
 		role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
 		<div class="modal-dialog">
 			<div class="modal-content">
-					<div class="modal-header">
-						<h4 class="modal-title" align="center">修改详情</h4>
-					</div>
-					<div class="modal-body">
+				<div class="modal-header">
+					<h4 class="modal-title" align="center">修改</h4>
+				</div>
+				<div class="modal-body">
 					<div class="row">
-						<div class="col-xs-6 ">
-							<span class="text-success" style="margin-left: 35%;">已选主机列表</span>
-							<span class="glyphicon glyphicon-question-sign" rel="drevil"
-								data-container="body" data-toggle="popover"
-								data-placement="bottom" data-content="通过单击项目将其添加到已选列表"></span>
-							<table  id="HTable_second" class="table  table-hover table-bordered "
-								border="1">
-								<thead>
-									<tr>
-										<th>Host</th>
-									</tr>
-								</thead>
-								<tbody id="HTable_second_T">
-								</tbody>
-							</table>
-						</div>
 						<div class="col-xs-6 ">
 							<span class="text-success" style="margin-left: 32%;">所有主机列表</span>
 							<span class="glyphicon glyphicon-question-sign" rel="drevil"
 								data-container="body" data-toggle="popover"
 								data-placement="bottom" data-content="通过单击项目将其移出已选列表(同时放回可选列表)"></span>
-							<table id="HTable_second_all" class="table table-hover table-bordered"
-								border="1">
+							<table id="HTable_second_all"
+								class="table table-hover table-bordered" border="1">
 								<thead>
 									<tr>
 										<th>Selected Host</th>
@@ -253,15 +237,70 @@ table thead th {
 								</tbody>
 							</table>
 						</div>
+						<div class="col-xs-6 ">
+							<span class="text-success" style="margin-left: 35%;">已选主机列表</span>
+							<span class="glyphicon glyphicon-question-sign" rel="drevil"
+								data-container="body" data-toggle="popover"
+								data-placement="bottom" data-content="通过单击项目将其添加到已选列表"></span> <input
+								id="host_key_hid" hidden="hidden">
+							<table id="HTable_second"
+								class="table  table-hover table-bordered " border="1">
+								<thead>
+									<tr>
+										<th>Host</th>
+									</tr>
+								</thead>
+								<tbody id="HTable_second_T">
+								</tbody>
+							</table>
+						</div>
+					
 					</div>
-					</div>
+				</div>
 				<div class="modal-footer">
-					<button type="button" class="btn btn-default" data-dismiss="modal" onclick="myrefresh(this);">关闭</button>
-					<button type="button" class="btn btn-default"  onclick="affirm_modifiy(this);">确认修改</button>
+					<button type="button" class="btn btn-default" data-dismiss="modal"
+						onclick="myrefresh(this);">关闭</button>
+					<button type="button" class="btn btn-default"
+						onclick="affirm_modifiy(this);">修改</button>
+					<!-- 					<button type="button" class="btn btn-default" id="affirm_modifiy" onclick="affirm_modifiy(this);">确认修改</button> -->
 				</div>
 			</div>
 		</div>
 	</div>
+
+	<!-- 模态框2 -->
+	<div class="modal fade" id="host_info_model" data-backdrop="static"
+		role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h4 class="modal-title" align="center">修改详情</h4>
+				</div>
+				<div class="modal-body">
+					<div class="row">
+						<div class="col-xs-2 ">
+							<input id="hg_name_hid" hidden="hidden">
+							<input id="host_hid" hidden="hidden">
+						</div>
+						<div class="col-xs-8 ">
+						<p id="hg_info_result"></p>
+						</div>
+						<div class="col-xs-2 "></div>
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" data-dismiss="modal"
+						onclick="myrefresh_second(this);">关闭</button>
+					<button type="button" class="btn btn-default"
+						onclick="affirm_modifiy_second(this);">确认修改</button>
+					<!-- 					<button type="button" class="btn btn-default" id="affirm_modifiy" onclick="affirm_modifiy(this);">确认修改</button> -->
+				</div>
+			</div>
+		</div>
+	</div>
+
+
+
 
 
 </body>

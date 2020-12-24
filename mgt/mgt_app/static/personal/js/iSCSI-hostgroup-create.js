@@ -460,11 +460,12 @@ function host_compile(obj) {
 	tr = target.parentNode.parentNode;
 	td = tr.cells;
 	 for(var i = 0; i<td.length; i++ ){
+	var td_hg_name = td[0].innerHTML
 	 var td_host = td[1].innerHTML
 	 }
 	}
 	td_host = td_host.split(",");
-	// td_hg = JSON.stringify(hg);
+	$("#host_key_hid").val(td_hg_name);
 	// 获取hostgroup的值
 	$.ajax({
 		url : vplxIp + "/host/show/data",
@@ -522,10 +523,7 @@ function host_compile(obj) {
 }
 
 
-//返回按钮进行刷新当前页面
-
-
-
+// 返回按钮进行刷新当前页面
 function host_select(obj) {
 	if (event.srcElement.tagName == "TD") {
 		curRow = event.srcElement.parentElement;
@@ -551,7 +549,64 @@ function myrefresh(obj) {
 	window.location.reload();
 }
 
+
 function affirm_modifiy(obj){
-	window.location.reload();
+	//打开二次确认弹窗
+	$('#host_info_model').modal("show");
+	
+	var obj_host = [];
+	var str = "";
+	for (var i = 1; i < HTable_second.rows.length; i++) {
+		obj_host.push(HTable_second.rows[i].cells[0].innerHTML)
+	}
+	obj_host_str = obj_host.toString();
+	var hg_name = $("#host_key_hid").val()
+	
+	$("#hg_name_hid").val(hg_name);
+	$("#host_hid").val(obj_host_str);
+	
+//	var dict_data = JSON.stringify({
+//		"hg_name" : hg_name,
+//		"host" : obj_host_str
+//	});
+	$.ajax({
+		url : vplxIp + "/hg/modify/check",
+		type : "get",
+		dataType : "json",
+		data : {
+			tid : tid,
+			hg_name: hg_name,
+			host: obj_host_str
+		},
+		async : false,
+		success : function(hg_result) {
+			$("#hg_info_result").text(hg_result['info']);
+		},
+	});
+// window.location.reload();
+}
+
+function affirm_modifiy_second(obj){
+	hg_name = $("#hg_name_hid").val();
+	obj_host_str = $("#host_hid").val();
+	$.ajax({
+		url : vplxIp + "/hg/modify",
+		type : "get",
+		dataType : "json",
+		data : {
+			tid : tid,
+			ip : mgtIp,
+			hg_name: hg_name,
+			host: obj_host_str
+		},
+		async : false,
+		success : function(hg_result) {
+			alert(hg_result);
+			window.location.reload();
+		},
+	});
+	
+	
+	
 }
 

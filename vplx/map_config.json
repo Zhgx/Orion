@@ -117,7 +117,7 @@
                 "iqn.2020-04.feixitek.com:versaplx00",
                 "2",
                 "/dev/drbd1002",
-                "iqn.2323-23.xx1 iqn.2323-23.xx1111 iqn.2323-23.xx4 iqn.2323-23.xx2 iqn.2323-23.xx3",
+                "iqn.2323-23.02 iqn.2323-23.04 iqn.2323-23.01 iqn.2323-23.xx iqn.2323-23.03",
                 "Started"
             ],
             [
@@ -125,7 +125,15 @@
                 "iqn.2020-04.feixitek.com:versaplx00",
                 "3",
                 "/dev/drbd1003",
-                "iqn.2323-23.xx4 iqn.2323-23.xx2 iqn.2323-23.xx1 iqn.2323-23.xx3",
+                "iqn.2323-23.01 iqn.2323-23.04 iqn.2323-23.02 iqn.2323-23.03",
+                "Started"
+            ],
+            [
+                "res_e",
+                "iqn.2020-04.feixitek.com:versaplx00",
+                "5",
+                "/dev/drbd1005",
+                "iqn.2323-23.01 iqn.2323-23.04 iqn.2323-23.02 iqn.2323-23.03",
                 "Started"
             ]
         ],
