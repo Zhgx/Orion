@@ -17,7 +17,8 @@ from commands import (
     DiskGroupCommands,
     HostCommands,
     HostGroupCommands,
-    MapCommands
+    MapCommands,
+    VIPCommands
 )
 
 class MyArgumentParser(argparse.ArgumentParser):
@@ -66,6 +67,7 @@ class VtelCLI(object):
         self._host_commands = HostCommands()
         self._hostgroup_commands = HostGroupCommands()
         self._map_commands = MapCommands()
+        self._vip_commands = VIPCommands()
         self._parser = self.setup_parser()
 
 
@@ -139,6 +141,7 @@ class VtelCLI(object):
         self._host_commands.setup_commands(subp_iscsi)
         self._hostgroup_commands.setup_commands(subp_iscsi)
         self._map_commands.setup_commands(subp_iscsi)
+        self._vip_commands.setup_commands(subp_iscsi)
 
         parser.set_defaults(func=self.func_vtel)
         return parser
