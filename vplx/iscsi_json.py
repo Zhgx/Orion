@@ -337,20 +337,25 @@ class JsonOperation(object):
 
 
     def get_disk_with_iqn(self):
+        # 报错：KeyError: 'h1',配置文件中没有h1
 
         data = self.json_data
         dict_disk_iqn = {}
         for disk in data['Disk']:
             dict_disk_iqn.update({disk: []})
 
-        for map in data['Map'].values():
-            for dg in map['DiskGroup']:
-                for disk in data['DiskGroup'][dg]:
-                    list_iqn = []
-                    for hg in map['HostGroup']:
-                        for host in data['HostGroup'][hg]:
-                            list_iqn.append(data['Host'][host])
-                    dict_disk_iqn[disk] = s.append_list(dict_disk_iqn[disk], list_iqn)
+
+        try:
+            for map in data['Map'].values():
+                for dg in map['DiskGroup']:
+                    for disk in data['DiskGroup'][dg]:
+                        list_iqn = []
+                        for hg in map['HostGroup']:
+                            for host in data['HostGroup'][hg]:
+                                list_iqn.append(data['Host'][host])
+                        dict_disk_iqn[disk] = s.append_list(dict_disk_iqn[disk], list_iqn)
+        except KeyError as key:
+            s.prt_log(f'JSON配置文件中不存在{key}，请检查',2)
 
         return dict_disk_iqn
 
