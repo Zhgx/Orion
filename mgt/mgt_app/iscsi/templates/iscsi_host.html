@@ -39,18 +39,18 @@ table thead th {
 }
 
 table tr td {
-    overflow:hidden;
-    white-space:nowrap;
-    text-overflow:ellipsis;
-    -o-text-overflow:ellipsis;
-    -moz-text-overflow: ellipsis;
-    -webkit-text-overflow: ellipsis;
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	-o-text-overflow: ellipsis;
+	-moz-text-overflow: ellipsis;
+	-webkit-text-overflow: ellipsis;
 }
-table td:hover { /* 鼠标滑过  显示隐藏的内容  伴有横向的滚动条 */
-overflow:auto; 
-text-overflow:clip; 
-} 
 
+table td:hover { /* 鼠标滑过  显示隐藏的内容  伴有横向的滚动条 */
+	overflow: auto;
+	text-overflow: clip;
+}
 </style>
 
 <style type="text/css">
@@ -158,7 +158,7 @@ text-overflow:clip;
 						<thead>
 							<tr>
 								<th style="width: 100px;">Host</th>
-								<th >IQN</th>
+								<th>IQN</th>
 								<th style="width: 200px;">操作</th>
 							</tr>
 						</thead>
@@ -180,6 +180,74 @@ text-overflow:clip;
 			style="text-align: center; font-size: 30px; color: oldlace;"></p>
 	</div>
 	<div id="fade" class="black_overlay"></div>
+
+	<!-- 模态框 1-->
+	<div class="modal fade" id="host_model" data-backdrop="static"
+		role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h4 class="modal-title" align="center">Host 修改</h4>
+				</div>
+				<div class="modal-body">
+					<div class="row">
+						<div class="col-xs-3 "></div>
+						<div class="col-xs-7 ">
+							<div class="input-group">
+								<span class="input-group-addon">Host</span> <input type="text"
+									class="form-control" id="host_name_hidden">
+							</div>
+							<br>
+							<div class="input-group">
+								<span class="input-group-addon">IQN</span> <input type="text"
+									class="form-control" id="host_iqn_hidden">
+							</div>
+
+						</div>
+						<div class="col-xs-3 "></div>
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" data-dismiss="modal"
+						onclick="myrefresh(this);">关闭</button>
+					<button type="button" class="btn btn-default"
+						onclick="affirm_modifiy(this);">修改</button>
+					<!-- 					<button type="button" class="btn btn-default" id="affirm_modifiy" onclick="affirm_modifiy(this);">确认修改</button> -->
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- 模态框2 -->
+	<div class="modal fade" id="host_info_model" data-backdrop="static"
+		role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h4 class="modal-title" align="center">修改详情</h4>
+				</div>
+				<div class="modal-body">
+					<div class="row">
+						<div class="col-xs-2 "></div>
+						<div class="col-xs-8 ">
+							<p id="host_info_result"></p>
+						</div>
+						<div class="col-xs-2 "></div>
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" data-dismiss="modal"
+						onclick="myrefresh_second(this);">关闭</button>
+					<button type="button" class="btn btn-default"
+						onclick="affirm_modifiy_second(this);">确认修改</button>
+					<!-- 					<button type="button" class="btn btn-default" id="affirm_modifiy" onclick="affirm_modifiy(this);">确认修改</button> -->
+				</div>
+			</div>
+		</div>
+	</div>
+
+
+
 
 
 

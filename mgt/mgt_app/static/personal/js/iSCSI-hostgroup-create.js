@@ -562,8 +562,8 @@ function affirm_modifiy(obj){
 	obj_host_str = obj_host.toString();
 	var hg_name = $("#host_key_hid").val()
 	
-	$("#hg_name_hid").val(hg_name);
-	$("#host_hid").val(obj_host_str);
+	$("#hg_name_hidden").val(hg_name);
+	$("#host_hidden").val(obj_host_str);
 	
 //	var dict_data = JSON.stringify({
 //		"hg_name" : hg_name,
@@ -587,8 +587,8 @@ function affirm_modifiy(obj){
 }
 
 function affirm_modifiy_second(obj){
-	hg_name = $("#hg_name_hid").val();
-	obj_host_str = $("#host_hid").val();
+	hg_name = $("#hg_name_hidden").val();
+	obj_host_str = $("#host_hidden").val();
 	$.ajax({
 		url : vplxIp + "/hg/modify",
 		type : "get",

@@ -252,7 +252,7 @@ function host_table() {
 												+ host_result[i]
 												+ '</td>'
 												+ '<td style="width: 200px;">'
-												+ '<button  onClick="btn_show(this);" id="btn_show">编辑</button>'+'<button id="btn_hid" onClick="btn_hid(this);" hidden="hidden">确认</button>'
+												+ '<button  onClick="btn_show(this);">编辑</button>'
 												+ '</td>';
 										$("#Host_Table_Show").append(
 												'<tr>' + tr + '</tr>')
@@ -273,14 +273,77 @@ function host_table() {
 };
 
 function btn_show(obj) {
-	$("#btn_hid").show()//table显示du
+//	$("#btn_hid").show()//table显示du
 	$("#btn_show").hide()//table隐藏zhi
+	// 弹出框
 	
-}
-function btn_hid(obj) {
-	$("#btn_show").show()//table显示du
-	$("#btn_hid").hide()//table隐藏zhi
-	
+	$('tr').each(function() {
+		$(this).on("click", function() {
+			$("#host_model").modal("toggle");
+		})
+	});
+	// 获取点击表格的td值
+	var e = e || window.event;
+	var target = e.target || e.srcElement;
+	if (target.parentNode.tagName.toLowerCase() == "td") {
+	tr = target.parentNode.parentNode;
+	td = tr.cells;
+	 for(var i = 0; i<td.length; i++ ){
+	var td_host = td[0].innerHTML
+	 var td_iqn = td[1].innerHTML
+	 }
+	}
+	console.log(td_host);
+	console.log(td_iqn);
+	$("#host_name_hidden").val(td_host);
+	$("#host_iqn_hidden").val(td_iqn);
 }
 
+function affirm_modifiy(obj){
+	//打开二次确认弹窗
+	$('#host_info_model').modal("show");
+	$.ajax({
+		url : vplxIp + "/host/modify/check",
+		type : "get",
+		dataType : "json",
+		data : {
+			tid : tid,
+			host_name: host_name,
+			host_iqn: host_iqn
+		},
+		async : false,
+		success : function(hg_result) {
+			$("#host_info_result").text(hg_result['info']);
+		},
+	});
+// window.location.reload();
+}
 
+function myrefresh(obj) {
+	window.location.reload();
+}
+function myrefresh_second(obj) {
+	window.location.reload();
+}
+
+function affirm_modifiy_second(obj){
+	host_name = $("#host_name_hidden").val();
+	 host_iqn = $("#host_iqn_hidden").val();
+	 
+	$.ajax({
+		url : vplxIp + "/host/modify",
+		type : "get",
+		dataType : "json",
+		data : {
+			tid : tid,
+			ip : mgtIp,
+			host_name: host_name,
+			host_iqn: host_iqn
+		},
+		async : false,
+		success : function(host_result) {
+			alert(host_result);
+			window.location.reload();
+		},
+	});
+}

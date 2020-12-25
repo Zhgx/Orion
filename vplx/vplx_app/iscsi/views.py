@@ -36,6 +36,9 @@ iscsi_blueprint.add_url_rule('/map/modify/check', view_func=model.CheckMapModify
 iscsi_blueprint.add_url_rule('/map/modify', view_func=model.MapModify.as_view('map_modify'))
 
 #修改
+iscsi_blueprint.add_url_rule('/host/modify/check', view_func=model.CheckHostModify.as_view('host_modify_check'))
+iscsi_blueprint.add_url_rule('/host/modify', view_func=model.HostModify.as_view('host_modify'))
+#修改
 iscsi_blueprint.add_url_rule('/hg/modify/check', view_func=model.CheckHgModify.as_view('hg_modify_check'))
 iscsi_blueprint.add_url_rule('/hg/modify', view_func=model.HgModify.as_view('hg_modify'))
 

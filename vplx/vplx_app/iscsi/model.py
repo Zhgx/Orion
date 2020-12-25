@@ -303,6 +303,28 @@ class AllMapResult(views.MethodView):
         logger.write_to_log('DATA', 'RETURN', 'AllMapResult', 'result', MAP_RESULT)
         return cors_data(MAP_RESULT)
     
+class CheckHostModify(views.MethodView):
+
+    def get(self):
+        dict_data = get_request_data()
+        host_name = dict_data['host_name']
+        host_iqn = dict_data['host_iqn']
+        # js_modify对象更新数据{hg_name:list_host},然后跟js对象对比，返回改动的信息
+        print(hg_name,host)
+        message = '返回到后台的数据是'
+        dict = {'iscsi_data':True,'info':message}
+        return cors_data(dict)
+
+class HostModify(views.MethodView):
+
+    def get(self):
+        dict_data = get_request_data()
+        host_name = dict_data['host_name']
+        host_iqn = dict_data['host_iqn']
+        message = '操作完成'
+        return cors_data(message)
+
+
 
 
   
