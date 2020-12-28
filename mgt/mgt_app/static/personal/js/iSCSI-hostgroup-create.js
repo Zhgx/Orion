@@ -466,9 +466,10 @@ function host_compile(obj) {
 	}
 	td_host = td_host.split(",");
 	$("#host_key_hid").val(td_hg_name);
+	$("#hg_name_text").text(td_hg_name);
 	// 获取hostgroup的值
 	$.ajax({
-		url : vplxIp + "/host/show/data",
+		url : vplxIp + "/host/show/oprt",
 		type : "get",
 		dataType : "json",
 		data : {
@@ -549,9 +550,12 @@ function myrefresh(obj) {
 	window.location.reload();
 }
 
+function myrefresh_second(obj) {
+	window.location.reload();
+}
 
 function affirm_modifiy(obj){
-	//打开二次确认弹窗
+	// 打开二次确认弹窗
 	$('#host_info_model').modal("show");
 	
 	var obj_host = [];
@@ -565,10 +569,10 @@ function affirm_modifiy(obj){
 	$("#hg_name_hidden").val(hg_name);
 	$("#host_hidden").val(obj_host_str);
 	
-//	var dict_data = JSON.stringify({
-//		"hg_name" : hg_name,
-//		"host" : obj_host_str
-//	});
+// var dict_data = JSON.stringify({
+// "hg_name" : hg_name,
+// "host" : obj_host_str
+// });
 	$.ajax({
 		url : vplxIp + "/hg/modify/check",
 		type : "get",
@@ -605,8 +609,5 @@ function affirm_modifiy_second(obj){
 			window.location.reload();
 		},
 	});
-	
-	
-	
 }
 

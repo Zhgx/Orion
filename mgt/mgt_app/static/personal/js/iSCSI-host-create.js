@@ -200,7 +200,7 @@ function host_name_myfunction() {
 function iqn_myfunction() {
 	document.getElementById("iqn_format").className = "hidden";
 	var input_result = $('#host_iqn').val();
-	var iqn_match_regular = /^iqn.\d{4}-\d{2}.[a-zA-Z0-9.:-]+$/;
+	var iqn_match_regular = /^iqn.\d{4}-\d{2}.[a-zA-Z0-9.:-_]+$/;
 	match_result = iqn_match_regular.test(input_result)
 	if (!input_result) {
 		$("#host_iqn_hid").val("0");
@@ -252,7 +252,7 @@ function host_table() {
 												+ host_result[i]
 												+ '</td>'
 												+ '<td style="width: 200px;">'
-												+ '<button  onClick="btn_show(this);">编辑</button>'
+												+ '<button  onClick="btn_show(this);">编辑</button>'+'<button  onClick="btn_show_delete(this);">删除</button>'
 												+ '</td>';
 										$("#Host_Table_Show").append(
 												'<tr>' + tr + '</tr>')

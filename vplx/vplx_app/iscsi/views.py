@@ -30,15 +30,18 @@ iscsi_blueprint.add_url_rule('/dg/show/data', view_func=model.AllDgResult.as_vie
 # map 操作/数据
 iscsi_blueprint.add_url_rule('/map/show/oprt', view_func=model.OprtAllMap.as_view('oprt_all_map'))
 iscsi_blueprint.add_url_rule('/map/show/data', view_func=model.AllMapResult.as_view('all_map_result'))
-
-#删除
-iscsi_blueprint.add_url_rule('/map/modify/check', view_func=model.CheckMapModify.as_view('map_modify_check'))
-iscsi_blueprint.add_url_rule('/map/modify', view_func=model.MapModify.as_view('map_modify'))
-
 #修改
 iscsi_blueprint.add_url_rule('/host/modify/check', view_func=model.CheckHostModify.as_view('host_modify_check'))
 iscsi_blueprint.add_url_rule('/host/modify', view_func=model.HostModify.as_view('host_modify'))
 #修改
 iscsi_blueprint.add_url_rule('/hg/modify/check', view_func=model.CheckHgModify.as_view('hg_modify_check'))
 iscsi_blueprint.add_url_rule('/hg/modify', view_func=model.HgModify.as_view('hg_modify'))
+#修改
+iscsi_blueprint.add_url_rule('/dg/modify/check', view_func=model.CheckDgModify.as_view('dg_modify_check'))
+iscsi_blueprint.add_url_rule('/dg/modify', view_func=model.DgModify.as_view('dg_modify'))
+
+#删除
+iscsi_blueprint.add_url_rule('/map/modify/check', view_func=model.CheckMapModify.as_view('map_modify_check'))
+iscsi_blueprint.add_url_rule('/map/modify', view_func=model.MapModify.as_view('map_modify'))
+
 
