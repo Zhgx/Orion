@@ -74,7 +74,7 @@ class HostCommands():
         Show iSCSI Host
         """
         p_show_host = host_subp.add_parser(
-            'show', aliases='s', help='Displays the host data', usage=Usage.host_modify)
+            'show', aliases='s', help='Displays the host data', usage=Usage.host_show)
 
         # add arguments of host show
         p_show_host.add_argument(

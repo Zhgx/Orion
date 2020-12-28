@@ -356,7 +356,7 @@ def handle_exception():
         raise consts.ReplayExit
     else:
         print('命令结果无法获取，请检查')
-        sys.exit()#在这里结束会屏蔽掉程序抛出的异常，再考虑要不要直接在这里中断程序
+        raise consts.CmdError
 
 
 

@@ -4,6 +4,7 @@ import time
 import iscsi_json
 import sundry as s
 import subprocess
+import consts
 
 @s.deco_cmd('crm')
 def execute_crm_cmd(cmd, timeout=60):
@@ -240,6 +241,163 @@ class CRMConfig():
         if result['sts']:
             s.prt_log(f"Change {res} allowed_initiators success!",0)
             return True
+
+
+class Portal():
+    def __init__(self):
+        pass
+
+    def create(self, name, ip, port=3260 ,netmask=24):
+        if not self._check_name(name):
+            print(f'{name}不符合规范')
+            return
+
+        if not self._check_IP(ip):
+            print(f'{ip}不符合规范')
+            return
+
+        if not self._check_port(port):
+            print(f'{port}不符合规范，范围：3260-65535')
+            return
+
+        if not self._check_netmask(netmask):
+            print(f'{netmask}不符合规范，范围：0-32')
+            return
+
+
+        try:
+            obj_ip = Ipadrr2()
+            obj_ip.create(name,ip,netmask)
+
+            obj_portblock = PortBlockGroup()
+            obj_portblock.create_block(name,ip,port)
+            obj_portblock.create_unblock(name,ip,port)
+
+            obj_colocation = Colocation()
+            obj_colocation.create(f'col_{obj_portblock.block_name}',obj_portblock.block_name,name)
+            obj_colocation.create(f'col_{obj_portblock.unblock_name}', obj_portblock.unblock_name, name)
+
+            obj_order = Order()
+            obj_order.create(f'or_{obj_portblock.block_name}',name, obj_portblock.block_name)
+
+        except consts.CmdError:
+            # 回滚
+            pass
+
+
+
+        #验证：
+        pass
+
+
+
+    def delete(self, name):
+        pass
+
+
+    def modify(self, name, ip, port):
+        pass
+
+
+    def show(self):
+        pass
+
+
+    def _check_name(self, name):
+        re_name = re.compile(r'^[a-zA-Z]\w*$')
+        result = re_name.match(name)
+        return True if result else False
+
+    def _check_IP(self, ip):
+        re_ip = re.compile(
+            r'^((2([0-4]\d|5[0-5]))|[1-9]?\d|1\d{2})(\.((2([0-4]\d|5[0-5]))|[1-9]?\d|1\d{2})){3}$')
+        result = re_ip.match(ip)
+        return True if result else False
+
+    def _check_port(self, port):
+        if not isinstance(port,int):
+            return False
+        return True if 3260<=port<=65535 else False
+
+    def _check_netmask(self, netmask):
+        if not isinstance(netmask, int):
+            return False
+        return True if 0 <= netmask <= 32 else False
+
+    def _check_status(self,vip_name):
+        cmd_result = execute_crm_cmd(f'crm res list | grep {vip_name}')
+        print('* 调试 cmd命令crm res list | grep {vip_name}')
+        print(cmd_result)
+        re_status = re.compile(
+            f'{vip_name}\s*\(ocf::heartbeat:IPaddr2\):\s*(\w*)')
+        status = re_status.search(cmd_result['rst']).group()[0]
+        if status == 'Started':
+            pass
+
+
+
+
+
+class Ipadrr2():
+    def __init__(self):
+        pass
+
+    def create(self,name,ip,netmask):
+        cmd = f'crm cof primitive {name} IPaddr2 params ip={ip} cidr_netmask={netmask}'
+        cmd_result = execute_crm_cmd(cmd)
+        # 这个创建的回滚是什么方式？删除这个资源？
+
+
+
+class PortBlockGroup():
+    # 需不需要block的限制关系？创建完block之后才能创建unblock？
+    def __init__(self):
+        self.block_name = None
+        self.unblock_name = None
+
+    def create_block(self,name,ip,port):
+        name = f'{name}_prtblk_on'
+        cmd = f'crm cof primitive {name} portblock params ip={ip} portno={port} protocol=tcp action=block op monitor timeout=20 interval=20'
+        cmd_result = execute_crm_cmd(cmd)
+        self.block_name = name
+
+    def create_unblock(self,name,ip,port):
+        name = f'{name}_prtblk_off'
+        cmd = f'crm cof primitive {name} portblock params ip={ip} portno={port} protocol=tcp action=unblock op monitor timeout=20 interval=20'
+        cmd_result = execute_crm_cmd(cmd)
+        self.unblock_name = name
+
+
+    def delete(self):
+        pass
+
+
+class Colocation():
+    def __init__(self):
+        pass
+
+
+    def create(self,name,target1,target2):
+        cmd = f'crm cof colocation {name} inf: {target1} {target2}'
+        cmd_result = execute_crm_cmd(cmd)
+
+
+
+
+
+class Order():
+    def __init__(self):
+        pass
+
+
+    def create(self,name, target1 ,target2):
+        cmd = f'crm cof order {name} {target1} {target2}'
+        cmd_result = execute_crm_cmd(cmd)
+
+
+
+
+
 
 
 
