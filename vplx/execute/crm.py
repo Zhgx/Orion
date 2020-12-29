@@ -114,6 +114,29 @@ class CRMData():
             js.update_crm_conf(vip, target)
             return True
 
+    def check_crm_conf(self):
+        # 不允许ipaddr2,portblock单独存在，进行检查
+        # 验证规则：找到ip，匹配是否有对应ip的portblock组（2个，block+unblock）
+        vip = self.get_vip()
+        vip = {'vip1':{'ip':'10.203.1.2'},'vip2':{'ip':'10.203.1.1'}}
+        target = self.get_target()
+        plock = {'_on':{'ip':'10.203.1.2','port':'3260','type':'block'},'_off':{'ip':'10.203.1.2','port':'3260','type':'unblock'}}
+        #plock
+        # 测试创建block，用一样的ip，不一样的端口，一样的端口，stderr和stdout
+
+        # 考虑错误时的数据，哪里的数据不对？
+
+        dict_err = {}
+        for vip,vip_data in vip.items():
+            for plock,plock_data in plock.items():
+                plock_num = 0
+                if vip_data['ip'] == plock_data['ip']:
+                    plock_data +=1
+
+                if plock_num !=2:
+                    return False
+
+
 
 
 class CRMConfig():

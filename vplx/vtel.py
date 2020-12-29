@@ -18,7 +18,8 @@ from commands import (
     HostCommands,
     HostGroupCommands,
     MapCommands,
-    VIPCommands
+    VIPCommands,
+    SyncCommands
 )
 
 class MyArgumentParser(argparse.ArgumentParser):
@@ -68,6 +69,7 @@ class VtelCLI(object):
         self._hostgroup_commands = HostGroupCommands()
         self._map_commands = MapCommands()
         self._vip_commands = VIPCommands()
+        self._sync_commands = SyncCommands()
         self._parser = self.setup_parser()
 
 
@@ -142,7 +144,10 @@ class VtelCLI(object):
         self._hostgroup_commands.setup_commands(subp_iscsi)
         self._map_commands.setup_commands(subp_iscsi)
         self._vip_commands.setup_commands(subp_iscsi)
+        self._sync_commands.setup_commands(subp_iscsi)
 
+        parser_iscsi.set_defaults(func=self.print_iscsi_help)
+        parser_stor.set_defaults(func=self.print_stor_help)
         parser.set_defaults(func=self.func_vtel)
         return parser
 
@@ -152,6 +157,13 @@ class VtelCLI(object):
             print(f'VersaTEL G2 {consts.VERSION}')
         else:
             self._parser.print_help()
+
+    def print_iscsi_help(self, *args):
+        self.parser_iscsi.print_help()
+
+    def print_stor_help(self, *args):
+        self.parser_stor.print_help()
+
 
     def replay_one(self,dict_input):
         if not dict_input:
