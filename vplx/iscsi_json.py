@@ -16,6 +16,7 @@ class JsonOperation(object):
             self.iscsi_data.pop('crm')
 
 
+
     # 读取json文档
     @s.deco_json_operation('读取到的JSON数据')
     def read_json(self):
@@ -326,9 +327,9 @@ class JsonOperation(object):
 
     # 更新crm configure资源的信息
     @s.deco_json_operation('JSON更新CRM资源信息')
-    def update_crm_conf(self, resource,vip,target):
+    def update_crm_conf(self,vip,target):
         self.json_data.update({'crm': {}})
-        self.json_data['crm'].update({'resource': resource})
+        # self.json_data['crm'].update({'resource': resource})
         self.json_data['crm'].update({'vip': vip})
         self.json_data['crm'].update({'target': target})
         with open('../vplx/map_config.json', "w") as fw:

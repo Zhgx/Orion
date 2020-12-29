@@ -497,10 +497,10 @@ class Map():
         if 'ERROR' in crm_data.crm_conf_data:
             s.prt_log("Could not perform requested operations, are you root?",1)
         else:
-            res = crm_data.get_resource_data()
-            vip = crm_data.get_vip_data()
-            target = crm_data.get_target_data()
-            self.js.update_crm_conf(res,vip,target)
+            # res = crm_data.get_resource_data()
+            vip = crm_data.get_vip()
+            target = crm_data.get_target()
+            self.js.update_crm_conf(vip,target)
             if target:
                 # 目前的设计只有一个target，所以取列表的第一个
                 target_all = target[0]

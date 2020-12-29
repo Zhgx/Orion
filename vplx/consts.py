@@ -35,6 +35,7 @@ def init():
     _GLOBAL_DICT['LOG_ID'] = 0
     _GLOBAL_DICT['RPL'] = 'no'
     _GLOBAL_DICT['LOG_SWITCH'] = 'yes'
+    _GLOBAL_DICT['ROLLBACK'] = {}
 
 def set_value(key, value):
     """ 定义一个全局变量 """
@@ -76,6 +77,9 @@ def set_glo_log_switch(value):
 def set_glo_gui_tid(value):
     set_value('GUI_TID',value)
 
+def set_glo_rollback(value):
+    set_value('ROLLBACK',value)
+
 
 
 def glo_gui_tid():
@@ -110,4 +114,6 @@ def glo_log_switch():
     return get_value('LOG_SWITCH')
 
 
+def glo_rollback():
+    return get_value('ROLLBACK')
 
