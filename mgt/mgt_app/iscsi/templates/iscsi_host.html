@@ -245,7 +245,35 @@ table td:hover { /* 鼠标滑过  显示隐藏的内容  伴有横向的滚动�
 			</div>
 		</div>
 	</div>
-
+	
+	<!-- 模态框3 -->
+	<div class="modal fade" id="host_delete_model" data-backdrop="static"
+		role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h4 class="modal-title" align="center">删除详情</h4>
+				</div>
+				<div class="modal-body">
+					<div class="row">
+						<div class="col-xs-2 "></div>
+						<div class="col-xs-8 ">
+						 	<input id="host_delete_data" hidden="hidden">
+							<p id="host_delete_info"></p>
+						</div>
+						<div class="col-xs-2 "></div>
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" data-dismiss="modal"
+						onclick="myrefresh_delete(this);">关闭</button>
+					<button type="button" class="btn btn-default"
+						onclick="affirm_delete(this);">确认删除</button>
+					<!-- 					<button type="button" class="btn btn-default" id="affirm_modifiy" onclick="affirm_modifiy(this);">确认修改</button> -->
+				</div>
+			</div>
+		</div>
+	</div>
 
 
 

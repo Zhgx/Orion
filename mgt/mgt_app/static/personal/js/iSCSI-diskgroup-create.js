@@ -193,7 +193,7 @@ function change_disk(obj) {
 							} 
 				},
 				error : function() {
-					write_to_log(tid, 'DATA', 'ROUTE', vplxIp, '/hg/show/data',
+					write_to_log(tid, 'DATA', 'ROUTE', vplxIp, '/dg/show/data',
 							'error');
 				}
 
@@ -236,7 +236,7 @@ function change_disk_second() {
 						 
 					 }
 					 write_to_log(tid, 'DATA', 'ROUTE', vplxIp,
-					 '/hg/show/data', JSON
+					 '/dg/show/data', JSON
 					 .stringify(host_group_result));
 				},
 				error : function() {
@@ -448,8 +448,8 @@ function Dg_Table() {
 							for (i in all_dg_result) {
 								tr = '<td >' + i + '</td>'+
 								 '<td >' + all_dg_result[i] + '</td>'+'<td>'+
-									'<button  onClick="disk_compile(this);">编辑</button>'+'</td>';
-								 
+									'<button  onClick="disk_compile(this);">编辑</button>'+'<button  onClick="btn_show_delete(this);">删除</button>'
+									+ '</td>';
 								$("#Disk_Table_Show").append(
 										'<tr >'
 												+ tr + '</tr>')
@@ -578,7 +578,9 @@ function myrefresh_second(obj) {
 	window.location.reload();
 }
 
-
+function myrefresh_delete(obj) {
+	window.location.reload();
+}
 
 function affirm_modifiy(obj){
 	// 打开二次确认弹窗
@@ -637,6 +639,59 @@ function affirm_modifiy_second(obj){
 	});
 }
 
+
+function btn_show_delete(obj) {
+	
+	$('tr').each(function() {
+		$(this).on("click", function() {
+			$("#dg_delete_model").modal("toggle");
+		})
+	});
+	// 获取点击表格的td值
+	var e = e || window.event;
+	var target = e.target || e.srcElement;
+	if (target.parentNode.tagName.toLowerCase() == "td") {
+	tr = target.parentNode.parentNode;
+	td = tr.cells;
+	 for(var i = 0; i<td.length; i++ ){
+	var td_dg_name = td[0].innerHTML
+	 }
+	};
+	$("#dg_delete_data").val(td_dg_name);
+	$.ajax({
+		url : vplxIp + "/dg/delete/check",
+		type : "get",
+		dataType : "json",
+		data : {
+			tid : tid,
+			ip : mgtIp,
+			dg_name: td_dg_name
+		},
+		async : false,
+		success : function(dg_result) {
+			$("#dg_delete_info").text(dg_result['info']);
+		},
+	});
+}
+
+function affirm_delete(obj) {
+	dg_delete_name = $("#dg_delete_data").val();
+	$.ajax({
+		url : vplxIp + "/dg/delete",
+		type : "get",
+		dataType : "json",
+		data : {
+			tid : tid,
+			ip : mgtIp,
+			dg_name: dg_delete_name
+		},
+		async : false,
+		success : function(dg_result) {
+			alert(dg_result);
+			window.location.reload();
+		},
+	});
+}
 
 
 

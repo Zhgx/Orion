@@ -425,7 +425,8 @@ function hg_table() {
 							for (i in host_group_result) {
 								tr = '<td >' + i + '</td>'+
 								'<td>' + host_group_result[i] + '</td>'+'<td>'+
-								'<button  onClick="host_compile(this);">编辑</button>'+'</td>';
+								'<button  onClick="host_compile(this);">编辑</button>'+'<button  onClick="btn_show_delete(this);">删除</button>'
+								+ '</td>';
 								$("#Host_Group_Table_Show").append(
 										'<tr>'
 												+ tr + '</tr>')
@@ -450,7 +451,7 @@ function host_compile(obj) {
 	// 弹出框
 	$('tr').each(function() {
 		$(this).on("click", function() {
-			$("#host_model").modal("toggle");
+			$("#hg_model").modal("toggle");
 		})
 	});
 	// 获取点击表格的td值
@@ -553,10 +554,13 @@ function myrefresh(obj) {
 function myrefresh_second(obj) {
 	window.location.reload();
 }
+function myrefresh_delete(obj) {
+	window.location.reload();
+}
 
 function affirm_modifiy(obj){
 	// 打开二次确认弹窗
-	$('#host_info_model').modal("show");
+	$('#hg_info_model').modal("show");
 	
 	var obj_host = [];
 	var str = "";
@@ -611,3 +615,56 @@ function affirm_modifiy_second(obj){
 	});
 }
 
+
+function btn_show_delete(obj) {
+	
+	$('tr').each(function() {
+		$(this).on("click", function() {
+			$("#hg_delete_model").modal("toggle");
+		})
+	});
+	// 获取点击表格的td值
+	var e = e || window.event;
+	var target = e.target || e.srcElement;
+	if (target.parentNode.tagName.toLowerCase() == "td") {
+	tr = target.parentNode.parentNode;
+	td = tr.cells;
+	 for(var i = 0; i<td.length; i++ ){
+	var td_hg_name = td[0].innerHTML
+	 }
+	};
+	$("#hg_delete_data").val(td_hg_name);
+	$.ajax({
+		url : vplxIp + "/hg/delete/check",
+		type : "get",
+		dataType : "json",
+		data : {
+			tid : tid,
+			ip : mgtIp,
+			hg_name: td_hg_name
+		},
+		async : false,
+		success : function(hg_result) {
+			$("#hg_delete_info").text(hg_result['info']);
+		},
+	});
+}
+
+function affirm_delete(obj) {
+	hg_delete_name = $("#hg_delete_data").val();
+	$.ajax({
+		url : vplxIp + "/hg/delete",
+		type : "get",
+		dataType : "json",
+		data : {
+			tid : tid,
+			ip : mgtIp,
+			hg_name: hg_delete_name
+		},
+		async : false,
+		success : function(hg_result) {
+			alert(hg_result);
+			window.location.reload();
+		},
+	});
+}

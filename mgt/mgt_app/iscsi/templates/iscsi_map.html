@@ -388,6 +388,36 @@ table thead th {
 	</div>
 
 
+<!-- 模态框3 -->
+	<div class="modal fade" id="map_delete_model" data-backdrop="static"
+		role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h4 class="modal-title" align="center">删除详情</h4>
+				</div>
+				<div class="modal-body">
+					<div class="row">
+						<div class="col-xs-2 ">
+							<input id="map_delete_data" hidden="hidden">
+						</div>
+						<div class="col-xs-8 ">
+						<p id="map_delete_info"></p>
+						</div>
+						<div class="col-xs-2 "></div>
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" data-dismiss="modal"
+						onclick="myrefresh_delete(this);">关闭</button>
+					<button type="button" class="btn btn-default"
+						onclick="affirm_delete(this);">确认修改</button>
+					<!-- 					<button type="button" class="btn btn-default" id="affirm_modifiy" onclick="affirm_modifiy(this);">确认修改</button> -->
+				</div>
+			</div>
+		</div>
+	</div>
+
 
 
 

@@ -5,7 +5,10 @@ from execute import iscsi
 import iscsi_json
 import consts
 
-
+'''
+@author: paul
+@note: 防止跨域问题出现
+'''
 def cors_data(data_dict):
     response = make_response(jsonify(data_dict))
     response.headers['Access-Control-Allow-Origin'] = '*'
@@ -13,7 +16,10 @@ def cors_data(data_dict):
     response.headers['Access-Control-Allow-Headers'] = 'x-requested-with'
     return response
 
-
+'''
+@note: 从服务器上取值
+request后面可以跟多种不同的取值方式，可以自行百度
+'''
 def get_request_data():
     if request.method == 'GET':
         str_data = request.args.items()
@@ -25,7 +31,10 @@ def get_request_data():
         consts.set_glo_log(logger)
         return dict_data
 
-    
+"""
+@author: paul
+@note: iSCSI创建资源类函数
+"""  
 class HostCreate(views.MethodView):
 
     def get(self):
@@ -105,18 +114,24 @@ class MapCreate(views.MethodView):
         logger.write_to_log('DATA', 'RETURN', 'MapCreate', 'result', result)
         return cors_data(result)
 
-
+'''
+@note: 获取tid,网页传值，tid-时间戳
+'''
 def get_tid():
     if request.method == 'GET':
         str_transaction_id = request.args.items()
         dict_transaction = dict(str_transaction_id)
         return dict_transaction["transaction_id"]
 
-
+'''
+@author: paul
+@note: 获取iSCSI数据路由
+OprtALLxx为更新数据路由- 操作路由，调用update函数
+AllxxxResult为获取数据路由
+前后顺序
+'''
 # host
 HOST_RESULT = None
-
-
 def update_host():
     global HOST_RESULT
    
@@ -302,7 +317,15 @@ class AllMapResult(views.MethodView):
            update_map()
         logger.write_to_log('DATA', 'RETURN', 'AllMapResult', 'result', MAP_RESULT)
         return cors_data(MAP_RESULT)
-    
+
+'''
+@author: paul
+@note: iSCSI修改资源路由
+CheckxxModify为验证判断路由，返回修改影响到前端展示。
+xxModify为实际修改路由，触发实际修改动作，返回修改结果到前端
+'''
+
+
 class CheckHostModify(views.MethodView):
 
     def get(self):
@@ -310,10 +333,11 @@ class CheckHostModify(views.MethodView):
         host_name = dict_data['host_name']
         host_iqn = dict_data['host_iqn']
         # js_modify对象更新数据{hg_name:list_host},然后跟js对象对比，返回改动的信息
-        print(hg_name,host)
+        print(hg_name, host)
         message = '返回到后台的数据是'
-        dict = {'iscsi_data':True,'info':message}
+        dict = {'iscsi_data':True, 'info':message}
         return cors_data(dict)
+
 
 class HostModify(views.MethodView):
 
@@ -323,9 +347,6 @@ class HostModify(views.MethodView):
         host_iqn = dict_data['host_iqn']
         message = '操作完成'
         return cors_data(message)
-
-
-
 
   
 class CheckHgModify(views.MethodView):
@@ -337,10 +358,11 @@ class CheckHgModify(views.MethodView):
         list_host = host.split()
         # js_modify对象更新数据{hg_name:list_host},然后跟js对象对比，返回改动的信息
         
-        print(hg_name,host)
+        print(hg_name, host)
         message = '返回到后台的数据是'
-        dict = {'iscsi_data':True,'info':message}
+        dict = {'iscsi_data':True, 'info':message}
         return cors_data(dict)
+
 
 class HgModify(views.MethodView):
 
@@ -361,10 +383,11 @@ class CheckDgModify(views.MethodView):
         list_disk = host.split()
         # js_modify对象更新数据{hg_name:list_host},然后跟js对象对比，返回改动的信息
         
-        print(dg_name,disk)
+        print(dg_name, disk)
         message = '返回到后台的数据是'
-        dict = {'iscsi_data':True,'info':message}
+        dict = {'iscsi_data':True, 'info':message}
         return cors_data(dict)
+
 
 class DgModify(views.MethodView):
 
@@ -387,10 +410,11 @@ class CheckMapModify(views.MethodView):
         list_hg = hg.split()
         list_dg = dg.split()
         # js_modify对象更新数据{hg_name:list_host},然后跟js对象对比，返回改动的信息
-        print(list_hg,list_dg,map_name)
+        print(list_hg, list_dg, map_name)
         message = '返回到后台的数据是'
-        dict = {'iscsi_data':True,'info':message}
+        dict = {'iscsi_data':True, 'info':message}
         return cors_data(dict)
+
 
 class MapModify(views.MethodView):
 
@@ -401,11 +425,6 @@ class MapModify(views.MethodView):
         dg = dict_data['dg']
         message = '操作完成'
         return cors_data(message)  
-
-
-
-
-
 
 # class CheckMapModify(views.MethodView):
 # 
@@ -458,5 +477,90 @@ class MapModify(views.MethodView):
 #             print('json配置文件已改变')
 #             info = 'json配置文件已改变,请重新操作'
 #         return cors_data(info)
-        
+'''
+@author: paul
+@note: iSCSI删除资源
+'''
+class CheckHostDelete(views.MethodView):
+ 
+    def get(self):
+        dict_data = get_request_data()
+        host_name = dict_data['host_name']
+        # js_modify对象更新数据{hg_name:list_host},然后跟js对象对比，返回改动的信息
+        print(host_name)
+        message = '返回到后台的数据是'
+        dict = {'iscsi_data':True, 'info':message}
+        return cors_data(dict)
+ 
+ 
+class HostDelete(views.MethodView):
+ 
+    def get(self):
+        dict_data = get_request_data()
+        host_name = dict_data['host_name']
+        message = '操作完成'
+        return cors_data(message)    
+
+class CheckHgDelete(views.MethodView):
+ 
+    def get(self):
+        dict_data = get_request_data()
+        hg_name = dict_data['hg_name']
+        # js_modify对象更新数据{hg_name:list_host},然后跟js对象对比，返回改动的信息
+        print(hg_name)
+        message = '返回到后台的数据是'
+        dict = {'iscsi_data':True, 'info':message}
+        return cors_data(dict)
+ 
+ 
+class HgDelete(views.MethodView):
+ 
+    def get(self):
+        dict_data = get_request_data()
+        hg_name = dict_data['hg_name']
+        message = '操作完成'
+        return cors_data(message)    
+
+class CheckDgDelete(views.MethodView):
+ 
+    def get(self):
+        dict_data = get_request_data()
+        dg_name = dict_data['dg_name']
+        # js_modify对象更新数据{hg_name:list_host},然后跟js对象对比，返回改动的信息
+        print(dg_name)
+        message = '返回到后台的数据是'
+        dict = {'iscsi_data':True, 'info':message}
+        return cors_data(dict)
+ 
+ 
+class DgDelete(views.MethodView):
+ 
+    def get(self):
+        dict_data = get_request_data()
+        dg_name = dict_data['dg_name']
+        message = '操作完成'
+        return cors_data(message) 
     
+class CheckMapDelete(views.MethodView):
+ 
+    def get(self):
+        dict_data = get_request_data()
+        map_name = dict_data['map_name']
+        # js_modify对象更新数据{hg_name:list_host},然后跟js对象对比，返回改动的信息
+        print(map_name)
+        message = '返回到后台的数据是'
+        dict = {'iscsi_data':True, 'info':message}
+        return cors_data(dict)
+ 
+ 
+class MapDelete(views.MethodView):
+ 
+    def get(self):
+        dict_data = get_request_data()
+        map_name = dict_data['map_name']
+        message = '操作完成'
+        return cors_data(message)    
+    
+    
+    
+       

@@ -325,6 +325,10 @@ function myrefresh(obj) {
 function myrefresh_second(obj) {
 	window.location.reload();
 }
+function myrefresh_delete(obj) {
+	window.location.reload();
+}
+
 
 function affirm_modifiy_second(obj){
 	host_name = $("#host_name_hidden").val();
@@ -347,3 +351,58 @@ function affirm_modifiy_second(obj){
 		},
 	});
 }
+
+function btn_show_delete(obj) {
+	
+	$('tr').each(function() {
+		$(this).on("click", function() {
+			$("#host_delete_model").modal("toggle");
+		})
+	});
+	// 获取点击表格的td值
+	var e = e || window.event;
+	var target = e.target || e.srcElement;
+	if (target.parentNode.tagName.toLowerCase() == "td") {
+	tr = target.parentNode.parentNode;
+	td = tr.cells;
+	 for(var i = 0; i<td.length; i++ ){
+	var td_host_name = td[0].innerHTML
+	 }
+	};
+	$("#host_delete_data").val(td_host_name);
+	$.ajax({
+		url : vplxIp + "/host/delete/check",
+		type : "get",
+		dataType : "json",
+		data : {
+			tid : tid,
+			ip : mgtIp,
+			host_name: td_host_name
+		},
+		async : false,
+		success : function(host_result) {
+			$("#host_delete_info").text(host_result['info']);
+		},
+	});
+}
+
+function affirm_delete(obj) {
+	host_delete_name = $("#host_delete_data").val();
+	$.ajax({
+		url : vplxIp + "/host/delete",
+		type : "get",
+		dataType : "json",
+		data : {
+			tid : tid,
+			ip : mgtIp,
+			host_name: host_delete_name
+		},
+		async : false,
+		success : function(host_result) {
+			alert(host_result);
+			window.location.reload();
+		},
+	});
+}
+
+
