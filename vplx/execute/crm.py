@@ -14,12 +14,14 @@ def execute_crm_cmd(cmd, timeout=60):
     cmd - Command to be executed
     timeout - The longest waiting time(unit:second)
     """
-    p = subprocess.Popen(cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
+    p = subprocess.Popen(cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE, stdin=subprocess.PIPE, shell=True)
     t_beginning = time.time()
     seconds_passed = 0
     output = None
     while True:
         if p.poll() is not None:
+            break
+        if p.stderr:
             break
         seconds_passed = time.time() - t_beginning
         if timeout and seconds_passed > timeout:
@@ -312,133 +314,135 @@ class CRMConfig():
             return True
 
 
+#
+# class Portal():
+#     def __init__(self):
+#         self.dict_rollback = {}
+#
+#     def create(self, name, ip, port=3260 ,netmask=24):
+#         if not self._check_name(name):
+#             print(f'{name}不符合规范')
+#             return
+#         if not self._check_IP(ip):
+#             print(f'{ip}不符合规范')
+#             return
+#         if not self._check_port(port):
+#             print(f'{port}不符合规范，范围：3260-65535')
+#             return
+#         if not self._check_netmask(netmask):
+#             print(f'{netmask}不符合规范，范围：0-32')
+#             return
+#
+#         try:
+#             obj_ipadrr = Ipadrr2()
+#             obj_ipadrr.create(name,ip,netmask)
+#             self.dict_rollback.update({'create_ipaddr2':name})
+#
+#             obj_portblock = PortBlockGroup()
+#             obj_portblock.create(f'{name}_prtblk_on',ip,port,action='block')
+#             self.dict_rollback.update({'create_block':f'{name}_prtblk_on'})
+#             obj_portblock.create(f'{name}_prtblk_off',ip,port,action='unblock')
+#             self.dict_rollback.update({'create_unblock': f'{name}_prtblk_off'})
+#
+#             obj_colocation = Colocation()
+#             obj_colocation.create(f'col_{name}_prtblk_on',f'{name}_prtblk_on', name)
+#             obj_colocation.create(f'col_{name}_prtblk_off', f'{name}_prtblk_off', name)
+#
+#             obj_order = Order()
+#             obj_order.create(f'or_{name}_prtblk_on',name, f'{name}_prtblk_on')
+#
+#         except Exception as ex:
+#             # 记录异常信息
+#             # self.logger.write_to_log('DATA', 'DEBUG', 'exception', '', str(traceback.format_exc()))
+#             # 回滚
+#             # 执行顺序有没有要求？
+#             print('进行回滚操作')
+#             for operation,res in self.dict_rollback.items():
+#                 if operation == 'create_block' or 'create_unblock':
+#                     obj_portblock.delete(res)
+#                 elif operation == 'create_ipaddr2':
+#                     obj_ipadrr.delete(res)
+#
+#         # 验证
+#         status = self._check_status(name)
+#
+#         if status == 'OK':
+#             self.js = iscsi_json.JsonOperation
+#             self.js.update_data('Portal', name, {'ip': ip, 'port': port,'netmask':netmask,'target':[]})
+#         elif status == 'NETWORK_ERROR':
+#             obj_ipadrr.delete(name)
+#             obj_portblock.delete(f'{name}_prtblk_on')
+#             obj_portblock.delete(f'{name}_prtblk_off')
+#             s.prt_log('由于设置的IP地址网段有误或有其他网络问题，此portal无法正常创建，请重新配置', 1)
+#
+#
+#
+#
+#
+#     def delete(self, name):
+#         pass
+#
+#
+#     def modify(self, name, ip, port):
+#         pass
+#
+#
+#     def show(self):
+#         pass
+#
+#
+#     def _check_name(self, name):
+#         re_name = re.compile(r'^[a-zA-Z]\w*$')
+#         result = re_name.match(name)
+#         # 添加从JSON中验证这个Name有没有被portal使用
+#         return True if result else False
+#
+#     def _check_IP(self, ip):
+#         re_ip = re.compile(
+#             r'^((2([0-4]\d|5[0-5]))|[1-9]?\d|1\d{2})(\.((2([0-4]\d|5[0-5]))|[1-9]?\d|1\d{2})){3}$')
+#         result = re_ip.match(ip)
+#         # 添加从JSON中验证这个IP有没有被portal使用
+#         return True if result else False
+#
+#     def _check_port(self, port):
+#         if not isinstance(port,int):
+#             return False
+#         return True if 3260<=port<=65535 else False
+#
+#     def _check_netmask(self, netmask):
+#         if not isinstance(netmask, int):
+#             return False
+#         return True if 0 <= netmask <= 32 else False
+#
+#     def _check_status(self, name):
+#         """
+#
+#         :param name: portal name
+#         :return:
+#         """
+#         obj_crm = CRMConfig()
+#         status = obj_crm.check_crm_res(name, type='ipaddr2')
+#         if status is True:
+#             s.prt_log('创建成功',1)
+#             return 'OK'
+#         elif status is False:
+#             failed_actions = obj_crm.get_failed_actions(name)
+#             if failed_actions == 0:
+#                 return 'NETWORK_ERROR'
+#             elif failed_actions:
+#                 s.prt_log(failed_actions,1)
+#                 return 'OTHER_ERROR'
+#             else:
+#                 s.prt_log('未知错误,请进行检查',1)
+#                 return 'UNKNOWN_ERROR'
+#         else:
+#             s.prt_log(f'{name}没有被成功创建，请检查',1)
+#             return 'FAIL'
 
-class Portal():
-    def __init__(self):
-        self.dict_rollback = {}
-
-    def create(self, name, ip, port=3260 ,netmask=24):
-        if not self._check_name(name):
-            print(f'{name}不符合规范')
-            return
-        if not self._check_IP(ip):
-            print(f'{ip}不符合规范')
-            return
-        if not self._check_port(port):
-            print(f'{port}不符合规范，范围：3260-65535')
-            return
-        if not self._check_netmask(netmask):
-            print(f'{netmask}不符合规范，范围：0-32')
-            return
-
-        try:
-            obj_ipadrr = Ipadrr2()
-            obj_ipadrr.create(name,ip,netmask)
-            self.dict_rollback.update({'create_ipaddr2':name})
-
-            obj_portblock = PortBlockGroup()
-            obj_portblock.create(f'{name}_prtblk_on',ip,port)
-            self.dict_rollback.update({'create_block':f'{name}_prtblk_on'})
-            obj_portblock.create(f'{name}_prtblk_off',ip,port)
-            self.dict_rollback.update({'create_unblock': f'{name}_prtblk_off'})
-
-            obj_colocation = Colocation()
-            obj_colocation.create(f'col_{name}_prtblk_on',f'{name}_prtblk_on', name)
-            obj_colocation.create(f'col_{name}_prtblk_off', f'{name}_prtblk_off', name)
-
-            obj_order = Order()
-            obj_order.create(f'or_{name}_prtblk_on',name, f'{name}_prtblk_on')
-
-        except consts.CmdError:
-            # 回滚
-            # 执行顺序有没有要求？
-            print('进行回滚操作')
-            for operation,res in self.dict_rollback.items():
-                if operation == 'create_block' or 'create_unblock':
-                    obj_portblock.delete(res)
-                elif operation == 'create_ipaddr2':
-                    obj_ipadrr.delete(res)
-
-        # 验证
-        status = self._check_status(name)
-
-        if status == 'OK':
-            self.js = iscsi_json.JsonOperation
-            self.js.update_data('Portal', name, {'ip': ip, 'port': port,'netmask':netmask,'target':[]})
-        elif status == 'NETWORK_ERROR':
-            obj_ipadrr.delete(name)
-            obj_portblock.delete(f'{name}_prtblk_on')
-            obj_portblock.delete(f'{name}_prtblk_off')
-            s.prt_log('由于设置的IP地址网段有误或有其他网络问题，此portal无法正常创建，请重新配置', 1)
 
 
 
-
-
-    def delete(self, name):
-        pass
-
-
-    def modify(self, name, ip, port):
-        pass
-
-
-    def show(self):
-        pass
-
-
-    def _check_name(self, name):
-        re_name = re.compile(r'^[a-zA-Z]\w*$')
-        result = re_name.match(name)
-        # 添加从JSON中验证这个Name有没有被portal使用
-        return True if result else False
-
-    def _check_IP(self, ip):
-        re_ip = re.compile(
-            r'^((2([0-4]\d|5[0-5]))|[1-9]?\d|1\d{2})(\.((2([0-4]\d|5[0-5]))|[1-9]?\d|1\d{2})){3}$')
-        result = re_ip.match(ip)
-        # 添加从JSON中验证这个IP有没有被portal使用
-        return True if result else False
-
-    def _check_port(self, port):
-        if not isinstance(port,int):
-            return False
-        return True if 3260<=port<=65535 else False
-
-    def _check_netmask(self, netmask):
-        if not isinstance(netmask, int):
-            return False
-        return True if 0 <= netmask <= 32 else False
-
-    def _check_status(self, name):
-        """
-
-        :param name: portal name
-        :return:
-        """
-        obj_crm = CRMConfig()
-        status = obj_crm.check_crm_res(name, type='ipaddr2')
-        if status is True:
-            s.prt_log('创建成功',1)
-            return 'OK'
-        elif status is False:
-            failed_actions = obj_crm.get_failed_actions(name)
-            if failed_actions == 0:
-                return 'NETWORK_ERROR'
-            elif failed_actions:
-                s.prt_log(failed_actions,1)
-                return 'OTHER_ERROR'
-            else:
-                s.prt_log('未知错误,请进行检查',1)
-                return 'UNKNOWN_ERROR'
-        else:
-            s.prt_log(f'{name}没有被成功创建，请检查',1)
-            return 'FAIL'
-
-
-
-
-class Ipadrr2():
+class Ipaddr2():
     def __init__(self):
         pass
 
@@ -449,12 +453,16 @@ class Ipadrr2():
             # 创建失败，输出原命令报错信息
             s.prt_log(cmd_result['rst'],1)
             raise consts.CmdError
+        else:
+            print('创建ipaddr2成功')
 
     def delete(self,name):
         obj_crm = CRMConfig()
         result = obj_crm.delete_res(name)
         if not result:
             raise consts.CmdError
+        else:
+            print('删除ipaddr2成功')
 
 
 
@@ -462,16 +470,29 @@ class Ipadrr2():
 class PortBlockGroup():
     # 需不需要block的限制关系？创建完block之后才能创建unblock？
     def __init__(self):
-        pass
+        self.block = None
+        self.unblock = None
 
+    def create(self,name,ip,port,action):
+        """
 
-    def create(self,name,ip,port):
-        cmd = f'crm cof primitive {name} portblock params ip={ip} portno={port} protocol=tcp action=block op monitor timeout=20 interval=20'
+        :param name:
+        :param ip:
+        :param port:
+        :param action: block/unblock
+        :return:
+        """
+        if not action in ['block','unblock']:
+            raise TypeError('action参数输入错误：block/unblock')
+
+        cmd = f'crm cof primitive {name} portblock params ip={ip} portno={port} protocol=tcp action={action} op monitor timeout=20 interval=20'
         cmd_result = execute_crm_cmd(cmd)
         if not cmd_result['sts']:
             # 创建失败，输出原命令报错信息
             s.prt_log(cmd_result['rst'],1)
             raise consts.CmdError
+        else:
+            print(f'创建{name}成功')
 
 
     def delete(self,name):
@@ -479,6 +500,8 @@ class PortBlockGroup():
         result = obj_crm.delete_res(name)
         if not result:
             raise consts.CmdError
+        else:
+            print(f'删除{name}成功')
 
 
 class Colocation():
@@ -492,6 +515,8 @@ class Colocation():
             # 创建失败，输出原命令报错信息
             s.prt_log(cmd_result['rst'],1)
             raise consts.CmdError
+        else:
+            print(f'创建{name}成功')
 
 
 
@@ -507,6 +532,8 @@ class Order():
             # 创建失败，输出原命令报错信息
             s.prt_log(cmd_result['rst'],1)
             raise consts.CmdError
+        else:
+            print(f'创建{name}成功')
 
 
 

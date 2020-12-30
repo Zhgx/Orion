@@ -18,7 +18,7 @@ from commands import (
     HostCommands,
     HostGroupCommands,
     MapCommands,
-    VIPCommands,
+    PortalCommands,
     SyncCommands
 )
 
@@ -68,7 +68,7 @@ class VtelCLI(object):
         self._host_commands = HostCommands()
         self._hostgroup_commands = HostGroupCommands()
         self._map_commands = MapCommands()
-        self._vip_commands = VIPCommands()
+        self._vip_commands = PortalCommands()
         self._sync_commands = SyncCommands()
         self._parser = self.setup_parser()
 

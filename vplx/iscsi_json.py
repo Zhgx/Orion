@@ -33,7 +33,8 @@ class JsonOperation(object):
                     "Disk": {},
                     "HostGroup": {},
                     "DiskGroup": {},
-                    "Map": {}}
+                    "Map": {},
+                    "Portal":{}}
                 json.dump(json_dict, fw, indent=4, separators=(',', ': '))
             return json_dict
         except json.decoder.JSONDecodeError:
@@ -263,6 +264,8 @@ class JsonOperation(object):
     # 创建Host、HostGroup、DiskGroup、Map
     @s.deco_json_operation('JSON更新后的资源信息')
     def update_data(self, first_key, data_key, data_value):
+        if not first_key in self.json_data.keys():
+            self.json_data.update({"Portal":{}})
         self.json_data[first_key].update({data_key: data_value})
         with open('../vplx/map_config.json', "w") as fw:
             json.dump(self.json_data, fw, indent=4, separators=(',', ': '))

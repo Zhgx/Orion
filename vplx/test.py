@@ -10,13 +10,15 @@ def execute_crm_cmd(cmd, timeout=60):
     cmd - Command to be executed
     timeout - The longest waiting time(unit:second)
     """
-    p = subprocess.Popen(cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
+    p = subprocess.Popen(cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE, stdin=subprocess.PIPE,shell=True)
     t_beginning = time.time()
     seconds_passed = 0
     output = None
     while True:
         if p.poll() is not None:
             break
+        if p.stdin:
+            print('需要进行输入')
         seconds_passed = time.time() - t_beginning
         if timeout and seconds_passed > timeout:
             p.terminate()
@@ -97,8 +99,13 @@ def get_failed_actions(target):
     #  ('viptest2', 'node85', 'unknown error', '[findif] failed'),
     #  ('viptest2', 'node43', 'unknown error', '[findif] failed')]
 
+#
+cmd = 'crm cof primitive vip_test IPaddr2 params ip=10.203.1.75 cidr_netmask=24'
+p = subprocess.Popen(cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE,stdin=subprocess.PIPE,shell=True)
+out, err = p.communicate()
+print('STDOUT:',out.decode())
+print('STDERR:',err.decode())
 
 
 
 
-check_crm_res('vip','tat')

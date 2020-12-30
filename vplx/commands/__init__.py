@@ -7,5 +7,5 @@ from .diskgroup_cmds import DiskGroupCommands
 from .host_cmds import HostCommands
 from .hostgroup_cmds import HostGroupCommands
 from .map_cmds import MapCommands
-from .vip_cmds import VIPCommands
+from .portal_cmds import PortalCommands
 from .sync_cmds import SyncCommands
