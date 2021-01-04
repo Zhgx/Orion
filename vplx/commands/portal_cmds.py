@@ -1,5 +1,4 @@
 import execute as ex
-import sundry as sd
 import consts
 
 class Usage():
@@ -52,13 +51,14 @@ class PortalCommands():
         p_create_portal.add_argument(
             '-ip',
             action='store',
+            required=True,
             dest='ip',
             help='IP'
         )
 
         p_create_portal.add_argument(
-            '-n'
-            '-netmask',
+            '-n',
+            '-netmaks',
             '--netmask',
             type=int,
             dest='netmask',
@@ -105,13 +105,6 @@ class PortalCommands():
             action='store',
             help='portal name')
 
-        P_delete_portal.add_argument(
-            '-y',
-            dest='yes',
-            action='store_true',
-            help='Skip to confirm selection',
-            default=False)
-
         P_delete_portal.set_defaults(func=self.delete)
 
         portal_parser.set_defaults(func=self.print_portal_help)
@@ -135,6 +128,7 @@ class PortalCommands():
         p_modify_portal.add_argument(
             '-ip',
             dest='ip',
+            required=True,
             action='store',
             help='IP',
             metavar='IP',
@@ -144,6 +138,7 @@ class PortalCommands():
             '-p'
             '-port',
             '--port',
+            required=True,
             type=int,
             dest='port',
             action='store',
@@ -156,6 +151,12 @@ class PortalCommands():
 
     # @sd.deco_record_exception
     def create(self, args):
+        crm = ex.CRMData()
+        vip = crm.get_vip()
+        portblock = crm.get_portblock()
+        target = crm.get_target()
+        crm.check_env_sync(vip,portblock,target)
+
         portal = ex.Portal()
         portal.create(args.portal,args.ip,args.port,args.netmask)
 
@@ -171,7 +172,6 @@ class PortalCommands():
         #     portal.show_spe_portal(args.portal)
 
     # @sd.deco_record_exception
-    # @sd.deco_comfirm_del('portal')
     def delete(self, args):
         portal = ex.Portal()
         portal.delete(args.portal)

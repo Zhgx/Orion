@@ -99,12 +99,17 @@ def re_findall(re_string, tgt_string):
     return re_result
 
 
-def re_search(re_string, tgt_stirng):
+def re_search(re_string, tgt_stirng,output_type='group'):
     logger = consts.glo_log()
     re_ = re.compile(re_string)
     oprt_id = create_oprt_id()
     logger.write_to_log('OPRT','REGULAR','search',oprt_id, {'re':re_,'string':tgt_stirng})
-    re_result = re_.search(tgt_stirng).group()
+    re_result = re_.search(tgt_stirng)
+    if re_result:
+        if output_type == 'group':
+            re_result = re_result.group()
+        else:
+            re_result = re_result.groups()
     logger.write_to_log('DATA', 'REGULAR', 'search', oprt_id, re_result)
     return re_result
 

@@ -1,13 +1,10 @@
 import argparse
 import traceback
 import sys
-import pickle
-import linstordb
 import logdb
 import log
 import sundry
 import consts
-import iscsi_json
 
 from commands import (
     NodeCommands,
@@ -21,6 +18,7 @@ from commands import (
     PortalCommands,
     SyncCommands
 )
+
 
 class MyArgumentParser(argparse.ArgumentParser):
     def parse_args(self, args=None, namespace=None):

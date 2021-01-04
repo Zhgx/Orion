@@ -1,4 +1,3 @@
-import pickle
 import execute as ex
 import sundry as sd
 import consts

@@ -1,6 +1,8 @@
-import execute as ex
 import consts
 import sundry as sd
+from execute import CRMData
+import iscsi_json
+
 
 
 class SyncCommands():
@@ -18,4 +20,20 @@ class SyncCommands():
 
     @sd.deco_record_exception
     def sycn_data(self, args):
+        # 添加前置检查
         pass
+
+        obj_crm = CRMData()
+        js = iscsi_json.JsonOperation()
+        vip = obj_crm.get_vip()
+        portblock = obj_crm.get_portblock()
+        target = obj_crm.get_target()
+        portal = obj_crm.get_portal_data(vip,portblock,target)
+        js.json_data.update({'Portal': portal})
+        js.json_data.update({'Target': target})
+        js.commit_json()
+        sd.prt_log('JSON数据更新完成', 1)
+
+
+
+

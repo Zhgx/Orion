@@ -17,8 +17,8 @@ def execute_crm_cmd(cmd, timeout=60):
     while True:
         if p.poll() is not None:
             break
-        if p.stdin:
-            print('需要进行输入')
+        if p.stderr:
+            break
         seconds_passed = time.time() - t_beginning
         if timeout and seconds_passed > timeout:
             p.terminate()
@@ -100,12 +100,56 @@ def get_failed_actions(target):
     #  ('viptest2', 'node43', 'unknown error', '[findif] failed')]
 
 #
-cmd = 'crm cof primitive vip_test IPaddr2 params ip=10.203.1.75 cidr_netmask=24'
-p = subprocess.Popen(cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE,stdin=subprocess.PIPE,shell=True)
-out, err = p.communicate()
-print('STDOUT:',out.decode())
-print('STDERR:',err.decode())
+cmd1 = 'crm res stop vip_test1,vip_test1_prtblk_on,vip_test1_prtblk_off'
+cmd1_1 = 'crm conf del vip_test1'
+
+cmd2 = 'crm res stop vip_test1_prtblk_off'
+cmd2_1 = 'crm conf del vip_test1_prtblk_off'
+
+cmd3 = 'crm res stop vip_test1_prtblk_on'
+cmd3_1 = 'crm conf del vip_test1_prtblk_on'
+
+# import time
+#
+# subprocess.getoutput(cmd1)
+# time.sleep(1)
+# subprocess.getoutput(cmd1_1)
+#
+#
+# subprocess.getoutput(cmd2)
+# time.sleep(1)
+# subprocess.getoutput(cmd2_1)
+#
+#
+# subprocess.getoutput(cmd3)
+# time.sleep(1)
+# subprocess.getoutput(cmd3_1)
+
+# cmd = 'crm res list vip_test1_prtblk_on1 | cat'
+# result = execute_crm_cmd(cmd)
+# print(result)
 
 
 
+def create(name, ip, port, action):
+    """
 
+    :param name:
+    :param ip:
+    :param port:
+    :param action: block/unblock
+    :return:
+    """
+    if not action in ['block', 'unblock']:
+        raise TypeError('action参数输入错误：block/unblock')
+
+    cmd = f'crm cof primitive {name} portblock params ip={ip} portno={port} protocol=tcp action={action} op monitor timeout=20 interval=20'
+    cmd_result = execute_crm_cmd(cmd)
+    if not cmd_result['sts']:
+        # 创建失败，输出原命令报错信息
+        print(cmd_result['rst'])
+    else:
+        print(f'创建{name}成功')
+
+
+create('plock_3','10.203.1.151',3260,action='unblock')

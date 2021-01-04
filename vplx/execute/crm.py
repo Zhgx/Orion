@@ -47,7 +47,11 @@ def execute_crm_cmd(cmd, timeout=60):
 class CRMData():
     def __init__(self):
         self.crm_conf_data = self.get_crm_conf()
-
+        self.vip = None
+        self.portblock = None
+        self.target = None
+        if 'ERROR' in self.crm_conf_data:
+            s.prt_log("Could not perform requested operations, are you root?",2)
 
     def get_crm_conf(self):
         cmd = 'crm configure show | cat'
@@ -57,88 +61,121 @@ class CRMData():
         else:
             s.handle_exception()
 
-    def get_resource_data(self):
-        # 用来匹配的原数据，allowed_initiators=""，有时有双引号，有时候没有，无法确定，然后多个iqn是怎么样的
-        re_logical = re.compile(
-            r'primitive (\w*) iSCSILogicalUnit \\\s\tparams\starget_iqn="([a-zA-Z0-9.:-]*)"\simplementation=lio-t\slun=(\d*)\spath="([a-zA-Z0-9/]*)"\sallowed_initiators="?([a-zA-Z0-9.: -]+)"?[\s\S.]*?meta target-role=(\w*)')
-        result = s.re_findall(re_logical, self.crm_conf_data)
-        return result
+    # def get_resource_data(self):
+    #     # 用来匹配的原数据，allowed_initiators=""，有时有双引号，有时候没有，无法确定，然后多个iqn是怎么样的
+    #     re_logical = re.compile(
+    #         r'primitive (\w*) iSCSILogicalUnit \\\s\tparams\starget_iqn="([a-zA-Z0-9.:-]*)"\simplementation=lio-t\slun=(\d*)\spath="([a-zA-Z0-9/]*)"\sallowed_initiators="?([a-zA-Z0-9.: -]+)"?[\s\S.]*?meta target-role=(\w*)')
+    #     result = s.re_findall(re_logical, self.crm_conf_data)
+    #     return result
 
-    # [name, IP, netmask]
     def get_vip(self):
         re_vip = re.compile(
             r'primitive\s(\S+)\sIPaddr2.*\s*params\sip=([0-9.]+)\scidr_netmask=(\d+)')
         result = s.re_findall(re_vip, self.crm_conf_data)
-        data = {}
-        return result
+        dict_vip = {}
+        for vip in result:
+            dict_vip.update({vip[0]:{'ip':vip[1],'netmask':vip[2]}})
+        self.vip = dict_vip
+        return dict_vip
 
-    # [('p_iscsi_portblock_off', '192.168.7.5', '3260', 'unblock'),]
-    def get_portblock(string):
+    def get_portblock(self):
         re_portblock = re.compile(
             r'primitive\s(\S+)\sportblock.*\s*params\sip=([0-9.]+)\sportno=(\d+).*action=(\w+)')
-        result = re_portblock.findall(string)
-        return result
+        result = s.re_findall(re_portblock,self.crm_conf_data)
+        dict_portblock = {}
+        for portblock in result:
+            dict_portblock.update({portblock[0]:{'ip':portblock[1],'port':portblock[2],'type':portblock[3]}})
+        self.portblock = dict_portblock
+        return dict_portblock
 
-
-    #[('vip', '10.203.1.75', '24')]
-    #[('t_test', 'iqn.2020-04.feixitek.com:versaplx00', '10.203.1.75', '3260')]
-
-    # [name, target IQN, VIP, port]
     def get_target(self):
         re_target = re.compile(
             r'primitive\s(\S+)\siSCSITarget.*\s*params\siqn="(\S+)"\s.*portals="([0-9.]+):(\d+)"')
         result = s.re_findall(re_target, self.crm_conf_data)
-        print(result)
-        return result
+        dict_target = {}
+        for target in result:
+            dict_target.update({target[0]:{'target_iqn':target[1],'ip':target[2],'port':target[3]}})
+        self.target = dict_target
+        return dict_target
 
-    # def get_vip_data(self):
-    #     re_vip = re.compile(
-    #         r'primitive\s(\w*)\sIPaddr2\s\\\s*\w*\sip=([0-9.]*)\s\w*=(\d*)\s')
-    #     result = s.re_findall(re_vip, self.crm_conf_data)
-    #     return result
-    #
-    # def get_target_data(self):
-    #     re_target = re.compile(
-    #         r'primitive\s(\w*)\s\w*\s\\\s*params\siqn="([a-zA-Z0-9.:-]*)"\s[a-z=-]*\sportals="([0-9.]*):\d*"\s\\')
-    #     result = s.re_findall(re_target, self.crm_conf_data)
-    #     return result
+    def get_portal_data(self,vip_all,portblock_all,target_all):
+        """
+        获取现在CRM的环境下所有Portal的数据，
+        :param vip_all: 目前CRM环境的所有vip数据
+        :param portblock_all:目前CRM环境下的所有portblock数据
+        :param target_all: 目前CRM环境下的所有target数据
+        :return:
+        """
+        dict_portal = {}
+        for vip in vip_all:
+            dict_portal.update(
+                {vip: {'ip': vip_all[vip]['ip'], 'port': '', 'netmask': vip_all[vip]['netmask'], 'target': []}})
+            for portblock in portblock_all:
+                if portblock_all[portblock]['ip'] == vip_all[vip]['ip']:
+                    dict_portal[vip]['port'] = portblock_all[portblock]['port']
+                    continue
 
-    # 获取并更新crm信息
-    def update_crm_conf(self):
-        # crm_config_status = obj_crm.get_crm_data()
-        if 'ERROR' in self.crm_conf_data:
-            s.prt_log("Could not perform requested operations, are you root?",1)
-        else:
-            js = iscsi_json.JsonOperation()
-            # res = self.get_resource_data()
-            vip = self.get_vip()
-            target = self.get_target()
-            js.update_crm_conf(vip, target)
-            return True
+            for target in target_all:
+                if target_all[target]['ip'] == vip_all[vip]['ip']:
+                    dict_portal[vip]['target'].append(target)
 
-    def check_crm_conf(self):
-        # 不允许ipaddr2,portblock单独存在，进行检查
-        # 验证规则：找到ip，匹配是否有对应ip的portblock组（2个，block+unblock）
-        vip = self.get_vip()
-        vip = {'vip1':{'ip':'10.203.1.2'},'vip2':{'ip':'10.203.1.1'}}
-        target = self.get_target()
-        plock = {'_on':{'ip':'10.203.1.2','port':'3260','type':'block'},'_off':{'ip':'10.203.1.2','port':'3260','type':'unblock'}}
-        #plock
-        # 测试创建block，用一样的ip，不一样的端口，一样的端口，stderr和stdout
-
-        # 考虑错误时的数据，哪里的数据不对？
-
-        dict_err = {}
-        for vip,vip_data in vip.items():
-            for plock,plock_data in plock.items():
-                plock_num = 0
-                if vip_data['ip'] == plock_data['ip']:
-                    plock_data +=1
-
-                if plock_num !=2:
-                    return False
+        return dict_portal
 
 
+
+    def check_portal_component(self,vip,portblock):
+        """
+        对目前环境的portal组件(ipaddr,portblock）的检查，需满足：
+        1.不存在单独的portblock
+        2.已存在的ipaddr，必须有对应的portblock组（block，unblock）
+        不满足条件时提示并退出
+        :param vip_all: dict
+        :param portblock_all: dict
+        :return:None
+        """
+        dict_portal = {}
+        for vip_name,vip_data in vip.items():
+            dict_portal.update({vip_name:{},'status':'ERROR'}) #error/normal
+            for pb_name,pb_data in portblock.items():
+                if vip_data['ip'] == pb_data['ip']:
+                    dict_portal[vip_name].update({pb_name:pb_data['type']})
+                    del portblock[pb_name]
+            if len(dict_portal[vip_name]) == 2:
+                if 'block' and 'unblock' in dict_portal[vip_name].values():
+                    dict_portal['status'] = 'NORMAL'
+        if not portblock:
+            s.prt_log(f'{",".join(portblock.keys())}没有对应的VIP，请进行处理',2)
+        list_portal = [] # portal如果没有block和unblock，则会加进这个列表
+        for portal_name,portal_data in dict_portal.items():
+            if portal_data['status'] == 'ERROR':
+                list_portal.append(portal_name)
+        if not list_portal:
+            s.prt_log(f'{",".join(list_portal)}这些portal无法正常使用，请进行处理',2)
+
+
+    def check_env_sync(self,vip,portblock,target):
+        """
+        检查CRM环境与JSON配置文件所记录的Portal、Target的数据是否一致，不一致提示后退出
+        :param vip_all:目前CRM环境的vip数据
+        :param target_all:目前CRM环境的target数据
+        :return:
+        """
+        js = iscsi_json.JsonOperation()
+        crm_portal = self.get_portal_data(vip,portblock,target)
+        json_portal = js.json_data['Portal']
+
+        # 处理列表的顺序问题
+        for portal_name,portal_data in crm_portal.items():
+            portal_data['target'] = set(portal_data['target'])
+
+        for portal_name,portal_data in json_portal.items():
+            portal_data['target'] = set(portal_data['target'])
+
+
+        if not crm_portal == json_portal:
+            s.prt_log('Portal数据不一致，请检查后重试',2)
+        if not target == js.json_data['Target']:
+            s.prt_log('iSCSITarget数据不一致,请检查后重试',2)
 
 
 class CRMConfig():
@@ -161,16 +198,16 @@ class CRMConfig():
             s.prt_log("create iSCSILogicalUnit success",0)
             return True
 
-    # 通过 crm st 获取resource状态
-    def get_res_status(self, crm_res):
-        cmd = f'crm res list | grep {crm_res}'
-        result = execute_crm_cmd(cmd)
-        if 'Started' in result['rst']:
-            return True
-        elif 'Stopped' in result['rst']:
-            return False
-        else:
-            pass
+    # # 通过 crm st 获取resource状态
+    # def get_res_status(self, crm_res):
+    #     cmd = f'crm res list | grep {crm_res}'
+    #     result = execute_crm_cmd(cmd)
+    #     if 'Started' in result['rst']:
+    #         return True
+    #     elif 'Stopped' in result['rst']:
+    #         return False
+    #     else:
+    #         pass
 
     def get_failed_actions(self, crm_res):
         # 检查crm整体状态，但是目前好像只是用于提取vip的错误信息
@@ -186,50 +223,63 @@ class CRMConfig():
                 exitreason = result
         return exitreason
 
-    def check_crm_res(self, crm_res, type):
-        # 可替换掉get_res_status，这个比较严谨
-        if type == 'ipaddr2':
-            re_ = f'{crm_res}\s*\(ocf::heartbeat:IPaddr2\):\s*(\w*)'
-        elif type == 'target':
-            re_ = f'{crm_res}\s*\(ocf::heartbeat:iSCSITarget\):\s*(\w*)'
-        else:
-            # 抛出参数异常
-            raise TypeError('type参数输入错误:ipaddr2/target')
+    def get_crm_res_status(self, crm_res, type):
+        if not type in ['IPaddr2','iSCSITarget','portblock','iSCSILogicalUnit']:
+            raise ValueError('参数type传入有误，必须为IPaddr2,iSCSITarget,portblock,iSCSILogicalUnit其中一个')
 
         cmd_result = execute_crm_cmd(f'crm res list | grep {crm_res}')
-        re_status = re.compile(re_)
-        status = re_status.search(cmd_result['rst'])
+        re_status = f'{crm_res}\s*\(ocf::heartbeat:{type}\):\s*(\w*)'
+        status = s.re_search(re_status,cmd_result['rst'],output_type='groups')
         if status:
-            if status.groups()[0] == 'Started':
+            if status[0] == 'Started':
+                return 'STARTED'
+            else:
+                return 'NOT_STARTED'
+
+    def checkout_status(self, res, type, expect_status, times=5):
+        """
+        检查res的状态
+        :param res: 需要检查的资源
+        :param type_res: 需要检查的资源类型
+        :param times: 需要检查的次数
+        :param expect_status: 预期状态
+        :return: 返回True则说明是预期效果
+        """
+        n = 0
+        while n < times:
+            n += 1
+            if self.get_crm_res_status(res,type) == expect_status:
+                s.prt_log(f'The status of {res} is {expect_status} now.',0)
                 return True
             else:
-                return False
+                time.sleep(1)
         else:
-            return None
+            s.prt_log("Does not meet expectations, please try again.", 1)
 
-    # 多次通过 crm st 检查resource状态，状态为started时返回True，检查5次都为stopped 则返回None
-    def checkout_status_start(self, res):
-        n = 0
-        while n < 5:
-            n += 1
-            if self.get_res_status(res):
-                s.prt_log(f'the resource {res} is Started', 0)
-                return True
-            else:
-                time.sleep(1)
-        s.prt_log(f'the resource {res} is Stopped', 1)
 
-    # 多次通过 crm st 检查resource状态，状态为stop时返回True，检查5次都不为stopped 则返回None
-    def checkout_status_stop(self, res):
-        n = 0
-        while n < 5:
-            n += 1
-            if self.get_res_status(res) == False:
-                s.prt_log(f'the resource {res} is Stopped', 0)
-                return True
-            else:
-                time.sleep(1)
-        s.prt_log(f"the resource {res} can't Stopped", 1)
+    # # 多次通过 crm st 检查resource状态，状态为started时返回True，检查5次都为stopped 则返回None
+    # def checkout_status_start(self, res):
+    #     n = 0
+    #     while n < 5:
+    #         n += 1
+    #         if self.get_res_status(res):
+    #             s.prt_log(f'the resource {res} is Started', 0)
+    #             return True
+    #         else:
+    #             time.sleep(1)
+    #     s.prt_log(f'the resource {res} is Stopped', 1)
+    #
+    # # 多次通过 crm st 检查resource状态，状态为stop时返回True，检查5次都不为stopped 则返回None
+    # def checkout_status_stop(self, res):
+    #     n = 0
+    #     while n < 5:
+    #         n += 1
+    #         if self.get_res_status(res) == False:
+    #             s.prt_log(f'the resource {res} is Stopped', 0)
+    #             return True
+    #         else:
+    #             time.sleep(1)
+    #     s.prt_log(f"the resource {res} can't Stopped", 1)
 
     # 停用res
     def stop_res(self, res):
@@ -241,9 +291,9 @@ class CRMConfig():
             s.prt_log("crm res stop fail",1)
 
     # 删除resource步骤
-    def delete_res(self, res):
+    def delete_res(self, res, type):
         if self.stop_res(res):
-            if self.checkout_status_stop(res):
+            if self.checkout_status(res,type,'NOT_STARTED'):
                 if self.delete_conf_res(res):
                     return True
         s.prt_log(f"{res} delete fail",1)
@@ -268,9 +318,9 @@ class CRMConfig():
             return True
         else:
             output = result['rst']
-            re_str = re.compile(rf'INFO: hanging colocation:co_{res} deleted\nINFO: hanging order:or_{res} deleted\n')
+            re_str = re.compile(rf'INFO: hanging colocation:.*? deleted\nINFO: hanging order:.*? deleted\n')
             if s.re_search(re_str, output):
-                s.prt_log(f"delete colocation:co_{res}, order:or_{res} success", 0)
+                s.prt_log(output, 0)
                 return True
             else:
                 s.prt_log(f"delete resource fail", 1)
@@ -314,135 +364,9 @@ class CRMConfig():
             return True
 
 
-#
-# class Portal():
-#     def __init__(self):
-#         self.dict_rollback = {}
-#
-#     def create(self, name, ip, port=3260 ,netmask=24):
-#         if not self._check_name(name):
-#             print(f'{name}不符合规范')
-#             return
-#         if not self._check_IP(ip):
-#             print(f'{ip}不符合规范')
-#             return
-#         if not self._check_port(port):
-#             print(f'{port}不符合规范，范围：3260-65535')
-#             return
-#         if not self._check_netmask(netmask):
-#             print(f'{netmask}不符合规范，范围：0-32')
-#             return
-#
-#         try:
-#             obj_ipadrr = Ipadrr2()
-#             obj_ipadrr.create(name,ip,netmask)
-#             self.dict_rollback.update({'create_ipaddr2':name})
-#
-#             obj_portblock = PortBlockGroup()
-#             obj_portblock.create(f'{name}_prtblk_on',ip,port,action='block')
-#             self.dict_rollback.update({'create_block':f'{name}_prtblk_on'})
-#             obj_portblock.create(f'{name}_prtblk_off',ip,port,action='unblock')
-#             self.dict_rollback.update({'create_unblock': f'{name}_prtblk_off'})
-#
-#             obj_colocation = Colocation()
-#             obj_colocation.create(f'col_{name}_prtblk_on',f'{name}_prtblk_on', name)
-#             obj_colocation.create(f'col_{name}_prtblk_off', f'{name}_prtblk_off', name)
-#
-#             obj_order = Order()
-#             obj_order.create(f'or_{name}_prtblk_on',name, f'{name}_prtblk_on')
-#
-#         except Exception as ex:
-#             # 记录异常信息
-#             # self.logger.write_to_log('DATA', 'DEBUG', 'exception', '', str(traceback.format_exc()))
-#             # 回滚
-#             # 执行顺序有没有要求？
-#             print('进行回滚操作')
-#             for operation,res in self.dict_rollback.items():
-#                 if operation == 'create_block' or 'create_unblock':
-#                     obj_portblock.delete(res)
-#                 elif operation == 'create_ipaddr2':
-#                     obj_ipadrr.delete(res)
-#
-#         # 验证
-#         status = self._check_status(name)
-#
-#         if status == 'OK':
-#             self.js = iscsi_json.JsonOperation
-#             self.js.update_data('Portal', name, {'ip': ip, 'port': port,'netmask':netmask,'target':[]})
-#         elif status == 'NETWORK_ERROR':
-#             obj_ipadrr.delete(name)
-#             obj_portblock.delete(f'{name}_prtblk_on')
-#             obj_portblock.delete(f'{name}_prtblk_off')
-#             s.prt_log('由于设置的IP地址网段有误或有其他网络问题，此portal无法正常创建，请重新配置', 1)
-#
-#
-#
-#
-#
-#     def delete(self, name):
-#         pass
-#
-#
-#     def modify(self, name, ip, port):
-#         pass
-#
-#
-#     def show(self):
-#         pass
-#
-#
-#     def _check_name(self, name):
-#         re_name = re.compile(r'^[a-zA-Z]\w*$')
-#         result = re_name.match(name)
-#         # 添加从JSON中验证这个Name有没有被portal使用
-#         return True if result else False
-#
-#     def _check_IP(self, ip):
-#         re_ip = re.compile(
-#             r'^((2([0-4]\d|5[0-5]))|[1-9]?\d|1\d{2})(\.((2([0-4]\d|5[0-5]))|[1-9]?\d|1\d{2})){3}$')
-#         result = re_ip.match(ip)
-#         # 添加从JSON中验证这个IP有没有被portal使用
-#         return True if result else False
-#
-#     def _check_port(self, port):
-#         if not isinstance(port,int):
-#             return False
-#         return True if 3260<=port<=65535 else False
-#
-#     def _check_netmask(self, netmask):
-#         if not isinstance(netmask, int):
-#             return False
-#         return True if 0 <= netmask <= 32 else False
-#
-#     def _check_status(self, name):
-#         """
-#
-#         :param name: portal name
-#         :return:
-#         """
-#         obj_crm = CRMConfig()
-#         status = obj_crm.check_crm_res(name, type='ipaddr2')
-#         if status is True:
-#             s.prt_log('创建成功',1)
-#             return 'OK'
-#         elif status is False:
-#             failed_actions = obj_crm.get_failed_actions(name)
-#             if failed_actions == 0:
-#                 return 'NETWORK_ERROR'
-#             elif failed_actions:
-#                 s.prt_log(failed_actions,1)
-#                 return 'OTHER_ERROR'
-#             else:
-#                 s.prt_log('未知错误,请进行检查',1)
-#                 return 'UNKNOWN_ERROR'
-#         else:
-#             s.prt_log(f'{name}没有被成功创建，请检查',1)
-#             return 'FAIL'
 
 
-
-
-class Ipaddr2():
+class IPaddr2():
     def __init__(self):
         pass
 
@@ -458,11 +382,23 @@ class Ipaddr2():
 
     def delete(self,name):
         obj_crm = CRMConfig()
-        result = obj_crm.delete_res(name)
+        result = obj_crm.delete_res(name,type='IPaddr2')
         if not result:
             raise consts.CmdError
         else:
             print('删除ipaddr2成功')
+
+
+    def modify(self,name,ip):
+        cmd = f'crm cof set {name}.ip {ip}'
+        cmd_result = execute_crm_cmd(cmd)
+        if not cmd_result['sts']:
+            # 创建失败，输出原命令报错信息
+            s.prt_log(cmd_result['rst'],1)
+            raise consts.CmdError
+        else:
+            print('修改IPaddr2的IP成功')
+
 
 
 
@@ -497,11 +433,30 @@ class PortBlockGroup():
 
     def delete(self,name):
         obj_crm = CRMConfig()
-        result = obj_crm.delete_res(name)
+        result = obj_crm.delete_res(name,type='portblock')
         if not result:
             raise consts.CmdError
         else:
             print(f'删除{name}成功')
+
+
+    def modify_ip(self,name,ip):
+        cmd = f'crm cof set {name}.ip {ip}'
+        cmd_result = execute_crm_cmd(cmd)
+        if not cmd_result['sts']:
+            s.prt_log(cmd_result['rst'],1)
+            raise consts.CmdError
+        else:
+            print(f'修改{name}IP成功')
+
+    def modify_port(self,name,port):
+        cmd = f'crm cof set {name}.portno {port}'
+        cmd_result = execute_crm_cmd(cmd)
+        if not cmd_result['sts']:
+            s.prt_log(cmd_result['rst'],1)
+            raise consts.CmdError
+        else:
+            print(f'修改{name}port成功')
 
 
 class Colocation():
@@ -536,6 +491,23 @@ class Order():
             print(f'创建{name}成功')
 
 
+
+
+class ISCSITarget():
+    def __init__(self):
+        pass
+
+
+    def modify(self,name,ip,port):
+        print('开始修改iSCSITarget')
+
+        cmd = f'crm cof set {name}.portals {ip}:{port}'
+        cmd_result = execute_crm_cmd(cmd)
+        if not cmd_result['sts']:
+            s.prt_log(cmd_result['rst'],1)
+            raise consts.CmdError
+        else:
+            print(f'修改{name}成功')
 
 
 

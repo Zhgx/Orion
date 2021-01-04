@@ -5,37 +5,21 @@
         "h3": "iqn.2020-11.com.example:pytest03",
         "h4": "iqn.2020-11.com.example:pytest04",
         "h5": "iqn.2020-11.com.example:pytest05",
-        "h6": "iqn.2020-11.com.example:pytest06",
-        "host1": "iqn.2323-23.xx",
-        "host2": "iqn.2323-23.01",
-        "host3": "iqn.2323-23.02",
-        "host4": "iqn.2323-23.03",
-        "host5": "iqn.2323-23.04"
+        "h6": "iqn.2020-11.com.example:pytest06"
     },
     "Disk": {
         "res_a": "/dev/drbd1000",
         "res_b": "/dev/drbd1001",
         "res_c": "/dev/drbd1002",
-        "res_d": "/dev/drbd1003",
-        "res_e": "/dev/drbd1005",
-        "res_f": "/dev/drbd1006"
+        "res_d": "/dev/drbd1003"
     },
     "HostGroup": {
         "hg1": [
-            "h1",
             "h2"
         ],
         "hg2": [
             "h3",
             "h4"
-        ],
-        "hg_a": [
-            "host1",
-            "host2"
-        ],
-        "hg_b": [
-            "host3",
-            "host4"
         ],
         "hg4": [
             "h6"
@@ -52,23 +36,18 @@
     },
     "DiskGroup": {
         "dg1": [
-            "res_a",
-            "res_b"
+            "res_a"
         ],
         "dg2": [
             "res_a",
-            "res_c"
+            "res_c",
+            "res_b"
         ],
         "dg3": [
             "res_d"
         ],
         "dg4": [
             "res_e"
-        ],
-        "dg_paul": [
-            "res_a",
-            "res_b",
-            "res_c"
         ]
     },
     "Map": {
@@ -78,52 +57,31 @@
                 "hg2"
             ],
             "DiskGroup": [
-                "dg1",
-                "dg2"
-            ]
-        },
-        "map2": {
-            "HostGroup": [
-                "hg_a",
-                "hg_b"
-            ],
-            "DiskGroup": [
-                "dg3",
-                "dg4"
+                "dg1"
             ]
         }
-    },
-    "crm": {
-        "vip": [
-            [
-                "vip",
-                "10.203.1.75",
-                "24"
-            ]
-        ],
-        "target": [
-            [
-                "t_test",
-                "iqn.2020-04.feixitek.com:versaplx00",
-                "10.203.1.75",
-                "3260"
-            ]
-        ]
     },
     "Portal": {
-        "vip_test4": {
-            "ip": "10.203.1.76",
-            "port": 3360,
-            "netmask": 24,
-            "target": []
+        "vip": {
+            "ip": "10.203.1.75",
+            "port": "3260",
+            "netmask": "24",
+            "target": [
+                "t_test"
+            ]
         },
-
         "vip_test1": {
-            "ip": "10.203.1.71",
+            "ip": "10.203.1.159",
             "port": 3360,
             "netmask": 24,
             "target": []
         }
-
+    },
+    "Target": {
+        "t_test": {
+            "target_iqn": "iqn.2020-04.feixitek.com:versaplx00",
+            "ip": "10.203.1.75",
+            "port": "3260"
+        }
     }
 }

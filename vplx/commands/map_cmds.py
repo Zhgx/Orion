@@ -1,6 +1,3 @@
-import pickle
-import iscsi_json
-
 import execute as ex
 import sundry as sd
 import consts
