@@ -1,13 +1,10 @@
 import argparse
 import traceback
 import sys
-import pickle
-import linstordb
 import logdb
 import log
 import sundry
 import consts
-import iscsi_json
 
 from commands import (
     NodeCommands,
@@ -17,8 +14,11 @@ from commands import (
     DiskGroupCommands,
     HostCommands,
     HostGroupCommands,
-    MapCommands
+    MapCommands,
+    PortalCommands,
+    SyncCommands
 )
+
 
 class MyArgumentParser(argparse.ArgumentParser):
     def parse_args(self, args=None, namespace=None):
@@ -66,6 +66,8 @@ class VtelCLI(object):
         self._host_commands = HostCommands()
         self._hostgroup_commands = HostGroupCommands()
         self._map_commands = MapCommands()
+        self._vip_commands = PortalCommands()
+        self._sync_commands = SyncCommands()
         self._parser = self.setup_parser()
 
 
@@ -139,7 +141,11 @@ class VtelCLI(object):
         self._host_commands.setup_commands(subp_iscsi)
         self._hostgroup_commands.setup_commands(subp_iscsi)
         self._map_commands.setup_commands(subp_iscsi)
+        self._vip_commands.setup_commands(subp_iscsi)
+        self._sync_commands.setup_commands(subp_iscsi)
 
+        parser_iscsi.set_defaults(func=self.print_iscsi_help)
+        parser_stor.set_defaults(func=self.print_stor_help)
         parser.set_defaults(func=self.func_vtel)
         return parser
 
@@ -149,6 +155,13 @@ class VtelCLI(object):
             print(f'VersaTEL G2 {consts.VERSION}')
         else:
             self._parser.print_help()
+
+    def print_iscsi_help(self, *args):
+        self.parser_iscsi.print_help()
+
+    def print_stor_help(self, *args):
+        self.parser_stor.print_help()
+
 
     def replay_one(self,dict_input):
         if not dict_input:
