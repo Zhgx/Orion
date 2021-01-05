@@ -1,5 +1,6 @@
 import execute as ex
 import consts
+import sundry as s
 
 class Usage():
     # portal部分使用手册
@@ -131,11 +132,10 @@ class PortalCommands():
             required=True,
             action='store',
             help='IP',
-            metavar='IP',
-            nargs='+')
+            metavar='IP')
 
         p_modify_portal.add_argument(
-            '-p'
+            '-p',
             '-port',
             '--port',
             required=True,
@@ -149,7 +149,7 @@ class PortalCommands():
         p_modify_portal.set_defaults(func=self.modify)
 
 
-    # @sd.deco_record_exception
+    @sd.deco_record_exception
     def create(self, args):
         crm = ex.CRMData()
         vip = crm.get_vip()
@@ -161,31 +161,22 @@ class PortalCommands():
         portal.create(args.portal,args.ip,args.port,args.netmask)
 
 
-    # @sd.deco_record_exception
+    @s.deco_record_exception
     def show(self, args):
-        print('show')
-        print(args)
-        # portal = ex.PORTAL()
-        # if args.portal == 'all' or args.portal is None:
-        #     portal.show_all_portal()
-        # else:
-        #     portal.show_spe_portal(args.portal)
+        portal = ex.Portal()
+        portal.show()
 
-    # @sd.deco_record_exception
+
+    @s.deco_record_exception
     def delete(self, args):
         portal = ex.Portal()
         portal.delete(args.portal)
 
 
-    # @sd.deco_record_exception
+    @s.deco_record_exception
     def modify(self, args):
-        print('modify')
-        print(args)
-        # portal = ex.PORTAL()
-        # if args.add:
-        #     portal.add_disk(args.portal,args.add)
-        # if args.remove:
-        #     portal.remove_disk(args.portal,args.remove)
+        portal = ex.Portal()
+        portal.modify(args.portal,args.ip,args.port)
 
 
     def print_portal_help(self, *args):

@@ -44,6 +44,69 @@ def execute_crm_cmd(cmd, timeout=60):
     else:
         s.handle_exception()
 
+
+class RollBack():
+    """
+    装饰器，记录执行进行操作CRM资源名，提供方法rollback可以回滚执行操作的操作
+    """
+    dict_rollback = {'IPaddr2':{}, 'PortBlockGroup':{} , 'ISCSITarget':{}}
+    def __init__(self, func):
+        self.func = func
+        self.type,self.oprt = func.__qualname__.split('.')
+
+    def __call__(self, *args, **kwargs):
+        if self.func(self, *args, **kwargs):
+            self.dict_rollback[self.type].update({args[0]:self.oprt})
+
+    @classmethod
+    def rollback(cls,ip,port,netmask):
+        # 目前只用于Portal的回滚，之后Target的回滚可以根据需要增加一个判断类型的参数
+        print("程序中途错误，开始进行资源回滚")
+        print("需要回滚的资源：",cls.dict_rollback)
+        cls.rb_ipaddr2(cls,ip,port,netmask)
+        cls.rb_block(cls,ip,port,netmask)
+        cls.rb_target(cls,ip,port,netmask)
+        print("回滚结束")
+
+    # 回滚完之后考虑做一个对crm配置的检查？跟name相关的资源如果还存在，进行提示？
+
+    def rb_ipaddr2(self,ip,port,netmask):
+        if self.dict_rollback['IPaddr2']:
+            obj_ipaddr2 = IPaddr2()
+            # 实际上应该不可能需要循环
+            for name, oprt in self.dict_rollback['IPaddr2'].items():
+                if oprt == 'create':
+                    obj_ipaddr2.delete(name)
+                elif oprt == 'delete':
+                    obj_ipaddr2.create(name,ip,netmask)
+                elif oprt == 'modify':
+                    obj_ipaddr2.modify(name,ip)
+
+
+    def rb_block(self,ip,port,netmask):
+        if self.dict_rollback['PortBlockGroup']:
+            obj_block = PortBlockGroup()
+            for name,oprt in self.dict_rollback['PortBlockGroup'].items():
+                if oprt == 'create':
+                    obj_block.delete(name)
+                elif oprt == 'delete':
+                    action = 'block'
+                    if name.split('_')[2] == 'off':
+                        action = 'unblock'
+                    obj_block.create(name,ip,port,action)
+                elif oprt == 'modify':
+                    obj_block.modify(name,ip,port)
+
+
+    def rb_target(self,ip,port,netmask):
+        if self.dict_rollback['ISCSITarget']:
+            obj_target = ISCSITarget()
+            for name,oprt in self.dict_rollback['ISCSITarget'].items():
+                if oprt == 'modify':
+                    obj_target.modify(name,ip,port)
+
+
+
 class CRMData():
     def __init__(self):
         self.crm_conf_data = self.get_crm_conf()
@@ -171,16 +234,17 @@ class CRMData():
         for portal_name,portal_data in json_portal.items():
             portal_data['target'] = set(portal_data['target'])
 
-
         if not crm_portal == json_portal:
             s.prt_log('Portal数据不一致，请检查后重试',2)
         if not target == js.json_data['Target']:
             s.prt_log('iSCSITarget数据不一致,请检查后重试',2)
 
 
+
 class CRMConfig():
     def __init__(self):
         pass
+
 
     def create_crm_res(self, res, target_iqn, lunid, path, initiator):
         cmd = f'crm conf primitive {res} iSCSILogicalUnit params ' \
@@ -256,30 +320,6 @@ class CRMConfig():
         else:
             s.prt_log("Does not meet expectations, please try again.", 1)
 
-
-    # # 多次通过 crm st 检查resource状态，状态为started时返回True，检查5次都为stopped 则返回None
-    # def checkout_status_start(self, res):
-    #     n = 0
-    #     while n < 5:
-    #         n += 1
-    #         if self.get_res_status(res):
-    #             s.prt_log(f'the resource {res} is Started', 0)
-    #             return True
-    #         else:
-    #             time.sleep(1)
-    #     s.prt_log(f'the resource {res} is Stopped', 1)
-    #
-    # # 多次通过 crm st 检查resource状态，状态为stop时返回True，检查5次都不为stopped 则返回None
-    # def checkout_status_stop(self, res):
-    #     n = 0
-    #     while n < 5:
-    #         n += 1
-    #         if self.get_res_status(res) == False:
-    #             s.prt_log(f'the resource {res} is Stopped', 0)
-    #             return True
-    #         else:
-    #             time.sleep(1)
-    #     s.prt_log(f"the resource {res} can't Stopped", 1)
 
     # 停用res
     def stop_res(self, res):
@@ -365,11 +405,11 @@ class CRMConfig():
 
 
 
-
 class IPaddr2():
     def __init__(self):
         pass
 
+    @RollBack
     def create(self,name,ip,netmask):
         cmd = f'crm cof primitive {name} IPaddr2 params ip={ip} cidr_netmask={netmask}'
         cmd_result = execute_crm_cmd(cmd)
@@ -379,7 +419,9 @@ class IPaddr2():
             raise consts.CmdError
         else:
             print('创建ipaddr2成功')
+            return True
 
+    @RollBack
     def delete(self,name):
         obj_crm = CRMConfig()
         result = obj_crm.delete_res(name,type='IPaddr2')
@@ -387,8 +429,9 @@ class IPaddr2():
             raise consts.CmdError
         else:
             print('删除ipaddr2成功')
+            return True
 
-
+    @RollBack
     def modify(self,name,ip):
         cmd = f'crm cof set {name}.ip {ip}'
         cmd_result = execute_crm_cmd(cmd)
@@ -398,8 +441,7 @@ class IPaddr2():
             raise consts.CmdError
         else:
             print('修改IPaddr2的IP成功')
-
-
+            return True
 
 
 
@@ -409,6 +451,7 @@ class PortBlockGroup():
         self.block = None
         self.unblock = None
 
+    @RollBack
     def create(self,name,ip,port,action):
         """
 
@@ -428,35 +471,57 @@ class PortBlockGroup():
             s.prt_log(cmd_result['rst'],1)
             raise consts.CmdError
         else:
-            print(f'创建{name}成功')
+            print(f'创建 {name} 成功')
+            return True
 
 
+    @RollBack
     def delete(self,name):
         obj_crm = CRMConfig()
         result = obj_crm.delete_res(name,type='portblock')
         if not result:
             raise consts.CmdError
         else:
-            print(f'删除{name}成功')
+            print(f'删除 {name} 成功')
+            return True
 
 
-    def modify_ip(self,name,ip):
-        cmd = f'crm cof set {name}.ip {ip}'
-        cmd_result = execute_crm_cmd(cmd)
-        if not cmd_result['sts']:
-            s.prt_log(cmd_result['rst'],1)
+    @RollBack
+    def modify(self,name,ip,port):
+        cmd_ip = f'crm cof set {name}.ip {ip}'
+        cmd_port = f'crm cof set {name}.portno {port}'
+        cmd_result_ip = execute_crm_cmd(cmd_ip)
+        cmd_result_port = execute_crm_cmd(cmd_port)
+        if not cmd_result_ip['sts'] or not cmd_result_port['sts']:
+            s.prt_log(cmd_result_ip['rst'],1)
+            s.prt_log(cmd_result_port['rst'], 1)
             raise consts.CmdError
         else:
-            print(f'修改{name}IP成功')
+            print(f'修改 {name} IP和Port成功')
+            return True
 
-    def modify_port(self,name,port):
-        cmd = f'crm cof set {name}.portno {port}'
-        cmd_result = execute_crm_cmd(cmd)
-        if not cmd_result['sts']:
-            s.prt_log(cmd_result['rst'],1)
-            raise consts.CmdError
-        else:
-            print(f'修改{name}port成功')
+
+
+    # def modify_ip(self,name,ip):
+    #     cmd = f'crm cof set {name}.ip {ip}'
+    #     cmd_result = execute_crm_cmd(cmd)
+    #     if not cmd_result['sts']:
+    #         s.prt_log(cmd_result['rst'],1)
+    #         raise consts.CmdError
+    #     else:
+    #         print(f'修改 {name} IP成功')
+    #         return True
+    #
+    # def modify_port(self,name,port):
+    #     cmd = f'crm cof set {name}.portno {port}'
+    #     cmd_result = execute_crm_cmd(cmd)
+    #     if not cmd_result['sts']:
+    #         s.prt_log(cmd_result['rst'],1)
+    #         raise consts.CmdError
+    #     else:
+    #         print(f'修改 {name} port成功')
+    #         return True
+
 
 
 class Colocation():
@@ -472,6 +537,7 @@ class Colocation():
             raise consts.CmdError
         else:
             print(f'创建{name}成功')
+            return True
 
 
 
@@ -489,7 +555,7 @@ class Order():
             raise consts.CmdError
         else:
             print(f'创建{name}成功')
-
+            return True
 
 
 
@@ -497,7 +563,7 @@ class ISCSITarget():
     def __init__(self):
         pass
 
-
+    @RollBack
     def modify(self,name,ip,port):
         print('开始修改iSCSITarget')
 
@@ -507,7 +573,47 @@ class ISCSITarget():
             s.prt_log(cmd_result['rst'],1)
             raise consts.CmdError
         else:
-            print(f'修改{name}成功')
+            print(f'修改 {name} 成功')
+            return True
+
+
+
+class ISCSILogicalUnit():
+    def __init__(self):
+        pass
+
+
+    def create(self,name,target):
+        pass
+
+
+
+    # def create_res(self, res, list_iqn):
+        # obj_crm = CRMConfig()
+        # # 取DeviceName后四位数字，减一千作为lun id
+        # path = self.js.get_data('Disk')[res]
+        # lunid = int(path[-4:]) - 1000
+        # initiator = ' '.join(list_iqn)
+        # # 创建iSCSILogicalUnit
+        # if obj_crm.create_crm_res(res, self.target_iqn, lunid, path, initiator):
+        #     self.list_res_created.append(res)
+        #     # 创建order，colocation
+        #     if obj_crm.create_set(res, self.target_name):
+        #         # 尝试启动资源，成功失败都不影响创建
+        #         obj_crm.start_res(res)
+        #         obj_crm.checkout_status(res,'iSCSILogicalUnit','STARTED')
+        #     else:
+        #         for i in self.list_res_created:
+        #             obj_crm.delete_res(i,'iSCSILogicalUnit')
+        #         return False
+        # else:
+        #     s.prt_log('Fail to create iSCSILogicalUnit', 1)
+        #     for i in self.list_res_created:
+        #         obj_crm.delete_res(i,'iSCSILogicalUnit')
+        #     return False
+
+
+
 
 
 
