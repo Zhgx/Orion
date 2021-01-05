@@ -1,30 +1,4 @@
 {
-<<<<<<< HEAD
-    "Host": {},
-    "Disk": {},
-    "HostGroup": {},
-    "DiskGroup": {},
-    "Map": {},
-    "crm": {
-        "resource": [],
-        "vip": [
-            [
-                "vip",
-                "10.203.1.75",
-                "24"
-            ],
-            [
-                "vip_test1",
-                "10.203.1.71",
-                "24"
-            ]
-        ],
-        "target": [
-            [
-                "t_test",
-                "iqn.2020-04.feixitek.com:versaplx00",
-                "10.203.1.75"
-=======
     "Host": {
         "h1": "iqn.2020-11.com.example:pytest01",
         "h2": "iqn.2020-11.com.example:pytest02",
@@ -94,7 +68,6 @@
             "netmask": "24",
             "target": [
                 "t_test"
->>>>>>> fr_portal
             ]
         },
         "vip_test1": {

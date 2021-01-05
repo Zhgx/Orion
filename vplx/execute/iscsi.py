@@ -144,7 +144,6 @@ class Disk():
 
     def get_all_disk(self):
         linstor = Linstor()
-        # linstor 有可能没有值
         linstor_res = linstor.get_linstor_data(
             'linstor --no-color --no-utf8 r lv')
         disks = {}
@@ -194,7 +193,7 @@ class Host():
         else:
             self.check_iqn(iqn)
             self.js.update_data("Host", host, iqn)
-            s.prt_log(f"Create {host} success!", 0)
+            s.prt_log("Create success!", 0)
             return True
 
     def get_all_host(self):
@@ -223,10 +222,11 @@ class Host():
                     "Fail! The host in ... hostgroup.Please delete the hostgroup first", 1)
             else:
                 self.js.delete_data('Host', host)
-                s.prt_log(f"Delete {host} success!", 0)
+                s.prt_log("Delete success!", 0)
                 return True
         else:
             s.prt_log(f"Fail! Can't find {host}", 1)
+
 
     def modify_host(self, host, iqn):
         if not self.js.check_key('Host', host)['result']:
@@ -268,7 +268,7 @@ class DiskGroup():
                     return
 
             self.js.update_data('DiskGroup', diskgroup, disk)
-            s.prt_log(f"Create {diskgroup} success!", 0)
+            s.prt_log("Create success!", 0)
             return True
 
     def get_all_diskgroup(self):
@@ -296,7 +296,7 @@ class DiskGroup():
                 s.prt_log("Fail! The diskgroup already map,Please delete the map", 1)
             else:
                 self.js.delete_data('DiskGroup', dg)
-                s.prt_log(f"Delete {dg} success!", 0)
+                s.prt_log("Delete success!", 0)
         else:
             s.prt_log(f"Fail! Can't find {dg}", 1)
 
@@ -325,12 +325,6 @@ class DiskGroup():
         self.js.json_data = json_data_modify
         self.js.commit_json()
 
-<<<<<<< HEAD
-        self.js.append_member('DiskGroup', dg, list_disk)
-        for v in list_disk:
-            print(f'{dg} add {v}')
-=======
->>>>>>> fr_portal
 
 
     def remove_disk(self, dg, list_disk):
@@ -339,22 +333,10 @@ class DiskGroup():
         for disk in list_disk:
             if not self.js.check_value_in_key("DiskGroup", dg, disk)['result']:
                 s.prt_log(f'{dg}中不存在成员{disk}，无法进行移除', 2)
-<<<<<<< HEAD
-        for v in list_disk:
-            print(f'{dg} remove {v}')
-        js_modify = iscsi_json.JsonMofidy()
-        js_modify.remove_member('DiskGroup', dg, list_disk)
-
-        dict_current = self.js.get_disk_with_iqn()
-        dict_changed = js_modify.get_disk_with_iqn()
-
-        obj_iscsi = IscsiConfig(dict_current, dict_changed)
-=======
 
         json_data_before = copy.deepcopy(self.js.json_data)
         self.js.remove_member('DiskGroup', dg, list_disk)
         obj_iscsi = IscsiConfig(json_data_before, self.js.json_data)
->>>>>>> fr_portal
         obj_iscsi.comfirm_modify()
 
         # 重新读取配置文件的数据，保证数据一致性
@@ -364,21 +346,9 @@ class DiskGroup():
         else:
             s.prt_log('JSON已被修改，请重新操作', 2)
 
-<<<<<<< HEAD
-        for v in js_modify.json_data['DiskGroup'][dg]:
-            print(f'dg:{v}')
-
-        # 配置文件移除成员
-        if not js_modify.json_data['DiskGroup'][dg]:
-
-            self.js.delete_data('DiskGroup', dg)
-            list_map = self.js.get_map_by_group('DiskGroup',dg)
-            print(f'list_map:{list_map}')
-=======
         if not self.js.json_data['DiskGroup'][dg]:
             self.js.delete_data('DiskGroup', dg)
             list_map = self.js.get_map_by_group('DiskGroup', dg)
->>>>>>> fr_portal
             for map in list_map:
                 if len(self.js.json_data['Map'][map]['DiskGroup']) > 1:
                     self.js.remove_member('DiskGroup', map, [dg], type='Map')
@@ -410,7 +380,7 @@ class HostGroup():
                     return
 
             self.js.update_data('HostGroup', hostgroup, host)
-            s.prt_log(f"Create {hostgroup} success!", 0)
+            s.prt_log("Create success!", 0)
             return True
 
     def get_all_hostgroup(self):
@@ -438,7 +408,7 @@ class HostGroup():
                 s.prt_log("Fail! The hostgroup already map,Please delete the map", 1)
             else:
                 self.js.delete_data('HostGroup', hg)
-                s.prt_log(f"Delete {hg} success!", 0)
+                s.prt_log("Delete success!", 0)
         else:
             s.prt_log(f"Fail! Can't find {hg}", 1)
 
@@ -530,6 +500,7 @@ class Map():
         for i in data_list:
             if self.js.check_key(key, i)['result'] == False:
                 return False
+
 
     def get_initiator(self, hg):
         # 根据hg去获取hostiqn，返回由hostiqn组成的initiator
@@ -1058,5 +1029,3 @@ class Portal():
         else:
             s.prt_log(f'{name}没有被成功创建，请检查',1)
             return 'FAIL'
-
-

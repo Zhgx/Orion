@@ -1,4 +1,4 @@
-# coding:utf-8
+#coding:utf-8
 """
 Global constants for vtel
 """
@@ -20,12 +20,12 @@ class ExitCode(object):
 
 
 class ReplayExit(Exception):
-    """replay时，输出日志中的异常信息后，此次replay事务也随之停止"""
+    "replay时，输出日志中的异常信息后，此次replay事务也随之停止"
     pass
 
 
 class CmdError(Exception):
-    """执行命令出错"""
+    "执行命令出错"
     pass
 
 
@@ -37,13 +37,12 @@ def init():
     _GLOBAL_DICT['LOG_SWITCH'] = 'yes'
     _GLOBAL_DICT['ROLLBACK'] = {}
 
-
 def set_value(key, value):
     """ 定义一个全局变量 """
     _GLOBAL_DICT[key] = value
 
 
-def get_value(key, dft_val=None):
+def get_value(key, dft_val = None):
     """ 获得一个全局变量,不存在则返回默认值 """
     try:
         return _GLOBAL_DICT[key]
@@ -76,15 +75,11 @@ def set_glo_log_switch(value):
 
 
 def set_glo_gui_tid(value):
-<<<<<<< HEAD
-    set_value('GUI_TID', value)
-=======
     set_value('GUI_TID',value)
 
 def set_glo_rollback(value):
     set_value('ROLLBACK',value)
 
->>>>>>> fr_portal
 
 
 def glo_gui_tid():
@@ -117,11 +112,9 @@ def glo_log_id():
 
 def glo_log_switch():
     return get_value('LOG_SWITCH')
-<<<<<<< HEAD
-=======
 
 
 def glo_rollback():
     return get_value('ROLLBACK')
 
->>>>>>> fr_portal
+# 77777

@@ -1,26 +1,13 @@
 import json
-import threading
-
 import consts
 import sundry as s
 import threading
 import sys
 
 
-class JsonOperation(object):
-<<<<<<< HEAD
-    # def __init__(self):
-    #     self.RPL = consts.glo_rpl()
-    #     self.json_data = self.read_json()
-    #     self.iscsi_data = self.json_data.copy()
-    #     if 'crm' in self.json_data.keys():
-    #         self.iscsi_data.pop('crm')
 
+class JsonOperation(object):
     _instance_lock = threading.Lock()
-    # RPL = consts.glo_rpl()
-=======
-    _instance_lock = threading.Lock()
->>>>>>> fr_portal
 
     def __init__(self):
         self.RPL = consts.glo_rpl()
@@ -37,10 +24,7 @@ class JsonOperation(object):
                 if not hasattr(cls, '_instance'):
                     JsonOperation._instance = super().__new__(cls)
         return JsonOperation._instance
-<<<<<<< HEAD
-=======
 
->>>>>>> fr_portal
 
     # 读取json文档
     @s.deco_json_operation('读取到的JSON数据')
@@ -66,13 +50,10 @@ class JsonOperation(object):
             print('Failed to read json file.')
             sys.exit()
 
-<<<<<<< HEAD
-=======
     def commit_json(self):
         with open('../vplx/map_config.json', "w") as fw:
             json.dump(self.json_data, fw, indent=4, separators=(',', ': '))
 
->>>>>>> fr_portal
     # 获取Host,Disk、Target，HostGroup、DiskGroup、Map的信息
     def get_data(self, first_key):
         all_data = self.json_data[first_key]
@@ -86,13 +67,17 @@ class JsonOperation(object):
         else:
             return {'type': first_key, 'alias': data_key, 'result': False}
 
+
+
     # 检查value值是否存在
     @s.deco_json_operation('JSON检查value值的结果')
     def check_value(self, first_key, data_value):
         for key in self.json_data[first_key]:
             if data_value in self.json_data[first_key][key]:
-                return {'type': first_key, 'alias': data_value, 'result': True}
-        return {'type': first_key, 'alias': data_value, 'result': False}
+                return {'type':first_key,'alias':data_value,'result':True}
+        return {'type':first_key,'alias':data_value,'result':False}
+
+
 
     @s.deco_json_operation('JSON检查某个key值是否存在于某个value值')
     def check_value_in_key(self, type, key, value):
@@ -106,7 +91,7 @@ class JsonOperation(object):
                 return {'type': type, 'key': key, 'value': value, 'result': False}
 
     @s.deco_json_operation('JSON检查某个成员是否存在于指定map中')
-    def check_map_member(self, map, member, type):
+    def check_map_member(self,map,member,type):
         """
         检查某个member是否存在指定的map中
         :param map:
@@ -115,9 +100,10 @@ class JsonOperation(object):
         :return:
         """
         if member in self.json_data["Map"][map][type]:
-            return {'type': type, 'map': map, 'member': member, 'result': True}
+            return {'type':type, 'map':map, 'member':member, 'result': True}
         else:
-            return {'type': type, 'map': map, 'member': member, 'result': False}
+            return {'type':type, 'map':map, 'member':member, 'result': False}
+
 
     def check_in_res(self,res,type,target):
         """
@@ -137,14 +123,14 @@ class JsonOperation(object):
 
 
     @s.deco_json_operation('JSON通过host获取到所有相关的hostgroup')
-    def get_hg_by_host(self, host):
+    def get_hg_by_host(self,host):
         """
         通过host取到使用这个host的所有hg
         :param host:str
         :return:list
         """
         list_host = []
-        for hg, hg_member in self.json_data["HostGroup"].items():
+        for hg,hg_member in self.json_data["HostGroup"].items():
             if host in hg_member:
                 list_host.append(hg)
         return list_host
@@ -159,7 +145,7 @@ class JsonOperation(object):
         # return list_host
 
     @s.deco_json_operation('JSON通过map获取到所有相关的diskgroup/hostgroup')
-    def get_map_by_group(self, type, group):
+    def get_map_by_group(self,type,group):
         """
         通过hg/dg取到使用这个hg的所有map
         :param type: "HostGroup"/"DiskGroup"
@@ -167,13 +153,14 @@ class JsonOperation(object):
         :return:
         """
         list_map = []
-        for map, map_member in self.json_data['Map'].items():
+        for map,map_member in self.json_data['Map'].items():
             if group in map_member[type]:
                 list_map.append(map)
         return list_map
 
+
     @s.deco_json_operation('JSON通过dg列表获取到所有相关的disk')
-    def get_disk_by_dg(self, list_dg):
+    def get_disk_by_dg(self,list_dg):
         """
         过dg列表获取到所有相关的disk
         :param dg:list
@@ -181,18 +168,18 @@ class JsonOperation(object):
         """
         list_disk = []
         for dg in list_dg:
-            list_disk += self.get_data('DiskGroup')[dg]
+            list_disk+=self.get_data('DiskGroup')[dg]
         return list(set(list_disk))
 
     @s.deco_json_operation('JSON通过host获取到所有相关的map')
     # 问题：日志记录的是只需要通过host获取到map的这一数据，还是需要将通过host获取到map的过程也记录下来（通过host获取hg，通过hg获取map）
     # 目前的通过调用get_hg_by_host()和get_map_by_group()，这两个方法也会进行日志的记录。
     # 下面一个方法get_map_by_disk()，就只会记录通过disk获取到的map这一数据，过程(get_dg_by_disk，get_map_by_group)就不进行记录。
-    def get_map_by_host(self, host):
+    def get_map_by_host(self,host):
         list_map = []
         list_hg = self.get_hg_by_host(host)
         for hg in list_hg:
-            list_map.extend(self.get_map_by_group('HostGroup', hg))
+            list_map.extend(self.get_map_by_group('HostGroup',hg))
         return list(set(list_map))
 
     @s.deco_json_operation('JSON通过disk获取到所有相关的map')
@@ -220,7 +207,7 @@ class JsonOperation(object):
         return list(set(map_list))
 
     @s.deco_json_operation('JSON通过disk获取到所有相关的iqn')
-    def get_iqn_by_disk(self, disk):
+    def get_iqn_by_disk(self,disk):
         """
         通过disk获取到对应iSCSILogicalUnit的allowed initiators
         allowed initiators即host的iqn
@@ -233,7 +220,7 @@ class JsonOperation(object):
         list_host = []
         list_map = self.get_map_by_disk(disk)
         for map in list_map:
-            list_hg += self.get_data('Map')[map]['HostGroup']
+            list_hg+=self.get_data('Map')[map]['HostGroup']
 
         for hg in set(list_hg):
             for host in self.get_data('HostGroup')[hg]:
@@ -244,27 +231,33 @@ class JsonOperation(object):
 
         return list(set(list_initiator))
 
+
     @s.deco_json_operation('JSON通过disk获取到相关的dg')
-    def get_dg_by_disk(self, disk):
+    def get_dg_by_disk(self,disk):
         list_dg = []
         dict_dg = self.get_data('DiskGroup')
-        for dg, member in dict_dg.items():
+        for dg,member in dict_dg.items():
             if disk in member:
                 list_dg.append(dg)
         return list(set(list_dg))
 
+
+
+
     @s.deco_json_operation('JSON通过disk获取到相关的hg')
-    # "改改改"
-    def get_disk_by_hg(self, hg):
-        list_map = self.get_map_by_group('HostGroup', hg)
+    #"改改改"
+    def get_disk_by_hg(self,hg):
+        list_map = self.get_map_by_group('HostGroup',hg)
         list_disk = []
         for map in list_map:
             for disk in self.get_disk_by_dg(self.get_data('Map')[map]['DiskGroup']):
                 list_disk.append(disk)
         return list(set(list_disk))
 
+
+
     @s.deco_json_operation('JSON通过disk获取到相关的host')
-    def get_disk_by_host(self, host):
+    def get_disk_by_host(self,host):
         """
         通过disk获取到相关的host
         :param host: str
@@ -277,6 +270,7 @@ class JsonOperation(object):
                 list_disk.append(disk)
         return list(set(list_disk))
 
+
     @s.deco_json_operation('JSON通过map获取到相关的iqn')
     def get_iqn_by_map(self, map):
         list_iqn = []
@@ -284,8 +278,9 @@ class JsonOperation(object):
         list_iqn.extend(self.get_iqn_by_hg(hg_list))
         return list(set(list_iqn))
 
+
     @s.deco_json_operation('JSON通过hg列表获取到相关的iqn')
-    def get_iqn_by_hg(self, list_hg):
+    def get_iqn_by_hg(self,list_hg):
         list_iqn = []
         for hg in list_hg:
             for host in self.get_data('HostGroup')[hg]:
@@ -294,11 +289,13 @@ class JsonOperation(object):
 
         return list(set(list_iqn))
 
+
     # 创建Host、HostGroup、DiskGroup、Map
     @s.deco_json_operation('JSON更新后的资源信息')
     def update_data(self, first_key, data_key, data_value):
         self.json_data[first_key].update({data_key: data_value})
         return self.json_data[first_key]
+
 
     # 更新disk 可能需要注意的地方：没有限制可以修改的key
     @s.deco_json_operation(f'JSON更新disk信息')
@@ -306,7 +303,8 @@ class JsonOperation(object):
         self.json_data[first_key] = data
         return self.json_data[first_key]
 
-    def append_member(self, iscsi_type, target, member, type=None):
+
+    def append_member(self,iscsi_type,target,member,type=None):
         """
         :param iscsi_type:
         :param target:
@@ -322,178 +320,34 @@ class JsonOperation(object):
 
         if type == 'Map':
             dict_map = self.get_data('Map')[target]
-            dict_map.update({iscsi_type: list_member})
-            self.update_data('Map', target, dict_map)
+            dict_map.update({iscsi_type:list_member})
+            self.update_data('Map',target,dict_map)
         else:
             self.update_data(iscsi_type, target, list(set(list_member)))
 
-<<<<<<< HEAD
-    def remove_member(self, iscsi_type, target, member, type=None):
-=======
 
 
     def remove_member(self,iscsi_type,target,member,type=None):
->>>>>>> fr_portal
         if type == 'Map':
             list_member = self.get_data('Map')[target][iscsi_type]
         else:
             list_member = self.get_data(iscsi_type)[target]
-        # print(f'list_member:{list_member}')
+
         for i in member:
             list_member.remove(i)
 
         if type == 'Map':
             dict_map = self.get_data('Map')[target]
-            dict_map.update({iscsi_type: list_member})
-            self.update_data('Map', target, dict_map)
+            dict_map.update({iscsi_type:list_member})
+            self.update_data('Map',target,dict_map)
         else:
             self.update_data(iscsi_type, target, list(set(list_member)))
+
 
     # 删除Host、HostGroup、DiskGroup、Map
     @s.deco_json_operation('JSON删除后的资源信息')
     def delete_data(self, first_key, data_key):
         self.json_data[first_key].pop(data_key)
-<<<<<<< HEAD
-        with open('../vplx/map_config.json', "w") as fw:
-            json.dump(self.json_data, fw, indent=4, separators=(',', ': '))
-        return self.json_data[first_key]
-
-    # 更新crm configure资源的信息
-    @s.deco_json_operation('JSON更新CRM资源信息')
-    def update_crm_conf(self, resource, vip, target):
-        self.json_data.update({'crm': {}})
-        self.json_data['crm'].update({'resource': resource})
-        self.json_data['crm'].update({'vip': vip})
-        self.json_data['crm'].update({'target': target})
-        with open('../vplx/map_config.json', "w") as fw:
-            json.dump(self.json_data, fw, indent=4, separators=(',', ': '))
-        return self.json_data['crm']
-
-    def get_disk_with_iqn(self):
-
-        data = self.json_data
-        dict_disk_iqn = {}
-        for disk in data['Disk']:
-            dict_disk_iqn.update({disk: []})
-
-        for map in data['Map'].values():
-            for dg in map['DiskGroup']:
-                for disk in data['DiskGroup'][dg]:
-                    list_iqn = []
-                    for hg in map['HostGroup']:
-                        for host in data['HostGroup'][hg]:
-                            list_iqn.append(data['Host'][host])
-                    dict_disk_iqn[disk] = s.append_list(dict_disk_iqn[disk], list_iqn)
-
-        return dict_disk_iqn
-
-    # 集合的方式
-    # def get_disk_with_iqn(self):
-    #
-    #     data = self.json_data
-    #     dict_disk_iqn = {}
-    #     for disk in data['Disk']:
-    #         dict_disk_iqn.update({disk: set()})
-    #
-    #     for map in data['Map'].values():
-    #         for dg in map['DiskGroup']:
-    #             for disk in data['DiskGroup'][dg]:
-    #                 set_iqn = set()
-    #                 for hg in map['HostGroup']:
-    #                     for host in data['HostGroup'][hg]:
-    #                         set_iqn.add(data['Host'][host])
-    #                 dict_disk_iqn[disk] = dict_disk_iqn[disk] | set_iqn
-    #
-    #     return dict_disk_iqn
-
-
-class JsonMofidy(JsonOperation):
-    def __init__(self):
-        super().__init__()
-
-    @s.deco_json_operation('读取到的JSON数据(临时JSON对象)')
-    def read_json(self):
-        try:
-            json_data = open("../vplx/map_config.json", encoding='utf-8')
-            json_dict = json.load(json_data)
-            json_data.close()
-            return json_dict
-
-        except FileNotFoundError:
-            with open('../vplx/map_config.json', "w") as fw:
-                json_dict = {
-                    "Host": {},
-                    "Disk": {},
-                    "HostGroup": {},
-                    "DiskGroup": {},
-                    "Map": {}}
-                json.dump(json_dict, fw, indent=4, separators=(',', ': '))
-            return json_dict
-        except json.decoder.JSONDecodeError:
-            print('Failed to read json file.')
-            sys.exit()
-
-    @s.deco_json_operation('JSON更新后的资源信息（临时JSON对象）')
-    def update_data(self, first_key, data_key, data_value):
-        self.json_data[first_key].update({data_key: data_value})
-        return self.json_data[first_key]
-
-    def append_member(self, iscsi_type, target, member, type=None):
-        data = self.json_data
-        if type == 'Map':
-            list_member = data['Map'][target][iscsi_type]
-            list_member.extend(member)
-            dict_map = data['Map'][target]
-            dict_map.update({iscsi_type: list_member})
-            self.update_data('Map', target, dict_map)
-        else:
-            list_member = data[iscsi_type][target]
-            list_member.extend(member)
-            self.update_data(iscsi_type, target, list(set(list_member)))
-
-    def remove_member(self, iscsi_type, target, member, type=None):
-        data = self.json_data
-        if type == 'Map':
-            list_member = data['Map'][target][iscsi_type]
-            for i in member:
-                list_member.remove(i)
-            dict_map = data['Map'][target]
-            dict_map.update({iscsi_type: list_member})
-            self.update_data('Map', target, dict_map)
-        else:
-            list_member = data[iscsi_type][target]
-            for i in member:
-                list_member.remove(i)
-            self.update_data(iscsi_type, target, list(set(list_member)))
-
-    def get_iqn_by_disk(self, disk):
-        """
-        通过disk获取到对应iSCSILogicalUnit的allowed initiators
-        allowed initiators即host的iqn
-        :param disk:str
-        :return:list
-        """
-
-        get_map_by_disk = self.get_map_by_disk.__wrapped__
-        # 通过disk获取dg
-        list_initiator = []
-        list_hg = []
-        list_host = []
-        list_map = get_map_by_disk(self, disk)
-        for map in list_map:
-            list_hg += self.get_data('Map')[map]['HostGroup']
-
-        for hg in set(list_hg):
-            for host in self.get_data('HostGroup')[hg]:
-                list_host.append(host)
-
-        for host in set(list_host):
-            list_initiator.append(self.get_data('Host')[host])
-
-        return list(set(list_initiator))
-=======
         # with open('../vplx/map_config.json', "w") as fw:
         #     json.dump(self.json_data, fw, indent=4, separators=(',', ': '))
         return self.json_data[first_key]
-
->>>>>>> fr_portal
