@@ -1,5 +1,6 @@
 import execute as ex
 import consts
+import sundry as s
 
 class Usage():
     # portal部分使用手册
@@ -40,7 +41,8 @@ class PortalCommands():
         p_create_portal = portal_subp.add_parser(
             'create',
             aliases='c',
-            help='Create the PORTAL')
+            help='Create the PORTAL',
+            usage = Usage.portal_create)
 
         # add arguments of portal create
         p_create_portal.add_argument(
@@ -131,11 +133,10 @@ class PortalCommands():
             required=True,
             action='store',
             help='IP',
-            metavar='IP',
-            nargs='+')
+            metavar='IP')
 
         p_modify_portal.add_argument(
-            '-p'
+            '-p',
             '-port',
             '--port',
             required=True,
@@ -149,43 +150,40 @@ class PortalCommands():
         p_modify_portal.set_defaults(func=self.modify)
 
 
-    # @sd.deco_record_exception
+    @s.deco_record_exception
     def create(self, args):
         crm = ex.CRMData()
-        vip = crm.get_vip()
-        portblock = crm.get_portblock()
-        target = crm.get_target()
-        crm.check_env_sync(vip,portblock,target)
+        crm.check()
 
         portal = ex.Portal()
         portal.create(args.portal,args.ip,args.port,args.netmask)
 
 
-    # @sd.deco_record_exception
+    @s.deco_record_exception
     def show(self, args):
-        print('show')
-        print(args)
-        # portal = ex.PORTAL()
-        # if args.portal == 'all' or args.portal is None:
-        #     portal.show_all_portal()
-        # else:
-        #     portal.show_spe_portal(args.portal)
+        crm = ex.CRMData()
+        crm.check()
 
-    # @sd.deco_record_exception
+        portal = ex.Portal()
+        portal.show()
+
+
+    @s.deco_record_exception
     def delete(self, args):
+        crm = ex.CRMData()
+        crm.check()
+
         portal = ex.Portal()
         portal.delete(args.portal)
 
 
-    # @sd.deco_record_exception
+    @s.deco_record_exception
     def modify(self, args):
-        print('modify')
-        print(args)
-        # portal = ex.PORTAL()
-        # if args.add:
-        #     portal.add_disk(args.portal,args.add)
-        # if args.remove:
-        #     portal.remove_disk(args.portal,args.remove)
+        crm = ex.CRMData()
+        crm.check()
+
+        portal = ex.Portal()
+        portal.modify(args.portal,args.ip,args.port)
 
 
     def print_portal_help(self, *args):
