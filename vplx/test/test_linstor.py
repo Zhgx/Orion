@@ -22,7 +22,8 @@ class TestLinstor:
 | ubuntu | res_a    | pool_a      |     0 |    1000 | /dev/drbd1000 |    12 MiB | Unused | UpToDate |
 +---------------------------------------------------------------------------------------------------+'''
         res_result = self.ls.refine_linstor(res)
-        assert res_result == [['ubuntu', 'res_a', 'pool_a', '0', '1000', '/dev/drbd1000', '12MiB', 'Unused', 'UpToDate']]
+        assert res_result == [
+            ['ubuntu', 'res_a', 'pool_a', '0', '1000', '/dev/drbd1000', '12MiB', 'Unused', 'UpToDate']]
 
     def test_refine_linstor_sp(self):
         sp = '''+-----------------------------------------------------------------------------------------------------------+

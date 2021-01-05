@@ -76,3 +76,33 @@ def test_prt():
 
 def test_prt_log():
     assert sundry.prt_log('test_prt_log', 0) == None
+
+
+# -----------------  add  ------------   2020.12.28
+
+def test_show_spe_map_data():
+    assert True
+
+
+def test_deco_json_operation():
+    assert True
+
+
+def test_remove_list():
+    assert True
+
+
+def test_append_list():
+    assert True
+
+
+def test_confirm_modify():
+    assert True
+
+
+def test_deco_db_insert():
+    assert True
+
+
+def test_deco_color():
+    assert True

@@ -5,10 +5,7 @@ import logging.config
 import consts
 import sundry
 
-
-
-
-LOG_PATH = '../../vplx/'
+LOG_PATH = '../vplx/'
 # LOG_PATH = '/var/log/vtel/'
 CLI_LOG_NAME = 'cli.log'
 WEB_LOG_NAME = 'web.log'
@@ -28,7 +25,7 @@ class MyLoggerAdapter(logging.LoggerAdapter):
 
 
 class Log(object):
-    def __init__(self, user, tid,file_name=CLI_LOG_NAME):
+    def __init__(self, user, tid, file_name=CLI_LOG_NAME):
         """
         日志格式：
         asctime：时间
@@ -48,7 +45,7 @@ class Log(object):
             "%(asctime)s [%(tid)s] [%(user)s] [%(t1)s] [%(t2)s] [%(d1)s] [%(d2)s] [%(data)s]|",
             datefmt='[%Y/%m/%d %H:%M:%S]')
         self.handler_input = logging.handlers.RotatingFileHandler(filename=f'{LOG_PATH}{file_name}', mode='a',
-                                                             maxBytes=10*1024*1024, backupCount=20)
+                                                                  maxBytes=10 * 1024 * 1024, backupCount=20)
         self.handler_input.setFormatter(fmt)
         self.user = user
         self.tid = tid
@@ -86,4 +83,3 @@ class Log(object):
                 'd1': d1,
                 'd2': d2,
                 'data': data})
-

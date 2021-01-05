@@ -19,7 +19,7 @@ class TestLVM:
 
     # list_vg/[]
     def test_refine_vg(self):
-        assert self.l.refine_vg()  is not None
+        assert self.l.refine_vg() is not None
 
     # True / None
     def test_is_vg_exists(self):

@@ -1,4 +1,6 @@
 import json
+import threading
+
 import consts
 import sundry as s
 from functools import wraps
@@ -7,12 +9,31 @@ import traceback
 
 
 class JsonOperation(object):
+    # def __init__(self):
+    #     self.RPL = consts.glo_rpl()
+    #     self.json_data = self.read_json()
+    #     self.iscsi_data = self.json_data.copy()
+    #     if 'crm' in self.json_data.keys():
+    #         self.iscsi_data.pop('crm')
+
+    _instance_lock = threading.Lock()
+    # RPL = consts.glo_rpl()
+
     def __init__(self):
         self.RPL = consts.glo_rpl()
         self.json_data = self.read_json()
         self.iscsi_data = self.json_data.copy()
-        if 'crm' in self.json_data.keys():
-            self.iscsi_data.pop('crm')
+        if 'Portal' in self.json_data.keys():
+            self.iscsi_data.pop('Portal')
+        if 'Target' in self.json_data.keys():
+            self.iscsi_data.pop('Target')
+
+    def __new__(cls, *args, **kwargs):
+        if not hasattr(cls, '_instance'):
+            with JsonOperation._instance_lock:
+                if not hasattr(cls, '_instance'):
+                    JsonOperation._instance = super().__new__(cls)
+        return JsonOperation._instance
 
     # 读取json文档
     @s.deco_json_operation('读取到的JSON数据')
@@ -24,7 +45,7 @@ class JsonOperation(object):
             return json_dict
 
         except FileNotFoundError:
-            with open('../../vplx/map_config.json', "w") as fw:
+            with open('../vplx/map_config.json', "w") as fw:
                 json_dict = {
                     "Host": {},
                     "Disk": {},
@@ -245,7 +266,7 @@ class JsonOperation(object):
     @s.deco_json_operation('JSON更新后的资源信息')
     def update_data(self, first_key, data_key, data_value):
         self.json_data[first_key].update({data_key: data_value})
-        with open('../../vplx/map_config.json', "w") as fw:
+        with open('../vplx/map_config.json', "w") as fw:
             json.dump(self.json_data, fw, indent=4, separators=(',', ': '))
         return self.json_data[first_key]
 
@@ -253,7 +274,7 @@ class JsonOperation(object):
     @s.deco_json_operation(f'JSON更新disk信息')
     def cover_data(self, first_key, data):
         self.json_data[first_key] = data
-        with open('../../vplx/map_config.json', "w") as fw:
+        with open('../vplx/map_config.json', "w") as fw:
             json.dump(self.json_data, fw, indent=4, separators=(',', ': '))
         return self.json_data[first_key]
 
@@ -283,7 +304,7 @@ class JsonOperation(object):
             list_member = self.get_data('Map')[target][iscsi_type]
         else:
             list_member = self.get_data(iscsi_type)[target]
-
+        # print(f'list_member:{list_member}')
         for i in member:
             list_member.remove(i)
 
@@ -298,7 +319,7 @@ class JsonOperation(object):
     @s.deco_json_operation('JSON删除后的资源信息')
     def delete_data(self, first_key, data_key):
         self.json_data[first_key].pop(data_key)
-        with open('../../vplx/map_config.json', "w") as fw:
+        with open('../vplx/map_config.json', "w") as fw:
             json.dump(self.json_data, fw, indent=4, separators=(',', ': '))
         return self.json_data[first_key]
 
@@ -309,7 +330,7 @@ class JsonOperation(object):
         self.json_data['crm'].update({'resource': resource})
         self.json_data['crm'].update({'vip': vip})
         self.json_data['crm'].update({'target': target})
-        with open('../../vplx/map_config.json', "w") as fw:
+        with open('../vplx/map_config.json', "w") as fw:
             json.dump(self.json_data, fw, indent=4, separators=(',', ': '))
         return self.json_data['crm']
 
@@ -358,13 +379,13 @@ class JsonMofidy(JsonOperation):
     @s.deco_json_operation('读取到的JSON数据(临时JSON对象)')
     def read_json(self):
         try:
-            json_data = open("../../vplx/map_config.json", encoding='utf-8')
+            json_data = open("../vplx/map_config.json", encoding='utf-8')
             json_dict = json.load(json_data)
             json_data.close()
             return json_dict
 
         except FileNotFoundError:
-            with open('../../vplx/map_config.json', "w") as fw:
+            with open('../vplx/map_config.json', "w") as fw:
                 json_dict = {
                     "Host": {},
                     "Disk": {},

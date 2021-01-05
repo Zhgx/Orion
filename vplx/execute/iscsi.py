@@ -175,7 +175,7 @@ class Host():
         else:
             self.check_iqn(iqn)
             self.js.update_data("Host", host, iqn)
-            s.prt_log("Create success!", 0)
+            s.prt_log(f"Create {host} success!", 0)
             return True
 
     def get_all_host(self):
@@ -204,7 +204,7 @@ class Host():
                     "Fail! The host in ... hostgroup.Please delete the hostgroup first", 1)
             else:
                 self.js.delete_data('Host', host)
-                s.prt_log("Delete success!", 0)
+                s.prt_log(f"Delete {host} success!", 0)
                 return True
         else:
             s.prt_log(f"Fail! Can't find {host}", 1)
@@ -249,7 +249,7 @@ class DiskGroup():
                     return
 
             self.js.update_data('DiskGroup', diskgroup, disk)
-            s.prt_log("Create success!", 0)
+            s.prt_log(f"Create {diskgroup} success!", 0)
             return True
 
     def get_all_diskgroup(self):
@@ -277,7 +277,7 @@ class DiskGroup():
                 s.prt_log("Fail! The diskgroup already map,Please delete the map", 1)
             else:
                 self.js.delete_data('DiskGroup', dg)
-                s.prt_log("Delete success!", 0)
+                s.prt_log(f"Delete {dg} success!", 0)
         else:
             s.prt_log(f"Fail! Can't find {dg}", 1)
 
@@ -304,6 +304,8 @@ class DiskGroup():
             s.prt_log('JSON已被修改，请重新操作', 2)
 
         self.js.append_member('DiskGroup', dg, list_disk)
+        for v in list_disk:
+            print(f'{dg} add {v}')
 
 
     def remove_disk(self, dg, list_disk):
@@ -312,8 +314,8 @@ class DiskGroup():
         for disk in list_disk:
             if not self.js.check_value_in_key("DiskGroup", dg, disk)['result']:
                 s.prt_log(f'{dg}中不存在成员{disk}，无法进行移除', 2)
-
-
+        for v in list_disk:
+            print(f'{dg} remove {v}')
         js_modify = iscsi_json.JsonMofidy()
         js_modify.remove_member('DiskGroup', dg, list_disk)
 
@@ -328,10 +330,15 @@ class DiskGroup():
         else:
             s.prt_log('JSON已被修改，请重新操作', 2)
 
+        for v in js_modify.json_data['DiskGroup'][dg]:
+            print(f'dg:{v}')
+
         # 配置文件移除成员
         if not js_modify.json_data['DiskGroup'][dg]:
+
             self.js.delete_data('DiskGroup', dg)
             list_map = self.js.get_map_by_group('DiskGroup',dg)
+            print(f'list_map:{list_map}')
             for map in list_map:
                 if len(self.js.json_data['Map'][map]['DiskGroup']) > 1:
                     self.js.remove_member('DiskGroup', map, [dg], type='Map')
@@ -361,7 +368,7 @@ class HostGroup():
                     return
 
             self.js.update_data('HostGroup', hostgroup, host)
-            s.prt_log("Create success!", 0)
+            s.prt_log(f"Create {hostgroup} success!", 0)
             return True
 
     def get_all_hostgroup(self):
@@ -389,7 +396,7 @@ class HostGroup():
                 s.prt_log("Fail! The hostgroup already map,Please delete the map", 1)
             else:
                 self.js.delete_data('HostGroup', hg)
-                s.prt_log("Delete success!", 0)
+                s.prt_log(f"Delete {hg} success!", 0)
         else:
             s.prt_log(f"Fail! Can't find {hg}", 1)
 
