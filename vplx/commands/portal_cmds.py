@@ -41,7 +41,8 @@ class PortalCommands():
         p_create_portal = portal_subp.add_parser(
             'create',
             aliases='c',
-            help='Create the PORTAL')
+            help='Create the PORTAL',
+            usage = Usage.portal_create)
 
         # add arguments of portal create
         p_create_portal.add_argument(
@@ -149,13 +150,10 @@ class PortalCommands():
         p_modify_portal.set_defaults(func=self.modify)
 
 
-    @sd.deco_record_exception
+    @s.deco_record_exception
     def create(self, args):
         crm = ex.CRMData()
-        vip = crm.get_vip()
-        portblock = crm.get_portblock()
-        target = crm.get_target()
-        crm.check_env_sync(vip,portblock,target)
+        crm.check()
 
         portal = ex.Portal()
         portal.create(args.portal,args.ip,args.port,args.netmask)
@@ -163,18 +161,27 @@ class PortalCommands():
 
     @s.deco_record_exception
     def show(self, args):
+        crm = ex.CRMData()
+        crm.check()
+
         portal = ex.Portal()
         portal.show()
 
 
     @s.deco_record_exception
     def delete(self, args):
+        crm = ex.CRMData()
+        crm.check()
+
         portal = ex.Portal()
         portal.delete(args.portal)
 
 
     @s.deco_record_exception
     def modify(self, args):
+        crm = ex.CRMData()
+        crm.check()
+
         portal = ex.Portal()
         portal.modify(args.portal,args.ip,args.port)
 

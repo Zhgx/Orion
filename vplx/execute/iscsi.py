@@ -151,6 +151,7 @@ class Disk():
         for d in linstor_res:
             disks.update({d[1]: d[5]})
         self.js.cover_data('Disk', disks)
+        self.js.commit_json()
         return disks
 
     def get_spe_disk(self, disk):
@@ -194,6 +195,7 @@ class Host():
         else:
             self.check_iqn(iqn)
             self.js.update_data("Host", host, iqn)
+            self.js.commit_json()
             s.prt_log("Create success!", 0)
             return True
 
@@ -223,6 +225,7 @@ class Host():
                     "Fail! The host in ... hostgroup.Please delete the hostgroup first", 1)
             else:
                 self.js.delete_data('Host', host)
+                self.js.commit_json()
                 s.prt_log("Delete success!", 0)
                 return True
         else:
@@ -269,6 +272,7 @@ class DiskGroup():
                     return
 
             self.js.update_data('DiskGroup', diskgroup, disk)
+            self.js.commit_json()
             s.prt_log("Create success!", 0)
             return True
 
@@ -297,6 +301,7 @@ class DiskGroup():
                 s.prt_log("Fail! The diskgroup already map,Please delete the map", 1)
             else:
                 self.js.delete_data('DiskGroup', dg)
+                self.js.commit_json()
                 s.prt_log("Delete success!", 0)
         else:
             s.prt_log(f"Fail! Can't find {dg}", 1)
@@ -381,6 +386,7 @@ class HostGroup():
                     return
 
             self.js.update_data('HostGroup', hostgroup, host)
+            self.js.commit_json()
             s.prt_log("Create success!", 0)
             return True
 
@@ -409,6 +415,7 @@ class HostGroup():
                 s.prt_log("Fail! The hostgroup already map,Please delete the map", 1)
             else:
                 self.js.delete_data('HostGroup', hg)
+                self.js.commit_json()
                 s.prt_log("Delete success!", 0)
         else:
             s.prt_log(f"Fail! Can't find {hg}", 1)
@@ -551,7 +558,9 @@ class Map():
 
         json_data_before = copy.deepcopy(self.js.json_data)
         self.js.update_data('Map', map, {'HostGroup': hg_list, 'DiskGroup': dg_list})
+        json_data_modify = copy.deepcopy(self.js.json_data)
         obj_iscsi = IscsiConfig(json_data_before, self.js.json_data)
+
 
         # 已经被使用过的disk(ilu)需不需要提示
         dict_disk_inuse = obj_iscsi.modify
@@ -561,6 +570,7 @@ class Map():
         obj_iscsi.create_iscsilogicalunit()
         obj_iscsi.modify_iscsilogicalunit()
 
+        self.js.json_data = json_data_modify
         self.js.commit_json()
         s.prt_log('Create map success!', 0)
         return True
@@ -645,10 +655,12 @@ class Map():
 
         json_data_before = copy.deepcopy(self.js.json_data)
         self.js.delete_data('Map', map)
+        json_data_modify = copy.deepcopy(self.js.json_data)
         obj_iscsi = IscsiConfig(json_data_before, self.js.json_data)
         obj_iscsi.delete_iscsilogicalunit()
         obj_iscsi.modify_iscsilogicalunit()
 
+        self.js.json_data = json_data_modify
         self.js.commit_json()
         s.prt_log("Delete map success!", 0)
         return True
@@ -898,7 +910,6 @@ class Portal():
         if not self.js.check_key('Portal',name)['result']:
             s.prt_log(f'不存在{name}，无法修改',1)
             return
-
         if not self._check_IP(ip):
             s.prt_log(f'{ip}不符合规范',1)
             return
@@ -907,6 +918,9 @@ class Portal():
             return
 
         portal = self.js.json_data['Portal'][name]
+        if portal['ip'] == ip and portal['port'] == str(port):
+            s.prt_log(f'IP和Port都相同，不需要修改',1)
+            return
 
 
         # 查询有没有target使用这个vip
