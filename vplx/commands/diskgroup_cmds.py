@@ -1,4 +1,3 @@
-import pickle
 import execute as ex
 import sundry as sd
 import consts
@@ -43,7 +42,9 @@ class DiskGroupCommands():
         p_create_dg = dg_subp.add_parser(
             'create',
             aliases='c',
-            help='Create the DiskGroup')
+            help='Create the DiskGroup',
+            usage=Usage.dg_create
+        )
 
         # add arguments of diskgroup create
         p_create_dg.add_argument(

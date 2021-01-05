@@ -3,7 +3,6 @@ import logging
 import logging.handlers
 import logging.config
 import consts
-import sundry
 
 LOG_PATH = '../vplx/'
 # LOG_PATH = '/var/log/vtel/'

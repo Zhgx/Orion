@@ -3,12 +3,12 @@ import threading
 
 import consts
 import sundry as s
-from functools import wraps
+import threading
 import sys
-import traceback
 
 
 class JsonOperation(object):
+<<<<<<< HEAD
     # def __init__(self):
     #     self.RPL = consts.glo_rpl()
     #     self.json_data = self.read_json()
@@ -18,6 +18,9 @@ class JsonOperation(object):
 
     _instance_lock = threading.Lock()
     # RPL = consts.glo_rpl()
+=======
+    _instance_lock = threading.Lock()
+>>>>>>> fr_portal
 
     def __init__(self):
         self.RPL = consts.glo_rpl()
@@ -34,6 +37,10 @@ class JsonOperation(object):
                 if not hasattr(cls, '_instance'):
                     JsonOperation._instance = super().__new__(cls)
         return JsonOperation._instance
+<<<<<<< HEAD
+=======
+
+>>>>>>> fr_portal
 
     # 读取json文档
     @s.deco_json_operation('读取到的JSON数据')
@@ -51,13 +58,21 @@ class JsonOperation(object):
                     "Disk": {},
                     "HostGroup": {},
                     "DiskGroup": {},
-                    "Map": {}}
+                    "Map": {},
+                    "Portal":{}}
                 json.dump(json_dict, fw, indent=4, separators=(',', ': '))
             return json_dict
         except json.decoder.JSONDecodeError:
             print('Failed to read json file.')
             sys.exit()
 
+<<<<<<< HEAD
+=======
+    def commit_json(self):
+        with open('../vplx/map_config.json', "w") as fw:
+            json.dump(self.json_data, fw, indent=4, separators=(',', ': '))
+
+>>>>>>> fr_portal
     # 获取Host,Disk、Target，HostGroup、DiskGroup、Map的信息
     def get_data(self, first_key):
         all_data = self.json_data[first_key]
@@ -103,6 +118,23 @@ class JsonOperation(object):
             return {'type': type, 'map': map, 'member': member, 'result': True}
         else:
             return {'type': type, 'map': map, 'member': member, 'result': False}
+
+    def check_in_res(self,res,type,target):
+        """
+        检查目标资源在不在某个res的成员里面，res：Map，Target，Portal
+        :param res:
+        :param type:
+        :param target:
+        :return:
+        """
+        for res in self.json_data[res].values():
+            if target in res[type]:
+                return {'type': type, 'target': target, 'result': True}
+            else:
+                return {'type': type, 'target': target, 'result': False}
+
+
+
 
     @s.deco_json_operation('JSON通过host获取到所有相关的hostgroup')
     def get_hg_by_host(self, host):
@@ -266,16 +298,12 @@ class JsonOperation(object):
     @s.deco_json_operation('JSON更新后的资源信息')
     def update_data(self, first_key, data_key, data_value):
         self.json_data[first_key].update({data_key: data_value})
-        with open('../vplx/map_config.json', "w") as fw:
-            json.dump(self.json_data, fw, indent=4, separators=(',', ': '))
         return self.json_data[first_key]
 
     # 更新disk 可能需要注意的地方：没有限制可以修改的key
     @s.deco_json_operation(f'JSON更新disk信息')
     def cover_data(self, first_key, data):
         self.json_data[first_key] = data
-        with open('../vplx/map_config.json', "w") as fw:
-            json.dump(self.json_data, fw, indent=4, separators=(',', ': '))
         return self.json_data[first_key]
 
     def append_member(self, iscsi_type, target, member, type=None):
@@ -299,7 +327,13 @@ class JsonOperation(object):
         else:
             self.update_data(iscsi_type, target, list(set(list_member)))
 
+<<<<<<< HEAD
     def remove_member(self, iscsi_type, target, member, type=None):
+=======
+
+
+    def remove_member(self,iscsi_type,target,member,type=None):
+>>>>>>> fr_portal
         if type == 'Map':
             list_member = self.get_data('Map')[target][iscsi_type]
         else:
@@ -319,6 +353,7 @@ class JsonOperation(object):
     @s.deco_json_operation('JSON删除后的资源信息')
     def delete_data(self, first_key, data_key):
         self.json_data[first_key].pop(data_key)
+<<<<<<< HEAD
         with open('../vplx/map_config.json', "w") as fw:
             json.dump(self.json_data, fw, indent=4, separators=(',', ': '))
         return self.json_data[first_key]
@@ -456,3 +491,9 @@ class JsonMofidy(JsonOperation):
             list_initiator.append(self.get_data('Host')[host])
 
         return list(set(list_initiator))
+=======
+        # with open('../vplx/map_config.json', "w") as fw:
+        #     json.dump(self.json_data, fw, indent=4, separators=(',', ': '))
+        return self.json_data[first_key]
+
+>>>>>>> fr_portal

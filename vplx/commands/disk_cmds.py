@@ -1,4 +1,3 @@
-import traceback
 import execute as ex
 import consts
 import sundry as sd

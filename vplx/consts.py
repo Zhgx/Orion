@@ -35,6 +35,7 @@ def init():
     _GLOBAL_DICT['LOG_ID'] = 0
     _GLOBAL_DICT['RPL'] = 'no'
     _GLOBAL_DICT['LOG_SWITCH'] = 'yes'
+    _GLOBAL_DICT['ROLLBACK'] = {}
 
 
 def set_value(key, value):
@@ -75,7 +76,15 @@ def set_glo_log_switch(value):
 
 
 def set_glo_gui_tid(value):
+<<<<<<< HEAD
     set_value('GUI_TID', value)
+=======
+    set_value('GUI_TID',value)
+
+def set_glo_rollback(value):
+    set_value('ROLLBACK',value)
+
+>>>>>>> fr_portal
 
 
 def glo_gui_tid():
@@ -108,3 +117,11 @@ def glo_log_id():
 
 def glo_log_switch():
     return get_value('LOG_SWITCH')
+<<<<<<< HEAD
+=======
+
+
+def glo_rollback():
+    return get_value('ROLLBACK')
+
+>>>>>>> fr_portal
