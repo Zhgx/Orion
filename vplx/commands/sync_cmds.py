@@ -32,7 +32,7 @@ class SyncCommands():
         # 检查
         obj_crm.check_portal_component(vip, portblock)
 
-        portal = obj_crm.get_portal_data(vip,portblock,target)
+        portal = obj_crm.get_portal_data(vip,obj_crm.portblock,target)
         js.json_data.update({'Portal': portal})
         js.json_data.update({'Target': target})
         js.commit_json()

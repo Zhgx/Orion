@@ -187,11 +187,15 @@ def deco_cmd(type):
                 return result_cmd
             else:
                 logdb = consts.glo_db()
+                print(func_name)
                 id_result = logdb.get_id(consts.glo_tsc_id(), func_name)
+                print(id_result)
                 if id_result['oprt_id']:
                     cmd_result = logdb.get_oprt_result(id_result['oprt_id'])
                 else:
                     cmd_result = {'time':'','result':''}
+
+                print(id_result['oprt_id'])
                 if type != 'sys' and cmd_result['result']:
                     result = eval(cmd_result['result'])
                     result_output = result['rst']
@@ -238,12 +242,12 @@ def prt(str_, warning_level=0):
         print(str(str_))
     else:
         db = consts.glo_db()
-        time,cmd_output = db.get_cmd_output(consts.glo_tsc_id())
-        if not time:
-            time = ''
-        print(f'RE:{time:<20} 日志记录输出：{warning_str:<4}\n{cmd_output}')
+        data = db.get_cmd_output(consts.glo_tsc_id())
+        if not data["time"]:
+            data["time"] = ''
+        print(f'RE:{data["time"]:<20} 日志记录输出：{warning_str:<4}\n{data["output"]}')
         print(f'RE:{"":<20} 此次执行输出：{warning_str:<4}\n{str_}')
-
+        change_pointer(int(data["db_id"])+1)
 
 def prt_log(str_, warning_level):
     """
@@ -254,7 +258,6 @@ def prt_log(str_, warning_level):
     logger = consts.glo_log()
     RPL = consts.glo_rpl()
     if RPL == 'yes':
-        # pass
         prt(str_, warning_level)
     elif RPL == 'no':
         prt(str_, warning_level)
@@ -313,7 +316,6 @@ def deco_json_operation(str):
             else:
                 logdb = consts.glo_db()
                 id_result = logdb.get_id(consts.glo_tsc_id(), func.__name__)
-                print('id_result:',id_result)
                 json_result = logdb.get_oprt_result(id_result['oprt_id'])
                 if json_result['result']:
                     result = eval(json_result['result'])

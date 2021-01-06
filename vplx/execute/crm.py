@@ -165,6 +165,7 @@ class CRMData():
         for vip in vip_all:
             dict_portal.update(
                 {vip: {'ip': vip_all[vip]['ip'], 'port': '', 'netmask': vip_all[vip]['netmask'], 'target': []}})
+
             for portblock in portblock_all:
                 if portblock_all[portblock]['ip'] == vip_all[vip]['ip']:
                     dict_portal[vip]['port'] = portblock_all[portblock]['port']
@@ -187,18 +188,20 @@ class CRMData():
         :return:None
         """
         dict_portal = {}
-
+        list_normal_portblock = []
         for vip_name,vip_data in list(vip.items()):
             dict_portal.update({vip_name:{'status':'ERROR'}}) #error/normal
             for pb_name,pb_data in list(portblock.items()):
                 if vip_data['ip'] == pb_data['ip']:
                     dict_portal[vip_name].update({pb_name:pb_data['type']})
-                    del portblock[pb_name]
+                    list_normal_portblock.append(pb_name)
             if len(dict_portal[vip_name]) == 3:
                 if 'block' and 'unblock' in dict_portal[vip_name].values():
                     dict_portal[vip_name]['status'] = 'NORMAL'
-        if portblock:
-            s.prt_log(f'{",".join(portblock.keys())}没有对应的VIP，请进行处理',2)
+
+        error_portblock = set(portblock.keys()) - set(list_normal_portblock)
+        if error_portblock:
+            s.prt_log(f'{",".join(error_portblock)}没有对应的VIP，请进行处理',2)
         list_portal = [] # portal如果没有block和unblock，则会加进这个列表
 
         for portal_name,portal_data in list(dict_portal.items()):
@@ -381,7 +384,9 @@ class CRMConfig():
     def start_res(self, res):
         s.prt_log(f"try to start {res}", 0)
         cmd = f'crm res start {res}'
+        print('--------------')
         result = execute_crm_cmd(cmd)
+        print(result)
         if result['sts']:
             return True
 
@@ -557,7 +562,6 @@ class ISCSITarget():
 # class ISCSILogicalUnit():
 #     def __init__(self):
 #         pass
-#
 #
 #
 #     def create_crm_res(self,res,target):

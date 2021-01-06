@@ -60,7 +60,7 @@ class PortalCommands():
 
         p_create_portal.add_argument(
             '-n',
-            '-netmaks',
+            '-netmask',
             '--netmask',
             type=int,
             dest='netmask',
@@ -75,8 +75,8 @@ class PortalCommands():
             type=int,
             action='store',
             dest='port',
-            default=3360,
-            help='Port：3360-65535.It default is 3360.')
+            default=3260,
+            help='Port：3260-65535.It default is 3260.')
 
 
 
