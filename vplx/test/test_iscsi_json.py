@@ -1,5 +1,6 @@
 import json
 import os
+import subprocess
 from unittest.mock import patch
 
 import pytest
@@ -22,9 +23,13 @@ class TestJsonOperation:
                 "Disk": {},
                 "HostGroup": {},
                 "DiskGroup": {},
-                "Map": {}}
+                "Map": {},
+                "Portal": {}}
             json.dump(json_dict, fw, indent=4, separators=(',', ': '))
-
+        # 同步下资源
+        subprocess.run('python3 vtel.py iscsi sync', shell=True)
+        # 修改json文件权限
+        subprocess.run('chmod -R 777 map_config.json', shell=True)
         # 删除测试json文件
         # path = '../vplx/map_config.json'
         # os.remove(path)
@@ -42,7 +47,8 @@ class TestJsonOperation:
             "Disk": {},
             "HostGroup": {},
             "DiskGroup": {},
-            "Map": {}}
+            "Map": {},
+            "Portal": {}}
         assert self.js.read_json() == json_dict
         # 破坏 json 正确结构
         with open(path, 'a') as json:
@@ -89,20 +95,21 @@ class TestJsonOperation:
         assert not result['result']
         # self.js.delete_data('Host', 'pytest_host')
 
-    def test_update_crm_conf(self):
-        resouce = [["thinlv_test",
-                    "iqn.2020-04.feixitek.com:versaplx00",
-                    "04",
-                    "/dev/drbd1004",
-                    "iqn123 ",
-                    "Started"]]
-        vip = [["vip",
-                "10.203.1.75",
-                "24"]]
-        target = [["t_test",
-                   "iqn.2020-04.feixitek.com:versaplx00",
-                   "10.203.1.75"]]
-        assert self.js.update_crm_conf(resouce, vip, target)
+    # 函数已被删除
+    # def test_update_crm_conf(self):
+    #     resouce = [["thinlv_test",
+    #                 "iqn.2020-04.feixitek.com:versaplx00",
+    #                 "04",
+    #                 "/dev/drbd1004",
+    #                 "iqn123 ",
+    #                 "Started"]]
+    #     vip = [["vip",
+    #             "10.203.1.75",
+    #             "24"]]
+    #     target = [["t_test",
+    #                "iqn.2020-04.feixitek.com:versaplx00",
+    #                "10.203.1.75"]]
+    #     assert self.js.update_crm_conf(resouce, vip, target)
 
     # ------------------   add  ----------------   2020.12.28
 
@@ -217,25 +224,25 @@ class TestJsonOperation:
         data = self.js.delete_data('Host', 'pytest_host')
         assert 'pytest_host' not in data
 
-
-class TestJsonMofidy:
-    def setup_class(self):
-        self.jm = iscsi_json.JsonMofidy()
-
-    def test_read_json(self):
-        pass
-
-    def test_update_data(self):
-        pass
-
-    # 无返回值，无输出
-    def test_append_member(self):
-        pass
-
-    # 无返回值，无输出
-    def test_remove_member(self):
-        pass
-
-    # 无调用
-    def test_get_iqn_by_disk(self):
-        pass
+# 修改为单例模式后该类被删除
+# class TestJsonMofidy:
+#     def setup_class(self):
+#         self.jm = iscsi_json.JsonMofidy()
+#
+#     def test_read_json(self):
+#         pass
+#
+#     def test_update_data(self):
+#         pass
+#
+#     # 无返回值，无输出
+#     def test_append_member(self):
+#         pass
+#
+#     # 无返回值，无输出
+#     def test_remove_member(self):
+#         pass
+#
+#     # 无调用
+#     def test_get_iqn_by_disk(self):
+#         pass

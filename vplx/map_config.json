@@ -1,45 +1,21 @@
 {
-    "Host": {
-    },
+    "Host": {},
     "Disk": {},
-    "HostGroup": {
-
-    },
-    "DiskGroup": {
-        "dg1": [
-            "res_a"
-        ],
-        "dg2": [
-            "res_a",
-            "res_c",
-            "res_b"
-        ],
-        "dg3": [
-            "res_d"
-        ],
-        "dg4": [
-            "res_e"
-        ]
-    },
+    "HostGroup": {},
+    "DiskGroup": {},
     "Map": {},
     "Portal": {
         "vip": {
             "ip": "10.203.1.75",
-            "port": "3260",
+            "port": "",
             "netmask": "24",
             "target": [
                 "t_test"
             ]
         },
         "vip_test1": {
-            "ip": "10.203.1.152",
-            "port": "3362",
-            "netmask": "24",
-            "target": []
-        },
-        "vip_test3": {
-            "ip": "10.203.1.154",
-            "port": "3360",
+            "ip": "10.203.1.71",
+            "port": "",
             "netmask": "24",
             "target": []
         }

@@ -310,7 +310,7 @@ class TestHostGroup:
         subprocess.run('python3 vtel.py iscsi h d test_host1 -y', shell=True)
         subprocess.run('python3 vtel.py iscsi h d test_host2 -y', shell=True)
         subprocess.run('python3 vtel.py iscsi d s', shell=True)
-        subprocess.run('python3 vtel.py iscsi dg d test_dg', shell=True)
+        subprocess.run('python3 vtel.py iscsi dg d test_dg -y', shell=True)
 
 
     # 1.判断 HostGroup 是否存在，存在返回 None 2.遍历 Host 列表，若发现 Host 不存在返回 None 3.创建成功返回 True
@@ -352,7 +352,7 @@ class TestHostGroup:
         # 保留测试用例，该分支有bug
         with patch('builtins.print') as terminal_print:
             # print(f'判断条件：{self.js.check_value("Map","test_dg")["result"]}')
-            self.map.show_all_map()
+            # self.map.show_all_map()
             self.hostg.delete_hostgroup('test_hg')
             terminal_print.assert_called_with('Fail! The hostgroup already map,Please delete the map')
         with patch('builtins.print') as terminal_print:
@@ -459,8 +459,10 @@ class TestMap:
         finally:
             subprocess.run('python3 vtel.py stor r d res_test -y', shell=True)
             subprocess.run('python3 vtel.py stor r d res_test1 -y', shell=True)
-
         subprocess.run('python3 vtel.py iscsi d s', shell=True)
+        subprocess.run('python3 vtel.py iscsi h d test_host1 -y', shell=True)
+        subprocess.run('python3 vtel.py iscsi hg d test_hg1 -y', shell=True)
+        subprocess.run('python3 vtel.py iscsi dg d test_dg -y', shell=True)
 
     # 1.map 是否存在/hostgroup是否存在/diskgroup是否存在
     def test_pre_check_create_map(self):

@@ -300,7 +300,6 @@ class DiskGroup():
 
     def delete_diskgroup(self, dg):
         if self.js.check_key('DiskGroup', dg)['result']:
-            print()
             if self.js.check_in_res('Map','DiskGroup', dg)['result']:
                 s.prt_log("Fail! The diskgroup already map,Please delete the map", 1)
             else:
@@ -417,7 +416,8 @@ class HostGroup():
 
     def delete_hostgroup(self, hg):
         if self.js.check_key('HostGroup', hg)['result']:
-            if self.js.check_value('Map', hg)['result']:
+            # diskgroup删除已修改为使用check_in_res函数进行检查，HostGroup没有修改，现予以修改2021/01/06
+            if self.js.check_in_res('Map','HostGroup', hg)['result']:
                 s.prt_log("Fail! The hostgroup already map,Please delete the map", 1)
             else:
                 self.js.delete_data('HostGroup', hg)
@@ -772,12 +772,12 @@ class Map():
         else:
             s.prt_log('JSON已被修改，请重新操作', 2)
 
+        self.js.json_data = json_data_modify
         # 配置文件删除/移除成员
         if not self.js.json_data['Map'][map]['HostGroup']:
             self.js.delete_data('Map', map)
             print(f'该{map}已删除')
 
-        self.js.json_data = json_data_modify
         self.js.commit_json()
 
     def remove_dg(self, map, list_dg):
@@ -802,11 +802,11 @@ class Map():
         else:
             s.prt_log('JSON已被修改，请重新操作', 2)
 
+        self.js.json_data = json_data_modify
         if not self.js.json_data['Map'][map]['DiskGroup']:
             self.js.delete_data('Map', map)
             print(f'该{map}已删除')
 
-        self.js.json_data = json_data_modify
         self.js.commit_json()
 
 
