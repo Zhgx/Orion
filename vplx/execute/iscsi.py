@@ -1,8 +1,7 @@
 # coding=utf-8
-import sys
 import time
 import copy
-import traceback
+
 
 import iscsi_json
 import sundry as s
