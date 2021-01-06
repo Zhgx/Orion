@@ -21,13 +21,17 @@ class SyncCommands():
     @sd.deco_record_exception
     def sycn_data(self, args):
         # 添加前置检查
-        pass
-
         obj_crm = CRMData()
         js = iscsi_json.JsonOperation()
+
+        # 获取数据
         vip = obj_crm.get_vip()
         portblock = obj_crm.get_portblock()
         target = obj_crm.get_target()
+
+        # 检查
+        obj_crm.check_portal_component(vip, portblock)
+
         portal = obj_crm.get_portal_data(vip,portblock,target)
         js.json_data.update({'Portal': portal})
         js.json_data.update({'Target': target})

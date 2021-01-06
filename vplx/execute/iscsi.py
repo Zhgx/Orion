@@ -2,11 +2,12 @@
 import sys
 import time
 import copy
+import traceback
 
 import iscsi_json
 import sundry as s
 from execute.linstor import Linstor
-from execute.crm import CRMData, CRMConfig,IPaddr2,PortBlockGroup,Colocation,Order,ISCSITarget
+from execute.crm import RollBack,CRMData, CRMConfig,IPaddr2,PortBlockGroup,Colocation,Order,ISCSITarget
 import consts
 
 
@@ -225,6 +226,7 @@ class Host():
                     "Fail! The host in ... hostgroup.Please delete the hostgroup first", 1)
             else:
                 self.js.delete_data('Host', host)
+                self.js.commit_json()
                 s.prt_log("Delete success!", 0)
                 self.js.commit_json()
                 return True
@@ -272,6 +274,7 @@ class DiskGroup():
                     return
 
             self.js.update_data('DiskGroup', diskgroup, disk)
+            self.js.commit_json()
             s.prt_log("Create success!", 0)
             self.js.commit_json()
             return True
@@ -302,6 +305,7 @@ class DiskGroup():
                 s.prt_log("Fail! The diskgroup already map,Please delete the map", 1)
             else:
                 self.js.delete_data('DiskGroup', dg)
+                self.js.commit_json()
                 s.prt_log("Delete success!", 0)
                 self.js.commit_json()
         else:
@@ -387,6 +391,7 @@ class HostGroup():
                     return
 
             self.js.update_data('HostGroup', hostgroup, host)
+            self.js.commit_json()
             s.prt_log("Create success!", 0)
             self.js.commit_json()
             return True
@@ -416,6 +421,7 @@ class HostGroup():
                 s.prt_log("Fail! The hostgroup already map,Please delete the map", 1)
             else:
                 self.js.delete_data('HostGroup', hg)
+                self.js.commit_json()
                 s.prt_log("Delete success!", 0)
                 self.js.commit_json()
         else:
@@ -559,9 +565,10 @@ class Map():
 
         json_data_before = copy.deepcopy(self.js.json_data)
         self.js.update_data('Map', map, {'HostGroup': hg_list, 'DiskGroup': dg_list})
-        self.js.commit_json()
-
+        json_data_modify = copy.deepcopy(self.js.json_data)
         obj_iscsi = IscsiConfig(json_data_before, self.js.json_data)
+
+
         # 已经被使用过的disk(ilu)需不需要提示
         dict_disk_inuse = obj_iscsi.modify
         if dict_disk_inuse:
@@ -570,7 +577,8 @@ class Map():
         obj_iscsi.create_iscsilogicalunit()
         obj_iscsi.modify_iscsilogicalunit()
 
-        # self.js.commit_json()
+        self.js.json_data = json_data_modify
+        self.js.commit_json()
         s.prt_log('Create map success!', 0)
         return True
 
@@ -654,13 +662,14 @@ class Map():
 
         json_data_before = copy.deepcopy(self.js.json_data)
         self.js.delete_data('Map', map)
-        self.js.commit_json()
 
+        json_data_modify = copy.deepcopy(self.js.json_data)
         obj_iscsi = IscsiConfig(json_data_before, self.js.json_data)
         obj_iscsi.delete_iscsilogicalunit()
         obj_iscsi.modify_iscsilogicalunit()
 
-        # self.js.commit_json()
+        self.js.json_data = json_data_modify
+        self.js.commit_json()
         s.prt_log("Delete map success!", 0)
         return True
 
@@ -803,7 +812,6 @@ class Map():
 
 class Portal():
     def __init__(self):
-        self.dict_rollback = {}
         self.js = iscsi_json.JsonOperation()
 
     def create(self, name, ip, port=3260 ,netmask=24):
@@ -830,13 +838,10 @@ class Portal():
         try:
             obj_ipadrr = IPaddr2()
             obj_ipadrr.create(name,ip,netmask)
-            self.dict_rollback.update({'create_ipaddr2':name})
 
             obj_portblock = PortBlockGroup()
             obj_portblock.create(f'{name}_prtblk_on',ip,port,action='block')
-            self.dict_rollback.update({'create_block':f'{name}_prtblk_on'})
             obj_portblock.create(f'{name}_prtblk_off',ip,port,action='unblock')
-            self.dict_rollback.update({'create_unblock': f'{name}_prtblk_off'})
 
             obj_colocation = Colocation()
             obj_colocation.create(f'col_{name}_prtblk_on',f'{name}_prtblk_on', name)
@@ -848,24 +853,15 @@ class Portal():
         except Exception as ex:
             # 记录异常信息
             # self.logger.write_to_log('DATA', 'DEBUG', 'exception', '', str(traceback.format_exc()))
-            # 回滚
-            # 执行顺序有没有要求？
-            print('进行回滚操作')
-            for operation,res in self.dict_rollback.items():
-                if operation == 'create_ipaddr2':
-                    obj_ipadrr.delete(res)
-                elif operation == 'create_block' or operation =='create_unblock':
-                    obj_portblock.delete(res)
-            print('回滚完成')
+            RollBack.rollback(ip,port,netmask)
             return
-
-        # 回滚完之后考虑做一个对crm配置的检查？跟name相关的资源如果还存在，进行提示？
 
         # 验证
         status = self._check_status(name)
 
         if status == 'OK':
-            self.js.update_data('Portal', name, {'ip': ip, 'port': port,'netmask':netmask,'target':[]})
+            self.js.update_data('Portal', name, {'ip': ip, 'port': str(port),'netmask':str(netmask),'target':[]})
+            self.js.commit_json()
         elif status == 'NETWORK_ERROR':
             obj_ipadrr.delete(name)
             obj_portblock.delete(f'{name}_prtblk_on')
@@ -882,39 +878,28 @@ class Portal():
             s.prt_log(f'{",".join(target)}正在使用该portal，无法删除',1)
             return
 
-        portal = self.js.json_data['Portal'][name]
 
         try:
             obj_ipadrr = IPaddr2()
             obj_ipadrr.delete(name)
-            self.dict_rollback.update({'delete_ipaddr2':name})
+
             obj_portblock = PortBlockGroup()
             obj_portblock.delete(f'{name}_prtblk_on')
-            self.dict_rollback.update({'delete_block':f'{name}_prtblk_on'})
             obj_portblock.delete(f'{name}_prtblk_off')
-            self.dict_rollback.update({'create_unblock': f'{name}_prtblk_off'})
 
         except Exception as ex:
             # 记录异常信息
             # self.logger.write_to_log('DATA', 'DEBUG', 'exception', '', str(traceback.format_exc()))
-            # 回滚
-            # 执行顺序有没有要求？
-            print('进行回滚操作')
-            for operation,res in self.dict_rollback.items():
-                if operation == 'delete_ipaddr2':
-                    obj_ipadrr.create(res,portal['ip'],portal['netmask'])
-                elif operation == 'delete_block':
-                    obj_portblock.create(res,portal['ip'],portal['port'],action='block')
-                elif operation == 'delete_unblock':
-                    obj_portblock.create(res,portal['ip'],portal['port'],action='unblock')
-            if self.dict_rollback:
+            portal = self.js.json_data['Portal'][name]
+            RollBack.rollback(portal['ip'],portal['port'],portal['netmask'])
+            # 恢复colocation和order
+            if RollBack.dict_rollback['IPaddr2']:
                 obj_colocation = Colocation()
                 obj_colocation.create(f'col_{name}_prtblk_on',f'{name}_prtblk_on', name)
                 obj_colocation.create(f'col_{name}_prtblk_off', f'{name}_prtblk_off', name)
 
                 obj_order = Order()
                 obj_order.create(f'or_{name}_prtblk_on',name, f'{name}_prtblk_on')
-            print('回滚完成')
             return
 
         # 验证
@@ -922,6 +907,7 @@ class Portal():
         dict = crm_data.get_vip()
         if not name in dict.keys():
             self.js.delete_data('Portal',name)
+            self.js.commit_json()
             print(f'删除{name}成功')
         else:
             print(f'{name}没有被成功删除，请检查')
@@ -929,12 +915,9 @@ class Portal():
 
     def modify(self, name, ip, port):
         # CRM和JSON数据对比检查
-
-
         if not self.js.check_key('Portal',name)['result']:
             s.prt_log(f'不存在{name}，无法修改',1)
             return
-
         if not self._check_IP(ip):
             s.prt_log(f'{ip}不符合规范',1)
             return
@@ -942,57 +925,73 @@ class Portal():
             s.prt_log(f'{port}不符合规范，范围：3260-65535',1)
             return
 
+        portal = self.js.json_data['Portal'][name]
+        if portal['ip'] == ip and portal['port'] == str(port):
+            s.prt_log(f'IP和Port都相同，不需要修改',1)
+            return
 
 
         # 查询有没有target使用这个vip
-        if self.js.json_data['Portal'][name]['target']:
-            # 有在使用这个portal，确认是否删除
-            print('已有target正在使用这个portal，是否继续修改?y/n')
+        if portal['target']:
+            # 反馈修改影响
+            print(f'已有target：{",".join(portal["target"])}正在使用这个portal，target将同步修改，是否继续?y/n')
             answer = s.get_answer()
             if not answer in ['y', 'yes', 'Y', 'YES']:
                 s.prt_log('Modify canceled', 2)
 
+            try:
+                obj_ipadrr = IPaddr2()
+                obj_ipadrr.modify(name,ip)
 
+                obj_portblock = PortBlockGroup()
+                obj_portblock.modify(f'{name}_prtblk_on',ip, port)
+                obj_portblock.modify(f'{name}_prtblk_off',ip, port)
 
-            obj_ipadrr = IPaddr2()
-            obj_ipadrr.modify(name,ip)
-
-            obj_portblock = PortBlockGroup()
-            obj_portblock.modify_ip(f'{name}_prtblk_on',ip)
-            obj_portblock.modify_port(f'{name}_prtblk_on',port)
-            obj_portblock.modify_ip(f'{name}_prtblk_off',ip)
-            obj_portblock.modify_port(f'{name}_prtblk_off',port)
-
-            obj_target = ISCSITarget()
-
+                obj_target = ISCSITarget()
+                for target in portal['target']:
+                    obj_target.modify(target,ip,port)
+            except Exception as ex:
+                RollBack.rollback(portal['ip'],portal['port'],portal['netmask'])
+                return
 
         else:
             # 直接修改
-            obj_ipadrr = IPaddr2()
-            obj_ipadrr.modify(name,ip)
-            self.dict_rollback.update({'modify_ipaddr2':name})
+            try:
+                obj_ipadrr = IPaddr2()
+                obj_ipadrr.modify(name,ip)
 
-            obj_portblock = PortBlockGroup()
-            obj_portblock.modify_ip(f'{name}_prtblk_on',ip)
-            self.dict_rollback.update({'modify_block_ip':f'{name}_prtblk_on'})
-            obj_portblock.modify_port(f'{name}_prtblk_on',port)
-            obj_portblock.modify_ip(f'{name}_prtblk_off',ip)
-            obj_portblock.modify_port(f'{name}_prtblk_off',port)
-
-            # 直接存储需要恢复的资源
-            # 还是存储所有数据，封装一个方法可以通用地进行回滚。
-            # self.dict_rollback
+                obj_portblock = PortBlockGroup()
+                obj_portblock.modify(f'{name}_prtblk_on',ip, port)
+                obj_portblock.modify(f'{name}_prtblk_off',ip, port)
+            except Exception as ex:
+                RollBack.rollback(portal['ip'],portal['port'],portal['netmask'])
+                return
 
 
+        # 暂不验证（见需求）
 
-
-
-
+        # 更新数据
+        self.js.json_data['Portal'][name]['ip'] = ip
+        self.js.json_data['Portal'][name]['port'] = str(port)
+        for target in portal['target']:
+            self.js.json_data['Target'][target]['ip'] = ip
+            self.js.json_data['Target'][target]['port'] = str(port)
+        self.js.commit_json()
+        print(f'修改portal:{name}成功')
 
 
 
     def show(self):
-        pass
+        """
+        用表格展示所有portal数据
+        :return: all portal
+        """
+        list_header = ["Portal","IP","Port","Netmask","iSCSITarget"]
+        list_data = []
+        for portal,data in self.js.json_data['Portal'].items():
+            list_data.append([portal,data['ip'],data['port'],data['netmask'],",".join(data['target'])])
+        table = s.show_linstor_data(list_header,list_data)
+        s.prt_log(table, 0)
 
 
     def _check_name(self, name):
@@ -1041,3 +1040,6 @@ class Portal():
         else:
             s.prt_log(f'{name}没有被成功创建，请检查',1)
             return 'FAIL'
+
+
+
