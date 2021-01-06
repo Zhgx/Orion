@@ -44,6 +44,7 @@ def deco_comfirm_del(type):
             else:
                 print(f"Are you sure you want to delete this {type}? If yes, enter 'y/yes'")
                 answer = get_answer()
+                answer = 'y'
                 if answer in ['y', 'yes']:
                     func(self,*args)
                 else:

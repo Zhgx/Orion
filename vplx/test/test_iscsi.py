@@ -51,9 +51,10 @@ class TestHost:
         print('setup_class')
         subprocess.run('python3 vtel.py iscsi h c test_host iqn.2020-04.feixitek.com:pytest0001', shell=True)
         subprocess.run('python3 vtel.py iscsi h c test_host_hg iqn.2020-04.feixitek.com:pytest0991', shell=True)
+        subprocess.run('python3 vtel.py iscsi h s', shell=True)
         subprocess.run('python3 vtel.py iscsi hg c test_hg test_host_hg', shell=True)
+        subprocess.run('python3 vtel.py iscsi h s', shell=True)
         self.host = iscsi.Host()
-        self.js = iscsi_json.JsonOperation()
 
     def teardown_class(self):
         print('teardown_class')
@@ -155,12 +156,23 @@ class TestDiskGroup:
         subprocess.run('python3 vtel.py iscsi hg c test_hg test_host', shell=True)
         # 创建 Map
         subprocess.run('python3 vtel.py iscsi m c map1 -dg test_dg -hg test_hg', shell=True)
+        subprocess.run('python3 vtel.py iscsi m s', shell=True)
+
         self.diskg = iscsi.DiskGroup()
         self.map = iscsi.Map()
 
     def teardown_class(self):
-        subprocess.run('python3 vtel.py stor r d res_test -y', shell=True)
-        subprocess.run('python3 vtel.py stor r d res_a -y', shell=True)
+        print('teardown')
+        try:
+            execute_crm_cmd('crm res stop res_test')
+            execute_crm_cmd('crm conf del res_test')
+            execute_crm_cmd('crm res stop res_a')
+            execute_crm_cmd('crm conf del res_a')
+        except Exception:
+            print(Exception)
+        finally:
+            subprocess.run('python3 vtel.py stor r d res_test -y', shell=True)
+            subprocess.run('python3 vtel.py stor r d res_a -y', shell=True)
         subprocess.run('python3 vtel.py iscsi d s', shell=True)
         subprocess.run('python3 vtel.py iscsi hg d test_hg -y', shell=True)
         subprocess.run('python3 vtel.py iscsi h d test_host -y', shell=True)
@@ -203,15 +215,14 @@ class TestDiskGroup:
         with patch('builtins.print') as terminal_print:
             self.diskg.delete_diskgroup('test_dg2')
             terminal_print.assert_called_with('Fail! Can\'t find test_dg2')
-        # print(f'判断条件：{self.js.check_value("Map", "test_dg")["result"]}')
         # 保留测试用例，该分支有bug
-        # with patch('builtins.print') as terminal_print:
-        #     print(f'判断条件：{self.js.check_value("Map","test_dg")["result"]}')
-        #     self.diskg.delete_diskgroup('test_dg')
-        #     terminal_print.assert_called_with('Fail! The diskgroup already map,Please delete the map')
+        with patch('builtins.print') as terminal_print:
+            self.map.show_spe_map('map1')
+            self.diskg.delete_diskgroup('test_dg')
+            terminal_print.assert_called_with('Fail! The diskgroup already map,Please delete the map')
         with patch('builtins.print') as terminal_print:
             self.diskg.delete_diskgroup('test_dg1')
-            terminal_print.assert_called_with('Delete test_dg1 success!')
+            terminal_print.assert_called_with('Delete success!')
 
     # -----------   add  -----------------  2020.12.28
     def test_add_disk(self):
@@ -236,34 +247,37 @@ class TestDiskGroup:
 
     def test_remove_disk(self):
         # 移除成功
-        # print('移除前')
-        # self.diskg.show_spe_diskgroup('test_dg')
-        # assert not self.diskg.remove_disk('test_dg', ['res_a'])
-        # # 移除失败
-        # with pytest.raises(SystemExit) as exsinfo:
-        #     with patch('builtins.print') as terminal_print:
-        #         self.diskg.remove_disk('test_dg2', ['res_a'])
-        #         terminal_print.assert_called_with('不存在test_dg2可以去进行修改')
-        # assert exsinfo.type == SystemExit
-        # with pytest.raises(SystemExit) as exsinfo:
-        #     with patch('builtins.print') as terminal_print:
-        #         self.diskg.remove_disk('test_dg', ['res_O'])
-        #         terminal_print.assert_called_with('test_dg中不存在成员res_O，无法进行移除')
-        # assert exsinfo.type == SystemExit
-        # # 只有一个资源移除后是否会删掉该dg
-        # with patch('builtins.print') as terminal_print:
-        #     self.diskg.remove_disk('test_dg', ['res_test'])
-        #     terminal_print.assert_called_with('不存在test_dg2可以去进行修改')
-        self.map.delete_map('map1')
-        self.diskg.delete_diskgroup('test_dg')
+        print('移除前')
+        self.diskg.show_spe_diskgroup('test_dg')
+        assert not self.diskg.remove_disk('test_dg', ['res_a'])
+        # 移除失败
+        with pytest.raises(SystemExit) as exsinfo:
+            with patch('builtins.print') as terminal_print:
+                self.diskg.remove_disk('test_dg2', ['res_a'])
+                terminal_print.assert_called_with('不存在test_dg2可以去进行修改')
+        assert exsinfo.type == SystemExit
+        with pytest.raises(SystemExit) as exsinfo:
+            with patch('builtins.print') as terminal_print:
+                self.diskg.remove_disk('test_dg', ['res_O'])
+                terminal_print.assert_called_with('test_dg中不存在成员res_O，无法进行移除')
+        assert exsinfo.type == SystemExit
+        # 只有一个资源移除后是否会删掉该dg , 会移除该 hg 和 所配置该 hg 的map
+        with patch('builtins.print') as terminal_print:
+            self.diskg.remove_disk('test_dg', ['res_test'])
+            terminal_print.assert_called_with('相关的map已经修改/删除')
+        # self.map.delete_map('map1')
+        # self.diskg.delete_diskgroup('test_dg')
 
     # 返回所有 DiskGroup，如果为 DiskGroup 空，返回{},否则返回 DiskGroup 非空字典
     def test_get_all_diskgroup(self):
         # DiskGroup 不为空
+        assert self.diskg.create_diskgroup('test_dg1', ['res_test'])
+        print('show all diskgroup')
+        self.diskg.show_all_diskgroup()
         assert self.diskg.get_all_diskgroup()
         # DiskGroup 为空
         # self.map.delete_map('map1')
-        # self.diskg.delete_diskgroup('test_dg')
+        self.diskg.delete_diskgroup('test_dg1')
         assert self.diskg.get_all_diskgroup() == {}
 
 
@@ -279,13 +293,25 @@ class TestHostGroup:
         subprocess.run('python3 vtel.py iscsi hg c test_hg test_host1', shell=True)
         # 创建 Map
         subprocess.run('python3 vtel.py iscsi m c map1 -dg test_dg -hg test_hg', shell=True)
+        subprocess.run('python3 vtel.py iscsi m s', shell=True)
+
         self.hostg = iscsi.HostGroup()
         self.map = iscsi.Map()
 
     def teardown_class(self):
-        subprocess.run('python3 vtel.py stor r d res_test -y', shell=True)
+        try:
+            execute_crm_cmd('crm res stop res_test')
+            execute_crm_cmd('crm conf del res_test')
+        except Exception:
+            print(Exception)
+        finally:
+            subprocess.run('python3 vtel.py stor r d res_test -y', shell=True)
+            subprocess.run('python3 vtel.py iscsi d s', shell=True)
+        subprocess.run('python3 vtel.py iscsi h d test_host1 -y', shell=True)
+        subprocess.run('python3 vtel.py iscsi h d test_host2 -y', shell=True)
         subprocess.run('python3 vtel.py iscsi d s', shell=True)
         subprocess.run('python3 vtel.py iscsi dg d test_dg', shell=True)
+
 
     # 1.判断 HostGroup 是否存在，存在返回 None 2.遍历 Host 列表，若发现 Host 不存在返回 None 3.创建成功返回 True
     def test_create_hostgroup(self):
@@ -324,10 +350,11 @@ class TestHostGroup:
             terminal_print.assert_called_with('Fail! Can\'t find test_hg2')
         # print(f'判断条件：{self.js.check_value("Map", "test_dg")["result"]}')
         # 保留测试用例，该分支有bug
-        # with patch('builtins.print') as terminal_print:
-        #     # print(f'判断条件：{self.js.check_value("Map","test_dg")["result"]}')
-        #     self.hostg.delete_hostgroup('test_hg')
-        #     terminal_print.assert_called_with('Fail! The hostgroup already map,Please delete the map')
+        with patch('builtins.print') as terminal_print:
+            # print(f'判断条件：{self.js.check_value("Map","test_dg")["result"]}')
+            self.map.show_all_map()
+            self.hostg.delete_hostgroup('test_hg')
+            terminal_print.assert_called_with('Fail! The hostgroup already map,Please delete the map')
         with patch('builtins.print') as terminal_print:
             self.hostg.delete_hostgroup('test_hg1')
             terminal_print.assert_called_with('Delete success!')

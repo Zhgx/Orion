@@ -298,7 +298,7 @@ class CRMConfig():
                     return True
         s.prt_log(f"{res} delete fail",1)
 
-    # 创建resource相关配置
+    # 创建resource相关配置，no
     def create_set(self, res, target):
         if self.create_col(res, target):
             if self.create_order(res, target):

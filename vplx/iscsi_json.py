@@ -51,6 +51,7 @@ class JsonOperation(object):
             sys.exit()
 
     def commit_json(self):
+        # print('commit', self.json_data)
         with open('../vplx/map_config.json', "w") as fw:
             json.dump(self.json_data, fw, indent=4, separators=(',', ': '))
 
@@ -113,14 +114,11 @@ class JsonOperation(object):
         :param target:
         :return:
         """
+        # 要注意 hg/dg 原来就没有配置在 map 中的删除情况
         for res in self.json_data[res].values():
             if target in res[type]:
                 return {'type': type, 'target': target, 'result': True}
-            else:
-                return {'type': type, 'target': target, 'result': False}
-
-
-
+        return {'type': type, 'target': target, 'result': False}
 
     @s.deco_json_operation('JSON通过host获取到所有相关的hostgroup')
     def get_hg_by_host(self,host):
