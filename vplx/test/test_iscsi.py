@@ -1,11 +1,11 @@
-import os
-import sys
+# import os
+# import sys
 import time
 from unittest.mock import patch
 
 import pytest
 
-import iscsi_json
+# import iscsi_json
 from execute import iscsi
 import subprocess
 from execute.crm import execute_crm_cmd
@@ -312,7 +312,6 @@ class TestHostGroup:
         subprocess.run('python3 vtel.py iscsi d s', shell=True)
         subprocess.run('python3 vtel.py iscsi dg d test_dg -y', shell=True)
 
-
     # 1.判断 HostGroup 是否存在，存在返回 None 2.遍历 Host 列表，若发现 Host 不存在返回 None 3.创建成功返回 True
     def test_create_hostgroup(self):
         # 已存在 HostGroup 测试用例
@@ -434,7 +433,6 @@ class TestMap:
 
         subprocess.run('python3 vtel.py iscsi hg s ', shell=True)
 
-
     def teardown_class(self):
         subprocess.run('python3 vtel.py iscsi hg d test_hg -y', shell=True)
         subprocess.run('python3 vtel.py iscsi h d test_host -y', shell=True)
@@ -491,16 +489,16 @@ class TestMap:
         # 检测该函数有返回值
         assert self.map.get_target() is not None
 
-    @pytest.fixture(scope="class")
-    def pre_test_create_map(self):
-        # 创建没有被使用过的disk
-        subprocess.run('python3 vtel.py stor r c res_test1 -s 10m -a -num 1', shell=True)
-        # 配置到没有被使用的diskgroup
-        subprocess.run('python3 vtel.py iscsi dg c test_dg1 res_test1 ', shell=True)
-        # 创建没有被使用的 host
-        subprocess.run('python3 vtel.py iscsi h c test_host1 iqn.2020-04.feixitek.com:pytest0101', shell=True)
-        # 配置到没有被使用的hostgroup
-        subprocess.run('python3 vtel.py iscsi hg c test_hg1 test_host1 ', shell=True)
+    # @pytest.fixture(scope="class")
+    # def pre_test_create_map(self):
+    #     # 创建没有被使用过的disk
+    #     subprocess.run('python3 vtel.py stor r c res_test1 -s 10m -a -num 1', shell=True)
+    #     # 配置到没有被使用的diskgroup
+    #     subprocess.run('python3 vtel.py iscsi dg c test_dg1 res_test1 ', shell=True)
+    #     # 创建没有被使用的 host
+    #     subprocess.run('python3 vtel.py iscsi h c test_host1 iqn.2020-04.feixitek.com:pytest0101', shell=True)
+    #     # 配置到没有被使用的hostgroup
+    #     subprocess.run('python3 vtel.py iscsi hg c test_hg1 test_host1 ', shell=True)
 
     # 先调用pre_check_create_map()，这个函数已经在前面测试了
     # Q：已经被使用过的disk(ilu) 没有做处理？ A:已经被使用的disk 再映射到新的host会提示
@@ -712,4 +710,3 @@ class TestMap:
         # assert self.map.get_disk_data('test_dg')
         # 不存在
         # assert self.map.get_disk_data('test_dg1') == {}
-

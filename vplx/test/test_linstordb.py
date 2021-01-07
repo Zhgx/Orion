@@ -67,7 +67,7 @@ class TestCollectData:
         self.cd.insert_data(sql3, sp_data, 'storagepooltb')
 
     def test_get_resource(self):
-        assert self.cd._get_resource() is not None
+        assert len(self.cd._get_resource()) >= 1
 
     def test_get_all_node(self):
         assert self.cd.get_all_node() is not None

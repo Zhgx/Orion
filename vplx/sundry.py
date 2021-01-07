@@ -43,7 +43,7 @@ def deco_comfirm_del(type):
                 func(self,*args)
             else:
                 print(f"Are you sure you want to delete this {type}? If yes, enter 'y/yes'")
-                answer = get_answer()
+                # answer = get_answer()
                 answer = 'y'
                 if answer in ['y', 'yes']:
                     func(self,*args)
@@ -87,6 +87,7 @@ def get_hostname():
 
 # Get the path of the program
 def get_path():
+    print(os.getcwd())
     return os.getcwd()
 
 
@@ -159,6 +160,7 @@ def show_linstor_data(list_header,list_data):
             table.add_row(i)
     else:
         pass
+    print(table._rows)
     return table
 
 

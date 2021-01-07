@@ -7,20 +7,28 @@ def test_prepare_db():
     assert consts.glo_db() != None
 
 
+# 检查文件是否存在，存在返回True，否则返回False
 def test_isFileExists():
-    assert logdb.isFileExists('logdb.py') == True
+    # 存在
+    assert logdb.isFileExists('logdb.py')
+    # 不存在
+    assert not logdb.isFileExists('XXXX.py')
 
 
 def test_fill_db_with_log():
-    assert logdb._fill_db_with_log() == None
+    assert logdb._fill_db_with_log() is None
 
 
 def test_read_log_files():
-    assert logdb._read_log_files() != None
+    # 读取成功则不为空字符
+    assert logdb._read_log_files()
+    # 读取失败
 
 
 def test_get_log_files():
-    assert logdb._get_log_files('logDB.db') != None
+    # 获取成功则不为空列表
+    assert logdb._get_log_files('logDB.db')
+    # 获取失败
 
 
 class TestLogDB:
@@ -30,10 +38,14 @@ class TestLogDB:
         self.tid = '1603872339'
 
     def test_drop_table(self):
-        assert self.log._drop_table() == None
+        sql = 'select count(*) from sqlite_master where type="table" and name = "logtable"'
+        self.log._drop_table()
+        assert self.log.cur.execute(sql).fetchone()[0] == 0
 
     def test_create_table(self):
-        assert self.log._create_table() == None
+        sql = 'select count(*) from sqlite_master where type="table" and name = "logtable"'
+        self.log._create_table()
+        assert self.log.cur.execute(sql).fetchone()[0] == 1
 
     def test_insert_data(self):
         # data = ('2020/10/28 16:05:39', self.tid, 'test', 'DATA', 'STR', 'cmd_input', '', '8033629173')
@@ -46,12 +58,12 @@ class TestLogDB:
 
     def test_sql_fetch_one(self):
         sql = f'SELECT * FROM logtable'
-        assert self.log.sql_fetch_one(sql) != None
+        assert self.log.sql_fetch_one(sql) is not None
 
     def test_sql_fetch_all(self):
         sql = f'SELECT * FROM logtable'
         # sql = f"SELECT data, describe1 FROM logtable WHERE transaction_id='1603872339'"
-        assert self.log.sql_fetch_all(sql) != None
+        assert self.log.sql_fetch_all(sql) is not None
 
     def test_get_userinput_via_tid(self):
         assert self.log.get_userinput_via_tid(self.tid) == {'cmd': 'stor -h', 'tid': '1603872339', 'valid': '1'}

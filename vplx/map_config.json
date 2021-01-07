@@ -5,6 +5,24 @@
     "DiskGroup": {},
     "Map": {},
     "Portal": {
+        "portal_test_1": {
+            "ip": "10.203.1.102",
+            "port": "",
+            "netmask": "24",
+            "target": []
+        },
+        "portal_test_3": {
+            "ip": "10.203.1.103",
+            "port": "",
+            "netmask": "24",
+            "target": []
+        },
+        "portal_test_4": {
+            "ip": "10.203.1.104",
+            "port": "",
+            "netmask": "24",
+            "target": []
+        },
         "vip": {
             "ip": "10.203.1.75",
             "port": "",
@@ -15,6 +33,12 @@
         },
         "vip_test1": {
             "ip": "10.203.1.71",
+            "port": "",
+            "netmask": "24",
+            "target": []
+        },
+        "vip_test2": {
+            "ip": "10.203.1.72",
             "port": "",
             "netmask": "24",
             "target": []
