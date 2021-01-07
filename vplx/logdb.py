@@ -123,7 +123,6 @@ class LogDB():
     def get_userinput_via_tid(self, transaction_id):
         sql = f"SELECT data FROM logtable WHERE describe1 = 'cmd_input' and transaction_id = '{transaction_id}'"
         result = self.sql_fetch_one(sql)
-        print(result)
         if result:
             result = eval(result)
             return {'tid':transaction_id, 'valid':result['valid'],'cmd':result['cmd']}

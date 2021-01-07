@@ -187,15 +187,11 @@ def deco_cmd(type):
                 return result_cmd
             else:
                 logdb = consts.glo_db()
-                print(func_name)
                 id_result = logdb.get_id(consts.glo_tsc_id(), func_name)
-                print(id_result)
                 if id_result['oprt_id']:
                     cmd_result = logdb.get_oprt_result(id_result['oprt_id'])
                 else:
                     cmd_result = {'time':'','result':''}
-
-                print(id_result['oprt_id'])
                 if type != 'sys' and cmd_result['result']:
                     result = eval(cmd_result['result'])
                     result_output = result['rst']
@@ -206,6 +202,7 @@ def deco_cmd(type):
                 print(f"RE:{cmd_result['time']:<20} 系统命令结果：\n{result_output}")
                 if id_result['db_id']:
                     change_pointer(id_result['db_id'])
+
             return result
         return wrapper
     return decorate
@@ -247,7 +244,7 @@ def prt(str_, warning_level=0):
             data["time"] = ''
         print(f'RE:{data["time"]:<20} 日志记录输出：{warning_str:<4}\n{data["output"]}')
         print(f'RE:{"":<20} 此次执行输出：{warning_str:<4}\n{str_}')
-        change_pointer(int(data["db_id"])+1)
+        change_pointer(int(data["db_id"]))
 
 def prt_log(str_, warning_level):
     """

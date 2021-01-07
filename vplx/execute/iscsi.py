@@ -6,7 +6,7 @@ import copy
 import iscsi_json
 import sundry as s
 from execute.linstor import Linstor
-from execute.crm import RollBack,CRMData, CRMConfig,IPaddr2,PortBlockGroup,Colocation,Order,ISCSITarget
+from execute.crm import RollBack,CRMData, CRMConfig,IPaddr2,PortBlockGroup,Colocation,Order,ISCSITarget,ISCSILogicalUnit
 import consts
 
 
@@ -24,8 +24,10 @@ class IscsiConfig():
         if any([self.modify, self.delete]):
             self.obj_crm = CRMConfig()
 
-        if self.create:
-            self.obj_map = Map()
+        # if self.create:
+        #     # self.obj_map = Map()
+        self.obj_iscsiLU = ISCSILogicalUnit()
+
 
         # 记载需要进行恢复的disk
         self.recovery_list = {'delete': set(), 'create': {}, 'modify': {}}
@@ -90,29 +92,29 @@ class IscsiConfig():
     def create_iscsilogicalunit(self):
         for disk, iqn in self.create.items():
             self.recovery_list['delete'].add(disk)
-            self.obj_map.create_res(disk, iqn)
+            self.obj_iscsiLU.create_mapping(disk, iqn)
 
     def delete_iscsilogicalunit(self):
         for disk in self.delete:
             self.recovery_list['create'].update({disk: self.recover['create'][disk]})
-            self.obj_crm.delete_res(disk,'iSCSILogicalUnit')
+            self.obj_iscsiLU.delete(disk)
 
     def modify_iscsilogicalunit(self):
         for disk, iqn in self.modify.items():
             self.recovery_list['modify'].update({disk: self.recover['modify'][disk]})
-            self.obj_crm.change_initiator(disk, iqn)
+            self.obj_iscsiLU.modify(disk,iqn)
 
     def restore(self):
         for disk, iqn in self.recovery_list['create'].items():
-            self.obj_map.create_res(disk, iqn)
+            self.obj_iscsiLU.create_mapping(disk, iqn)
             print(f'执行创建{disk},iqn为{iqn}')
 
         for disk in self.recovery_list['delete']:
-            self.obj_crm.delete_res(disk,'iSCSILogicalUnit')
+            self.obj_iscsiLU.delete(disk)
             print(f'执行删除{disk}')
 
         for disk, iqn in self.recovery_list['modify'].items():
-            self.obj_crm.change_initiator(disk, iqn)
+            self.obj_iscsiLU.modify(disk, iqn)
             print(f'执行修改{disk},iqn为{iqn}')
 
 
@@ -181,7 +183,7 @@ class Host():
     def __init__(self):
         self.js = iscsi_json.JsonOperation()
 
-    def check_iqn(self, iqn):
+    def _check_iqn(self, iqn):
         """
         判断iqn是否符合格式
         """
@@ -192,11 +194,12 @@ class Host():
         if self.js.check_key('Host', host):
             s.prt_log(f"Fail! The Host {host} already existed.", 1)
         else:
-            self.check_iqn(iqn)
+            self._check_iqn(iqn)
             self.js.update_data("Host", host, iqn)
             self.js.commit_json()
             s.prt_log("Create success!", 0)
             return True
+
 
     def get_all_host(self):
         return self.js.get_data("Host")
@@ -494,7 +497,7 @@ class Map():
         self.js = iscsi_json.JsonOperation()
         # 用于收集创建成功的resource
         self.list_res_created = []
-        self.target_name, self.target_iqn = self.get_target()
+        # self.target_name, self.target_iqn = self.get_target()
 
     def pre_check_create_map(self, map, hg, dg):
         if self.js.check_key('Map', map):
@@ -513,40 +516,6 @@ class Map():
                 return False
 
 
-    def get_initiator(self, hg):
-        # 根据hg去获取hostiqn，返回由hostiqn组成的initiator
-        hostiqn = []
-        for h in self.js.get_data('HostGroup').get(hg):
-            iqn = self.js.get_data('Host').get(h)
-            hostiqn.append(iqn)
-        initiator = " ".join(hostiqn)
-        return initiator
-
-    def get_target(self):
-        # 获取target及对应的target_iqn
-        target_all = self.js.json_data['Target']
-        if target_all:
-            # 目前的设计只有一个target（现在可能target有多个），所以直接取一个
-            target = next(iter(target_all.keys()))
-            target_iqn = target_all[target]['target_iqn']
-            return target,target_iqn
-        else:
-            s.prt_log('No target，please create target first', 2)
-
-
-    def get_disk_data(self, dg):
-        # 根据dg去收集drbdd的三项数据：resource name，device name
-        disk = self.js.get_data('DiskGroup').get(dg)
-        linstor = Linstor()
-        linstor_res = linstor.get_linstor_data('linstor --no-color --no-utf8 r lv')
-        disks = {}
-        for disk_all in linstor_res:
-            # 获取diskgroup中每个disk的相关数据
-            for d in disk:
-                if d in disk_all:
-                    disks.update({disk_all[1]: disk_all[5]})  # 取Resource, DeviceName
-        return disks
-
     def create_map(self, map, hg_list, dg_list):
         """
         创建map
@@ -559,7 +528,6 @@ class Map():
         if not self.pre_check_create_map(map, hg_list, dg_list):
             return
 
-        # replay模式下，取到的两个json_data都是相同的，有问题
         json_data_before = copy.deepcopy(self.js.json_data)
         self.js.update_data('Map', map, {'HostGroup': hg_list, 'DiskGroup': dg_list})
         json_data_modify = copy.deepcopy(self.js.json_data)
@@ -580,30 +548,6 @@ class Map():
         s.prt_log('Create map success!', 0)
         return True
 
-
-    def create_res(self, res, list_iqn):
-        obj_crm = CRMConfig()
-        # 取DeviceName后四位数字，减一千作为lun id
-        path = self.js.get_data('Disk')[res]
-        lunid = int(path[-4:]) - 1000
-        initiator = ' '.join(list_iqn)
-        # 创建iSCSILogicalUnit
-        if obj_crm.create_crm_res(res, self.target_iqn, lunid, path, initiator):
-            self.list_res_created.append(res)
-            # 创建order，colocation
-            if obj_crm.create_set(res, self.target_name):
-                # 尝试启动资源，成功失败都不影响创建
-                obj_crm.start_res(res)
-                obj_crm.checkout_status(res,'iSCSILogicalUnit','STARTED')
-            else:
-                for i in self.list_res_created:
-                    obj_crm.delete_res(i,'iSCSILogicalUnit')
-                return False
-        else:
-            s.prt_log('Fail to create iSCSILogicalUnit', 1)
-            for i in self.list_res_created:
-                obj_crm.delete_res(i,'iSCSILogicalUnit')
-            return False
 
     def get_all_map(self):
         return self.js.get_data("Map")
@@ -671,34 +615,13 @@ class Map():
         return True
 
 
-    # 获取已map的dg对应的hg
-    def get_hg_by_dg(self, dg):
-        map = self.js.get_data('Map')
-        hg_list = []
-        for i in map.values():
-            if dg in i:
-                hg_list.append(i[0])
-        return hg_list
-
-    def get_all_initiator(self, hg_list):
-        initiator = ''
-        for hg in hg_list:
-            initiator = f'{initiator} {self.get_initiator(hg)}'
-        return initiator[1:]
-
-    def get_all_disk(self, dg_list):
-        all_disk = {}
-        for dg in dg_list:
-            dgdata = self.get_disk_data(dg)
-            all_disk.update(dgdata)
-        return all_disk
 
 
     def add_hg(self, map, list_hg):
         if not self.js.check_key('Map', map):
             s.prt_log(f"不存在{map}可以去进行修改", 2)
         for hg in list_hg:
-            if self.js.check_map_member(map, hg, "HostGroup"):
+            if hg in self.js.json_data["Map"][map]["HostGroup"]:
                 s.prt_log(f'{hg}已存在{map}中', 2)
             if not self.js.check_key("HostGroup", hg):
                 s.prt_log(f'json文件中不存在{hg}，无法进行添加', 2)
@@ -726,7 +649,7 @@ class Map():
         if not self.js.check_key('Map', map):
             s.prt_log(f"不存在{map}可以去进行修改", 2)
         for dg in list_dg:
-            if self.js.check_map_member(map, dg, "DiskGroup"):
+            if dg in self.js.json_data["Map"][map]["DiskGroup"]:
                 s.prt_log(f'{dg}已存在{map}中', 2)
             if not self.js.check_key("DiskGroup", dg):
                 s.prt_log(f'json文件中不存在{dg}，无法进行添加', 2)
@@ -752,7 +675,7 @@ class Map():
         if not self.js.check_key('Map', map):
             s.prt_log(f"不存在{map}可以去进行修改", 2)
         for hg in list_hg:
-            if not self.js.check_map_member(map, hg, "HostGroup"):
+            if not hg in self.js.json_data["Map"][map]["HostGroup"]:
                 s.prt_log(f'{map}中不存在成员{hg}，无法进行移除', 2)
 
         # 获取修改前的数据进行复制，之后进行对json数据的修改，从而去对比获取需要改动的映射关系再使用crm命令修改
@@ -782,7 +705,7 @@ class Map():
         if not self.js.check_key('Map', map):
             s.prt_log(f"不存在{map}可以去进行修改", 2)
         for dg in list_dg:
-            if not self.js.check_map_member(map, dg, "DiskGroup"):
+            if not dg in self.js.json_data["Map"][map]["DiskGroup"]:
                 s.prt_log(f'{map}中不存在成员{dg}，无法进行移除', 2)
 
         # 获取修改前的数据进行复制，之后进行对json数据的修改，从而去获取映射关系再使用crm命令修改
@@ -840,12 +763,9 @@ class Portal():
             obj_portblock.create(f'{name}_prtblk_on',ip,port,action='block')
             obj_portblock.create(f'{name}_prtblk_off',ip,port,action='unblock')
 
-            obj_colocation = Colocation()
-            obj_colocation.create(f'col_{name}_prtblk_on',f'{name}_prtblk_on', name)
-            obj_colocation.create(f'col_{name}_prtblk_off', f'{name}_prtblk_off', name)
-
-            obj_order = Order()
-            obj_order.create(f'or_{name}_prtblk_on',name, f'{name}_prtblk_on')
+            Colocation.create(f'col_{name}_prtblk_on',f'{name}_prtblk_on', name)
+            Colocation.create(f'col_{name}_prtblk_off', f'{name}_prtblk_off', name)
+            Order.create(f'or_{name}_prtblk_on',name, f'{name}_prtblk_on')
 
         except Exception as ex:
             # 记录异常信息
@@ -891,12 +811,9 @@ class Portal():
             RollBack.rollback(portal['ip'],portal['port'],portal['netmask'])
             # 恢复colocation和order
             if RollBack.dict_rollback['IPaddr2']:
-                obj_colocation = Colocation()
-                obj_colocation.create(f'col_{name}_prtblk_on',f'{name}_prtblk_on', name)
-                obj_colocation.create(f'col_{name}_prtblk_off', f'{name}_prtblk_off', name)
-
-                obj_order = Order()
-                obj_order.create(f'or_{name}_prtblk_on',name, f'{name}_prtblk_on')
+                Colocation.create(f'col_{name}_prtblk_on',f'{name}_prtblk_on', name)
+                Colocation.create(f'col_{name}_prtblk_off', f'{name}_prtblk_off', name)
+                Order.create(f'or_{name}_prtblk_on',name, f'{name}_prtblk_on')
             return
 
         # 验证
@@ -974,8 +891,7 @@ class Portal():
             self.js.json_data['Target'][target]['ip'] = ip
             self.js.json_data['Target'][target]['port'] = str(port)
         self.js.commit_json()
-        print(f'修改portal:{name}成功')
-
+        print(f'Modify {name} successfully')
 
 
     def show(self):
@@ -1022,7 +938,7 @@ class Portal():
         obj_crm = CRMConfig()
         status = obj_crm.get_crm_res_status(name, type='IPaddr2')
         if status == 'STARTED':
-            s.prt_log('创建成功',1)
+            s.prt_log(f'Create {name} successfully',1)
             return 'OK'
         elif status == 'NOT_STARTED':
             failed_actions = obj_crm.get_failed_actions(name)
@@ -1032,10 +948,10 @@ class Portal():
                 s.prt_log(failed_actions,1)
                 return 'OTHER_ERROR'
             else:
-                s.prt_log('未知错误,请进行检查',1)
+                s.prt_log('Unknown error, please check',1)
                 return 'UNKNOWN_ERROR'
         else:
-            s.prt_log(f'{name}没有被成功创建，请检查',1)
+            s.prt_log(f'Failed to create {name}, please check',1)
             return 'FAIL'
 
 

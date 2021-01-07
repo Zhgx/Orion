@@ -6,7 +6,7 @@ import pprint
 from functools import wraps
 
 
-def deco_update_json(str):
+def deco_oprt_json(str):
     """
     Decorator providing confirmation of deletion function.
     :param func: Function to delete linstor resource
@@ -101,6 +101,8 @@ class JsonOperation(object):
     def commit_json(self):
         with open('../vplx/map_config.json', "w") as fw:
             json.dump(self.json_data, fw, indent=4, separators=(',', ': '))
+        return True
+
 
     # 获取Host,Disk、Target，HostGroup、DiskGroup、Map的信息
     def get_data(self, first_key):
@@ -144,20 +146,6 @@ class JsonOperation(object):
                 return True
             else:
                 return False
-
-    @s.deco_json_operation('JSON检查某个成员是否存在于指定map中')
-    def check_map_member(self,map,member,type):
-        """
-        检查某个member是否存在指定的map中
-        :param map:
-        :param hg:
-        :param type: "HostGroup"/"DiskGroup"
-        :return:
-        """
-        if member in self.json_data["Map"][map][type]:
-            return True
-        else:
-            return False
 
 
     def check_in_res(self,res,type,target):
@@ -343,15 +331,15 @@ class JsonOperation(object):
         return list(set(list_iqn))
 
 
-    # 创建Host、HostGroup、DiskGroup、Map
-    @deco_update_json('JSON更新后的资源信息')
+    # 更新Host、HostGroup、DiskGroup、Map的某一个成员的数据
+    @deco_oprt_json('JSON更新后的数据（某资源的成员）')
     def update_data(self, first_key, data_key, data_value):
         self.json_data[first_key].update({data_key: data_value})
         return self.json_data[first_key]
 
 
-    # 更新disk 可能需要注意的地方：没有限制可以修改的key
-    @s.deco_json_operation(f'JSON更新disk信息')
+    # 更新该资源的全部数据
+    @deco_oprt_json(f'JSON更新后的数据（某资源的全部）')
     def cover_data(self, first_key, data):
         self.json_data[first_key] = data
         return self.json_data[first_key]
@@ -398,7 +386,7 @@ class JsonOperation(object):
 
 
     # 删除Host、HostGroup、DiskGroup、Map
-    @s.deco_json_operation('JSON删除后的资源信息')
+    @deco_oprt_json('JSON删除后的资源信息')
     def delete_data(self, first_key, data_key):
         self.json_data[first_key].pop(data_key)
         # with open('../vplx/map_config.json', "w") as fw:

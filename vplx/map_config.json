@@ -50,18 +50,7 @@
             "res_e"
         ]
     },
-    "Map": {
-        "map1": {
-            "HostGroup": [
-                "hg1",
-                "hg2"
-            ],
-            "DiskGroup": [
-                "dg1",
-                "dg2"
-            ]
-        }
-    },
+    "Map": {},
     "Portal": {
         "vip": {
             "ip": "10.203.1.75",
@@ -74,6 +63,12 @@
         "vip_test1": {
             "ip": "10.203.1.151",
             "port": "3360",
+            "netmask": "24",
+            "target": []
+        },
+        "vip_test2": {
+            "ip": "10.203.1.153",
+            "port": "3362",
             "netmask": "24",
             "target": []
         }
