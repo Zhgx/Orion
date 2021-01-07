@@ -35,7 +35,7 @@ class HostCreate(views.MethodView):
         iqn = dict_data["host_iqn"]
         logger.write_to_log('OPRT', 'ROUTE', '/host/create', dict_data['ip'], dict_data)
         host_obj = iscsi.Host()
-        host_create_results = host_obj.create_host(host, iqn)
+        host_create_results = host_obj.create(host, iqn)
         logger.write_to_log('DATA', 'RESULT', 'HostCreate', 'result', host_create_results)
         if host_create_results == True:
             result = "0"
@@ -120,8 +120,8 @@ HOST_RESULT = None
 def update_host():
     global HOST_RESULT
    
-    host = iscsi.Host()
-    HOST_RESULT = host.get_all_host()
+    js = iscsi_json.JsonOperation()
+    HOST_RESULT = js.json_data['Host']
     
     return True
 
@@ -160,7 +160,7 @@ def update_disk():
     global DISK_RESULT
     
     disk = iscsi.Disk()
-    DISK_RESULT = disk.get_all_disk()
+    DISK_RESULT = disk.update_disk()
     return True
 
 

@@ -150,14 +150,12 @@ def show_map_data(list_header, dict_data):
     return table
 
 
-def show_linstor_data(list_header,list_data):
+def make_table(list_header,list_data):
     table = prettytable.PrettyTable()
     table.field_names = list_header
     if list_data:
         for i in list_data:
             table.add_row(i)
-    else:
-        pass
     return table
 
 

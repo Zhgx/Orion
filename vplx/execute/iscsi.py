@@ -24,10 +24,8 @@ class IscsiConfig():
         if any([self.modify, self.delete]):
             self.obj_crm = CRMConfig()
 
-        # if self.create:
-        #     # self.obj_map = Map()
-        self.obj_iscsiLU = ISCSILogicalUnit()
 
+        self.obj_iscsiLU = ISCSILogicalUnit()
 
         # 记载需要进行恢复的disk
         self.recovery_list = {'delete': set(), 'create': {}, 'modify': {}}
@@ -140,11 +138,16 @@ class IscsiConfig():
             self.restore()
 
 
+# 问题，这个disk数据是根据LINSTOR来的，那么是不是进行iscsi命令之前，需要更新这个数据，或者进行校验？
 class Disk():
+    """
+    Disk
+    """
     def __init__(self):
         self.js = iscsi_json.JsonOperation()
 
-    def get_all_disk(self):
+    def update_disk(self):
+        # 更新disk数据并返回
         linstor = Linstor()
         linstor_res = linstor.get_linstor_data(
             'linstor --no-color --no-utf8 r lv')
@@ -154,32 +157,29 @@ class Disk():
         self.js.cover_data('Disk', disks)
         self.js.commit_json()
         return disks
-
-    def get_spe_disk(self, disk):
-        self.get_all_disk()
-        if self.js.check_key('Disk', disk):
-            return {disk: self.js.get_data('Disk').get(disk)}
-
-    # 展示全部disk
-    def show_all_disk(self):
+    
+    def show(self,disk):
+        disk_all = self.update_disk()
         list_header = ["ResourceName", "Path"]
-        dict_data = self.get_all_disk()
-        table = s.show_iscsi_data(list_header, dict_data)
+        list_data = []
+        if disk == 'all' or disk is None:
+            # show all
+            for disk,path in disk_all.items():
+                list_data.append([disk,path])
+        else:
+            # show one
+            if self.js.check_key('Disk', disk):
+                list_data.append([disk,disk_all[disk]])
+
+        table = s.make_table(list_header, list_data)
         s.prt_log(table, 0)
 
-    # 展示指定的disk
-    def show_spe_disk(self, disk):
-        list_header = ["ResourceName", "Path"]
-        dict_data = self.get_spe_disk(disk)
-        table = s.show_iscsi_data(list_header, dict_data)
-        s.prt_log(table, 0)
-
-    """
-    host 操作
-    """
 
 
 class Host():
+    """
+    Host
+    """
     def __init__(self):
         self.js = iscsi_json.JsonOperation()
 
@@ -187,40 +187,40 @@ class Host():
         """
         判断iqn是否符合格式
         """
-        if not s.re_findall(r'^iqn\.\d{4}-\d{2}\.[a-zA-Z0-9.:-]+', iqn):
-            s.prt_log(f"The format of IQN is wrong. Please confirm and fill in again.", 2)
+        result = s.re_findall(r'^iqn\.\d{4}-\d{2}\.[a-zA-Z0-9.:-]+', iqn)
+        return True if result else False
 
-    def create_host(self, host, iqn):
+    def create(self, host, iqn):
         if self.js.check_key('Host', host):
             s.prt_log(f"Fail! The Host {host} already existed.", 1)
+            return
+        if not self._check_iqn(iqn):
+            s.prt_log(f"The format of IQN is wrong. Please confirm and fill in again.", 1)
+            return
+        self.js.update_data("Host", host, iqn)
+        self.js.commit_json()
+        s.prt_log("Create success!", 0)
+        return True
+
+
+    def show(self,host):
+        list_header = ["HostName", "IQN"]
+        list_data = []
+        host_all = self.js.json_data['Host']
+        if host == 'all' or host is None:
+            # show all
+            for host,iqn in host_all.items():
+                list_data.append([host,iqn])
         else:
-            self._check_iqn(iqn)
-            self.js.update_data("Host", host, iqn)
-            self.js.commit_json()
-            s.prt_log("Create success!", 0)
-            return True
-
-
-    def get_all_host(self):
-        return self.js.get_data("Host")
-
-    def get_spe_host(self, host):
-        if self.js.check_key('Host', host):
-            return ({host: self.js.get_data('Host').get(host)})
-
-    def show_all_host(self):
-        list_header = ["HostName", "IQN"]
-        dict_data = self.get_all_host()
-        table = s.show_iscsi_data(list_header, dict_data)
+            # show one
+            if self.js.check_key('Host', host):
+                list_data.append([host,host_all[host]])
+        table = s.make_table(list_header, list_data)
         s.prt_log(table, 0)
 
-    def show_spe_host(self, host):
-        list_header = ["HostName", "IQN"]
-        dict_data = self.get_spe_host(host)
-        table = s.show_iscsi_data(list_header, dict_data)
-        s.prt_log(table, 0)
 
-    def delete_host(self, host):
+    # 问题，现在这个delete是要判断有没有hostgroup有没有用这个host，有的话不能删除
+    def delete(self, host):
         if self.js.check_key('Host', host):
             if self.js.check_value('HostGroup', host):
                 s.prt_log(
@@ -234,9 +234,10 @@ class Host():
             s.prt_log(f"Fail! Can't find {host}", 1)
 
 
-    def modify_host(self, host, iqn):
+    def modify(self, host, iqn):
         if not self.js.check_key('Host', host):
-            s.prt_log("不存在这个host可以去进行修改", 2)
+            s.prt_log("不存在这个host可以去进行修改", 1)
+            return
 
         json_data_before = copy.deepcopy(self.js.json_data)
         self.js.update_data('Host', host, iqn)
@@ -252,16 +253,17 @@ class Host():
 
         self.js.commit_json()
 
-    """
-    diskgroup 操作
-    """
+
 
 
 class DiskGroup():
+    """
+    DiskGroup
+    """
     def __init__(self):
         # 更新json文档中的disk信息
         disk = Disk()
-        disk.get_all_disk()
+        disk.update_disk()
         self.js = iscsi_json.JsonOperation()
 
     def create_diskgroup(self, diskgroup, disk):
@@ -903,7 +905,7 @@ class Portal():
         list_data = []
         for portal,data in self.js.json_data['Portal'].items():
             list_data.append([portal,data['ip'],data['port'],data['netmask'],",".join(data['target'])])
-        table = s.show_linstor_data(list_header,list_data)
+        table = s.make_table(list_header,list_data)
         s.prt_log(table, 0)
 
 

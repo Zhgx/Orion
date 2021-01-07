@@ -60,10 +60,11 @@ def deco_oprt_json(str):
 
 class JsonOperation(object):
     _instance_lock = threading.Lock()
+    json_data = None
 
     def __init__(self):
-        self.RPL = consts.glo_rpl()
-        self.json_data = self.read_json()
+        if self.json_data is None:
+            self.json_data = self.read_json()
 
 
     def __new__(cls, *args, **kwargs):
