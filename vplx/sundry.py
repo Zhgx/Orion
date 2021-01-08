@@ -150,14 +150,12 @@ def show_map_data(list_header, dict_data):
     return table
 
 
-def show_linstor_data(list_header,list_data):
+def make_table(list_header,list_data):
     table = prettytable.PrettyTable()
     table.field_names = list_header
     if list_data:
         for i in list_data:
             table.add_row(i)
-    else:
-        pass
     return table
 
 
@@ -202,6 +200,7 @@ def deco_cmd(type):
                 print(f"RE:{cmd_result['time']:<20} 系统命令结果：\n{result_output}")
                 if id_result['db_id']:
                     change_pointer(id_result['db_id'])
+
             return result
         return wrapper
     return decorate
@@ -238,12 +237,12 @@ def prt(str_, warning_level=0):
         print(str(str_))
     else:
         db = consts.glo_db()
-        time,cmd_output = db.get_cmd_output(consts.glo_tsc_id())
-        if not time:
-            time = ''
-        print(f'RE:{time:<20} 日志记录输出：{warning_str:<4}\n{cmd_output}')
+        data = db.get_cmd_output(consts.glo_tsc_id())
+        if not data["time"]:
+            data["time"] = ''
+        print(f'RE:{data["time"]:<20} 日志记录输出：{warning_str:<4}\n{data["output"]}')
         print(f'RE:{"":<20} 此次执行输出：{warning_str:<4}\n{str_}')
-
+        change_pointer(int(data["db_id"]))
 
 def prt_log(str_, warning_level):
     """
@@ -254,7 +253,6 @@ def prt_log(str_, warning_level):
     logger = consts.glo_log()
     RPL = consts.glo_rpl()
     if RPL == 'yes':
-        # pass
         prt(str_, warning_level)
     elif RPL == 'no':
         prt(str_, warning_level)
@@ -313,7 +311,6 @@ def deco_json_operation(str):
             else:
                 logdb = consts.glo_db()
                 id_result = logdb.get_id(consts.glo_tsc_id(), func.__name__)
-                print('id_result:',id_result)
                 json_result = logdb.get_oprt_result(id_result['oprt_id'])
                 if json_result['result']:
                     result = eval(json_result['result'])
