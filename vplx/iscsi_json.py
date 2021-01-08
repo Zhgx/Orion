@@ -390,7 +390,5 @@ class JsonOperation(object):
     @deco_oprt_json('JSON删除后的资源信息')
     def delete_data(self, first_key, data_key):
         self.json_data[first_key].pop(data_key)
-        # with open('../vplx/map_config.json', "w") as fw:
-        #     json.dump(self.json_data, fw, indent=4, separators=(',', ': '))
         return self.json_data[first_key]
 

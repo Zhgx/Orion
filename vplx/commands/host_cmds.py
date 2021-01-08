@@ -113,10 +113,7 @@ class HostCommands():
     @sd.deco_record_exception
     def show(self, args):
         host = ex.Host()
-        if args.host == 'all' or args.host is None:
-            host.show_all_host()
-        else:
-            host.show_spe_host(args.host)
+        host.show(args.host)
 
     @sd.deco_record_exception
     @sd.deco_comfirm_del('host')

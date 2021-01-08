@@ -244,6 +244,8 @@ def main():
         cmd.parse()
     except KeyboardInterrupt:
         sys.stderr.write("\nClient exiting (received SIGINT)\n")
+    except PermissionError:
+        sys.stderr.write("\nPermission denied (log file or other)\n")
 
 
 if __name__ == '__main__':

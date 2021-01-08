@@ -4,6 +4,7 @@ import time
 import types
 import traceback
 from functools import wraps
+import copy
 
 import iscsi_json
 import sundry as s
@@ -248,7 +249,7 @@ class CRMData():
         """
         js = iscsi_json.JsonOperation()
         crm_portal = self.get_portal_data(vip,portblock,target)
-        json_portal = js.json_data['Portal']
+        json_portal = copy.deepcopy(js.json_data['Portal']) # 防止对json对象的数据修改，进行深拷贝，之后修改数据结构再修改
 
         # 处理列表的顺序问题
         for portal_name,portal_data in crm_portal.items():
@@ -488,7 +489,7 @@ class PortBlockGroup():
         if not result:
             raise consts.CmdError
         else:
-            print(f'删除 {name} 成功')
+            print(f'Delete {name} successfully')
             return True
 
 
@@ -503,7 +504,7 @@ class PortBlockGroup():
             s.prt_log(cmd_result_port['rst'], 1)
             raise consts.CmdError
         else:
-            print(f'修改 {name} IP和Port成功')
+            print(f"Modify {name} (IP and Port) successfully")
             return True
 
 

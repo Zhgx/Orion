@@ -175,7 +175,6 @@ class Disk():
         s.prt_log(table, 0)
 
 
-
 class Host():
     """
     Host
@@ -219,24 +218,25 @@ class Host():
         s.prt_log(table, 0)
 
 
-    # 问题，现在这个delete是要判断有没有hostgroup有没有用这个host，有的话不能删除
     def delete(self, host):
-        if self.js.check_key('Host', host):
-            if self.js.check_value('HostGroup', host):
-                s.prt_log(
-                    "Fail! The host in ... hostgroup.Please delete the hostgroup first", 1)
-            else:
-                self.js.delete_data('Host', host)
-                self.js.commit_json()
-                s.prt_log("Delete success!", 0)
-                return True
-        else:
+        if not self.js.check_key('Host', host):
             s.prt_log(f"Fail! Can't find {host}", 1)
+            return
+        if self.js.check_value('HostGroup', host):
+            s.prt_log(
+                "Fail! The host in ... hostgroup.Please delete the hostgroup first", 1)
+            return
+
+        self.js.delete_data('Host', host)
+        self.js.commit_json()
+        s.prt_log("Delete success!", 0)
+        return True
+
 
 
     def modify(self, host, iqn):
         if not self.js.check_key('Host', host):
-            s.prt_log("不存在这个host可以去进行修改", 1)
+            s.prt_log(f"Fail! Can't find {host}", 1)
             return
 
         json_data_before = copy.deepcopy(self.js.json_data)
@@ -254,8 +254,6 @@ class Host():
         self.js.commit_json()
 
 
-
-
 class DiskGroup():
     """
     DiskGroup
@@ -266,63 +264,66 @@ class DiskGroup():
         disk.update_disk()
         self.js = iscsi_json.JsonOperation()
 
-    def create_diskgroup(self, diskgroup, disk):
+    def create(self, diskgroup, disk):
         if self.js.check_key('DiskGroup', diskgroup):
             s.prt_log(f'Fail! The Disk Group {diskgroup} already existed.', 1)
-        else:
-            for i in disk:
-                if self.js.check_key('Disk', i) == False:
-                    s.prt_log(f"Fail! Can't find {i}.Please give the true name.", 1)
-                    return
+            return
+        for i in disk:
+            if self.js.check_key('Disk', i) == False:
+                s.prt_log(f"Fail! Can't find {i}.Please give the true name.", 1)
+                return
 
-            self.js.update_data('DiskGroup', diskgroup, disk)
-            self.js.commit_json()
-            s.prt_log("Create success!", 0)
-            return True
+        self.js.update_data('DiskGroup', diskgroup, disk)
+        self.js.commit_json()
+        s.prt_log("Create success!", 0)
+        return True
 
-    def get_all_diskgroup(self):
-        return self.js.get_data("DiskGroup")
-
-    def get_spe_diskgroup(self, dg):
-        if self.js.check_key('DiskGroup', dg):
-            return {dg: self.js.get_data('DiskGroup').get(dg)}
-
-    def show_all_diskgroup(self):
+    def show(self,dg):
         list_header = ["DiskgroupName", "DiskName"]
-        dict_data = self.get_all_diskgroup()
-        table = s.show_iscsi_data(list_header, dict_data)
+        list_data = []
+        hg_all = self.js.json_data['DiskGroup']
+
+        if dg == 'all' or dg is None:
+            # show all
+            for dg,disk in hg_all.items():
+                list_data.append([dg, ' '.join(disk)])
+        else:
+            # show one
+            if self.js.check_key('DiskGroup', dg):
+                list_data.append([dg,' '.join(hg_all[dg])])
+
+        table = s.make_table(list_header, list_data)
         s.prt_log(table, 0)
 
-    def show_spe_diskgroup(self, dg):
-        list_header = ["DiskgroupName", "DiskName"]
-        dict_data = self.get_spe_diskgroup(dg)
-        table = s.show_iscsi_data(list_header, dict_data)
-        s.prt_log(table, 0)
 
-    def delete_diskgroup(self, dg):
-        if self.js.check_key('DiskGroup', dg):
-            if self.js.check_in_res('Map','DiskGroup', dg):
-                s.prt_log("Fail! The diskgroup already map,Please delete the map", 1)
-            else:
-                self.js.delete_data('DiskGroup', dg)
-                self.js.commit_json()
-                s.prt_log("Delete success!", 0)
-        else:
+
+    def delete(self, dg):
+        if not self.js.check_key('DiskGroup', dg):
             s.prt_log(f"Fail! Can't find {dg}", 1)
+            return
+        if self.js.check_in_res('Map','DiskGroup', dg):
+            s.prt_log("Fail! The diskgroup already map,Please delete the map", 1)
+            return
+
+        self.js.delete_data('DiskGroup', dg)
+        self.js.commit_json()
+        s.prt_log("Delete success!", 0)
 
 
     def add_disk(self, dg, list_disk):
         if not self.js.check_key('DiskGroup', dg):
-            s.prt_log(f"不存在{dg}可以去进行修改", 2)
+            s.prt_log(f"Fail！Can't find {dg}", 1)
+            return
         for disk in list_disk:
             if self.js.check_value_in_key("DiskGroup", dg, disk):
-                s.prt_log(f'{disk}已存在{dg}中', 2)
+                s.prt_log(f'{disk}已存在{dg}中', 1)
+                return
             if not self.js.check_key("Disk", disk):
-                s.prt_log(f'json文件中不存在{disk}，无法进行添加', 2)
+                s.prt_log(f'json文件中不存在{disk}，无法进行添加', 1)
+                return
 
         json_data_before = copy.deepcopy(self.js.json_data)
         self.js.append_member('DiskGroup', dg, list_disk)
-        json_data_modify = copy.deepcopy(self.js.json_data)
         obj_iscsi = IscsiConfig(json_data_before, self.js.json_data)
         obj_iscsi.comfirm_modify()
 
@@ -332,21 +333,21 @@ class DiskGroup():
             obj_iscsi.crm_conf_change()
         else:
             s.prt_log('JSON已被修改，请重新操作', 2)
-        self.js.json_data = json_data_modify
         self.js.commit_json()
 
 
 
     def remove_disk(self, dg, list_disk):
         if not self.js.check_key('DiskGroup', dg):
-            s.prt_log(f"不存在{dg}可以去进行修改", 2)
+            s.prt_log(f"Fail！Can't find {dg}", 1)
+            return
         for disk in list_disk:
             if not self.js.check_value_in_key("DiskGroup", dg, disk):
-                s.prt_log(f'{dg}中不存在成员{disk}，无法进行移除', 2)
+                s.prt_log(f'{dg}中不存在成员{disk}，无法进行移除', 1)
+                return
 
         json_data_before = copy.deepcopy(self.js.json_data)
         self.js.remove_member('DiskGroup', dg, list_disk)
-        json_data_modify = copy.deepcopy(self.js.json_data)
         obj_iscsi = IscsiConfig(json_data_before, self.js.json_data)
         obj_iscsi.comfirm_modify()
 
@@ -357,7 +358,6 @@ class DiskGroup():
         else:
             s.prt_log('JSON已被修改，请重新操作', 2)
 
-        self.js.json_data = json_data_modify
         if not self.js.json_data['DiskGroup'][dg]:
             self.js.delete_data('DiskGroup', dg)
             list_map = self.js.get_map_by_group('DiskGroup', dg)
@@ -382,59 +382,65 @@ class HostGroup():
     def __init__(self):
         self.js = iscsi_json.JsonOperation()
 
-    def create_hostgroup(self, hostgroup, host):
+    def create(self, hostgroup, host):
         if self.js.check_key('HostGroup', hostgroup):
             s.prt_log(f'Fail! The HostGroup {hostgroup} already existed.', 1)
-        else:
-            for i in host:
-                if self.js.check_key('Host', i) == False:
-                    s.prt_log(f"Fail! Can't find {i}.Please give the true name.", 1)
-                    return
+            return
+        for i in host:
+            if self.js.check_key('Host', i) == False:
+                s.prt_log(f"Fail! Can't find {i}.Please give the true name.", 1)
+                return
 
-            self.js.update_data('HostGroup', hostgroup, host)
-            self.js.commit_json()
-            s.prt_log("Create success!", 0)
-            return True
+        self.js.update_data('HostGroup', hostgroup, host)
+        self.js.commit_json()
+        s.prt_log("Create success!", 0)
+        return True
 
-    def get_all_hostgroup(self):
-        return self.js.get_data("HostGroup")
-
-    def get_spe_hostgroup(self, hg):
-        if self.js.check_key('HostGroup', hg):
-            return {hg: self.js.get_data('HostGroup').get(hg)}
-
-    def show_all_hostgroup(self):
+    def show(self,hg):
         list_header = ["HostGroupName", "HostName"]
-        dict_data = self.get_all_hostgroup()
-        table = s.show_iscsi_data(list_header, dict_data)
+        list_data = []
+        hg_all = self.js.json_data['HostGroup']
+
+        if hg == 'all' or hg is None:
+            # show all
+            for hg,host in hg_all.items():
+                list_data.append([hg, ' '.join(host)])
+        else:
+            # show one
+            if self.js.check_key('HostGroup', hg):
+                list_data.append([hg,' '.join(hg_all[hg])])
+
+        table = s.make_table(list_header, list_data)
         s.prt_log(table, 0)
 
-    def show_spe_hostgroup(self, hg):
-        list_header = ["HostGroupName", "HostName"]
-        dict_data = self.get_spe_hostgroup(hg)
-        table = s.show_iscsi_data(list_header, dict_data)
-        s.prt_log(table, 0)
 
-    def delete_hostgroup(self, hg):
-        if self.js.check_key('HostGroup', hg):
-            if self.js.check_value('Map', hg):
-                s.prt_log("Fail! The hostgroup already map,Please delete the map", 1)
-            else:
-                self.js.delete_data('HostGroup', hg)
-                self.js.commit_json()
-                s.prt_log("Delete success!", 0)
-        else:
+    # 问题，现在这个delete是要判断有没有Map使用这个hg，有的话不能删除，但是修改功能是可以把hg的成员全部移除的，然后这个hg就会被删除
+    # 要怎么处理？
+    def delete(self, hg):
+        if not self.js.check_key('HostGroup', hg):
             s.prt_log(f"Fail! Can't find {hg}", 1)
+            return
+        if self.js.check_value('Map', hg):
+            s.prt_log("Fail! The hostgroup already map,Please delete the map", 1)
+            return
+
+        self.js.delete_data('HostGroup', hg)
+        self.js.commit_json()
+        s.prt_log("Delete success!", 0)
+
 
 
     def add_host(self, hg, list_host):
         if not self.js.check_key('HostGroup', hg):
-            s.prt_log(f"不存在{hg}可以去进行修改", 2)
+            s.prt_log(f"Fail！Can't find {hg}", 1)
+            return
         for host in list_host:
             if self.js.check_value_in_key("HostGroup", hg, host):
-                s.prt_log(f'{host}已存在{hg}中', 2)
+                s.prt_log(f'{host}已存在{hg}中', 1)
+                return
             if not self.js.check_key("Host", host):
-                s.prt_log(f'json文件中不存在{host}，无法进行添加', 2)
+                s.prt_log(f'json文件中不存在{host}，无法进行添加', 1)
+                return
 
 
         json_data_before = copy.deepcopy(self.js.json_data)
@@ -455,14 +461,15 @@ class HostGroup():
 
     def remove_host(self, hg, list_host):
         if not self.js.check_key('HostGroup', hg):
-            s.prt_log(f"不存在{hg}可以去进行修改", 2)
+            s.prt_log(f"Fail！Can't find {hg}", 1)
+            return
         for host in list_host:
             if not self.js.check_value_in_key("HostGroup", hg, host):
-                s.prt_log(f'{hg}中不存在成员{host}，无法进行移除', 2)
+                s.prt_log(f'{hg}中不存在成员{host}，无法进行移除', 1)
+                return
 
         json_data_before = copy.deepcopy(self.js.json_data)
         self.js.remove_member('HostGroup', hg, list_host)
-        json_data_modify = copy.deepcopy(self.js.json_data)
         obj_iscsi = IscsiConfig(json_data_before, self.js.json_data)
         obj_iscsi.comfirm_modify()
 
@@ -474,7 +481,6 @@ class HostGroup():
             s.prt_log('JSON已被修改，请重新操作', 2)
 
         # 配置文件的改变
-        self.js.json_data = json_data_modify
         if not self.js.json_data['HostGroup'][hg]:
             self.js.delete_data('HostGroup', hg)
             list_map = self.js.get_map_by_group('HostGroup', hg)
@@ -498,27 +504,41 @@ class Map():
     def __init__(self):
         self.js = iscsi_json.JsonOperation()
         # 用于收集创建成功的resource
-        self.list_res_created = []
         # self.target_name, self.target_iqn = self.get_target()
 
-    def pre_check_create_map(self, map, hg, dg):
-        if self.js.check_key('Map', map):
-            s.prt_log(f'The Map "{map}" already existed.', 2)
-        elif self.checkout_exist('HostGroup', hg) == False:
-            s.prt_log(f"Can't find {hg}", 2)
-        elif self.checkout_exist('DiskGroup', dg) == False:
-            s.prt_log(f"Can't find {dg}", 2)
-        else:
-            return True
+    # def create_mapping(self,name,list_iqn):
+    #     path = self.js.get_data('Disk')[name]
+    #     lunid = int(path[-4:]) - 1000
+    #     initiator = ' '.join(list_iqn)
+    #
+    #     try:
+    #         # 执行iscsilogicalunit创建
+    #         self.create(name,self.target_iqn,lunid,path,initiator)
+    #         self.list_res_created.append(name)
+    #
+    #         #Colocation和Order创建
+    #         Colocation.create(f'col_{name}', name, self.target_name)
+    #         Order.create(f'or_{name}', self.target_name, name)
+    #         s.prt_log(f'create colocation:co_{name}, order:or_{name} success', 0)
+    #     except Exception as ex:
+    #         # 回滚（暂用这种方法）
+    #         s.prt_log('Fail to create iSCSILogicalUnit', 1)
+    #         for i in self.list_res_created:
+    #             self.delete(i)
+    #         print('创建途中失败，以下是报错信息')
+    #         print(str(traceback.format_exc()))
+    #         return False
+    #
+    #     else:
+    #         #启动资源,成功与否不影响创建
+    #         obj_crm = CRMConfig()
+    #         obj_crm.start_res(name)
+    #         obj_crm.checkout_status(name, 'iSCSILogicalUnit', 'STARTED')
+    #
+    #     # 验证？
+    #     return True
 
-    # 检查列表的每个成员hg/dg是否存在
-    def checkout_exist(self, key, data_list):
-        for i in data_list:
-            if self.js.check_key(key, i) == False:
-                return False
-
-
-    def create_map(self, map, hg_list, dg_list):
+    def create(self, map, list_hg, list_dg):
         """
         创建map
         :param map:
@@ -527,14 +547,22 @@ class Map():
         :return:T/F
         """
         # 创建前的检查
-        if not self.pre_check_create_map(map, hg_list, dg_list):
+        if self.js.check_key('Map',map):
+            s.prt_log(f'The Map "{map}" already existed.', 2)
             return
+        for hg in list_hg:
+            if not self.js.check_key('HostGroup',hg):
+                s.prt_log(f"Can't find {hg}", 2)
+                return
+        for dg in list_dg:
+            if not self.js.check_key('DiskGroup',dg):
+                s.prt_log(f"Can't find {dg}", 2)
+                return
+
 
         json_data_before = copy.deepcopy(self.js.json_data)
-        self.js.update_data('Map', map, {'HostGroup': hg_list, 'DiskGroup': dg_list})
-        json_data_modify = copy.deepcopy(self.js.json_data)
-
-        obj_iscsi = IscsiConfig(json_data_before, json_data_modify)
+        self.js.update_data('Map', map, {'HostGroup': list_hg, 'DiskGroup': list_dg})
+        obj_iscsi = IscsiConfig(json_data_before, self.js.json_data)
 
 
         # 已经被使用过的disk(ilu)需不需要提示
@@ -545,73 +573,74 @@ class Map():
         obj_iscsi.create_iscsilogicalunit()
         obj_iscsi.modify_iscsilogicalunit()
 
-        self.js.json_data = json_data_modify
         self.js.commit_json()
         s.prt_log('Create map success!', 0)
         return True
 
 
-    def get_all_map(self):
-        return self.js.get_data("Map")
-
-    def get_spe_map(self, map):
-        list_hg = []
-        list_dg = []
-        if not self.js.check_key('Map', map):
-            s.prt_log('No map data', 2)
-        # {map1: {"HostGroup": [hg1, hg2], "DiskGroup": [dg1, dg2]}
-        map_data = self.js.get_data('Map').get(map)
-        hg_list = map_data["HostGroup"]
-        dg_list = map_data["DiskGroup"]
-        for hg in hg_list:
-            host = self.js.get_data('HostGroup').get(hg)
-            for i in host:
-                iqn = self.js.get_data('Host').get(i)
-                list_hg.append([hg, i, iqn])
-        for dg in dg_list:
-            disk = self.js.get_data('DiskGroup').get(dg)
-            for i in disk:
-                path = self.js.get_data('Disk').get(i)
-                list_dg.append([dg, i, path])
-        return [{map: map_data}, list_hg, list_dg]
-
-    def show_all_map(self):
+    def show(self,map):
         list_header = ["MapName", "HostGroup", "DiskGroup"]
-        dict_data = self.get_all_map()
-        table = s.show_map_data(list_header, dict_data)
+        list_data = []
+        map_all = self.js.json_data['Map']
+
+        if map == 'all' or map is None:
+            # show all
+            for map,data in map_all.items():
+                list_data.append([map," ".join(data['HostGroup'])," ".join(data['DiskGroup'])])
+        else:
+            # show one
+            if self.js.check_key('Map', map):
+                list_data.append([map," ".join(map_all[map]['HostGroup'])," ".join(map_all[map]['DiskGroup'])])
+
+        table = s.make_table(list_header, list_data)
         s.prt_log(table, 0)
 
-    def show_spe_map(self, map):
-        list_data = self.get_spe_map(map)
-        header_map = ["MapName", "HostGroup", "DiskGroup"]
-        header_host = ["HostGroup", "HostName", "IQN"]
-        header_disk = ["DiskGroup", "DiskName", "Disk"]
-        table_map = s.show_map_data(header_map, list_data[0])
-        table_hg = s.show_spe_map_data(header_host, list_data[1])
-        table_dg = s.show_spe_map_data(header_disk, list_data[2])
-        result = [str(table_map), str(table_hg), str(table_dg)]
-        s.prt_log('\n'.join(result), 0)
-        return list_data
-
-    def pre_check_delete_map(self, map):
-        if self.js.check_key('Map', map):
-            return True
-        else:
-            s.prt(f"Fail! Can't find {map}", 1)
+    #  执行map展示的时候，会展示对应dg和hg的数据（全部三个表格），暂时保留代码
+    # def get_spe_map(self, map):
+    #     list_hg = []
+    #     list_dg = []
+    #     if not self.js.check_key('Map', map):
+    #         s.prt_log('No map data', 2)
+    #     # {map1: {"HostGroup": [hg1, hg2], "DiskGroup": [dg1, dg2]}
+    #     map_data = self.js.get_data('Map').get(map)
+    #     hg_list = map_data["HostGroup"]
+    #     dg_list = map_data["DiskGroup"]
+    #     for hg in hg_list:
+    #         host = self.js.get_data('HostGroup').get(hg)
+    #         for i in host:
+    #             iqn = self.js.get_data('Host').get(i)
+    #             list_hg.append([hg, i, iqn])
+    #     for dg in dg_list:
+    #         disk = self.js.get_data('DiskGroup').get(dg)
+    #         for i in disk:
+    #             path = self.js.get_data('Disk').get(i)
+    #             list_dg.append([dg, i, path])
+    #     return [{map: map_data}, list_hg, list_dg]
+    #
+    # def show_spe_map(self, map):
+    #     list_data = self.get_spe_map(map)
+    #     header_map = ["MapName", "HostGroup", "DiskGroup"]
+    #     header_host = ["HostGroup", "HostName", "IQN"]
+    #     header_disk = ["DiskGroup", "DiskName", "Disk"]
+    #     table_map = s.show_map_data(header_map, list_data[0])
+    #     table_hg = s.show_spe_map_data(header_host, list_data[1])
+    #     table_dg = s.show_spe_map_data(header_disk, list_data[2])
+    #     result = [str(table_map), str(table_hg), str(table_dg)]
+    #     s.prt_log('\n'.join(result), 0)
+    #     return list_data
 
     # 调用crm删除map
     def delete_map(self, map):
-        if not self.pre_check_delete_map(map):
+        if not self.js.check_key('Map',map):
+            s.prt_log(f"Fail！Can't find {map}", 2)
             return
 
         json_data_before = copy.deepcopy(self.js.json_data)
         self.js.delete_data('Map', map)
-        json_data_modify = copy.deepcopy(self.js.json_data)
         obj_iscsi = IscsiConfig(json_data_before, self.js.json_data)
         obj_iscsi.delete_iscsilogicalunit()
         obj_iscsi.modify_iscsilogicalunit()
 
-        self.js.json_data = json_data_modify
         self.js.commit_json()
         s.prt_log("Delete map success!", 0)
         return True
@@ -621,16 +650,18 @@ class Map():
 
     def add_hg(self, map, list_hg):
         if not self.js.check_key('Map', map):
-            s.prt_log(f"不存在{map}可以去进行修改", 2)
+            s.prt_log(f"Fail！Can't find {map}", 1)
+            return
         for hg in list_hg:
             if hg in self.js.json_data["Map"][map]["HostGroup"]:
-                s.prt_log(f'{hg}已存在{map}中', 2)
+                s.prt_log(f'{hg}已存在{map}中', 1)
+                return
             if not self.js.check_key("HostGroup", hg):
-                s.prt_log(f'json文件中不存在{hg}，无法进行添加', 2)
+                s.prt_log(f'json文件中不存在{hg}，无法进行添加', 1)
+                return
 
         json_data_before = copy.deepcopy(self.js.json_data)
         self.js.append_member('HostGroup', map, list_hg, type='Map')
-        json_data_modify = copy.deepcopy(self.js.json_data)
         obj_iscsi = IscsiConfig(json_data_before, self.js.json_data)
         obj_iscsi.comfirm_modify()
 
@@ -642,23 +673,24 @@ class Map():
             s.prt_log('JSON已被修改，请重新操作', 2)
 
         # 提交json的修改
-        self.js.json_data = json_data_modify
         self.js.commit_json()
 
 
 
     def add_dg(self, map, list_dg):
         if not self.js.check_key('Map', map):
-            s.prt_log(f"不存在{map}可以去进行修改", 2)
+            s.prt_log(f"Fail！Can't find {map}", 1)
+            return
         for dg in list_dg:
             if dg in self.js.json_data["Map"][map]["DiskGroup"]:
-                s.prt_log(f'{dg}已存在{map}中', 2)
+                s.prt_log(f'{dg}已存在{map}中', 1)
+                return
             if not self.js.check_key("DiskGroup", dg):
-                s.prt_log(f'json文件中不存在{dg}，无法进行添加', 2)
+                s.prt_log(f'json文件中不存在{dg}，无法进行添加', 1)
+                return
 
         json_data_before = copy.deepcopy(self.js.json_data)
         self.js.append_member('DiskGroup', map, list_dg, type='Map')
-        json_data_modify = copy.deepcopy(self.js.json_data)
         obj_iscsi = IscsiConfig(json_data_before, self.js.json_data)
         obj_iscsi.comfirm_modify()
 
@@ -670,20 +702,20 @@ class Map():
             s.prt_log('JSON已被修改，请重新操作', 2)
 
         # 提交json的修改
-        self.js.json_data = json_data_modify
         self.js.commit_json()
 
     def remove_hg(self, map, list_hg):
         if not self.js.check_key('Map', map):
-            s.prt_log(f"不存在{map}可以去进行修改", 2)
+            s.prt_log(f"Fail！Can't find {map}", 1)
+            return
         for hg in list_hg:
             if not hg in self.js.json_data["Map"][map]["HostGroup"]:
-                s.prt_log(f'{map}中不存在成员{hg}，无法进行移除', 2)
+                s.prt_log(f'{map}中不存在成员{hg}，无法进行移除', 1)
+                return
 
         # 获取修改前的数据进行复制，之后进行对json数据的修改，从而去对比获取需要改动的映射关系再使用crm命令修改
         json_data_before = copy.deepcopy(self.js.json_data)
         self.js.remove_member('HostGroup', map, list_hg, type='Map')
-        json_data_modify = copy.deepcopy(self.js.json_data)
         obj_iscsi = IscsiConfig(json_data_before, self.js.json_data)
         obj_iscsi.comfirm_modify()
 
@@ -695,7 +727,6 @@ class Map():
             s.prt_log('JSON已被修改，请重新操作', 2)
 
         # 配置文件删除/移除成员
-        self.js.json_data = json_data_modify
         if not self.js.json_data['Map'][map]['HostGroup']:
             self.js.delete_data('Map', map)
             print(f'该{map}已删除')
@@ -705,15 +736,16 @@ class Map():
     def remove_dg(self, map, list_dg):
         # 验证
         if not self.js.check_key('Map', map):
-            s.prt_log(f"不存在{map}可以去进行修改", 2)
+            s.prt_log(f"Fail！Can't find {map}", 1)
+            return
         for dg in list_dg:
             if not dg in self.js.json_data["Map"][map]["DiskGroup"]:
-                s.prt_log(f'{map}中不存在成员{dg}，无法进行移除', 2)
+                s.prt_log(f'{map}中不存在成员{dg}，无法进行移除', 1)
+                return
 
         # 获取修改前的数据进行复制，之后进行对json数据的修改，从而去获取映射关系再使用crm命令修改
         json_data_before = copy.deepcopy(self.js.json_data)
         self.js.remove_member('DiskGroup', map, list_dg, type='Map')  # 对临时json对象的操作
-        json_data_modify = copy.deepcopy(self.js.json_data)
         obj_iscsi = IscsiConfig(json_data_before, self.js.json_data)
         obj_iscsi.comfirm_modify()
 
@@ -724,7 +756,6 @@ class Map():
         else:
             s.prt_log('JSON已被修改，请重新操作', 2)
 
-        self.js.json_data = json_data_modify
         if not self.js.json_data['Map'][map]['DiskGroup']:
             self.js.delete_data('Map', map)
             print(f'该{map}已删除')
@@ -790,11 +821,11 @@ class Portal():
 
     def delete(self, name):
         if not self.js.check_key('Portal',name):
-            s.prt_log(f'不存在{name}，无法删除',1)
+            s.prt_log(f"Fail！Can't find {name}", 1)
             return
         target = self.js.json_data['Portal'][name]['target']
         if target:
-            s.prt_log(f'{",".join(target)}正在使用该portal，无法删除',1)
+            s.prt_log(f'In use：{",".join(target)}. Can not delete',1)
             return
 
 
@@ -824,15 +855,15 @@ class Portal():
         if not name in dict.keys():
             self.js.delete_data('Portal',name)
             self.js.commit_json()
-            print(f'删除{name}成功')
+            print(f'Delete {name} successfully')
         else:
-            print(f'{name}没有被成功删除，请检查')
+            print(f'Failed to delete {name}, please check')
 
 
     def modify(self, name, ip, port):
         # CRM和JSON数据对比检查
         if not self.js.check_key('Portal',name):
-            s.prt_log(f'不存在{name}，无法修改',1)
+            s.prt_log(f"Fail！Can't find {name}", 1)
             return
         if not self._check_IP(ip):
             s.prt_log(f'{ip}不符合规范',1)

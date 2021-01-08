@@ -141,21 +141,18 @@ class DiskGroupCommands():
     @sd.deco_record_exception
     def create(self, args):
         diskgroup = ex.DiskGroup()
-        diskgroup.create_diskgroup(args.diskgroup, args.disk)
+        diskgroup.create(args.diskgroup, args.disk)
 
     @sd.deco_record_exception
     def show(self, args):
         diskgroup = ex.DiskGroup()
-        if args.diskgroup == 'all' or args.diskgroup is None:
-            diskgroup.show_all_diskgroup()
-        else:
-            diskgroup.show_spe_diskgroup(args.diskgroup)
+        diskgroup.show(args.diskgroup)
 
     @sd.deco_record_exception
     @sd.deco_comfirm_del('diskgroup')
     def delete(self, args):
         diskgroup = ex.DiskGroup()
-        diskgroup.delete_diskgroup(args.diskgroup)
+        diskgroup.delete(args.diskgroup)
 
     @sd.deco_record_exception
     def modify(self, args):
