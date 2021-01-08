@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Map</title>
+
+<link
+	href="{{url_for('static',filename='bootstrap-3.3.7/dist/css/bootstrap.min.css')}}"
+	rel="stylesheet" type="text/css" />
+</head>
+<body>
+	<div class="container">
+		<br> <br>
+		<div class="row">
+			<div class="col-xs-8">
+				<table id="MTable" class="table  table-hover table-bordered "
+					border="1">
+					<thead>
+						<tr>
+							<th>Map</th>
+							<th>HostGroup</th>
+							<th>DiskGroup</th>
+						</tr>
+					</thead>
+					<tbody id="M_T">
+					</tbody>
+				</table>
+
+			</div>
+			<div class="col-xs-4 "></div>
+		</div>
+	</div>
+			<div class="modal fade" id="host_model" data-backdrop="static"  role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h4 class="modal-title" align="center">设备详情</h4>
+					</div>
+					<div class="modal-body">
+				<table id="HG_Table" class="table  table-hover table-bordered "
+					border="1">
+					<thead>
+						<tr>
+							<th>Map</th>
+							<th>HostGroup</th>
+							<th>Host</th>
+							<th>操作</th>
+						</tr>
+					</thead>
+					<tbody id="HG_T">
+					</tbody>
+				</table>
+					
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+					</div>
+				</div>
+			</div>
+		</div>
+		
+			<div class="modal fade" id="confirm_model" data-backdrop="static"  role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h4 class="modal-title" align="center">删除详情</h4>
+					</div>
+					<input id="map_hid" hidden="hidden">
+					<input id="hg_hid" hidden="hidden">
+					<input id="hg_hid_data" hidden="hidden">
+					 <div class="modal-body"><p id="map_result"></p></div>
+					<div class="modal-footer">
+					   <button type="button" class="btn btn-default" data-dismiss="modal">撤销</button>
+                	<button type="button" class="btn btn-primary"  data-dismiss="modal" onclick="hg_remove(this)">确认删除</button>
+					</div>
+				</div>
+			</div>
+		</div>
+</body>
+<script type="text/javascript"
+	src="{{url_for('static',filename='personal/js/JQuery.js')}}"></script>
+<script type="text/javascript"
+	src="{{url_for('static',filename='bootstrap-3.3.7/dist/js/bootstrap.js')}}"></script>
+<script type="text/javascript"
+	src="{{url_for('static',filename='personal/js/iSCSI-map-Modify.js')}}"></script>
+</html>
+

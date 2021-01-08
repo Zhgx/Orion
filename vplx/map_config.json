@@ -1,0 +1,123 @@
+{
+    "Host": {
+        "host1": "iqn.2323-23.xx"
+    },
+    "Disk": {
+        "res_a": "/dev/drbd1000",
+        "res_b": "/dev/drbd1001",
+        "res_c": "/dev/drbd1002",
+        "res_d": "/dev/drbd1003",
+        "res_e": "/dev/drbd1005",
+        "res_f": "/dev/drbd1006"
+    },
+    "HostGroup": {
+        "hg1": [
+            "h1",
+            "h2"
+        ],
+        "hg2": [
+            "h3",
+            "h4"
+        ],
+        "hg4": [
+            "h6"
+        ],
+        "hg5": [
+            "h7"
+        ],
+        "hg6": [
+            "h6"
+        ],
+        "hg7": [
+            "h7"
+        ],
+        "hg8": [
+            "host1",
+            "h4"
+        ],
+        "hg_p": [
+            "h1",
+            "h2"
+        ],
+        "hg_paul": [
+            "h2",
+            "h3",
+            "h1"
+        ],
+        "hg_1": [
+            "h1",
+            "host1"
+        ]
+    },
+    "DiskGroup": {
+        "dg3": [
+            "res_c",
+            "res_d"
+        ],
+        "dg4": [
+            "res_e"
+        ],
+        "dg_paul": [
+            "res_a",
+            "res_b",
+            "res_c"
+        ],
+        "dg1": [
+            "res_a",
+            "res_b",
+            "res_c"
+        ]
+    },
+    "Map": {
+        "map2": {
+            "HostGroup": [
+                "hg1"
+            ],
+            "DiskGroup": [
+                "dg3"
+            ]
+        },
+        "map22": {
+            "HostGroup": [
+                "hg8"
+            ],
+            "DiskGroup": [
+                "dg1"
+            ]
+        }
+    },
+    "crm": {
+        "resource": [
+            [
+                "res_c",
+                "iqn.2020-04.feixitek.com:versaplx00",
+                "2",
+                "/dev/drbd1002",
+                "iqn.2020-11.com.example:pytest02 iqn.2020-11.com.example:pytest01",
+                "Started"
+            ],
+            [
+                "res_d",
+                "iqn.2020-04.feixitek.com:versaplx00",
+                "3",
+                "/dev/drbd1003",
+                "iqn.2020-11.com.example:pytest02 iqn.2020-11.com.example:pytest01",
+                "Started"
+            ]
+        ],
+        "vip": [
+            [
+                "vip",
+                "10.203.1.75",
+                "24"
+            ]
+        ],
+        "target": [
+            [
+                "t_test",
+                "iqn.2020-04.feixitek.com:versaplx00",
+                "10.203.1.75"
+            ]
+        ]
+    }
+}
