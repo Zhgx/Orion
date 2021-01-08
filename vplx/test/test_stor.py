@@ -74,6 +74,8 @@ class TestNode:
         # 存在
         self.node.show_one_node(self.node_name)
         assert 'ubuntu' in sys.stdout.getvalue()
+        self.node.show_one_node(self.node_name, '')
+        assert 'ubuntu' in sys.stdout.getvalue()
         # 不存在
         with patch('builtins.print') as terminal_print:
             self.node.show_one_node('windows')
@@ -82,6 +84,8 @@ class TestNode:
     def test_show_all_node(self):
         sys.stdout = io.StringIO()
         self.node.show_all_node()
+        assert 'ubuntu' in sys.stdout.getvalue()
+        self.node.show_all_node('')
         assert 'ubuntu' in sys.stdout.getvalue()
 
 
@@ -114,12 +118,17 @@ class TestStoragePool:
         sys.stdout = io.StringIO()
         self.sp.show_all_sp()
         assert 'sp_pytest_lvm' in sys.stdout.getvalue()
+        self.sp.show_all_sp('')
+        assert 'sp_pytest_lvm' in sys.stdout.getvalue()
 
     def test_show_one_sp(self):
         sys.stdout = io.StringIO()
         # 存在
         self.sp.show_one_sp('sp_pytest_lvm')
         assert 'sp_pytest_lvm' in sys.stdout.getvalue()
+        self.sp.show_one_sp('sp_pytest_lvm', '')
+        assert 'sp_pytest_lvm' in sys.stdout.getvalue()
+
         # 不存在
         with patch('builtins.print') as terminal_print:
             self.sp.show_one_sp('sp_pytest_lvm0')
@@ -152,10 +161,20 @@ class TestResource:
             pass
         self.res = stor.Resource()
 
+    # 不能删掉pytest_sp1这个storagepool会影响iscsi disk 的创建
+    # def teardown_class(self):
+    #     try:
+    #         self.sp = stor.StoragePool()
+    #         self.sp.delete_storagepool(self.node_name, 'pytest_sp1')
+    #     except Exception:
+    #         pass
+
     # 收集输入的参数，进行处理
     # 这里考虑 node 列表和 storagepool 列表为空的情况么（commands 模块传值时有做判断）
     def test_collect_args(self):
         assert self.res.collect_args([self.node_name], ['pytest_sp1']) == {'ubuntu': 'pytest_sp1'}
+        assert self.res.collect_args([self.node_name, 'window'], ['pytest_sp1', 'pytest_sp2']) == {
+            'ubuntu': 'pytest_sp1', 'window': 'pytest_sp2'}
 
     # 成功返回 True 有可能返回None 失败返回 result
     def test_linstor_create_rd(self):
@@ -182,11 +201,15 @@ class TestResource:
         sys.stdout = io.StringIO()
         self.res.show_all_res()
         assert 'pytest_res' in sys.stdout.getvalue()
+        self.res.show_all_res('')
+        assert 'pytest_res' in sys.stdout.getvalue()
 
     # 无返回值 主要采用 execute_linstor_cmd
     def test_show_one_res(self):
         sys.stdout = io.StringIO()
         self.res.show_one_res('pytest_res')
+        assert 'pytest_res' in sys.stdout.getvalue()
+        self.res.show_one_res('pytest_res', '')
         assert 'pytest_res' in sys.stdout.getvalue()
         # 不存在
         with patch('builtins.print') as terminal_print:
@@ -250,7 +273,21 @@ class TestResource:
         self.res.linstor_delete_rd('pytest_res')
 
     def test_add_mirror_auto(self):
-        pass
+        self.res.linstor_create_rd('pytest_res')
+        self.res.linstor_create_vd('pytest_res', '10m')
+        self.res.execute_create_res('pytest_res', self.node_name, 'pytest_sp1')
+        # 会创建失败因为只有一个node
+        sys.stdout = io.StringIO()
+        self.res.add_mirror_auto('pytest_res', 1)
+        assert 'FAIL' in sys.stdout.getvalue()
+        self.res.linstor_delete_rd('pytest_res')
 
     def test_add_mirror_manual(self):
-        pass
+        self.res.linstor_create_rd('pytest_res')
+        self.res.linstor_create_vd('pytest_res', '10m')
+        self.res.execute_create_res('pytest_res', self.node_name, 'pytest_sp1')
+        # 同一个节点上创建不了镜像
+        with pytest.raises(SystemExit) as exsinfo:
+            self.res.add_mirror_manual('pytest_res', ['ubuntu'], ['pytest_sp'])
+        assert exsinfo.type == SystemExit
+        self.res.linstor_delete_rd('pytest_res')
