@@ -1,6 +1,7 @@
 import json
 import os
 import subprocess
+from collections import Counter
 from unittest.mock import patch
 
 import pytest
@@ -74,8 +75,8 @@ class TestJsonOperation:
         assert data_hg['pytest_hg'] == ['pytest_host1', 'pytest_host2']
         data_dg = self.js.update_data('DiskGroup', 'pytest_dg', ['pytest_disk1', 'pytest_disk2'])
         assert data_dg['pytest_dg'] == ['pytest_disk1', 'pytest_disk2']
-        data_map = self.js.update_data('Map', 'pytest_map', {'HostGroup': 'pytest_hg', 'DiskGroup': 'pytest_dg'})
-        assert data_map['pytest_map'] == {'HostGroup': 'pytest_hg', 'DiskGroup': 'pytest_dg'}
+        data_map = self.js.update_data('Map', 'pytest_map', {'HostGroup': ['pytest_hg'], 'DiskGroup': ['pytest_dg']})
+        assert data_map['pytest_map'] == {'HostGroup': ['pytest_hg'], 'DiskGroup': ['pytest_dg']}
 
     def test_get_data(self):
         self.js.update_data('Host', 'pytest_host', 'pytest_iqn')
@@ -165,54 +166,62 @@ class TestJsonOperation:
 
     # 具体函数没调用
     def test_get_disk_by_dg(self):
-        self.js.update_data('DiskGroup', 'pytest_dg2', ['pytest_disk1', 'pytest_disk2'])
-        list_set = list(set(['pytest_disk1', 'pytest_disk2']))
-        assert self.js.get_disk_by_dg(['pytest_dg', 'pytest_dg2']) == list_set
+        assert Counter(self.js.get_disk_by_dg(['pytest_dg'])) == Counter(['pytest_disk1', 'pytest_disk2'])
         # 不存在抛 KeyError
         with pytest.raises(KeyError) as exsinfo:
             self.js.get_disk_by_dg(['pytest_dg1', 'pytest_dg3'])
         assert exsinfo.type == KeyError
 
     def test_get_map_by_host(self):
-        pass
+        assert self.js.get_map_by_host('pytest_host1') == ['pytest_map']
 
     def test_get_map_by_disk(self):
-        pass
+        assert self.js.get_map_by_disk('pytest_disk1') == ['pytest_map']
 
     def test_get_iqn_by_disk(self):
-        pass
+        self.js.update_data('Host', 'pytest_host1', 'pytest_iqn1')
+        self.js.update_data('Host', 'pytest_host2', 'pytest_iqn2')
+
+        assert Counter(self.js.get_iqn_by_disk('pytest_disk1')) == Counter(['pytest_iqn1', 'pytest_iqn2'])
 
     def test_get_dg_by_disk(self):
-        pass
+        self.js.update_data('Disk', 'pytest_disk1', 'pytest_path1')
+        self.js.update_data('Disk', 'pytest_disk2', 'pytest_path2')
+        assert self.js.get_dg_by_disk('pytest_disk2') == ['pytest_dg']
 
     def test_get_disk_by_hg(self):
-        pass
+        assert Counter(self.js.get_disk_by_hg('pytest_hg')) == Counter(['pytest_disk1', 'pytest_disk2'])
 
     # 无调用
     def test_get_disk_by_host(self):
-        pass
+        assert Counter(self.js.get_disk_by_host('pytest_host1')) == Counter(['pytest_disk1', 'pytest_disk2'])
 
     def test_get_iqn_by_map(self):
-        pass
+        assert Counter(self.js.get_iqn_by_map('pytest_map')) == Counter(['pytest_iqn1', 'pytest_iqn2'])
 
     def test_get_iqn_by_hg(self):
-        pass
+        assert Counter(self.js.get_iqn_by_hg(['pytest_hg'])) == Counter(['pytest_iqn1', 'pytest_iqn2'])
 
     def test_get_disk_with_iqn(self):
-        pass
+        assert Counter(self.js.get_iqn_by_disk('pytest_disk1')) == Counter(['pytest_iqn1', 'pytest_iqn2'])
 
     def test_cover_data(self):
         assert self.js.cover_data('Disk', {'pytest_disk1': 'pytest_path1'}) == {'pytest_disk1': 'pytest_path1'}
 
     # 无返回值，无输出
     def test_append_member(self):
-        pass
-        # assert self.js.append_member('DiskGroup', 'pytest_dg', 'pytest_disk1')
-        # assert self.js.append_member('DiskGroup', 'pytest_dg', 'pytest_disk1', 'Map')
+        self.js.append_member('HostGroup', 'pytest_map', ['pytest_hg1'], type='Map')
+        assert Counter(self.js.json_data['Map']['pytest_map']['HostGroup']) == Counter(['pytest_hg', 'pytest_hg1'])
+        self.js.append_member('HostGroup', 'pytest_hg', ['pytest_host3'])
+        assert Counter(self.js.json_data['HostGroup']['pytest_hg']) == Counter(
+            ['pytest_host1', 'pytest_host2', 'pytest_host3'])
 
     # 无返回值，无输出
     def test_remove_member(self):
-        pass
+        self.js.remove_member('HostGroup', 'pytest_map', ['pytest_hg1'], type='Map')
+        assert Counter(self.js.json_data['Map']['pytest_map']['HostGroup']) == Counter(['pytest_hg'])
+        self.js.remove_member('HostGroup', 'pytest_hg', ['pytest_host3'])
+        assert Counter(self.js.json_data['HostGroup']['pytest_hg']) == Counter(['pytest_host1', 'pytest_host2'])
 
     def test_delete_data(self):
         data_map = self.js.delete_data('Map', 'pytest_map')
