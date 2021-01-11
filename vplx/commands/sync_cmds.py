@@ -33,8 +33,10 @@ class SyncCommands():
         obj_crm.check_portal_component(vip, portblock)
 
         portal = obj_crm.get_portal_data(vip,portblock,target)
-        js.json_data.update({'Portal': portal})
-        js.json_data.update({'Target': target})
+        js.cover_data('Portal',portal)
+        js.cover_data('Target',target)
+        # js.cover_data({'Portal': portal})
+        # js.json_data.update({'Target': target})
         js.commit_json()
         sd.prt_log('JSON数据更新完成', 1)
 

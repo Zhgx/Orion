@@ -35,7 +35,7 @@ class HostCreate(views.MethodView):
         iqn = dict_data["host_iqn"]
         logger.write_to_log('OPRT', 'ROUTE', '/host/create', dict_data['ip'], dict_data)
         host_obj = iscsi.Host()
-        host_create_results = host_obj.create_host(host, iqn)
+        host_create_results = host_obj.create(host, iqn)
         logger.write_to_log('DATA', 'RESULT', 'HostCreate', 'result', host_create_results)
         if host_create_results == True:
             result = "0"
@@ -55,7 +55,7 @@ class HostGroupCreate(views.MethodView):
         host_group_name = dict_data["host_group_name"]
         logger.write_to_log('OPRT', 'ROUTE', '/hg/create', dict_data['ip'], dict_data)
         host_group_obj = iscsi.HostGroup()
-        host_group_create_results = host_group_obj.create_hostgroup(host_group_name, host)
+        host_group_create_results = host_group_obj.create(host_group_name, host)
         logger.write_to_log('DATA', 'RESULT', 'HostGroupCreate', 'result', host_group_create_results)
         if host_group_create_results == True:
             result = "0"
@@ -75,7 +75,7 @@ class DiskGroupCreate(views.MethodView):
         disk_group_name = dict_data["disk_group_name"]
         disk_group_obj = iscsi.DiskGroup()
 
-        disk_group_create_results = disk_group_obj.create_diskgroup(disk_group_name, disk)
+        disk_group_create_results = disk_group_obj.create(disk_group_name, disk)
         logger.write_to_log('DATA', 'RESULT', 'DiskGroupCreate', 'result', disk_group_create_results)
         if disk_group_create_results == True:
             result = "0"
@@ -96,7 +96,7 @@ class MapCreate(views.MethodView):
         print(disk_group_name)
         logger.write_to_log('OPRT', 'ROUTE', '/map/create', dict_data['ip'], dict_data)
         map_obj = iscsi.Map()
-        map_create_results = map_obj.create_map(map_name, host_group_name, disk_group_name)
+        map_create_results = map_obj.create(map_name, host_group_name, disk_group_name)
         logger.write_to_log('DATA', 'RESULT', 'MapCreate', 'result', map_create_results)
         if map_create_results == True:
             result = "0"
@@ -120,8 +120,8 @@ HOST_RESULT = None
 def update_host():
     global HOST_RESULT
    
-    host = iscsi.Host()
-    HOST_RESULT = host.get_all_host()
+    js = iscsi_json.JsonOperation()
+    HOST_RESULT = js.json_data['Host']
     
     return True
 
@@ -160,7 +160,7 @@ def update_disk():
     global DISK_RESULT
     
     disk = iscsi.Disk()
-    DISK_RESULT = disk.get_all_disk()
+    DISK_RESULT = disk.update_disk()
     return True
 
 
@@ -196,9 +196,10 @@ HOSTGROUP_RESULT = None
 
 def update_hg():
     global HOSTGROUP_RESULT
-    
+
+    js = iscsi_json.JsonOperation()
     host_group = iscsi.HostGroup()
-    HOSTGROUP_RESULT = host_group.get_all_hostgroup()
+    HOSTGROUP_RESULT = js.json_data['HostGroup']
     return True
 
 
@@ -234,9 +235,9 @@ DISKGROUP_RESULT = None
 
 def update_dg():
     global DISKGROUP_RESULT
-    
-    disk_group = iscsi.DiskGroup()
-    DISKGROUP_RESULT = disk_group.get_all_diskgroup()
+
+    js = iscsi_json.JsonOperation()
+    DISKGROUP_RESULT = js.json_data['DiskGroup']
     return True
 
 
@@ -272,9 +273,9 @@ MAP_RESULT = None
 
 def update_map():
     global MAP_RESULT
-    
-    map = iscsi.Map()
-    MAP_RESULT = map.get_all_map()
+
+    js = iscsi_json.JsonOperation()
+    MAP_RESULT = js.json_data['Map']
     return True
 
 

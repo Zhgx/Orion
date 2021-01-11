@@ -1,6 +1,11 @@
 # coding=utf-8
 import re
 import time
+import types
+import traceback
+from functools import wraps
+import copy
+
 import iscsi_json
 import sundry as s
 import subprocess
@@ -58,6 +63,30 @@ class RollBack():
         if self.func(self, *args, **kwargs):
             self.dict_rollback[self.type].update({args[0]:self.oprt})
 
+    # 带参数的编写方式
+    # def __init__(self,type):
+    #     self.type = type
+    #
+    # def __call__(self,func):
+    #     res, oprt = func.__qualname__.split('.')
+    #     type = self.type
+    #     dict_rb = self.dict_rb
+    #     @wraps(func)
+    #     def wrapper(self,*args):
+    #         if func(self,*args):
+    #             dict_rb[oprt].append(args[0])
+    #     return wrapper
+
+
+    # 保证调用被装饰的类方法时，有实例对象绑定类
+    # def __get__(self, instance, cls):
+    #     if instance is None:
+    #         return self
+    #     else:
+    #         return types.MethodType(self, instance)
+
+
+
     @classmethod
     def rollback(cls,ip,port,netmask):
         # 目前只用于Portal的回滚，之后Target的回滚可以根据需要增加一个判断类型的参数
@@ -104,6 +133,7 @@ class RollBack():
             for name,oprt in self.dict_rollback['ISCSITarget'].items():
                 if oprt == 'modify':
                     obj_target.modify(name,ip,port)
+
 
 
 class CRMData():
@@ -165,6 +195,7 @@ class CRMData():
         for vip in vip_all:
             dict_portal.update(
                 {vip: {'ip': vip_all[vip]['ip'], 'port': '', 'netmask': vip_all[vip]['netmask'], 'target': []}})
+
             for portblock in portblock_all:
                 if portblock_all[portblock]['ip'] == vip_all[vip]['ip']:
                     dict_portal[vip]['port'] = portblock_all[portblock]['port']
@@ -187,18 +218,20 @@ class CRMData():
         :return:None
         """
         dict_portal = {}
-
+        list_normal_portblock = []
         for vip_name,vip_data in list(vip.items()):
             dict_portal.update({vip_name:{'status':'ERROR'}}) #error/normal
             for pb_name,pb_data in list(portblock.items()):
                 if vip_data['ip'] == pb_data['ip']:
                     dict_portal[vip_name].update({pb_name:pb_data['type']})
-                    del portblock[pb_name]
+                    list_normal_portblock.append(pb_name)
             if len(dict_portal[vip_name]) == 3:
                 if 'block' and 'unblock' in dict_portal[vip_name].values():
                     dict_portal[vip_name]['status'] = 'NORMAL'
-        if portblock:
-            s.prt_log(f'{",".join(portblock.keys())}没有对应的VIP，请进行处理',2)
+
+        error_portblock = set(portblock.keys()) - set(list_normal_portblock)
+        if error_portblock:
+            s.prt_log(f'{",".join(error_portblock)}没有对应的VIP，请进行处理',2)
         list_portal = [] # portal如果没有block和unblock，则会加进这个列表
 
         for portal_name,portal_data in list(dict_portal.items()):
@@ -216,7 +249,7 @@ class CRMData():
         """
         js = iscsi_json.JsonOperation()
         crm_portal = self.get_portal_data(vip,portblock,target)
-        json_portal = js.json_data['Portal']
+        json_portal = copy.deepcopy(js.json_data['Portal']) # 防止对json对象的数据修改，进行深拷贝，之后修改数据结构再修改
 
         # 处理列表的顺序问题
         for portal_name,portal_data in crm_portal.items():
@@ -264,19 +297,21 @@ class CRMConfig():
             return True
 
 
+
     def get_failed_actions(self, res):
         # 检查crm整体状态，但是目前好像只是用于提取vip的错误信息
         exitreason = None
         cmd_result = execute_crm_cmd('crm st | cat')
         re_error = re.compile(
             f"\*\s({res})\w*\son\s(\S*)\s'(.*)'\s.*exitreason='(.*)',")
-        result = re_error.findall(cmd_result)
+        result = s.re_findall(re_error,cmd_result['rst'])
         if result:
             if result[0][3] == '[findif] failed':
                 exitreason = 0
             else:
                 exitreason = result
         return exitreason
+
 
     def get_crm_res_status(self, res, type):
         """
@@ -286,7 +321,7 @@ class CRMConfig():
         :return: string
         """
         if not type in ['IPaddr2','iSCSITarget','portblock','iSCSILogicalUnit']:
-            raise ValueError('参数type传入有误，必须为IPaddr2,iSCSITarget,portblock,iSCSILogicalUnit其中一个')
+            raise ValueError('\'type\' must one of [IPaddr2,iSCSITarget,portblock,iSCSILogicalUnit]')
 
         cmd_result = execute_crm_cmd(f'crm res list | grep {res}')
         re_status = f'{res}\s*\(ocf::heartbeat:{type}\):\s*(\w*)'
@@ -344,7 +379,6 @@ class CRMConfig():
             else:
                 return False
 
-    #
     def delete_res(self, res, type):
         # 删除一个crm res，完整的流程
         if self.stop_res(res):
@@ -352,31 +386,6 @@ class CRMConfig():
                 if self.execute_delete(res):
                     return True
         s.prt_log(f"Delete {res} fail",1)
-
-    # 创建resource相关配置
-    def create_set(self, res, target):
-        if self.create_col(res, target):
-            if self.create_order(res, target):
-                s.prt_log(f'create colocation:co_{res}, order:or_{res} success', 0)
-                return True
-            else:
-                s.prt_log("create order fail", 1)
-        else:
-            s.prt_log("create colocation fail", 1)
-
-    def create_col(self, res, target):
-        cmd = f'crm conf colocation co_{res} inf: {res} {target}'
-        result = execute_crm_cmd(cmd)
-        if result['sts']:
-            s.prt_log("set coclocation success",0)
-            return True
-
-    def create_order(self, res, target):
-        cmd = f'crm conf order or_{res} {target} {res}'
-        result = execute_crm_cmd(cmd)
-        if result['sts']:
-            s.prt_log("set order success",0)
-            return True
 
     def start_res(self, res):
         s.prt_log(f"try to start {res}", 0)
@@ -393,13 +402,13 @@ class CRMConfig():
             s.prt_log("refresh",0)
             return True
 
-    def change_initiator(self, res, iqns):
-        iqns = ' '.join(iqns)
-        cmd = f"crm config set {res}.allowed_initiators \"{iqns}\""
-        result = execute_crm_cmd(cmd)
-        if result['sts']:
-            s.prt_log(f"Change {res} allowed_initiators success!",0)
-            return True
+    # def change_initiator(self, res, iqns):
+    #     iqns = ' '.join(iqns)
+    #     cmd = f"crm config set {res}.allowed_initiators \"{iqns}\""
+    #     result = execute_crm_cmd(cmd)
+    #     if result['sts']:
+    #         s.prt_log(f"Change {res} allowed_initiators success!",0)
+    #         return True
 
 
 
@@ -416,7 +425,7 @@ class IPaddr2():
             s.prt_log(cmd_result['rst'],1)
             raise consts.CmdError
         else:
-            print('创建ipaddr2成功')
+            print(f'Create {name} successfully')
             return True
 
     @RollBack
@@ -426,7 +435,7 @@ class IPaddr2():
         if not result:
             raise consts.CmdError
         else:
-            print('删除ipaddr2成功')
+            print(f'Delete {name} successfully')
             return True
 
     @RollBack
@@ -438,7 +447,7 @@ class IPaddr2():
             s.prt_log(cmd_result['rst'],1)
             raise consts.CmdError
         else:
-            print('修改IPaddr2的IP成功')
+            print(f'{name}\'s ip and port have been modified successfully')
             return True
 
 
@@ -469,7 +478,7 @@ class PortBlockGroup():
             s.prt_log(cmd_result['rst'],1)
             raise consts.CmdError
         else:
-            print(f'创建 {name} 成功')
+            print(f'Create {name} successfully')
             return True
 
 
@@ -480,7 +489,7 @@ class PortBlockGroup():
         if not result:
             raise consts.CmdError
         else:
-            print(f'删除 {name} 成功')
+            print(f'Delete {name} successfully')
             return True
 
 
@@ -495,16 +504,17 @@ class PortBlockGroup():
             s.prt_log(cmd_result_port['rst'], 1)
             raise consts.CmdError
         else:
-            print(f'修改 {name} IP和Port成功')
+            print(f"Modify {name} (IP and Port) successfully")
             return True
 
 
 
 class Colocation():
     def __init__(self):
-        self.dict_rollback = consts.glo_rollback()
+        pass
 
-    def create(self,name,target1,target2):
+    @classmethod
+    def create(cls,name,target1,target2):
         cmd = f'crm cof colocation {name} inf: {target1} {target2}'
         cmd_result = execute_crm_cmd(cmd)
         if not cmd_result['sts']:
@@ -512,7 +522,7 @@ class Colocation():
             s.prt_log(cmd_result['rst'],1)
             raise consts.CmdError
         else:
-            print(f'创建{name}成功')
+            print(f'Create {name} successfully')
             return True
 
 
@@ -521,8 +531,8 @@ class Order():
     def __init__(self):
         pass
 
-
-    def create(self,name, target1 ,target2):
+    @classmethod
+    def create(cls,name, target1 ,target2):
         cmd = f'crm cof order {name} {target1} {target2}'
         cmd_result = execute_crm_cmd(cmd)
         if not cmd_result['sts']:
@@ -530,7 +540,7 @@ class Order():
             s.prt_log(cmd_result['rst'],1)
             raise consts.CmdError
         else:
-            print(f'创建{name}成功')
+            print(f'Create {name} successfully')
             return True
 
 
@@ -549,90 +559,108 @@ class ISCSITarget():
             s.prt_log(cmd_result['rst'],1)
             raise consts.CmdError
         else:
-            print(f'修改 {name} 成功')
+            print(f'Modify {name} successfully')
             return True
 
 
 
-# class ISCSILogicalUnit():
-#     def __init__(self):
-#         pass
-#
-#
-#
-#     def create_crm_res(self,res,target):
-#         pass
-#
-#
-#
-#     def create_crm_res(self, res, target_iqn, lunid, path, initiator):
-#         cmd = f'crm conf primitive {res} iSCSILogicalUnit params ' \
-#             f'target_iqn="{target_iqn}" ' \
-#             f'implementation=lio-t ' \
-#             f'lun={lunid} ' \
-#             f'path={path} ' \
-#             f'allowed_initiators="{initiator}" ' \
-#             f'op start timeout=40 interval=0 ' \
-#             f'op stop timeout=40 interval=0 ' \
-#             f'op monitor timeout=40 interval=15 ' \
-#             f'meta target-role=Stopped'
-#         result = execute_crm_cmd(cmd)
-#         if result['sts']:
-#             s.prt_log("create iSCSILogicalUnit success",0)
-#             return True
-#
-#
-#     def create(self,name,target):
-#         pass
-#
-#
-#     def create_set(self, res, target):
-#         if self.create_col(res, target):
-#             if self.create_order(res, target):
-#                 s.prt_log(f'create colocation:co_{res}, order:or_{res} success', 0)
-#                 return True
-#             else:
-#                 s.prt_log("create order fail", 1)
-#         else:
-#             s.prt_log("create colocation fail", 1)
-#
-#     def create_col(self, res, target):
-#         cmd = f'crm conf colocation co_{res} inf: {res} {target}'
-#         result = execute_crm_cmd(cmd)
-#         if result['sts']:
-#             s.prt_log("set coclocation success",0)
-#             return True
-#
-#     def create_order(self, res, target):
-#         cmd = f'crm conf order or_{res} {target} {res}'
-#         result = execute_crm_cmd(cmd)
-#         if result['sts']:
-#             s.prt_log("set order success",0)
-#             return True
-#
-#     def create_res(self, res, list_iqn):
-#         obj_crm = CRMConfig()
-#         # 取DeviceName后四位数字，减一千作为lun id
-#         path = self.js.get_data('Disk')[res]
-#         lunid = int(path[-4:]) - 1000
-#         initiator = ' '.join(list_iqn)
-#         # 创建iSCSILogicalUnit
-#         if obj_crm.create_crm_res(res, self.target_iqn, lunid, path, initiator):
-#             self.list_res_created.append(res)
-#             # 创建order，colocation
-#             if obj_crm.create_set(res, self.target_name):
-#                 # 尝试启动资源，成功失败都不影响创建
-#                 obj_crm.start_res(res)
-#                 obj_crm.checkout_status(res,'iSCSILogicalUnit','STARTED')
-#             else:
-#                 for i in self.list_res_created:
-#                     obj_crm.delete_res(i,'iSCSILogicalUnit')
-#                 return False
-#         else:
-#             s.prt_log('Fail to create iSCSILogicalUnit', 1)
-#             for i in self.list_res_created:
-#                 obj_crm.delete_res(i,'iSCSILogicalUnit')
-#             return False
+class ISCSILogicalUnit():
+    def __init__(self):
+        self.js = iscsi_json.JsonOperation()
+        self.list_res_created = []
+        self.target_name, self.target_iqn = self.get_target()
+
+    def get_target(self):
+        # 获取target及对应的target_iqn
+        target_all = self.js.json_data['Target']
+        if target_all:
+            # 目前的设计只有一个target（现在可能target有多个），所以直接取一个
+            target = next(iter(target_all.keys()))
+            target_iqn = target_all[target]['target_iqn']
+            return target,target_iqn
+        else:
+            s.prt_log('No target，please create target first', 2)
+
+
+    # @RollBack
+    def create(self, name, target_iqn, lunid, path, initiator):
+        cmd = f'crm conf primitive {name} iSCSILogicalUnit params ' \
+            f'target_iqn="{target_iqn}" ' \
+            f'implementation=lio-t ' \
+            f'lun={lunid} ' \
+            f'path={path} ' \
+            f'allowed_initiators="{initiator}" ' \
+            f'op start timeout=40 interval=0 ' \
+            f'op stop timeout=40 interval=0 ' \
+            f'op monitor timeout=40 interval=15 ' \
+            f'meta target-role=Stopped'
+        result = execute_crm_cmd(cmd)
+        if result['sts']:
+            s.prt_log(f"Create iSCSILogicalUnit:{name} successfully",0)
+            return True
+        else:
+            raise consts.CmdError
+
+
+    # @RollBack
+    def delete(self,name):
+        obj_crm = CRMConfig()
+        result = obj_crm.delete_res(name,type='iSCSILogicalUnit')
+        if not result:
+            raise consts.CmdError
+        else:
+            s.prt_log(f'Delete {name} successfully',0)
+            return True
+
+
+    # @RollBack
+    def modify(self,name,list_iqns):
+        iqns = ' '.join(list_iqns)
+        cmd = f"crm config set {name}.allowed_initiators \"{iqns}\""
+        result = execute_crm_cmd(cmd)
+        if result['sts']:
+            s.prt_log(f"Modify the allowed initiators of {name} successfully",0)
+            return True
+        else:
+            s.prt_log(result['rts'],1)
+            raise consts.CmdError
+
+
+    def create_mapping(self,name,list_iqn):
+        path = self.js.get_data('Disk')[name]
+        lunid = int(path[-4:]) - 1000
+        initiator = ' '.join(list_iqn)
+
+        try:
+            # 执行iscsilogicalunit创建
+            self.create(name,self.target_iqn,lunid,path,initiator)
+            self.list_res_created.append(name)
+
+            #Colocation和Order创建
+            Colocation.create(f'col_{name}', name, self.target_name)
+            Order.create(f'or_{name}', self.target_name, name)
+            s.prt_log(f'create colocation:co_{name}, order:or_{name} success', 0)
+        except Exception as ex:
+            # 回滚（暂用这种方法）
+            s.prt_log('Fail to create iSCSILogicalUnit', 1)
+            for i in self.list_res_created:
+                self.delete(i)
+            print('创建途中失败，以下是报错信息')
+            print(str(traceback.format_exc()))
+            return False
+
+        else:
+            #启动资源,成功与否不影响创建
+            obj_crm = CRMConfig()
+            obj_crm.start_res(name)
+            obj_crm.checkout_status(name, 'iSCSILogicalUnit', 'STARTED')
+
+        # 验证？
+        return True
+
+
+
+
 
 
 

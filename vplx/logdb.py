@@ -123,7 +123,6 @@ class LogDB():
     def get_userinput_via_tid(self, transaction_id):
         sql = f"SELECT data FROM logtable WHERE describe1 = 'cmd_input' and transaction_id = '{transaction_id}'"
         result = self.sql_fetch_one(sql)
-        print(result)
         if result:
             result = eval(result)
             return {'tid':transaction_id, 'valid':result['valid'],'cmd':result['cmd']}
@@ -186,10 +185,11 @@ class LogDB():
 
     def get_cmd_output(self,transaction_id):
         id_now = consts.glo_log_id()
-        sql = f"SELECT time,data FROM logtable WHERE describe2 = 'output' and type1 = 'INFO' and transaction_id = '{transaction_id}' and id > {id_now}"
+        sql = f"SELECT time,id,data FROM logtable WHERE describe2 = 'output' and type1 = 'INFO' and transaction_id = '{transaction_id}' and id > {id_now}"
         result = self.sql_fetch_one(sql)
         if result:
-            return result
+            time,db_id,output = result
+            return {'time':time,'db_id':db_id,'output':output}
         else:
-            return ('','')
+            return {'time':'','db_id':'','output':''}
 
