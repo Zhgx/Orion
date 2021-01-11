@@ -315,9 +315,13 @@ class DiskGroup():
             s.prt_log(f"Fail！Can't find {dg}", 1)
             return
         for disk in list_disk:
-            if self.js.check_value_in_key("DiskGroup", dg, disk):
+            if disk in self.js.json_data['DiskGroup'][dg]:
                 s.prt_log(f'{disk}已存在{dg}中', 1)
                 return
+            #
+            # if self.js.check_in_res('Map','DiskGroup', dg):
+            #     s.prt_log(f'{disk}已存在{dg}中', 1)
+            #     return
             if not self.js.check_key("Disk", disk):
                 s.prt_log(f'json文件中不存在{disk}，无法进行添加', 1)
                 return
@@ -342,9 +346,13 @@ class DiskGroup():
             s.prt_log(f"Fail！Can't find {dg}", 1)
             return
         for disk in list_disk:
-            if not self.js.check_value_in_key("DiskGroup", dg, disk):
+            if disk in self.js.json_data['DiskGroup'][dg]:
                 s.prt_log(f'{dg}中不存在成员{disk}，无法进行移除', 1)
                 return
+
+            # if not self.js.check_in_res('Map','DiskGroup', dg):
+            #     s.prt_log(f'{dg}中不存在成员{disk}，无法进行移除', 1)
+            #     return
 
         json_data_before = copy.deepcopy(self.js.json_data)
         self.js.remove_member('DiskGroup', dg, list_disk)
@@ -420,7 +428,7 @@ class HostGroup():
         if not self.js.check_key('HostGroup', hg):
             s.prt_log(f"Fail! Can't find {hg}", 1)
             return
-        if self.js.check_value('Map', hg):
+        if self.js.check_in_res('Map', 'HostGroup', hg):
             s.prt_log("Fail! The hostgroup already map,Please delete the map", 1)
             return
 
@@ -435,9 +443,12 @@ class HostGroup():
             s.prt_log(f"Fail！Can't find {hg}", 1)
             return
         for host in list_host:
-            if self.js.check_value_in_key("HostGroup", hg, host):
+            if host in self.js.json_data['HostGroup'][hg]:
                 s.prt_log(f'{host}已存在{hg}中', 1)
                 return
+            # if self.js.check_in_res('Map','Host', 123):
+            #     s.prt_log(f'{host}已存在{hg}中', 1)
+            #     return
             if not self.js.check_key("Host", host):
                 s.prt_log(f'json文件中不存在{host}，无法进行添加', 1)
                 return
@@ -464,10 +475,9 @@ class HostGroup():
             s.prt_log(f"Fail！Can't find {hg}", 1)
             return
         for host in list_host:
-            if not self.js.check_value_in_key("HostGroup", hg, host):
+            if not host in self.js.json_data['HostGroup'][hg]:
                 s.prt_log(f'{hg}中不存在成员{host}，无法进行移除', 1)
                 return
-
         json_data_before = copy.deepcopy(self.js.json_data)
         self.js.remove_member('HostGroup', hg, list_host)
         obj_iscsi = IscsiConfig(json_data_before, self.js.json_data)
@@ -769,22 +779,22 @@ class Portal():
 
     def create(self, name, ip, port=3260 ,netmask=24):
         if not self._check_name(name):
-            s.prt_log(f'{name}不符合规范',1)
+            s.prt_log(f'{name} naming does not conform to the specification',1)
             return
         if not self._check_IP(ip):
-            s.prt_log(f'{ip}不符合规范',1)
+            s.prt_log(f'{ip} does not meet specifications',1)
             return
         if not self._check_port(port):
-            s.prt_log(f'{port}不符合规范，范围：3260-65535',1)
+            s.prt_log(f'{port} does not meet specifications(Range：3260-65535)',1)
             return
         if not self._check_netmask(netmask):
-            s.prt_log(f'{netmask}不符合规范，范围：0-32',1)
+            s.prt_log(f'{netmask} does not meet specifications(Range：0-32)',1)
             return
         if self.js.check_key('Portal',name):
-            s.prt_log(f'{name}已存在',1)
+            s.prt_log(f'{name} already exists, please use another name',1)
             return
         if self.js.check_in_res('Portal','ip',ip):
-            s.prt_log(f'{ip}已被使用',1)
+            s.prt_log(f'{ip} IP is already in use, please use another IP',1)
             return
 
 
@@ -866,15 +876,18 @@ class Portal():
             s.prt_log(f"Fail！Can't find {name}", 1)
             return
         if not self._check_IP(ip):
-            s.prt_log(f'{ip}不符合规范',1)
+            s.prt_log(f'{ip} does not meet specifications',1)
             return
         if not self._check_port(port):
-            s.prt_log(f'{port}不符合规范，范围：3260-65535',1)
+            s.prt_log(f'{port} does not meet specifications(Range：3260-65535)',1)
             return
 
         portal = self.js.json_data['Portal'][name]
         if portal['ip'] == ip and portal['port'] == str(port):
-            s.prt_log(f'IP和Port都相同，不需要修改',1)
+            s.prt_log(f'IP and port are the same as the before, no need to modify',1)
+            return
+        if self.js.check_in_res('Portal','ip',ip):
+            s.prt_log(f'{ip} IP is already in use, please use another IP',1)
             return
 
 
@@ -924,7 +937,7 @@ class Portal():
             self.js.json_data['Target'][target]['ip'] = ip
             self.js.json_data['Target'][target]['port'] = str(port)
         self.js.commit_json()
-        print(f'Modify {name} successfully')
+        s.prt_log(f'Modify {name} successfully',0)
 
 
     def show(self):
@@ -959,7 +972,7 @@ class Portal():
     def _check_netmask(self, netmask):
         if not isinstance(netmask, int):
             return False
-        return True if 0 <= netmask <= 32 else False
+        return True if 1 <= netmask <= 32 else False
 
     def _check_status(self, name):
         """
