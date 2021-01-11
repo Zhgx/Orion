@@ -391,4 +391,3 @@ class JsonOperation(object):
     def delete_data(self, first_key, data_key):
         self.json_data[first_key].pop(data_key)
         return self.json_data[first_key]
-
