@@ -256,6 +256,7 @@ class TestResource:
     def test_create_res_manual(self):
         assert self.res.create_res_manual('pytest_res', '10m', [self.node_name], ['pytest_sp1']) is True
         # 重复创建，失败测试用例
+        # rd 不能重复创建，在创建 res 会有判断，如果 rd 创建存在问题会影响接下来的条件判断结构，导致代码覆盖率不能如预期
         with pytest.raises(SystemExit) as exsinfo:
             self.res.create_res_manual('pytest_res', '10m', [self.node_name], ['pytest_sp1'])
         assert exsinfo.type == SystemExit
