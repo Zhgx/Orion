@@ -1,7 +1,7 @@
 # coding=utf-8
 import time
 import copy
-
+import traceback
 
 import iscsi_json
 import sundry as s
@@ -74,18 +74,18 @@ class IscsiConfig():
 
     def show_info(self):
         if self.create:
-            print('新增：')
+            print('create：')
             for disk, iqn in self.create.items():
-                print(f'{disk}，其allowed_initiators将被设置为：{",".join(iqn)}')
+                print(f'{disk}，its allowed initiators will be set to "{",".join(iqn)}"')
         if self.delete:
-            print('删除：')
+            print('delete：')
             print(f'{",".join(self.delete)}')
         if self.modify:
-            print('修改：')
+            print('modify：')
             for disk, iqn in self.modify.items():
-                print(f'{disk}，其allowed_initiators将被设置为：{",".join(iqn)}')
+                print(f'{disk}，its allowed initiators will be set to "{",".join(iqn)}"')
         if not any([self.create,self.delete,self.modify]):
-            print('不会对映射关系产生任何影响')
+            print('Will not have any effect')
 
     def create_iscsilogicalunit(self):
         for disk, iqn in self.create.items():
@@ -102,23 +102,19 @@ class IscsiConfig():
             self.recovery_list['modify'].update({disk: self.recover['modify'][disk]})
             self.obj_iscsiLU.modify(disk,iqn)
 
-    def restore(self):
+    def rollback(self):
+        print("Mapping relationship rollback")
         for disk, iqn in self.recovery_list['create'].items():
             self.obj_iscsiLU.create_mapping(disk, iqn)
-            print(f'执行创建{disk},iqn为{iqn}')
-
         for disk in self.recovery_list['delete']:
             self.obj_iscsiLU.delete(disk)
-            print(f'执行删除{disk}')
-
         for disk, iqn in self.recovery_list['modify'].items():
             self.obj_iscsiLU.modify(disk, iqn)
-            print(f'执行修改{disk},iqn为{iqn}')
-
+        print("Mapping relationship rollback ends")
 
     def comfirm_modify(self):
         self.show_info()
-        print('是否确认修改?y/n')
+        print('Are you sure to modify?y/n')
         answer = s.get_answer()
         if not answer in ['y', 'yes', 'Y', 'YES']:
             s.prt_log('Modify canceled', 2)
@@ -131,11 +127,13 @@ class IscsiConfig():
             self.delete_iscsilogicalunit()
             self.modify_iscsilogicalunit()
         except consts.CmdError:
-            print('执行命令失败')
-            self.restore()
+            s.prt_log('Command execution failed',1)
+            self.logger.write_to_log('DATA', 'DEBUG', 'exception', 'Rollback', str(traceback.format_exc()))
+            self.rollback()
         except Exception:
-            print('未知异常')
-            self.restore()
+            s.prt_log('Unknown exception',1)
+            self.logger.write_to_log('DATA', 'DEBUG', 'exception', 'Rollback', str(traceback.format_exc()))
+            self.rollback()
 
 
 # 问题，这个disk数据是根据LINSTOR来的，那么是不是进行iscsi命令之前，需要更新这个数据，或者进行校验？
@@ -155,7 +153,7 @@ class Disk():
         for d in linstor_res:
             disks.update({d[1]: d[5]})
         self.js.cover_data('Disk', disks)
-        self.js.commit_json()
+        self.js.commit_data()
         return disks
     
     def show(self,disk):
@@ -197,7 +195,7 @@ class Host():
             s.prt_log(f"The format of IQN is wrong. Please confirm and fill in again.", 1)
             return
         self.js.update_data("Host", host, iqn)
-        self.js.commit_json()
+        self.js.commit_data()
         s.prt_log("Create success!", 0)
         return True
 
@@ -222,13 +220,18 @@ class Host():
         if not self.js.check_key('Host', host):
             s.prt_log(f"Fail! Can't find {host}", 1)
             return
-        if self.js.check_value('HostGroup', host):
-            s.prt_log(
-                "Fail! The host in ... hostgroup.Please delete the hostgroup first", 1)
-            return
+
+        hg_in_used = []
+        for hg,data in self.js.json_data['HostGroup']:
+            if host in data:
+                hg_in_used.append(hg)
+
+        if hg_in_used:
+            s.prt_log(f"Fail! {host} is being used by {','.join(hg_in_used)}.Please delete these hostgroup first", 1)
+
 
         self.js.delete_data('Host', host)
-        self.js.commit_json()
+        self.js.commit_data()
         s.prt_log("Delete success!", 0)
         return True
 
@@ -249,9 +252,9 @@ class Host():
         if json_data_before == json_data_now:
             obj_iscsi.crm_conf_change()
         else:
-            s.prt_log('JSON已被修改，请重新操作', 2)
+            s.prt_log('The configuration file has been modified, please try again', 2)
 
-        self.js.commit_json()
+        self.js.commit_data()
 
 
 class DiskGroup():
@@ -274,7 +277,7 @@ class DiskGroup():
                 return
 
         self.js.update_data('DiskGroup', diskgroup, disk)
-        self.js.commit_json()
+        self.js.commit_data()
         s.prt_log("Create success!", 0)
         return True
 
@@ -306,7 +309,7 @@ class DiskGroup():
             return
 
         self.js.delete_data('DiskGroup', dg)
-        self.js.commit_json()
+        self.js.commit_data()
         s.prt_log("Delete success!", 0)
 
 
@@ -316,14 +319,10 @@ class DiskGroup():
             return
         for disk in list_disk:
             if disk in self.js.json_data['DiskGroup'][dg]:
-                s.prt_log(f'{disk}已存在{dg}中', 1)
+                s.prt_log(f'{disk} already exists in {dg}', 1)
                 return
-            #
-            # if self.js.check_in_res('Map','DiskGroup', dg):
-            #     s.prt_log(f'{disk}已存在{dg}中', 1)
-            #     return
             if not self.js.check_key("Disk", disk):
-                s.prt_log(f'json文件中不存在{disk}，无法进行添加', 1)
+                s.prt_log(f'The disk does not exist in the configuration file and cannot be added', 1)
                 return
 
         json_data_before = copy.deepcopy(self.js.json_data)
@@ -336,8 +335,8 @@ class DiskGroup():
         if json_data_before == json_data_now:
             obj_iscsi.crm_conf_change()
         else:
-            s.prt_log('JSON已被修改，请重新操作', 2)
-        self.js.commit_json()
+            s.prt_log('The configuration file has been modified, please try again', 2)
+        self.js.commit_data()
 
 
 
@@ -347,12 +346,9 @@ class DiskGroup():
             return
         for disk in list_disk:
             if disk in self.js.json_data['DiskGroup'][dg]:
-                s.prt_log(f'{dg}中不存在成员{disk}，无法进行移除', 1)
+                s.prt_log(f'{disk} does not exist in {dg} and cannot be removed', 1)
                 return
 
-            # if not self.js.check_in_res('Map','DiskGroup', dg):
-            #     s.prt_log(f'{dg}中不存在成员{disk}，无法进行移除', 1)
-            #     return
 
         json_data_before = copy.deepcopy(self.js.json_data)
         self.js.remove_member('DiskGroup', dg, list_disk)
@@ -364,7 +360,7 @@ class DiskGroup():
         if json_data_before == json_data_now:
             obj_iscsi.crm_conf_change()
         else:
-            s.prt_log('JSON已被修改，请重新操作', 2)
+            s.prt_log('The configuration file has been modified, please try again', 2)
 
         if not self.js.json_data['DiskGroup'][dg]:
             self.js.delete_data('DiskGroup', dg)
@@ -374,10 +370,9 @@ class DiskGroup():
                     self.js.remove_member('DiskGroup', map, [dg], type='Map')
                 else:
                     self.js.delete_data('Map', map)
-            print(f'该{dg}已删除')
-            print(f'相关的map已经修改/删除')
+            print(f'{dg} and the map related to {dg} have been modified/deleted')
 
-        self.js.commit_json()
+        self.js.commit_data()
 
 
 
@@ -400,7 +395,7 @@ class HostGroup():
                 return
 
         self.js.update_data('HostGroup', hostgroup, host)
-        self.js.commit_json()
+        self.js.commit_data()
         s.prt_log("Create success!", 0)
         return True
 
@@ -433,7 +428,7 @@ class HostGroup():
             return
 
         self.js.delete_data('HostGroup', hg)
-        self.js.commit_json()
+        self.js.commit_data()
         s.prt_log("Delete success!", 0)
 
 
@@ -444,13 +439,10 @@ class HostGroup():
             return
         for host in list_host:
             if host in self.js.json_data['HostGroup'][hg]:
-                s.prt_log(f'{host}已存在{hg}中', 1)
+                s.prt_log(f'{host} already exists in {hg}', 1)
                 return
-            # if self.js.check_in_res('Map','Host', 123):
-            #     s.prt_log(f'{host}已存在{hg}中', 1)
-            #     return
             if not self.js.check_key("Host", host):
-                s.prt_log(f'json文件中不存在{host}，无法进行添加', 1)
+                s.prt_log(f'{host} does not exist in the configuration file and cannot be added', 1)
                 return
 
 
@@ -464,10 +456,10 @@ class HostGroup():
         if json_data_before == json_data_now:
             obj_iscsi.crm_conf_change()
         else:
-            s.prt_log('JSON已被修改，请重新操作', 2)
+            s.prt_log('The configuration file has been modified, please try again', 2)
 
         # 配置文件更新修改的资源
-        self.js.commit_json()
+        self.js.commit_data()
 
 
     def remove_host(self, hg, list_host):
@@ -476,7 +468,7 @@ class HostGroup():
             return
         for host in list_host:
             if not host in self.js.json_data['HostGroup'][hg]:
-                s.prt_log(f'{hg}中不存在成员{host}，无法进行移除', 1)
+                s.prt_log(f'{host} does not exist in {hg} and cannot be removed', 1)
                 return
         json_data_before = copy.deepcopy(self.js.json_data)
         self.js.remove_member('HostGroup', hg, list_host)
@@ -488,7 +480,7 @@ class HostGroup():
         if json_data_before == json_data_now:
             obj_iscsi.crm_conf_change()
         else:
-            s.prt_log('JSON已被修改，请重新操作', 2)
+            s.prt_log('The configuration file has been modified, please try again', 2)
 
         # 配置文件的改变
         if not self.js.json_data['HostGroup'][hg]:
@@ -499,9 +491,8 @@ class HostGroup():
                     self.js.remove_member('HostGroup', map, [hg], type='Map')
                 else:
                     self.js.delete_data('Map', map)
-            print(f'该{hg}已删除')
-            print(f'相关的map已经修改/删除')
-        self.js.commit_json()
+            print(f'{hg} and the map related to {hg} have been modified/deleted')
+        self.js.commit_data()
 
 
 
@@ -578,12 +569,12 @@ class Map():
         # 已经被使用过的disk(ilu)需不需要提示
         dict_disk_inuse = obj_iscsi.modify
         if dict_disk_inuse:
-            print(f"{','.join(dict_disk_inuse.keys())}已被map,将会修改其allowed initiators")
+            s.prt_log(f"Disk:{','.join(dict_disk_inuse.keys())} has been mapped,will modify their allowed initiators",0)
 
         obj_iscsi.create_iscsilogicalunit()
         obj_iscsi.modify_iscsilogicalunit()
 
-        self.js.commit_json()
+        self.js.commit_data()
         s.prt_log('Create map success!', 0)
         return True
 
@@ -651,8 +642,8 @@ class Map():
         obj_iscsi.delete_iscsilogicalunit()
         obj_iscsi.modify_iscsilogicalunit()
 
-        self.js.commit_json()
-        s.prt_log("Delete map success!", 0)
+        self.js.commit_data()
+        s.prt_log("Delete map successfully", 0)
         return True
 
 
@@ -664,10 +655,10 @@ class Map():
             return
         for hg in list_hg:
             if hg in self.js.json_data["Map"][map]["HostGroup"]:
-                s.prt_log(f'{hg}已存在{map}中', 1)
+                s.prt_log(f'{hg} already exists in {map}', 1)
                 return
             if not self.js.check_key("HostGroup", hg):
-                s.prt_log(f'json文件中不存在{hg}，无法进行添加', 1)
+                s.prt_log(f'{hg} does not exist in the configuration file and cannot be added', 1)
                 return
 
         json_data_before = copy.deepcopy(self.js.json_data)
@@ -680,10 +671,10 @@ class Map():
         if json_data_before == json_data_now:
             obj_iscsi.crm_conf_change()
         else:
-            s.prt_log('JSON已被修改，请重新操作', 2)
+            s.prt_log('The configuration file has been modified, please try again', 2)
 
         # 提交json的修改
-        self.js.commit_json()
+        self.js.commit_data()
 
 
 
@@ -693,10 +684,10 @@ class Map():
             return
         for dg in list_dg:
             if dg in self.js.json_data["Map"][map]["DiskGroup"]:
-                s.prt_log(f'{dg}已存在{map}中', 1)
+                s.prt_log(f'{dg} already exists in {map}', 1)
                 return
             if not self.js.check_key("DiskGroup", dg):
-                s.prt_log(f'json文件中不存在{dg}，无法进行添加', 1)
+                s.prt_log(f'{dg} does not exist in the configuration file and cannot be added', 1)
                 return
 
         json_data_before = copy.deepcopy(self.js.json_data)
@@ -709,10 +700,10 @@ class Map():
         if json_data_before == json_data_now:
             obj_iscsi.crm_conf_change()
         else:
-            s.prt_log('JSON已被修改，请重新操作', 2)
+            s.prt_log('The configuration file has been modified, please try again', 2)
 
         # 提交json的修改
-        self.js.commit_json()
+        self.js.commit_data()
 
     def remove_hg(self, map, list_hg):
         if not self.js.check_key('Map', map):
@@ -720,7 +711,7 @@ class Map():
             return
         for hg in list_hg:
             if not hg in self.js.json_data["Map"][map]["HostGroup"]:
-                s.prt_log(f'{map}中不存在成员{hg}，无法进行移除', 1)
+                s.prt_log(f'{hg} does not exist in {map} and cannot be removed', 1)
                 return
 
         # 获取修改前的数据进行复制，之后进行对json数据的修改，从而去对比获取需要改动的映射关系再使用crm命令修改
@@ -734,14 +725,14 @@ class Map():
         if json_data_before == json_data_now:
             obj_iscsi.crm_conf_change()
         else:
-            s.prt_log('JSON已被修改，请重新操作', 2)
+            s.prt_log('The configuration file has been modified, please try again', 2)
 
         # 配置文件删除/移除成员
         if not self.js.json_data['Map'][map]['HostGroup']:
             self.js.delete_data('Map', map)
-            print(f'该{map}已删除')
+            print(f'{map} deleted')
 
-        self.js.commit_json()
+        self.js.commit_data()
 
     def remove_dg(self, map, list_dg):
         # 验证
@@ -750,7 +741,7 @@ class Map():
             return
         for dg in list_dg:
             if not dg in self.js.json_data["Map"][map]["DiskGroup"]:
-                s.prt_log(f'{map}中不存在成员{dg}，无法进行移除', 1)
+                s.prt_log(f'{dg} does not exist in {map} and cannot be removed', 1)
                 return
 
         # 获取修改前的数据进行复制，之后进行对json数据的修改，从而去获取映射关系再使用crm命令修改
@@ -764,17 +755,18 @@ class Map():
         if json_data_before == json_data_now:
             obj_iscsi.crm_conf_change()
         else:
-            s.prt_log('JSON已被修改，请重新操作', 2)
+            s.prt_log('The configuration file has been modified, please try again', 2)
 
         if not self.js.json_data['Map'][map]['DiskGroup']:
             self.js.delete_data('Map', map)
-            print(f'该{map}已删除')
+            print(f'{map} deleted')
 
-        self.js.commit_json()
+        self.js.commit_data()
 
 
 class Portal():
     def __init__(self):
+        self.logger = consts.glo_log()
         self.js = iscsi_json.JsonOperation()
 
     def create(self, name, ip, port=3260 ,netmask=24):
@@ -788,13 +780,13 @@ class Portal():
             s.prt_log(f'{port} does not meet specifications(Range：3260-65535)',1)
             return
         if not self._check_netmask(netmask):
-            s.prt_log(f'{netmask} does not meet specifications(Range：0-32)',1)
+            s.prt_log(f'{netmask} does not meet specifications(Range：1-32)',1)
             return
         if self.js.check_key('Portal',name):
             s.prt_log(f'{name} already exists, please use another name',1)
             return
         if self.js.check_in_res('Portal','ip',ip):
-            s.prt_log(f'{ip} IP is already in use, please use another IP',1)
+            s.prt_log(f'{ip} is already in use, please use another IP',1)
             return
 
 
@@ -811,8 +803,7 @@ class Portal():
             Order.create(f'or_{name}_prtblk_on',name, f'{name}_prtblk_on')
 
         except Exception as ex:
-            # 记录异常信息
-            # self.logger.write_to_log('DATA', 'DEBUG', 'exception', '', str(traceback.format_exc()))
+            self.logger.write_to_log('DATA', 'DEBUG', 'exception', 'Rollback', str(traceback.format_exc()))
             RollBack.rollback(ip,port,netmask)
             return
 
@@ -821,12 +812,12 @@ class Portal():
 
         if status == 'OK':
             self.js.update_data('Portal', name, {'ip': ip, 'port': str(port),'netmask':str(netmask),'target':[]})
-            self.js.commit_json()
+            self.js.commit_data()
         elif status == 'NETWORK_ERROR':
             obj_ipadrr.delete(name)
             obj_portblock.delete(f'{name}_prtblk_on')
             obj_portblock.delete(f'{name}_prtblk_off')
-            s.prt_log('由于设置的IP地址网段有误或有其他网络问题，此portal无法正常创建，请重新配置', 1)
+            s.prt_log('The portal cannot be created normally due to the wrong IP address network segment or other network problems, please reconfigure', 1)
 
 
     def delete(self, name):
@@ -848,8 +839,7 @@ class Portal():
             obj_portblock.delete(f'{name}_prtblk_off')
 
         except Exception as ex:
-            # 记录异常信息
-            # self.logger.write_to_log('DATA', 'DEBUG', 'exception', '', str(traceback.format_exc()))
+            self.logger.write_to_log('DATA', 'DEBUG', 'exception', 'Rollback', str(traceback.format_exc()))
             portal = self.js.json_data['Portal'][name]
             RollBack.rollback(portal['ip'],portal['port'],portal['netmask'])
             # 恢复colocation和order
@@ -864,7 +854,7 @@ class Portal():
         dict = crm_data.get_vip()
         if not name in dict.keys():
             self.js.delete_data('Portal',name)
-            self.js.commit_json()
+            self.js.commit_data()
             print(f'Delete {name} successfully')
         else:
             print(f'Failed to delete {name}, please check')
@@ -887,14 +877,14 @@ class Portal():
             s.prt_log(f'IP and port are the same as the before, no need to modify',1)
             return
         if self.js.check_in_res('Portal','ip',ip):
-            s.prt_log(f'{ip} IP is already in use, please use another IP',1)
+            s.prt_log(f'{ip} is already in use, please use another IP',1)
             return
 
 
         # 查询有没有target使用这个vip
         if portal['target']:
             # 反馈修改影响
-            print(f'已有target：{",".join(portal["target"])}正在使用这个portal，target将同步修改，是否继续?y/n')
+            print(f'Target：{",".join(portal["target"])}using this portal.These targets will be modified synchronously, whether to continue?y/n')
             answer = s.get_answer()
             if not answer in ['y', 'yes', 'Y', 'YES']:
                 s.prt_log('Modify canceled', 2)
@@ -924,6 +914,7 @@ class Portal():
                 obj_portblock.modify(f'{name}_prtblk_on',ip, port)
                 obj_portblock.modify(f'{name}_prtblk_off',ip, port)
             except Exception as ex:
+                self.logger.write_to_log('DATA', 'DEBUG', 'exception', 'Rollback', str(traceback.format_exc()))
                 RollBack.rollback(portal['ip'],portal['port'],portal['netmask'])
                 return
 
@@ -936,7 +927,7 @@ class Portal():
         for target in portal['target']:
             self.js.json_data['Target'][target]['ip'] = ip
             self.js.json_data['Target'][target]['port'] = str(port)
-        self.js.commit_json()
+        self.js.commit_data()
         s.prt_log(f'Modify {name} successfully',0)
 
 

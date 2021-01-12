@@ -65,7 +65,7 @@ def get_answer():
         time,answer = logdb.get_anwser(transaction_id)
         if not time:
             time = ''
-        print(f'RE:{time:<20} 用户输入: {answer}')
+        print(f'RE:{time:<20} <input> user input: {answer}\n')
     return answer
 
 
@@ -196,8 +196,8 @@ def deco_cmd(type):
                 else:
                     result = cmd_result['result']
                     result_output = cmd_result['result']
-                print(f"RE:{id_result['time']:<20} 执行系统命令：\n{cmd}")
-                print(f"RE:{cmd_result['time']:<20} 系统命令结果：\n{result_output}")
+                print(f"RE:{id_result['time']:<20} <command>cmd：\n{cmd}")
+                print(f"RE:{cmd_result['time']:<20} <command>result：\n{result_output}")
                 if id_result['db_id']:
                     change_pointer(id_result['db_id'])
 
@@ -240,8 +240,8 @@ def prt(str_, warning_level=0):
         data = db.get_cmd_output(consts.glo_tsc_id())
         if not data["time"]:
             data["time"] = ''
-        print(f'RE:{data["time"]:<20} 日志记录输出：{warning_str:<4}\n{data["output"]}')
-        print(f'RE:{"":<20} 此次执行输出：{warning_str:<4}\n{str_}')
+        print(f'RE:{data["time"]:<20} <output>log output：{warning_str:<4}\n{data["output"]}')
+        print(f'RE:{"":<20} <output>this time output：{warning_str:<4}\n{str_}\n')
         change_pointer(int(data["db_id"]))
 
 def prt_log(str_, warning_level):
@@ -341,8 +341,8 @@ def deco_db_insert(func):
             logdb = consts.glo_db()
             id_result = logdb.get_id(consts.glo_tsc_id(), func.__name__)
             func(self, sql, data, tablename)
-            print(f"RE:{id_result['time']} 插入数据表: {tablename}")
-            print(f"RE:{id_result['time']} 插入数据:")
+            print(f"RE:{id_result['time']} <sql>insert table: {tablename}")
+            print(f"RE:{id_result['time']} <sql>insert data:")
             for i in data:
                 print(i)
             print()# 格式上的换行
@@ -354,37 +354,11 @@ def deco_db_insert(func):
 def handle_exception():
     rpl = consts.glo_rpl()
     if rpl == 'yes':
-        print('日志中无法取得相关数据，程序无法继续正常执行')
+        print('The Data cannot be obtained in the log, and the program cannot continue to execute normally')
         raise consts.ReplayExit
     else:
-        print('命令结果无法获取，请检查')
+        print('The command result cannot be obtained, please check')
         raise consts.CmdError
 
 
 
-# 删除指定的initiator
-def remove_list(list_now, list_del):
-    """
-    删除指定的iqn
-    :param iqn_now:list
-    :param iqn_del:list
-    :return:list
-    """
-    # if set(list_now) == set(list_del):
-    #     return []
-    #
-    list_now = set(list_now)
-    for i in set(list_del):
-        list_now.remove(i)
-    return list(list_now)
-
-def append_list(list_now, list_append):
-    list_now.extend(list_append)
-    return list(set(list_now))
-
-
-def confirm_modify(words):
-    print(words)
-    answer = input()
-    if not answer in ['y', 'yes', 'Y', 'YES']:
-        prt_log('中断修改，退出',2)

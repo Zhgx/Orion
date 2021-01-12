@@ -33,12 +33,11 @@ class Linstor():
         try:
             list_data_all.pop(0)
         except IndexError:
-            s.prt_log('The data cannot be read, please check whether LINSTOR is normal.',2)
+            s.prt_log('Error, please check whether LINSTOR is normal.',2)
             sys.exit()
         if list_data_all:
             if not list_data_all[0]:
-                s.prt_log('正则匹配出错,程序退出',2)
-                sys.exit()
+                s.prt_log('Error, please check whether LINSTOR is normal.', 2)
 
         self.logger.write_to_log('DATA', 'REGULAR', 'findall', oprt_id, list_data_all)
         return list_data_all
