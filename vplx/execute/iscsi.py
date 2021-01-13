@@ -116,6 +116,7 @@ class IscsiConfig():
         self.show_info()
         print('是否确认修改?y/n')
         answer = s.get_answer()
+        answer = 'y'
         if not answer in ['y', 'yes', 'Y', 'YES']:
             s.prt_log('Modify canceled', 2)
 
@@ -168,6 +169,7 @@ class Disk():
 
         table = s.make_table(list_header, list_data)
         s.prt_log(table, 0)
+        return list_data
 
 
 class Host():
@@ -211,6 +213,7 @@ class Host():
                 list_data.append([host, host_all[host]])
         table = s.make_table(list_header, list_data)
         s.prt_log(table, 0)
+        return list_data
 
     def delete(self, host):
         if not self.js.check_key('Host', host):
@@ -287,6 +290,7 @@ class DiskGroup():
 
         table = s.make_table(list_header, list_data)
         s.prt_log(table, 0)
+        return list_data
 
     def delete(self, dg):
         if not self.js.check_key('DiskGroup', dg):
@@ -398,6 +402,7 @@ class HostGroup():
 
         table = s.make_table(list_header, list_data)
         s.prt_log(table, 0)
+        return list_data
 
     # 问题，现在这个delete是要判断有没有Map使用这个hg，有的话不能删除，但是修改功能是可以把hg的成员全部移除的，然后这个hg就会被删除
     # 要怎么处理？
@@ -405,7 +410,7 @@ class HostGroup():
         if not self.js.check_key('HostGroup', hg):
             s.prt_log(f"Fail! Can't find {hg}", 1)
             return
-        if self.js.check_value('Map', hg):
+        if self.js.check_in_res('Map', 'HostGroup', hg):
             s.prt_log("Fail! The hostgroup already map,Please delete the map", 1)
             return
 
@@ -570,6 +575,7 @@ class Map():
 
         table = s.make_table(list_header, list_data)
         s.prt_log(table, 0)
+        return list_data
 
     #  执行map展示的时候，会展示对应dg和hg的数据（全部三个表格），暂时保留代码
     # def get_spe_map(self, map):
@@ -749,7 +755,7 @@ class Portal():
             s.prt_log(f'{port}不符合规范，范围：3260-65535', 1)
             return
         if not self._check_netmask(netmask):
-            s.prt_log(f'{netmask}不符合规范，范围：0-32', 1)
+            s.prt_log(f'{netmask}不符合规范，范围：1-32', 1)
             return
         if self.js.check_key('Portal', name):
             s.prt_log(f'{name}已存在', 1)
@@ -771,6 +777,7 @@ class Portal():
             Order.create(f'or_{name}_prtblk_on', name, f'{name}_prtblk_on')
 
         except Exception as ex:
+            print(ex)
             # 记录异常信息
             # self.logger.write_to_log('DATA', 'DEBUG', 'exception', '', str(traceback.format_exc()))
             RollBack.rollback(ip, port, netmask)
@@ -843,6 +850,9 @@ class Portal():
         if portal['ip'] == ip and portal['port'] == str(port):
             s.prt_log(f'IP和Port都相同，不需要修改', 1)
             return
+        if self.js.check_in_res('Portal', 'ip', ip):
+            s.prt_log(f'{ip} IP is already in use, please use another IP', 1)
+            return
 
         # 查询有没有target使用这个vip
         if portal['target']:
@@ -902,6 +912,7 @@ class Portal():
             list_data.append([portal, data['ip'], data['port'], data['netmask'], ",".join(data['target'])])
         table = s.make_table(list_header, list_data)
         s.prt_log(table, 0)
+        return list_data
 
     def _check_name(self, name):
         result = s.re_search(r'^[a-zA-Z]\w*$', name)
@@ -922,7 +933,7 @@ class Portal():
     def _check_netmask(self, netmask):
         if not isinstance(netmask, int):
             return False
-        return True if 0 <= netmask <= 32 else False
+        return True if 1 <= netmask <= 32 else False
 
     def _check_status(self, name):
         """

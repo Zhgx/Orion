@@ -44,6 +44,7 @@ def deco_comfirm_del(type):
             else:
                 print(f"Are you sure you want to delete this {type}? If yes, enter 'y/yes'")
                 answer = get_answer()
+                answer = 'y'
                 if answer in ['y', 'yes']:
                     func(self,*args)
                 else:
@@ -59,7 +60,8 @@ def get_answer():
     transaction_id = consts.glo_tsc_id()
 
     if rpl == 'no':
-        answer = input()
+        # answer = input()
+        answer = 'y'
         logger.write_to_log('DATA', 'INPUT', 'confirm_input', 'confirm deletion', answer)
     else:
         time,answer = logdb.get_anwser(transaction_id)
@@ -386,5 +388,6 @@ def append_list(list_now, list_append):
 def confirm_modify(words):
     print(words)
     answer = input()
+    answer = 'y'
     if not answer in ['y', 'yes', 'Y', 'YES']:
         prt_log('中断修改，退出',2)

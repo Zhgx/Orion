@@ -130,25 +130,25 @@ class TestJsonOperation:
         assert self.js.check_value_in_key('Host', 'pytest_host1', 'pytest_iqn2') is None
 
     # 不存在 map iscsi 模块有做处理，这里只检查该成员是否在该map中，所以这里的map一定存在
-    def test_check_map_member(self):
-        # 存在
-        assert self.js.check_map_member('pytest_map', 'pytest_hg', 'HostGroup') == {'type': 'HostGroup',
-                                                                                    'map': 'pytest_map',
-                                                                                    'member': 'pytest_hg',
-                                                                                    'result': True}
-        assert self.js.check_map_member('pytest_map', 'pytest_dg', 'DiskGroup') == {'type': 'DiskGroup',
-                                                                                    'map': 'pytest_map',
-                                                                                    'member': 'pytest_dg',
-                                                                                    'result': True}
-        # 不存在
-        assert self.js.check_map_member('pytest_map', 'pytest_hg1', 'HostGroup') == {'type': 'HostGroup',
-                                                                                     'map': 'pytest_map',
-                                                                                     'member': 'pytest_hg1',
-                                                                                     'result': False}
-        assert self.js.check_map_member('pytest_map', 'pytest_dg1', 'DiskGroup') == {'type': 'DiskGroup',
-                                                                                     'map': 'pytest_map',
-                                                                                     'member': 'pytest_dg1',
-                                                                                     'result': False}
+    # def test_check_map_member(self):
+    #     # 存在
+    #     assert self.js.check_map_member('pytest_map', 'pytest_hg', 'HostGroup') == {'type': 'HostGroup',
+    #                                                                                 'map': 'pytest_map',
+    #                                                                                 'member': 'pytest_hg',
+    #                                                                                 'result': True}
+    #     assert self.js.check_map_member('pytest_map', 'pytest_dg', 'DiskGroup') == {'type': 'DiskGroup',
+    #                                                                                 'map': 'pytest_map',
+    #                                                                                 'member': 'pytest_dg',
+    #                                                                                 'result': True}
+    #     # 不存在
+    #     assert self.js.check_map_member('pytest_map', 'pytest_hg1', 'HostGroup') == {'type': 'HostGroup',
+    #                                                                                  'map': 'pytest_map',
+    #                                                                                  'member': 'pytest_hg1',
+    #                                                                                  'result': False}
+    #     assert self.js.check_map_member('pytest_map', 'pytest_dg1', 'DiskGroup') == {'type': 'DiskGroup',
+    #                                                                                  'map': 'pytest_map',
+    #                                                                                  'member': 'pytest_dg1',
+    #                                                                                  'result': False}
 
     # 具体函数没调用
     def test_get_hg_by_host(self):

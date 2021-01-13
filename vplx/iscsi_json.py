@@ -102,7 +102,7 @@ class JsonOperation(object):
     def commit_json(self):
         with open('../vplx/map_config.json', "w") as fw:
             json.dump(self.json_data, fw, indent=4, separators=(',', ': '))
-        return True
+        return self.json_data
 
 
     # 获取Host,Disk、Target，HostGroup、DiskGroup、Map的信息

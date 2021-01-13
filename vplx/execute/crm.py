@@ -55,14 +55,27 @@ class RollBack():
     装饰器，记录执行进行操作CRM资源名，提供方法rollback可以回滚执行操作的操作
     """
     dict_rollback = {'IPaddr2':{}, 'PortBlockGroup':{} , 'ISCSITarget':{}}
+    # def __init__(self, func):
+    #     self.func = func
+    #     self.type,self.oprt = func.__qualname__.split('.')
+    #
+    # def __call__(self, *args, **kwargs):
+    #     if self.func(self, *args, **kwargs):
+    #         self.dict_rollback[self.type].update({args[0]:self.oprt})
+
     def __init__(self, func):
-        self.func = func
-        self.type,self.oprt = func.__qualname__.split('.')
+        wraps(func)(self)
+        self.type, self.oprt = func.__qualname__.split('.')
 
     def __call__(self, *args, **kwargs):
-        if self.func(self, *args, **kwargs):
-            self.dict_rollback[self.type].update({args[0]:self.oprt})
+        if self.__wrapped__(*args, **kwargs):
+            self.dict_rollback[self.type].update({args[0]: self.oprt})
 
+    def __get__(self, instance, cls):
+        if instance is None:
+            return self
+        else:
+            return types.MethodType(self, instance)
     # 带参数的编写方式
     # def __init__(self,type):
     #     self.type = type
@@ -248,6 +261,13 @@ class CRMData():
         :return:
         """
         js = iscsi_json.JsonOperation()
+        all_key = js.json_data.keys()
+        if not 'Portal' in all_key:
+            s.prt_log('"Portal" do not exist in the JSON configuration file', 2)
+            return
+        if not 'Target' in all_key:
+            s.prt_log('"Target" do not exist in the JSON configuration file', 2)
+            return
         crm_portal = self.get_portal_data(vip,portblock,target)
         json_portal = copy.deepcopy(js.json_data['Portal']) # 防止对json对象的数据修改，进行深拷贝，之后修改数据结构再修改
 
@@ -367,12 +387,14 @@ class CRMConfig():
         # 执行删除res
         cmd = f'crm conf del {res}'
         result = execute_crm_cmd(cmd)
+        print(result['sts'])
         if result['sts']:
             s.prt_log(f"Delete {res} success", 0)
             return True
         else:
             output = result['rst']
             re_str = re.compile(rf'INFO: hanging colocation:.*? deleted\nINFO: hanging order:.*? deleted\n')
+            print(re_str)
             if s.re_search(re_str, output):
                 s.prt_log(f"Delete {res} success(including colocation and order)", 0)
                 return True

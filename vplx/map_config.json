@@ -1,68 +1,16 @@
 {
-    "Host": {
-        "h1": "iqn.2020-11.com.example:pytest01",
-        "h2": "iqn.2020-11.com.example:pytest02",
-        "h3": "iqn.2020-11.com.example:pytest03",
-        "h4": "iqn.2020-11.com.example:pytest04",
-        "h5": "iqn.2020-11.com.example:pytest05",
-        "h6": "iqn.2020-11.com.example:pytest06"
-    },
-    "Disk": {
-        "res_a": "/dev/drbd1000",
-        "res_b": "/dev/drbd1001",
-        "res_c": "/dev/drbd1002",
-        "res_d": "/dev/drbd1003"
-    },
-    "HostGroup": {
-        "hg1": [
-            "h2"
-        ],
-        "hg2": [
-            "h3",
-            "h4"
-        ],
-        "hg4": [
-            "h6"
-        ],
-        "hg5": [
-            "h7"
-        ],
-        "hg6": [
-            "h6"
-        ],
-        "hg7": [
-            "h7"
-        ]
-    },
-    "DiskGroup": {
-        "dg1": [
-            "res_a"
-        ],
-        "dg2": [
-            "res_a",
-            "res_c",
-            "res_b"
-        ],
-        "dg3": [
-            "res_d"
-        ],
-        "dg4": [
-            "res_e"
-        ]
-    },
-    "Map": {
-        "map1": {
-            "HostGroup": [
-                "hg1",
-                "hg2"
-            ],
-            "DiskGroup": [
-                "dg1",
-                "dg2"
-            ]
-        }
-    },
+    "Host": {},
+    "Disk": {},
+    "HostGroup": {},
+    "DiskGroup": {},
+    "Map": {},
     "Portal": {
+        "portal_test_4": {
+            "ip": "10.203.1.201",
+            "port": "3260",
+            "netmask": "24",
+            "target": []
+        },
         "vip": {
             "ip": "10.203.1.75",
             "port": "3260",
@@ -70,6 +18,12 @@
             "target": [
                 "t_test"
             ]
+        },
+        "vip_test2": {
+            "ip": "10.203.1.206",
+            "port": "3260",
+            "netmask": "24",
+            "target": []
         }
     },
     "Target": {
