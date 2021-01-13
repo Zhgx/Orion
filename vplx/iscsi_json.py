@@ -44,19 +44,6 @@ def deco_oprt_json(str):
 
 
 
-"""
-            logdb = consts.glo_db()
-            id_result = logdb.get_id(consts.glo_tsc_id(), func.__name__)
-            func(self, sql, data, tablename)
-            print(f"RE:{id_result['time']} 插入数据表: {tablename}")
-            print(f"RE:{id_result['time']} 插入数据:")
-            for i in data:
-                print(i)
-            print()# 格式上的换行
-            if id_result['db_id']:
-                change_pointer(id_result['db_id'])
-"""
-
 
 class JsonOperation(object):
     _instance_lock = threading.Lock()

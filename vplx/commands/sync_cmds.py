@@ -38,7 +38,7 @@ class SyncCommands():
         # js.cover_data({'Portal': portal})
         # js.json_data.update({'Target': target})
         js.commit_json()
-        sd.prt_log('JSON数据更新完成', 1)
+        sd.prt_log('Configuration file data update completed', 1)
 
 
 

@@ -55,27 +55,14 @@ class RollBack():
     装饰器，记录执行进行操作CRM资源名，提供方法rollback可以回滚执行操作的操作
     """
     dict_rollback = {'IPaddr2':{}, 'PortBlockGroup':{} , 'ISCSITarget':{}}
-    # def __init__(self, func):
-    #     self.func = func
-    #     self.type,self.oprt = func.__qualname__.split('.')
-    #
-    # def __call__(self, *args, **kwargs):
-    #     if self.func(self, *args, **kwargs):
-    #         self.dict_rollback[self.type].update({args[0]:self.oprt})
-
     def __init__(self, func):
-        wraps(func)(self)
-        self.type, self.oprt = func.__qualname__.split('.')
+        self.func = func
+        self.type,self.oprt = func.__qualname__.split('.')
 
     def __call__(self, *args, **kwargs):
-        if self.__wrapped__(*args, **kwargs):
-            self.dict_rollback[self.type].update({args[0]: self.oprt})
+        if self.func(self, *args, **kwargs):
+            self.dict_rollback[self.type].update({args[0]:self.oprt})
 
-    def __get__(self, instance, cls):
-        if instance is None:
-            return self
-        else:
-            return types.MethodType(self, instance)
     # 带参数的编写方式
     # def __init__(self,type):
     #     self.type = type
@@ -263,11 +250,12 @@ class CRMData():
         js = iscsi_json.JsonOperation()
         all_key = js.json_data.keys()
         if not 'Portal' in all_key:
-            s.prt_log('"Portal" do not exist in the JSON configuration file', 2)
+            s.prt_log('"Portal" do not exist in the JSON configuration file',2)
             return
         if not 'Target' in all_key:
-            s.prt_log('"Target" do not exist in the JSON configuration file', 2)
+            s.prt_log('"Target" do not exist in the JSON configuration file',2)
             return
+
         crm_portal = self.get_portal_data(vip,portblock,target)
         json_portal = copy.deepcopy(js.json_data['Portal']) # 防止对json对象的数据修改，进行深拷贝，之后修改数据结构再修改
 
@@ -279,9 +267,11 @@ class CRMData():
             portal_data['target'] = set(portal_data['target'])
 
         if not crm_portal == json_portal:
-            s.prt_log('Portal数据不一致，请检查后重试',2)
+            s.prt_log('The data Portal of the JSON configuration file is inconsistent, please check and try again',2)
+            return
         if not target == js.json_data['Target']:
-            s.prt_log('iSCSITarget数据不一致,请检查后重试',2)
+            s.prt_log('The data Target of the JSON configuration file is inconsistent, please check and try again',2)
+            return
 
     def check(self):
         """
@@ -387,14 +377,12 @@ class CRMConfig():
         # 执行删除res
         cmd = f'crm conf del {res}'
         result = execute_crm_cmd(cmd)
-        print(result['sts'])
         if result['sts']:
             s.prt_log(f"Delete {res} success", 0)
             return True
         else:
             output = result['rst']
             re_str = re.compile(rf'INFO: hanging colocation:.*? deleted\nINFO: hanging order:.*? deleted\n')
-            print(re_str)
             if s.re_search(re_str, output):
                 s.prt_log(f"Delete {res} success(including colocation and order)", 0)
                 return True
@@ -447,7 +435,7 @@ class IPaddr2():
             s.prt_log(cmd_result['rst'],1)
             raise consts.CmdError
         else:
-            print(f'Create {name} successfully')
+            s.prt_log(f'Create {name} successfully',0)
             return True
 
     @RollBack
@@ -457,7 +445,7 @@ class IPaddr2():
         if not result:
             raise consts.CmdError
         else:
-            print(f'Delete {name} successfully')
+            s.prt_log(f'Delete {name} successfully',0)
             return True
 
     @RollBack
@@ -469,7 +457,7 @@ class IPaddr2():
             s.prt_log(cmd_result['rst'],1)
             raise consts.CmdError
         else:
-            print(f'{name}\'s ip and port have been modified successfully')
+            s.prt_log(f'{name}\'s ip and port have been modified successfully',0)
             return True
 
 
@@ -499,7 +487,7 @@ class PortBlockGroup():
             s.prt_log(cmd_result['rst'],1)
             raise consts.CmdError
         else:
-            print(f'Create {name} successfully')
+            s.prt_log(f'Create {name} successfully',0)
             return True
 
 
@@ -510,7 +498,7 @@ class PortBlockGroup():
         if not result:
             raise consts.CmdError
         else:
-            print(f'Delete {name} successfully')
+            s.prt_log(f'Delete {name} successfully',0)
             return True
 
 
@@ -525,7 +513,7 @@ class PortBlockGroup():
             s.prt_log(cmd_result_port['rst'], 1)
             raise consts.CmdError
         else:
-            print(f"Modify {name} (IP and Port) successfully")
+            s.prt_log(f"Modify {name} (IP and Port) successfully",0)
             return True
 
 
@@ -543,7 +531,7 @@ class Colocation():
             s.prt_log(cmd_result['rst'],1)
             raise consts.CmdError
         else:
-            print(f'Create {name} successfully')
+            s.prt_log(f'Create {name} successfully',0)
             return True
 
 
@@ -561,7 +549,7 @@ class Order():
             s.prt_log(cmd_result['rst'],1)
             raise consts.CmdError
         else:
-            print(f'Create {name} successfully')
+            s.prt_log(f'Create {name} successfully',0)
             return True
 
 
@@ -580,7 +568,7 @@ class ISCSITarget():
             s.prt_log(cmd_result['rst'],1)
             raise consts.CmdError
         else:
-            print(f'Modify {name} successfully')
+            s.prt_log(f'Modify {name} successfully',0)
             return True
 
 
