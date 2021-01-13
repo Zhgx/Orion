@@ -788,13 +788,13 @@ class Portal():
             s.prt_log(f'{port} does not meet specifications(Range：3260-65535)',1)
             return
         if not self._check_netmask(netmask):
-            s.prt_log(f'{netmask} does not meet specifications(Range：0-32)',1)
+            s.prt_log(f'{netmask} does not meet specifications(Range：1-32)',1)
             return
         if self.js.check_key('Portal',name):
             s.prt_log(f'{name} already exists, please use another name',1)
             return
         if self.js.check_in_res('Portal','ip',ip):
-            s.prt_log(f'{ip} IP is already in use, please use another IP',1)
+            s.prt_log(f'{ip} is already in use, please use another IP',1)
             return
 
 
@@ -887,7 +887,7 @@ class Portal():
             s.prt_log(f'IP and port are the same as the before, no need to modify',1)
             return
         if self.js.check_in_res('Portal','ip',ip):
-            s.prt_log(f'{ip} IP is already in use, please use another IP',1)
+            s.prt_log(f'{ip} is already in use, please use another IP',1)
             return
 
 
