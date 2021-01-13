@@ -35,15 +35,17 @@ class IscsiConfig():
         dict_map_relation = {}
         for disk in data['Disk']:
             dict_map_relation.update({disk: set()})
-
-        for map in data['Map'].values():
-            for dg in map['DiskGroup']:
-                for disk in data['DiskGroup'][dg]:
-                    set_iqn = set()
-                    for hg in map['HostGroup']:
-                        for host in data['HostGroup'][hg]:
-                            set_iqn.add(data['Host'][host])
-                    dict_map_relation[disk] = dict_map_relation[disk] | set_iqn
+        try:
+            for map in data['Map'].values():
+                for dg in map['DiskGroup']:
+                    for disk in data['DiskGroup'][dg]:
+                        set_iqn = set()
+                        for hg in map['HostGroup']:
+                            for host in data['HostGroup'][hg]:
+                                set_iqn.add(data['Host'][host])
+                        dict_map_relation[disk] = dict_map_relation[disk] | set_iqn
+        except KeyError as a:
+            s.prt_log(f'{a} does not exist in the configuration file, please check',2)
 
         return dict_map_relation
 
@@ -186,7 +188,7 @@ class Host():
         """
         判断iqn是否符合格式
         """
-        result = s.re_findall(r'^iqn\.\d{4}-\d{2}\.[a-zA-Z0-9.:-]+', iqn)
+        result = s.re_findall(r'^iqn\.\d{4}-\d{2}\.[a-zA-Z0-9][-a-zA-Z0-9]{0,62}(\.[a-zA-Z0-9][-a-zA-Z0-9]{0,62})+(:[a-zA-Z0-9.:-]+)?$', iqn)
         return True if result else False
 
     def create(self, host, iqn):
@@ -954,7 +956,7 @@ class Portal():
 
 
     def _check_name(self, name):
-        result = s.re_search(r'^[a-zA-Z]\w*$',name)
+        result = s.re_search(r'^[a-zA-Z][a-zA-Z0-9_]*$',name)
         # 添加从JSON中验证这个Name有没有被portal使用
         return True if result else False
 
