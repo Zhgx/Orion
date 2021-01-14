@@ -1,5 +1,6 @@
 from .crm import CRMData
 from .crm import CRMConfig
+from .crm import IPaddr2,PortBlockGroup,Order,Colocation,ISCSITarget
 from .linstor import Linstor
 from .lvm import LVM
 from .stor import Resource
@@ -10,3 +11,4 @@ from .iscsi import DiskGroup
 from .iscsi import Host
 from .iscsi import HostGroup
 from .iscsi import Map
+from .iscsi import Portal

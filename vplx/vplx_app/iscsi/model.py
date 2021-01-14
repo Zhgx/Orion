@@ -4,6 +4,7 @@ from flask_cors import *
 from execute import iscsi
 import iscsi_json
 import consts
+import log
 
 
 def cors_data(data_dict):
@@ -20,9 +21,8 @@ def get_request_data():
         dict_data = dict(str_data)
         tid = dict_data['tid']
         # 记录除了tid之后接收到的数据
-        logger = consts.glo_log()
+        logger = log.Log()
         logger.tid = tid
-        consts.set_glo_log(logger)
         return dict_data
 
     
@@ -30,12 +30,12 @@ class HostCreate(views.MethodView):
 
     def get(self):
         dict_data = get_request_data()
-        logger = consts.glo_log()
+        logger = log.Log()
         host = dict_data["host_name"]
         iqn = dict_data["host_iqn"]
         logger.write_to_log('OPRT', 'ROUTE', '/host/create', dict_data['ip'], dict_data)
         host_obj = iscsi.Host()
-        host_create_results = host_obj.create_host(host, iqn)
+        host_create_results = host_obj.create(host, iqn)
         logger.write_to_log('DATA', 'RESULT', 'HostCreate', 'result', host_create_results)
         if host_create_results == True:
             result = "0"
@@ -50,12 +50,12 @@ class HostGroupCreate(views.MethodView):
     def get(self):
         dict_data = get_request_data()
         print(dict_data)
-        logger = consts.glo_log()
+        logger = log.Log()
         host = dict_data['host'].split(',')
         host_group_name = dict_data["host_group_name"]
         logger.write_to_log('OPRT', 'ROUTE', '/hg/create', dict_data['ip'], dict_data)
         host_group_obj = iscsi.HostGroup()
-        host_group_create_results = host_group_obj.create_hostgroup(host_group_name, host)
+        host_group_create_results = host_group_obj.create(host_group_name, host)
         logger.write_to_log('DATA', 'RESULT', 'HostGroupCreate', 'result', host_group_create_results)
         if host_group_create_results == True:
             result = "0"
@@ -69,13 +69,13 @@ class DiskGroupCreate(views.MethodView):
 
     def get(self):
         dict_data = get_request_data()
-        logger = consts.glo_log()
+        logger = log.Log()
         disk = dict_data['disk'].split(',')
         logger.write_to_log('OPRT', 'ROUTE', '/dg/create', dict_data['ip'], dict_data)
         disk_group_name = dict_data["disk_group_name"]
         disk_group_obj = iscsi.DiskGroup()
 
-        disk_group_create_results = disk_group_obj.create_diskgroup(disk_group_name, disk)
+        disk_group_create_results = disk_group_obj.create(disk_group_name, disk)
         logger.write_to_log('DATA', 'RESULT', 'DiskGroupCreate', 'result', disk_group_create_results)
         if disk_group_create_results == True:
             result = "0"
@@ -89,13 +89,14 @@ class MapCreate(views.MethodView):
 
     def get(self):
         dict_data = get_request_data()
-        logger = consts.glo_log()
+        logger = log.Log()
         map_name = dict_data["map_name"]
         host_group_name = dict_data["host_group"].split(',')
         disk_group_name = dict_data["disk_group"].split(',')
+        print(disk_group_name)
         logger.write_to_log('OPRT', 'ROUTE', '/map/create', dict_data['ip'], dict_data)
         map_obj = iscsi.Map()
-        map_create_results = map_obj.create_map(map_name, host_group_name, disk_group_name)
+        map_create_results = map_obj.create(map_name, host_group_name, disk_group_name)
         logger.write_to_log('DATA', 'RESULT', 'MapCreate', 'result', map_create_results)
         if map_create_results == True:
             result = "0"
@@ -119,8 +120,8 @@ HOST_RESULT = None
 def update_host():
     global HOST_RESULT
    
-    host = iscsi.Host()
-    HOST_RESULT = host.get_all_host()
+    js = iscsi_json.JsonOperation()
+    HOST_RESULT = js.json_data['Host']
     
     return True
 
@@ -129,7 +130,7 @@ class OprtAllHost(views.MethodView):
 
     def get(self):
         dict_data = get_request_data()
-        logger = consts.glo_log()
+        logger = log.Log()
         logger.write_to_log('OPRT', 'ROUTE', '/host/show/oprt', dict_data['ip'], '')
         if update_host():
             logger.write_to_log('DATA', 'RETURN', 'OprtAllHost', 'result', '0')
@@ -143,7 +144,7 @@ class AllHostResult(views.MethodView):
 
     def get(self):
         dict_data = get_request_data()
-        logger = consts.glo_log()
+        logger = log.Log()
         logger.write_to_log('DATA', 'ROUTE', '/host/show/data', dict_data['ip'], '')
         if not HOST_RESULT:
             update_host()
@@ -159,7 +160,7 @@ def update_disk():
     global DISK_RESULT
     
     disk = iscsi.Disk()
-    DISK_RESULT = disk.get_all_disk()
+    DISK_RESULT = disk.update_disk()
     return True
 
 
@@ -167,7 +168,7 @@ class OprtAllDisk(views.MethodView):
 
     def get(self):
         dict_data = get_request_data()
-        logger = consts.glo_log()
+        logger = log.Log()
         logger.write_to_log('OPRT', 'ROUTE', '/disk/show/oprt', dict_data["ip"], '')
         if update_disk():
             logger.write_to_log('DATA', 'RETURN', 'OprtAllDisk', 'result', '0')
@@ -181,7 +182,7 @@ class AllDiskResult(views.MethodView):
 
     def get(self):
         dict_data = get_request_data()
-        logger = consts.glo_log()
+        logger = log.Log()
         logger.write_to_log('DATA', 'ROUTE', '/disk/show/data', dict_data["ip"], '')
         if not DISK_RESULT:
             update_disk()
@@ -195,9 +196,10 @@ HOSTGROUP_RESULT = None
 
 def update_hg():
     global HOSTGROUP_RESULT
-    
+
+    js = iscsi_json.JsonOperation()
     host_group = iscsi.HostGroup()
-    HOSTGROUP_RESULT = host_group.get_all_hostgroup()
+    HOSTGROUP_RESULT = js.json_data['HostGroup']
     return True
 
 
@@ -205,7 +207,7 @@ class OprtAllHg(views.MethodView):
 
     def get(self):
         dict_data = get_request_data()
-        logger = consts.glo_log()
+        logger = log.Log()
         logger.write_to_log('OPRT', 'ROUTE', '/hg/show/oprt', dict_data['ip'], '')
         if update_hg():
             logger.write_to_log('DATA', 'RETURN', 'OprtAllHg', 'result', '0')
@@ -219,7 +221,7 @@ class AllHgResult(views.MethodView):
     
     def get(self):
         dict_data = get_request_data()
-        logger = consts.glo_log()
+        logger = log.Log()
         logger.write_to_log('DATA', 'ROUTE', '/hg/show/data', dict_data['ip'], '')
         if not HOSTGROUP_RESULT:
             update_hg()
@@ -233,9 +235,9 @@ DISKGROUP_RESULT = None
 
 def update_dg():
     global DISKGROUP_RESULT
-    
-    disk_group = iscsi.DiskGroup()
-    DISKGROUP_RESULT = disk_group.get_all_diskgroup()
+
+    js = iscsi_json.JsonOperation()
+    DISKGROUP_RESULT = js.json_data['DiskGroup']
     return True
 
 
@@ -243,7 +245,7 @@ class OprtAllDg(views.MethodView):
 
     def get(self):
         dict_data = get_request_data()
-        logger = consts.glo_log()
+        logger = log.Log()
         logger.write_to_log('OPRT', 'ROUTE', '/dg/show/oprt', dict_data['ip'], '')
         if update_dg():
             logger.write_to_log('DATA', 'RETURN', 'OprtAllDg', 'result', '0')
@@ -257,7 +259,7 @@ class AllDgResult(views.MethodView):
 
     def get(self):
         dict_data = get_request_data()
-        logger = consts.glo_log()
+        logger = log.Log()
         logger.write_to_log('DATA', 'ROUTE', '/dg/show/data', dict_data['ip'], '')
         if not DISKGROUP_RESULT:
             update_dg()
@@ -271,9 +273,9 @@ MAP_RESULT = None
 
 def update_map():
     global MAP_RESULT
-    
-    map = iscsi.Map()
-    MAP_RESULT = map.get_all_map()
+
+    js = iscsi_json.JsonOperation()
+    MAP_RESULT = js.json_data['Map']
     return True
 
 
@@ -281,7 +283,7 @@ class OprtAllMap(views.MethodView):
 
     def get(self):
         dict_data = get_request_data()
-        logger = consts.glo_log()
+        logger = log.Log()
         logger.write_to_log('OPRT', 'ROUTE', '/map/show/oprt', dict_data['ip'], '')
         if update_map():
             logger.write_to_log('DATA', 'RETURN', 'OprtAllMap', 'result', '0')
@@ -295,14 +297,14 @@ class AllMapResult(views.MethodView):
 
     def get(self):
         dict_data = get_request_data()
-        logger = consts.glo_log()
+        logger = log.Log()
         logger.write_to_log('DATA', 'ROUTE', '/map/show/data', dict_data['ip'], '')
         if not MAP_RESULT:
            update_map()
         logger.write_to_log('DATA', 'RETURN', 'AllMapResult', 'result', MAP_RESULT)
         return cors_data(MAP_RESULT)
-    
-    
+
+
 class CheckMapModify(views.MethodView):
 
     def get(self):
@@ -317,10 +319,10 @@ class CheckMapModify(views.MethodView):
         obj_ilu = iscsi.IscsiConfig(dict_before, dict_now)
 
         info = f"删除：{','.join(obj_ilu.delete)}\n新增：{','.join(obj_ilu.create)}\n修改：{','.join(obj_ilu.modify)}"
-        dict = {'iscsi_data':js.iscsi_data,'info':info}
+        dict = {'iscsi_data': js.iscsi_data, 'info': info}
         return cors_data(dict)
 
-    
+
 class MapModify(views.MethodView):
 
     def get(self):
@@ -331,8 +333,8 @@ class MapModify(views.MethodView):
         print(type(dict_data['iscsi_data']))
         iscsi_data = eval(dict_data['iscsi_data'])
         js_now = iscsi_json.JsonOperation()
-        print("1:",type(iscsi_data))
-        print("2:",type(js_now.iscsi_data))
+        print("1:", type(iscsi_data))
+        print("2:", type(js_now.iscsi_data))
         if iscsi_data == js_now.iscsi_data:
             js_modify = iscsi_json.JsonMofidy()
             js_modify.remove_member('HostGroup', map, [hg], type='Map')
@@ -346,11 +348,13 @@ class MapModify(views.MethodView):
             except Exception:
                 print('异常,暂无回退')
                 info = '执行失败，已回退'
-            js_now.remove_member('HostGroup', map, [hg], type='Map')
+            if not js_modify.json_data['Map'][map]['HostGroup']:
+                js_now.delete_data('Map', map)
+            else:
+                js_now.remove_member('HostGroup', map, [hg], type='Map')
             info = '删除成功'
         else:
             print('json配置文件已改变')
             info = 'json配置文件已改变,请重新操作'
         return cors_data(info)
-        
-    
+

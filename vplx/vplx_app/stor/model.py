@@ -6,11 +6,8 @@ Created on 2020/3/2
 '''
 
 from flask import Flask, jsonify, render_template, request, make_response, views
-import json
-from flask_cors import *
 import process
-from public import log
-import consts
+import log
                                                                                                                                                                                                          
 
 def cors_data(datadict):
@@ -27,7 +24,7 @@ def get_request_data():
         dict_data = dict(str_data)
         tid = dict_data['tid']
         # 记录除了tid之后接收到的数据
-        logger = consts.glo_log()
+        logger = log.Log()
         logger.tid = tid
         return dict_data
 
@@ -45,7 +42,7 @@ class OprtResource(views.MethodView):
 
     def get(self):
         dict_data = get_request_data()
-        logger = consts.glo_log()
+        logger = log.Log()
         logger.write_to_log('OPRT', 'ROUTE', '/resource/show/oprt', dict_data['ip'], '')
         if get_all_resource():
             logger.write_to_log('DATA', 'RETURN', 'OprtResource', 'result', '0')
@@ -59,7 +56,7 @@ class ResourceResult(views.MethodView):
 
     def get(self):
         # get_request_data()
-        # logger = consts.glo_log()
+        # logger = log.Log()
         # logger.write_to_log('DATA', 'ROUTE', '/resource/show/data', dict_data['ip'], '')
         if not RESOURCEDICT:
             get_all_resource()

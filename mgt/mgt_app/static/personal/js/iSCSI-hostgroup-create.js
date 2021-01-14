@@ -338,17 +338,23 @@ function hg_name_myfunction() {
 													'/hg/show/data',
 													JSON
 													.stringify(HG_result_data));
-											for ( var i in HG_result_data) {
-												if (input_result == i) {
-													$("#hg_name_hid").val("0");
-													document
-															.getElementById("hg_name_examine").className = "";
-													break;
-												} else {
-													$("#hg_name_hid").val("1");
+											if (JSON.stringify(HG_result_data) === '{}') {
+												$("#hg_name_hid").val("1");
+											}else {
+												for ( var i in HG_result_data) {
+													if (input_result == i) {
+														$("#hg_name_hid").val("0");
+														document
+																.getElementById("hg_name_examine").className = "";
+														break;
+													} else {
+														$("#hg_name_hid").val("1");
+													}
+													
 												}
 												
 											}
+											
 										},
 										error : function() {
 											write_to_log(tid, 'DATA', 'ROUTE',
