@@ -478,8 +478,12 @@ class MapModify(views.MethodView):
 #             info = 'json配置文件已改变,请重新操作'
 #         return cors_data(info)
 '''
+
 @author: paul
 @note: iSCSI删除资源
+@bug: 可修改建议，前端返回2个值，一个类型，一个值，类型值"Hg"等，值指具体的Hg的值。
+
+
 '''
 class CheckHostDelete(views.MethodView):
  

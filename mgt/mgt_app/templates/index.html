@@ -39,15 +39,15 @@
 		<div class="layui-header ">
 			<div class="layui-logo">VersaTEL</div>
 			<!-- 头部区域（可配合layui已有的水平导航） -->
-			<ul class="layui-nav layui-layout-left">
+<!-- 			<ul class="layui-nav layui-layout-left">
 				<li class="layui-nav-item">
 					<a>Create</a>
 					<dl class="layui-nav-child">
 						<dd>
-							<a href="" onclick="selectItem(this)" id="StorCreate"><span>Stor</span></a>
+							<a href="" onclick="selectItem(this)" id="StorCreate"><span>LINSTOR</span></a>
 						</dd>
 						<dd>
-							<a onclick="selectItem(this)" id="iSCSICreate"><span>**iSCSI</span></a>
+							<a onclick="selectItem(this)" id="iSCSICreate"><span>iSCSI</span></a>
 						</dd>
 					</dl>
 				</li>
@@ -55,7 +55,7 @@
 					<a>Show</a>
 					<dl class="layui-nav-child">
 						<dd>
-							<a onclick="selectItem(this)" id="StorShow"><span>**Stor</span></a>
+							<a onclick="selectItem(this)" id="StorShow"><span>LINSTOR</span></a>
 						</dd>
 						<dd>
 							<a href="" onclick="selectItem(this)" id="iSCSIShow"><span>iSCSI</span></a>
@@ -66,15 +66,15 @@
 					<a>Delete</a>
 					<dl class="layui-nav-child">
 						<dd>
-							<a href="" onclick="selectItem(this)" id="StorDelete"><span>Stor</span></a>
+							<a href="" onclick="selectItem(this)" id="StorDelete"><span>LINSTOR</span></a>
 						</dd>
 						<dd>
 							<a href="" onclick="selectItem(this)" id="iSCSIDelete"><span>iSCSI</span></a>
 						</dd>
 					</dl>
 				</li>
-<!--				<li class="layui-nav-item"><a href="">Delete</a></li>-->
-				<!-- <li class="layui-nav-item"><a href="javascript:;">其他</a>
+				<li class="layui-nav-item"><a href="">Delete</a></li>
+				<li class="layui-nav-item"><a href="javascript:;">其他</a>
 					<dl class="layui-nav-child">
 						<dd>
 							<a href="">邮件管理</a>
@@ -85,8 +85,8 @@
 						<dd>
 							<a href="">授权管理</a>
 						</dd>
-					</dl></li> -->
-			</ul>
+					</dl></li>
+			</ul> -->
 
 		</div>
 		<div class="gy_wrap1">
@@ -101,8 +101,11 @@
 						<!-- <li><a href="javascript:;"><img class="logo"
                             src="images/logo.png" alt=""></a></li> -->
 						<li class="layui-nav-item "><a class="title"
-							onclick="selectItem(this)" id="Stor"><span>Stor</span></a>
+							onclick="selectItem(this)" id="Stor"><span>LINSTOR</span></a>
 							<dl class="layui-nav-child">
+								<!-- <dd>
+									<a onclick="selectItem(this)" id="LINSTOR_Create">Create</a>
+								</dd> -->
 								<dd>
 									<a onclick="selectItem(this)" id="Node">Node</a>
 								</dd>
@@ -110,34 +113,34 @@
 									<a onclick="selectItem(this)" id="Storagepool">Storagepool</a>
 								</dd>
 								<dd>
-									<a onclick="selectItem(this)" id="Resource">**Resource</a>
+									<a onclick="selectItem(this)" id="Resource">Resource</a>
 								</dd>
 							</dl></li>
 
 						<li class="layui-nav-item "><a class="title"
-							onclick="selectItem(this)" id="iSCSI"><span>**iSCSI</span></a>
+							onclick="selectItem(this)" id="iSCSI"><span>iSCSI</span></a>
 							<dl class="layui-nav-child">
 								<dd>
-									<a onclick="selectItem(this)" id="Host">**Host</a>
+									<a onclick="selectItem(this)" id="Host">Host</a>
 								</dd>
 								<dd>
-									<a onclick="selectItem(this)" id="HostGroup">**HostGroup</a>
+									<a onclick="selectItem(this)" id="HostGroup">HostGroup</a>
 								</dd>
 								<dd>
-									<a onclick="selectItem(this)" id="DiskGroup">**DiskGroup</a>
+									<a onclick="selectItem(this)" id="DiskGroup">DiskGroup</a>
 								</dd>
 								<dd>
-									<a onclick="selectItem(this)" id="Map">**Map</a>
+									<a onclick="selectItem(this)" id="Map">Map</a>
 								</dd>
 								<dd>
-									<a onclick="selectItem(this)" id="Map2">**Map2</a>
+									<a onclick="selectItem(this)" id="Map2">Map2</a>
 								</dd>
-							<dd>
+<!-- 							<dd>
 									<a onclick="selectItem(this)" id="iSCSICreate">Create</a>
-								</dd> 
-								<dd>
+								</dd>  -->
+								<!-- <dd>
 									<a onclick="selectItem(this)" id="iSCSI_map_modify">Modify</a>
-								</dd>
+								</dd> -->
 							</dl></li>
 					</ul>
 				</div>
@@ -179,8 +182,17 @@
         }else if(obj.id=='Map'){
                 $('#mainpage iframe').attr('src',"/iscsi/map");
                 $('#mainpage iframe').css({ "margin-left": "15%","max-width":"1700px"});
+        }else if(obj.id=='LINSTOR_Create'){
+                $('#mainpage iframe').attr('src',"/stor/create");
+                $('#mainpage iframe').css({ "margin-left": "15%","max-width":"1700px"});
         }else if(obj.id=='Resource'){
                 $('#mainpage iframe').attr('src',"/stor/resource/show");
+                $('#mainpage iframe').css({ "margin-left": "15%","max-width":"1700px"});
+        }else if(obj.id=='Node'){
+                $('#mainpage iframe').attr('src',"/stor/node/show");
+                $('#mainpage iframe').css({ "margin-left": "15%","max-width":"1700px"});
+        }else if(obj.id=='Storagepool'){
+                $('#mainpage iframe').attr('src',"/stor/storagepool/show");
                 $('#mainpage iframe').css({ "margin-left": "15%","max-width":"1700px"});
         }else if(obj.id=='Map2'){
                 $('#mainpage iframe').attr('src',"/iscsi/map2");

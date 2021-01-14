@@ -200,7 +200,7 @@ function host_name_myfunction() {
 function iqn_myfunction() {
 	document.getElementById("iqn_format").className = "hidden";
 	var input_result = $('#host_iqn').val();
-	var iqn_match_regular = /^iqn.\d{4}-\d{2}.[a-zA-Z0-9.:-_]+$/;
+	var iqn_match_regular = /^iqn\.\d{4}-\d{2}\.[a-zA-Z0-9][-a-zA-Z0-9]{0,62}(\.[a-zA-Z0-9][-a-zA-Z0-9]{0,62})+(:[a-zA-Z0-9.:-]+)?$/;
 	match_result = iqn_match_regular.test(input_result)
 	if (!input_result) {
 		$("#host_iqn_hid").val("0");

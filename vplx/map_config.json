@@ -8,14 +8,7 @@
         "h6": "iqn.2020-11.com.example:pytest06",
         "h7": "iqn.2020-11.com.example:pytest07"
     },
-    "Disk": {
-        "res_a": "/dev/drbd1000",
-        "res_b": "/dev/drbd1001",
-        "res_c": "/dev/drbd1002",
-        "res_d": "/dev/drbd1003",
-        "res_e": "/dev/drbd1005",
-        "res_f": "/dev/drbd1006"
-    },
+    "Disk": {},
     "HostGroup": {
         "hg1": [
             "h1",
@@ -100,6 +93,11 @@
             [
                 "vip",
                 "10.203.1.75",
+                "24"
+            ],
+            [
+                "vip_test1",
+                "10.203.1.71",
                 "24"
             ]
         ],
