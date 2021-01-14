@@ -1,6 +1,5 @@
 import execute as ex
 import sundry as sd
-import consts
 
 
 class Usage():
@@ -25,7 +24,7 @@ class Usage():
 class HostGroupCommands():
 
     def __init__(self):
-        self.logger = consts.glo_log()
+        pass
 
     def setup_commands(self, parser):
         """

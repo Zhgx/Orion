@@ -7,7 +7,7 @@ import iscsi_json
 
 class SyncCommands():
     def __init__(self):
-        self.logger = consts.glo_log()
+        pass
 
     def setup_commands(self, parser):
         """

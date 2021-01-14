@@ -1,18 +1,17 @@
 # coding:utf-8
-import socket
 import time
 import os
-import getpass
 import traceback
 import re
 import prettytable
 import sys
-from random import shuffle
+import pprint
 import subprocess
 from functools import wraps
 import colorama as ca
+
 import consts
-import pprint
+import log
 
 
 
@@ -53,7 +52,7 @@ def deco_comfirm_del(type):
 
 
 def get_answer():
-    logger = consts.glo_log()
+    logger = log.Log()
     rpl = consts.glo_rpl()
     logdb = consts.glo_db()
     transaction_id = consts.glo_tsc_id()
@@ -69,20 +68,6 @@ def get_answer():
     return answer
 
 
-def create_transaction_id():
-    return int(time.time())
-
-def create_oprt_id():
-    time_stamp = str(create_transaction_id())
-    str_list = list(time_stamp)
-    shuffle(str_list)
-    return ''.join(str_list)
-
-def get_username():
-    return getpass.getuser()
-
-def get_hostname():
-    return socket.gethostname()
 
 # Get the path of the program
 def get_path():
@@ -90,9 +75,9 @@ def get_path():
 
 
 def re_findall(re_string, tgt_string):
-    logger = consts.glo_log()
+    logger = log.Log()
     re_ = re.compile(re_string)
-    oprt_id = create_oprt_id()
+    oprt_id = log.create_oprt_id()
     logger.write_to_log('OPRT', 'REGULAR', 'findall', oprt_id, {'re': re_, 'string': tgt_string})
     re_result = re_.findall(tgt_string)
     logger.write_to_log('DATA', 'REGULAR', 'findall', oprt_id, re_result)
@@ -100,9 +85,9 @@ def re_findall(re_string, tgt_string):
 
 
 def re_search(re_string, tgt_stirng,output_type='group'):
-    logger = consts.glo_log()
+    logger = log.Log()
     re_ = re.compile(re_string)
-    oprt_id = create_oprt_id()
+    oprt_id = log.create_oprt_id()
     logger.write_to_log('OPRT','REGULAR','search',oprt_id, {'re':re_,'string':tgt_stirng})
     re_result = re_.search(tgt_stirng)
     if re_result:
@@ -114,40 +99,40 @@ def re_search(re_string, tgt_stirng,output_type='group'):
     return re_result
 
 
-def show_iscsi_data(list_header, dict_data):
-    table = prettytable.PrettyTable()
-    table.field_names = list_header
-    if dict_data:
-        for i,j in dict_data.items():
-            data_one = [i,(' '.join(j) if isinstance(j,list) == True else j)]
-            table.add_row(data_one)
-    else:
-        pass
-    return table
+# def show_iscsi_data(list_header, dict_data):
+#     table = prettytable.PrettyTable()
+#     table.field_names = list_header
+#     if dict_data:
+#         for i,j in dict_data.items():
+#             data_one = [i,(' '.join(j) if isinstance(j,list) == True else j)]
+#             table.add_row(data_one)
+#     else:
+#         pass
+#     return table
 
 
-def show_spe_map_data(list_header, list_data):
-    table = prettytable.PrettyTable()
-    table.field_names = list_header
-    if list_data:
-        for i in list_data:
-            table.add_row(i)
-    else:
-        pass
-    return table
+# def show_spe_map_data(list_header, list_data):
+#     table = prettytable.PrettyTable()
+#     table.field_names = list_header
+#     if list_data:
+#         for i in list_data:
+#             table.add_row(i)
+#     else:
+#         pass
+#     return table
 
 
-def show_map_data(list_header, dict_data):
-    table = prettytable.PrettyTable()
-    table.field_names = list_header
-    if dict_data:
-        # {map1:{"HostGroup":[hg1,hg2],"DiskGroup":[dg1,dg2]} => [map1,"hg1 hg2","dg1 dg2"]}
-        for i, j in dict_data.items():
-            data_list = [i,
-                         (' '.join(j["HostGroup"]) if isinstance(j["HostGroup"], list) == True else j["HostGroup"]),
-                         (' '.join(j["DiskGroup"]) if isinstance(j["DiskGroup"], list) == True else j["DiskGroup"])]
-            table.add_row(data_list)
-    return table
+# def show_map_data(list_header, dict_data):
+#     table = prettytable.PrettyTable()
+#     table.field_names = list_header
+#     if dict_data:
+#         # {map1:{"HostGroup":[hg1,hg2],"DiskGroup":[dg1,dg2]} => [map1,"hg1 hg2","dg1 dg2"]}
+#         for i, j in dict_data.items():
+#             data_list = [i,
+#                          (' '.join(j["HostGroup"]) if isinstance(j["HostGroup"], list) == True else j["HostGroup"]),
+#                          (' '.join(j["DiskGroup"]) if isinstance(j["DiskGroup"], list) == True else j["DiskGroup"])]
+#             table.add_row(data_list)
+#     return table
 
 
 def make_table(list_header,list_data):
@@ -174,10 +159,10 @@ def deco_cmd(type):
         @wraps(func)
         def wrapper(cmd):
             RPL = consts.glo_rpl()
-            oprt_id = create_oprt_id()
+            oprt_id = log.create_oprt_id()
             func_name = traceback.extract_stack()[-2][2]  # 装饰器获取被调用函数的函数名
             if RPL == 'no':
-                logger = consts.glo_log()
+                logger = log.Log()
                 logger.write_to_log('DATA', 'STR', func_name, '', oprt_id)
                 logger.write_to_log('OPRT', 'CMD', type, oprt_id, cmd)
                 result_cmd = func(cmd)
@@ -250,7 +235,7 @@ def prt_log(str_, warning_level):
     :param logger: Logger object for logging
     :param print_str: Strings to be printed and recorded
     """
-    logger = consts.glo_log()
+    logger = log.Log()
     RPL = consts.glo_rpl()
     if RPL == 'yes':
         prt(str_, warning_level)
@@ -302,8 +287,8 @@ def deco_json_operation(str):
             # print(traceback.extract_stack()[-2])
             # print(traceback.extract_stack()[-3])
             if RPL == 'no':
-                logger = consts.glo_log()
-                oprt_id = create_oprt_id()
+                logger = log.Log()
+                oprt_id = log.create_oprt_id()
                 logger.write_to_log('DATA', 'STR', func.__name__, '', oprt_id)
                 logger.write_to_log('OPRT', 'JSON', func.__name__, oprt_id, args)
                 result = func(self,*args)
@@ -331,8 +316,8 @@ def deco_db_insert(func):
     def wrapper(self, sql, data, tablename):
         RPL = consts.glo_rpl()
         if RPL == 'no':
-            logger = consts.glo_log()
-            oprt_id = create_oprt_id()
+            logger = log.Log()
+            oprt_id = log.create_oprt_id()
             logger.write_to_log('DATA', 'STR', func.__name__, '', oprt_id)
             logger.write_to_log('OPRT', 'SQL', func.__name__, oprt_id, sql)
             func(self,sql, data, tablename)
@@ -359,6 +344,4 @@ def handle_exception():
     else:
         print('The command result cannot be obtained, please check')
         raise consts.CmdError
-
-
 

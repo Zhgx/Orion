@@ -4,6 +4,7 @@ from flask_cors import *
 from execute import iscsi
 import iscsi_json
 import consts
+import log
 
 
 def cors_data(data_dict):
@@ -20,9 +21,8 @@ def get_request_data():
         dict_data = dict(str_data)
         tid = dict_data['tid']
         # 记录除了tid之后接收到的数据
-        logger = consts.glo_log()
+        logger = log.Log()
         logger.tid = tid
-        consts.set_glo_log(logger)
         return dict_data
 
     
@@ -30,7 +30,7 @@ class HostCreate(views.MethodView):
 
     def get(self):
         dict_data = get_request_data()
-        logger = consts.glo_log()
+        logger = log.Log()
         host = dict_data["host_name"]
         iqn = dict_data["host_iqn"]
         logger.write_to_log('OPRT', 'ROUTE', '/host/create', dict_data['ip'], dict_data)
@@ -50,7 +50,7 @@ class HostGroupCreate(views.MethodView):
     def get(self):
         dict_data = get_request_data()
         print(dict_data)
-        logger = consts.glo_log()
+        logger = log.Log()
         host = dict_data['host'].split(',')
         host_group_name = dict_data["host_group_name"]
         logger.write_to_log('OPRT', 'ROUTE', '/hg/create', dict_data['ip'], dict_data)
@@ -69,7 +69,7 @@ class DiskGroupCreate(views.MethodView):
 
     def get(self):
         dict_data = get_request_data()
-        logger = consts.glo_log()
+        logger = log.Log()
         disk = dict_data['disk'].split(',')
         logger.write_to_log('OPRT', 'ROUTE', '/dg/create', dict_data['ip'], dict_data)
         disk_group_name = dict_data["disk_group_name"]
@@ -89,7 +89,7 @@ class MapCreate(views.MethodView):
 
     def get(self):
         dict_data = get_request_data()
-        logger = consts.glo_log()
+        logger = log.Log()
         map_name = dict_data["map_name"]
         host_group_name = dict_data["host_group"].split(',')
         disk_group_name = dict_data["disk_group"].split(',')
@@ -130,7 +130,7 @@ class OprtAllHost(views.MethodView):
 
     def get(self):
         dict_data = get_request_data()
-        logger = consts.glo_log()
+        logger = log.Log()
         logger.write_to_log('OPRT', 'ROUTE', '/host/show/oprt', dict_data['ip'], '')
         if update_host():
             logger.write_to_log('DATA', 'RETURN', 'OprtAllHost', 'result', '0')
@@ -144,7 +144,7 @@ class AllHostResult(views.MethodView):
 
     def get(self):
         dict_data = get_request_data()
-        logger = consts.glo_log()
+        logger = log.Log()
         logger.write_to_log('DATA', 'ROUTE', '/host/show/data', dict_data['ip'], '')
         if not HOST_RESULT:
             update_host()
@@ -168,7 +168,7 @@ class OprtAllDisk(views.MethodView):
 
     def get(self):
         dict_data = get_request_data()
-        logger = consts.glo_log()
+        logger = log.Log()
         logger.write_to_log('OPRT', 'ROUTE', '/disk/show/oprt', dict_data["ip"], '')
         if update_disk():
             logger.write_to_log('DATA', 'RETURN', 'OprtAllDisk', 'result', '0')
@@ -182,7 +182,7 @@ class AllDiskResult(views.MethodView):
 
     def get(self):
         dict_data = get_request_data()
-        logger = consts.glo_log()
+        logger = log.Log()
         logger.write_to_log('DATA', 'ROUTE', '/disk/show/data', dict_data["ip"], '')
         if not DISK_RESULT:
             update_disk()
@@ -207,7 +207,7 @@ class OprtAllHg(views.MethodView):
 
     def get(self):
         dict_data = get_request_data()
-        logger = consts.glo_log()
+        logger = log.Log()
         logger.write_to_log('OPRT', 'ROUTE', '/hg/show/oprt', dict_data['ip'], '')
         if update_hg():
             logger.write_to_log('DATA', 'RETURN', 'OprtAllHg', 'result', '0')
@@ -221,7 +221,7 @@ class AllHgResult(views.MethodView):
     
     def get(self):
         dict_data = get_request_data()
-        logger = consts.glo_log()
+        logger = log.Log()
         logger.write_to_log('DATA', 'ROUTE', '/hg/show/data', dict_data['ip'], '')
         if not HOSTGROUP_RESULT:
             update_hg()
@@ -245,7 +245,7 @@ class OprtAllDg(views.MethodView):
 
     def get(self):
         dict_data = get_request_data()
-        logger = consts.glo_log()
+        logger = log.Log()
         logger.write_to_log('OPRT', 'ROUTE', '/dg/show/oprt', dict_data['ip'], '')
         if update_dg():
             logger.write_to_log('DATA', 'RETURN', 'OprtAllDg', 'result', '0')
@@ -259,7 +259,7 @@ class AllDgResult(views.MethodView):
 
     def get(self):
         dict_data = get_request_data()
-        logger = consts.glo_log()
+        logger = log.Log()
         logger.write_to_log('DATA', 'ROUTE', '/dg/show/data', dict_data['ip'], '')
         if not DISKGROUP_RESULT:
             update_dg()
@@ -283,7 +283,7 @@ class OprtAllMap(views.MethodView):
 
     def get(self):
         dict_data = get_request_data()
-        logger = consts.glo_log()
+        logger = log.Log()
         logger.write_to_log('OPRT', 'ROUTE', '/map/show/oprt', dict_data['ip'], '')
         if update_map():
             logger.write_to_log('DATA', 'RETURN', 'OprtAllMap', 'result', '0')
@@ -297,7 +297,7 @@ class AllMapResult(views.MethodView):
 
     def get(self):
         dict_data = get_request_data()
-        logger = consts.glo_log()
+        logger = log.Log()
         logger.write_to_log('DATA', 'ROUTE', '/map/show/data', dict_data['ip'], '')
         if not MAP_RESULT:
            update_map()

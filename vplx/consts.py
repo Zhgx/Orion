@@ -50,10 +50,6 @@ def get_value(key, dft_val = None):
         return dft_val
 
 
-def set_glo_log(value):
-    set_value('LOG', value)
-
-
 def set_glo_db(value):
     set_value('LOG_DB', value)
 
@@ -70,16 +66,8 @@ def set_glo_log_id(value):
     set_value('LOG_ID', value)
 
 
-def set_glo_log_switch(value):
-    set_value('LOG_SWITCH', value)
-
-
 def set_glo_gui_tid(value):
     set_value('GUI_TID',value)
-
-def set_glo_rollback(value):
-    set_value('ROLLBACK',value)
-
 
 
 def glo_gui_tid():
@@ -110,10 +98,6 @@ def glo_log_id():
     return get_value('LOG_ID')
 
 
-def glo_log_switch():
-    return get_value('LOG_SWITCH')
 
 
-def glo_rollback():
-    return get_value('ROLLBACK')
 

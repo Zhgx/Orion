@@ -1,21 +1,22 @@
 # coding=utf-8
 import re
-import consts
-import sundry as s
 import sys
+
+import sundry as s
+import log
 
 
 
 class Linstor():
     def __init__(self):
-        self.logger = consts.glo_log()
+        self.logger = log.Log()
 
     def refine_linstor(self,data):
         reSeparate = re.compile(r'(.*?\s\|)')
         list_table = data.split('\n')
         list_data_all = []
 
-        oprt_id = s.create_oprt_id()
+        oprt_id = log.create_oprt_id()
         self.logger.write_to_log('DATA','STR','refine_linstor','',oprt_id)
         self.logger.write_to_log('OPRT','REGULAR','findall',oprt_id,{'re':reSeparate})
 

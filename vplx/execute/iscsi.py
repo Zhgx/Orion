@@ -7,12 +7,13 @@ import iscsi_json
 import sundry as s
 from execute.linstor import Linstor
 from execute.crm import RollBack,CRMData, CRMConfig,IPaddr2,PortBlockGroup,Colocation,Order,ISCSITarget,ISCSILogicalUnit
+import log
 import consts
 
 
 class IscsiConfig():
     def __init__(self, data_current, data_changed):
-        self.logger = consts.glo_log()
+        self.logger = log.Log()
         dict_current = self.get_map_relation(data_current)
         dict_changed = self.get_map_relation(data_changed)
 
@@ -345,7 +346,7 @@ class DiskGroup():
             s.prt_log(f"Fail！Can't find {dg}", 1)
             return
         for disk in list_disk:
-            if disk in self.js.json_data['DiskGroup'][dg]:
+            if not disk in self.js.json_data['DiskGroup'][dg]:
                 s.prt_log(f'{disk} does not exist in {dg} and cannot be removed', 1)
                 return
 
@@ -417,8 +418,6 @@ class HostGroup():
         s.prt_log(table, 0)
 
 
-    # 问题，现在这个delete是要判断有没有Map使用这个hg，有的话不能删除，但是修改功能是可以把hg的成员全部移除的，然后这个hg就会被删除
-    # 要怎么处理？
     def delete(self, hg):
         if not self.js.check_key('HostGroup', hg):
             s.prt_log(f"Fail! Can't find {hg}", 1)
@@ -504,6 +503,9 @@ class HostGroup():
 class Map():
     def __init__(self):
         self.js = iscsi_json.JsonOperation()
+        disk = Disk()
+        disk.update_disk()
+
         # 用于收集创建成功的resource
         # self.target_name, self.target_iqn = self.get_target()
 
@@ -766,7 +768,7 @@ class Map():
 
 class Portal():
     def __init__(self):
-        self.logger = consts.glo_log()
+        self.logger = log.Log()
         self.js = iscsi_json.JsonOperation()
 
     def create(self, name, ip, port=3260 ,netmask=24):

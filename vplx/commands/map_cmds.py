@@ -1,6 +1,5 @@
 import execute as ex
 import sundry as sd
-import consts
 
 class Usage():
     # host部分使用手册
@@ -22,7 +21,7 @@ class Usage():
 class MapCommands():
 
     def __init__(self):
-        self.logger = consts.glo_log()
+        pass
 
     def setup_commands(self, parser):
         """

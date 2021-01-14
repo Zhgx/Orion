@@ -1,5 +1,4 @@
 import execute as ex
-import consts
 import sundry as sd
 
 class Usage():
@@ -14,7 +13,7 @@ class Usage():
 
 class DiskCommands():
     def __init__(self):
-        self.logger = consts.glo_log()
+        pass
 
     def setup_commands(self, parser):
         """

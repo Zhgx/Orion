@@ -1,6 +1,5 @@
 import sundry as sd
 import execute as ex
-import consts
 
 
 class usage():
@@ -23,7 +22,7 @@ class usage():
 
 class StoragePoolCommands():
     def __init__(self):
-        self.logger = consts.glo_log()
+        pass
 
     def setup_commands(self, parser):
         """

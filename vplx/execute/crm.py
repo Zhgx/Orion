@@ -672,18 +672,3 @@ class ISCSILogicalUnit():
         return True
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

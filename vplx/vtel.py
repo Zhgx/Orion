@@ -29,7 +29,7 @@ class MyArgumentParser(argparse.ArgumentParser):
         return args
 
     def print_usage(self, file=None):
-        logger = consts.glo_log()
+        logger = log.Log()
         cmd = ' '.join(sys.argv[1:])
         path = sundry.get_path()
         logger.write_to_log('DATA', 'INFO', 'cmd_input', path, {'valid':'1','cmd':cmd})
@@ -39,7 +39,7 @@ class MyArgumentParser(argparse.ArgumentParser):
         self._print_message(self.format_usage(), file)
 
     def print_help(self, file=None):
-        logger = consts.glo_log()
+        logger = log.Log()
         logger.write_to_log('INFO', 'INFO', 'finish','', 'print help')
         if file is None:
             file = sys.stdout
@@ -53,11 +53,7 @@ class VtelCLI(object):
     """
     def __init__(self):
         consts.init()
-        self.username = sundry.get_username()
-        self.transaction_id = sundry.create_transaction_id()
-        self.logger = log.Log(self.username,self.transaction_id)
-        consts.set_glo_log(self.logger)
-        self.replay_args_list = []
+        self.logger = log.Log()
         self._node_commands = NodeCommands()
         self._resource_commands = ResourceCommands()
         self._storagepool_commands = StoragePoolCommands()
@@ -205,7 +201,8 @@ class VtelCLI(object):
 
 
     def replay(self,args):
-        consts.set_glo_log_switch('no')
+        logger = log.Log()
+        logger.log_switch = False
         consts.set_glo_rpl('yes')
         logdb.prepare_db()
         obj_logdb = consts.glo_db()

@@ -1,9 +1,12 @@
 import json
-import consts
-import sundry as s
 import threading
 import pprint
 from functools import wraps
+
+
+import consts
+import sundry as s
+import log
 
 
 def deco_oprt_json(str):
@@ -18,8 +21,8 @@ def deco_oprt_json(str):
             # print(traceback.extract_stack()[-2])
             # print(traceback.extract_stack()[-3])
             if RPL == 'no':
-                logger = consts.glo_log()
-                oprt_id = s.create_oprt_id()
+                logger = log.Log()
+                oprt_id = log.create_oprt_id()
                 logger.write_to_log('DATA', 'STR', func.__name__, '', oprt_id)
                 logger.write_to_log('OPRT', 'JSON', func.__name__, oprt_id, args)
                 result = func(self,*args)
