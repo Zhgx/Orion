@@ -1,12 +1,5 @@
-import argparse
-import pickle
-import traceback
-from functools import wraps
-
 import sundry as sd
 import execute as ex
-import linstordb
-import consts
 
 
 class usage():
@@ -29,7 +22,7 @@ class usage():
 
 class StoragePoolCommands():
     def __init__(self):
-        self.logger = consts.glo_log()
+        pass
 
     def setup_commands(self, parser):
         """

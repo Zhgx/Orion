@@ -1,6 +1,4 @@
-import traceback
 import execute as ex
-import consts
 import sundry as sd
 
 class Usage():
@@ -15,7 +13,7 @@ class Usage():
 
 class DiskCommands():
     def __init__(self):
-        self.logger = consts.glo_log()
+        pass
 
     def setup_commands(self, parser):
         """
@@ -48,10 +46,7 @@ class DiskCommands():
     @sd.deco_record_exception
     def show(self, args):
         disk = ex.Disk()
-        if args.disk == 'all' or args.disk is None:
-            disk.show_all_disk()
-        else:
-            disk.show_spe_disk(args.disk)
+        disk.show(args.disk)
 
     def print_disk_help(self, *args):
         self.disk_parser.print_help()

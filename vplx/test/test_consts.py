@@ -15,9 +15,9 @@ def test_get_value():
     assert consts.get_value('test_key') == 'test_value'
 
 
-def test_set_glo_log():
-    consts.set_glo_log('test_log')
-    assert consts._GLOBAL_DICT['LOG'] == 'test_log'
+# def test_set_glo_log():
+#     consts.set_glo_log('test_log')
+#     assert consts._GLOBAL_DICT['LOG'] == 'test_log'
 
 
 def test_set_glo_db():
@@ -53,8 +53,8 @@ def test_glo_gui_tid():
     assert consts.glo_gui_tid() == 'test_tid'
 
 
-def test_glo_log():
-    assert consts.glo_log() == 'test_log'
+# def test_glo_log():
+#     assert consts.glo_log() == 'test_log'
 
 
 def test_glo_db():

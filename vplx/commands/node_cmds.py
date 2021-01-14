@@ -1,8 +1,5 @@
-import argparse
-import pickle
 import sundry as sd
 import execute as ex
-import consts
 from consts import ExitCode
 
 
@@ -28,7 +25,7 @@ class usage():
 
 class NodeCommands():
     def __init__(self):
-        self.logger = consts.glo_log()
+        pass
 
     def setup_commands(self, parser):
         """

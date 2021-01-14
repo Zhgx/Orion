@@ -1,18 +1,17 @@
 # coding:utf-8
-import socket
 import time
 import os
-import getpass
 import traceback
 import re
 import prettytable
 import sys
-from random import shuffle
+import pprint
 import subprocess
 from functools import wraps
 import colorama as ca
+
 import consts
-import pprint
+import log
 
 
 
@@ -53,7 +52,7 @@ def deco_comfirm_del(type):
 
 
 def get_answer():
-    logger = consts.glo_log()
+    logger = log.Log()
     rpl = consts.glo_rpl()
     logdb = consts.glo_db()
     transaction_id = consts.glo_tsc_id()
@@ -65,24 +64,10 @@ def get_answer():
         time,answer = logdb.get_anwser(transaction_id)
         if not time:
             time = ''
-        print(f'RE:{time:<20} 用户输入: {answer}')
+        print(f'RE:{time:<20} <input> user input: {answer}\n')
     return answer
 
 
-def create_transaction_id():
-    return int(time.time())
-
-def create_oprt_id():
-    time_stamp = str(create_transaction_id())
-    str_list = list(time_stamp)
-    shuffle(str_list)
-    return ''.join(str_list)
-
-def get_username():
-    return getpass.getuser()
-
-def get_hostname():
-    return socket.gethostname()
 
 # Get the path of the program
 def get_path():
@@ -90,69 +75,72 @@ def get_path():
 
 
 def re_findall(re_string, tgt_string):
-    logger = consts.glo_log()
+    logger = log.Log()
     re_ = re.compile(re_string)
-    oprt_id = create_oprt_id()
+    oprt_id = log.create_oprt_id()
     logger.write_to_log('OPRT', 'REGULAR', 'findall', oprt_id, {'re': re_, 'string': tgt_string})
     re_result = re_.findall(tgt_string)
     logger.write_to_log('DATA', 'REGULAR', 'findall', oprt_id, re_result)
     return re_result
 
 
-def re_search(re_string, tgt_stirng):
-    logger = consts.glo_log()
+def re_search(re_string, tgt_stirng,output_type='group'):
+    logger = log.Log()
     re_ = re.compile(re_string)
-    oprt_id = create_oprt_id()
+    oprt_id = log.create_oprt_id()
     logger.write_to_log('OPRT','REGULAR','search',oprt_id, {'re':re_,'string':tgt_stirng})
-    re_result = re_.search(tgt_stirng).group()
+    re_result = re_.search(tgt_stirng)
+    if re_result:
+        if output_type == 'group':
+            re_result = re_result.group()
+        else:
+            re_result = re_result.groups()
     logger.write_to_log('DATA', 'REGULAR', 'search', oprt_id, re_result)
     return re_result
 
 
-def show_iscsi_data(list_header, dict_data):
-    table = prettytable.PrettyTable()
-    table.field_names = list_header
-    if dict_data:
-        for i,j in dict_data.items():
-            data_one = [i,(' '.join(j) if isinstance(j,list) == True else j)]
-            table.add_row(data_one)
-    else:
-        pass
-    return table
+# def show_iscsi_data(list_header, dict_data):
+#     table = prettytable.PrettyTable()
+#     table.field_names = list_header
+#     if dict_data:
+#         for i,j in dict_data.items():
+#             data_one = [i,(' '.join(j) if isinstance(j,list) == True else j)]
+#             table.add_row(data_one)
+#     else:
+#         pass
+#     return table
 
 
-def show_spe_map_data(list_header, list_data):
+# def show_spe_map_data(list_header, list_data):
+#     table = prettytable.PrettyTable()
+#     table.field_names = list_header
+#     if list_data:
+#         for i in list_data:
+#             table.add_row(i)
+#     else:
+#         pass
+#     return table
+
+
+# def show_map_data(list_header, dict_data):
+#     table = prettytable.PrettyTable()
+#     table.field_names = list_header
+#     if dict_data:
+#         # {map1:{"HostGroup":[hg1,hg2],"DiskGroup":[dg1,dg2]} => [map1,"hg1 hg2","dg1 dg2"]}
+#         for i, j in dict_data.items():
+#             data_list = [i,
+#                          (' '.join(j["HostGroup"]) if isinstance(j["HostGroup"], list) == True else j["HostGroup"]),
+#                          (' '.join(j["DiskGroup"]) if isinstance(j["DiskGroup"], list) == True else j["DiskGroup"])]
+#             table.add_row(data_list)
+#     return table
+
+
+def make_table(list_header,list_data):
     table = prettytable.PrettyTable()
     table.field_names = list_header
     if list_data:
         for i in list_data:
             table.add_row(i)
-    else:
-        pass
-    return table
-
-
-def show_map_data(list_header, dict_data):
-    table = prettytable.PrettyTable()
-    table.field_names = list_header
-    if dict_data:
-        # {map1:{"HostGroup":[hg1,hg2],"DiskGroup":[dg1,dg2]} => [map1,"hg1 hg2","dg1 dg2"]}
-        for i, j in dict_data.items():
-            data_list = [i,
-                         (' '.join(j["HostGroup"]) if isinstance(j["HostGroup"], list) == True else j["HostGroup"]),
-                         (' '.join(j["DiskGroup"]) if isinstance(j["DiskGroup"], list) == True else j["DiskGroup"])]
-            table.add_row(data_list)
-    return table
-
-
-def show_linstor_data(list_header,list_data):
-    table = prettytable.PrettyTable()
-    table.field_names = list_header
-    if list_data:
-        for i in list_data:
-            table.add_row(i)
-    else:
-        pass
     return table
 
 
@@ -171,10 +159,10 @@ def deco_cmd(type):
         @wraps(func)
         def wrapper(cmd):
             RPL = consts.glo_rpl()
-            oprt_id = create_oprt_id()
+            oprt_id = log.create_oprt_id()
             func_name = traceback.extract_stack()[-2][2]  # 装饰器获取被调用函数的函数名
             if RPL == 'no':
-                logger = consts.glo_log()
+                logger = log.Log()
                 logger.write_to_log('DATA', 'STR', func_name, '', oprt_id)
                 logger.write_to_log('OPRT', 'CMD', type, oprt_id, cmd)
                 result_cmd = func(cmd)
@@ -193,10 +181,11 @@ def deco_cmd(type):
                 else:
                     result = cmd_result['result']
                     result_output = cmd_result['result']
-                print(f"RE:{id_result['time']:<20} 执行系统命令：\n{cmd}")
-                print(f"RE:{cmd_result['time']:<20} 系统命令结果：\n{result_output}")
+                print(f"RE:{id_result['time']:<20} <command>cmd：\n{cmd}")
+                print(f"RE:{cmd_result['time']:<20} <command>result：\n{result_output}")
                 if id_result['db_id']:
                     change_pointer(id_result['db_id'])
+
             return result
         return wrapper
     return decorate
@@ -233,12 +222,12 @@ def prt(str_, warning_level=0):
         print(str(str_))
     else:
         db = consts.glo_db()
-        time,cmd_output = db.get_cmd_output(consts.glo_tsc_id())
-        if not time:
-            time = ''
-        print(f'RE:{time:<20} 日志记录输出：{warning_str:<4}\n{cmd_output}')
-        print(f'RE:{"":<20} 此次执行输出：{warning_str:<4}\n{str_}')
-
+        data = db.get_cmd_output(consts.glo_tsc_id())
+        if not data["time"]:
+            data["time"] = ''
+        print(f'RE:{data["time"]:<20} <output>log output：{warning_str:<4}\n{data["output"]}')
+        print(f'RE:{"":<20} <output>this time output：{warning_str:<4}\n{str_}\n')
+        change_pointer(int(data["db_id"]))
 
 def prt_log(str_, warning_level):
     """
@@ -246,10 +235,9 @@ def prt_log(str_, warning_level):
     :param logger: Logger object for logging
     :param print_str: Strings to be printed and recorded
     """
-    logger = consts.glo_log()
+    logger = log.Log()
     RPL = consts.glo_rpl()
     if RPL == 'yes':
-        # pass
         prt(str_, warning_level)
     elif RPL == 'no':
         prt(str_, warning_level)
@@ -299,8 +287,8 @@ def deco_json_operation(str):
             # print(traceback.extract_stack()[-2])
             # print(traceback.extract_stack()[-3])
             if RPL == 'no':
-                logger = consts.glo_log()
-                oprt_id = create_oprt_id()
+                logger = log.Log()
+                oprt_id = log.create_oprt_id()
                 logger.write_to_log('DATA', 'STR', func.__name__, '', oprt_id)
                 logger.write_to_log('OPRT', 'JSON', func.__name__, oprt_id, args)
                 result = func(self,*args)
@@ -308,7 +296,6 @@ def deco_json_operation(str):
             else:
                 logdb = consts.glo_db()
                 id_result = logdb.get_id(consts.glo_tsc_id(), func.__name__)
-                print('id_result:',id_result)
                 json_result = logdb.get_oprt_result(id_result['oprt_id'])
                 if json_result['result']:
                     result = eval(json_result['result'])
@@ -329,8 +316,8 @@ def deco_db_insert(func):
     def wrapper(self, sql, data, tablename):
         RPL = consts.glo_rpl()
         if RPL == 'no':
-            logger = consts.glo_log()
-            oprt_id = create_oprt_id()
+            logger = log.Log()
+            oprt_id = log.create_oprt_id()
             logger.write_to_log('DATA', 'STR', func.__name__, '', oprt_id)
             logger.write_to_log('OPRT', 'SQL', func.__name__, oprt_id, sql)
             func(self,sql, data, tablename)
@@ -339,8 +326,8 @@ def deco_db_insert(func):
             logdb = consts.glo_db()
             id_result = logdb.get_id(consts.glo_tsc_id(), func.__name__)
             func(self, sql, data, tablename)
-            print(f"RE:{id_result['time']} 插入数据表: {tablename}")
-            print(f"RE:{id_result['time']} 插入数据:")
+            print(f"RE:{id_result['time']} <sql>insert table: {tablename}")
+            print(f"RE:{id_result['time']} <sql>insert data:")
             for i in data:
                 print(i)
             print()# 格式上的换行
@@ -352,37 +339,9 @@ def deco_db_insert(func):
 def handle_exception():
     rpl = consts.glo_rpl()
     if rpl == 'yes':
-        print('日志中无法取得相关数据，程序无法继续正常执行')
+        print('The Data cannot be obtained in the log, and the program cannot continue to execute normally')
         raise consts.ReplayExit
     else:
-        print('命令结果无法获取，请检查')
-        sys.exit()#在这里结束会屏蔽掉程序抛出的异常，再考虑要不要直接在这里中断程序
+        print('The command result cannot be obtained, please check')
+        raise consts.CmdError
 
-
-
-# 删除指定的initiator
-def remove_list(list_now, list_del):
-    """
-    删除指定的iqn
-    :param iqn_now:list
-    :param iqn_del:list
-    :return:list
-    """
-    # if set(list_now) == set(list_del):
-    #     return []
-    #
-    list_now = set(list_now)
-    for i in set(list_del):
-        list_now.remove(i)
-    return list(list_now)
-
-def append_list(list_now, list_append):
-    list_now.extend(list_append)
-    return list(set(list_now))
-
-
-def confirm_modify(words):
-    print(words)
-    answer = input()
-    if not answer in ['y', 'yes', 'Y', 'YES']:
-        prt_log('中断修改，退出',2)

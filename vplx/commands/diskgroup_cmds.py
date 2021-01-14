@@ -1,7 +1,5 @@
-import pickle
 import execute as ex
 import sundry as sd
-import consts
 
 class Usage():
     # host部分使用手册
@@ -24,7 +22,7 @@ class Usage():
 class DiskGroupCommands():
 
     def __init__(self):
-        self.logger = consts.glo_log()
+        pass
 
     def setup_commands(self, parser):
         """
@@ -43,7 +41,9 @@ class DiskGroupCommands():
         p_create_dg = dg_subp.add_parser(
             'create',
             aliases='c',
-            help='Create the DiskGroup')
+            help='Create the DiskGroup',
+            usage=Usage.dg_create
+        )
 
         # add arguments of diskgroup create
         p_create_dg.add_argument(
@@ -140,21 +140,18 @@ class DiskGroupCommands():
     @sd.deco_record_exception
     def create(self, args):
         diskgroup = ex.DiskGroup()
-        diskgroup.create_diskgroup(args.diskgroup, args.disk)
+        diskgroup.create(args.diskgroup, args.disk)
 
     @sd.deco_record_exception
     def show(self, args):
         diskgroup = ex.DiskGroup()
-        if args.diskgroup == 'all' or args.diskgroup is None:
-            diskgroup.show_all_diskgroup()
-        else:
-            diskgroup.show_spe_diskgroup(args.diskgroup)
+        diskgroup.show(args.diskgroup)
 
     @sd.deco_record_exception
     @sd.deco_comfirm_del('diskgroup')
     def delete(self, args):
         diskgroup = ex.DiskGroup()
-        diskgroup.delete_diskgroup(args.diskgroup)
+        diskgroup.delete(args.diskgroup)
 
     @sd.deco_record_exception
     def modify(self, args):

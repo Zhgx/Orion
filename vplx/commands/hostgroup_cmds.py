@@ -1,7 +1,5 @@
-import pickle
 import execute as ex
 import sundry as sd
-import consts
 
 
 class Usage():
@@ -26,7 +24,7 @@ class Usage():
 class HostGroupCommands():
 
     def __init__(self):
-        self.logger = consts.glo_log()
+        pass
 
     def setup_commands(self, parser):
         """
@@ -146,21 +144,19 @@ class HostGroupCommands():
     @sd.deco_record_exception
     def create(self, args):
         hostgroup = ex.HostGroup()
-        hostgroup.create_hostgroup(args.hostgroup, args.host)
+        hostgroup.create(args.hostgroup, args.host)
 
     @sd.deco_record_exception
     def show(self, args):
         hostgroup = ex.HostGroup()
-        if args.hostgroup == 'all' or args.hostgroup is None:
-            hostgroup.show_all_hostgroup()
-        else:
-            hostgroup.show_spe_hostgroup(args.hostgroup)
+        hostgroup.show(args.hostgroup)
+
 
     @sd.deco_record_exception
     @sd.deco_comfirm_del('hostgroup')
     def delete(self, args):
         hostgroup = ex.HostGroup()
-        hostgroup.delete_hostgroup(args.hostgroup)
+        hostgroup.delete(args.hostgroup)
 
 
     @sd.deco_record_exception

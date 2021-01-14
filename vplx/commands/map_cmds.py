@@ -1,9 +1,5 @@
-import pickle
-import iscsi_json
-
 import execute as ex
 import sundry as sd
-import consts
 
 class Usage():
     # host部分使用手册
@@ -25,7 +21,7 @@ class Usage():
 class MapCommands():
 
     def __init__(self):
-        self.logger = consts.glo_log()
+        pass
 
     def setup_commands(self, parser):
         """
@@ -146,15 +142,12 @@ class MapCommands():
     @sd.deco_record_exception
     def create(self, args):
         map = ex.Map()
-        map.create_map(args.map, args.hg, args.dg)
+        map.create(args.map, args.hg, args.dg)
 
     @sd.deco_record_exception
     def show(self, args):
         map = ex.Map()
-        if args.map == 'all' or args.map is None:
-            map.show_all_map()
-        else:
-            map.show_spe_map(args.map)
+        map.show(args.map)
 
     @sd.deco_record_exception
     @sd.deco_comfirm_del('map')
