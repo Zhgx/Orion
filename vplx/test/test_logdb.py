@@ -95,4 +95,5 @@ class TestLogDB:
         data = ('2020/01/29 16:05:39', '1603872222', 'test', 'INFO', 'STR', 'output', 'output',
                 "{'valid': '1', 'cmd': 'stor -h'}")
         self.log.insert_data(data)
-        assert self.log.get_cmd_output('1603872222') == ('2020/01/29 16:05:39', "{'valid': '1', 'cmd': 'stor -h'}")
+        assert self.log.get_cmd_output('1603872222') == {'time': '2020/01/29 16:05:39', 'db_id': 3, 'output': "{'valid': '1', 'cmd': 'stor -h'}"}
+        # assert self.log.get_cmd_output('1603872222') == ('2020/01/29 16:05:39', "{'valid': '1', 'cmd': 'stor -h'}")

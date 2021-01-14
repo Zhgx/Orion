@@ -14,7 +14,15 @@ class TestJsonOperation:
     def setup_class(self):
         # path = '../vplx/map_config.json'
         # os.remove(path)
+        subprocess.run('python3 vtel.py iscsi d s', shell=True)
         self.js = iscsi_json.JsonOperation()
+        self.js.json_data = {
+                "Host": {},
+                "Disk": {},
+                "HostGroup": {},
+                "DiskGroup": {},
+                "Map": {},
+                "Portal": {}}
 
     @staticmethod
     def teardown_class():
@@ -67,6 +75,7 @@ class TestJsonOperation:
     # def test_add_data(self):
 
     def test_update_data(self):
+        subprocess.run('python3 vtel.py iscsi d s', shell=True)
         data = self.js.update_data('Disk', 'pytest_disk', 'pytest_path')
         assert data == {'pytest_disk': 'pytest_path'}
         data_host = self.js.update_data('Host', 'pytest_host', 'pytest_iqn')
@@ -83,17 +92,14 @@ class TestJsonOperation:
         assert 'pytest_host' in self.js.get_data('Host')
 
     def test_check_key(self):
-        result = self.js.check_key('Host', 'pytest_host')
-        assert result['result']
-        result = self.js.check_key('Host', 'pytest_host_false')
-        assert not result['result']
+        assert self.js.check_key('Host', 'pytest_host')
+
+        assert not self.js.check_key('Host', 'pytest_host0')
 
     def test_check_value(self):
         # JSON检查value值的结果
-        result = self.js.check_value('Host', 'pytest_iqn')
-        assert result['result']
-        result = self.js.check_value('Host', 'pytest_iqn_false')
-        assert not result['result']
+        assert self.js.check_value('Host', 'pytest_iqn')
+        assert not self.js.check_value('Host', 'pytest_iqn_false')
         # self.js.delete_data('Host', 'pytest_host')
 
     # 函数已被删除
@@ -116,14 +122,9 @@ class TestJsonOperation:
 
     def test_check_value_in_key(self):
         # key 存在， value 存在
-        assert self.js.check_value_in_key('Host', 'pytest_host', 'pytest_iqn') == {'type': 'Host', 'key': 'pytest_host',
-                                                                                   'value': 'pytest_iqn',
-                                                                                   'result': True}
+        assert self.js.check_value_in_key('Host', 'pytest_host', 'pytest_iqn') == True
         # key 存在， value 不存在
-        assert self.js.check_value_in_key('Host', 'pytest_host', 'pytest_iqn2') == {'type': 'Host',
-                                                                                    'key': 'pytest_host',
-                                                                                    'value': 'pytest_iqn2',
-                                                                                    'result': False}
+        assert self.js.check_value_in_key('Host', 'pytest_host', 'pytest_iqn2') == False
         # key 不存在， value 存在
         assert self.js.check_value_in_key('Host', 'pytest_host1', 'pytest_iqn') is None
         # key 不存在， value 不存在

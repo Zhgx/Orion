@@ -61,13 +61,13 @@ def test_show_map_data():
     assert sundry.show_map_data(list_header, data)._field_names == ["MapName", "HostGroup", "DiskGroup"]
     assert sundry.show_map_data(list_header, data)._rows == [['map1', 'hg1 hg2', 'dg1 dg2']]
 
-
-def test_show_linstor_data():
-    head = ['node', 'node type', 'res num', 'stp num', 'addr', 'status']
-    data = [['ubuntu', 'COMBINED', 6, 3, '10.203.1.76:3366', 'pytest']]
-    assert sundry.show_linstor_data(head, data)._field_names == ['node', 'node type', 'res num', 'stp num', 'addr',
-                                                                 'status']
-    assert sundry.show_linstor_data(head, data)._rows == [['ubuntu', 'COMBINED', 6, 3, '10.203.1.76:3366', 'pytest']]
+# 函数已删除
+# def test_show_linstor_data():
+#     head = ['node', 'node type', 'res num', 'stp num', 'addr', 'status']
+#     data = [['ubuntu', 'COMBINED', 6, 3, '10.203.1.76:3366', 'pytest']]
+#     assert sundry.show_linstor_data(head, data)._field_names == ['node', 'node type', 'res num', 'stp num', 'addr',
+#                                                                  'status']
+#     assert sundry.show_linstor_data(head, data)._rows == [['ubuntu', 'COMBINED', 6, 3, '10.203.1.76:3366', 'pytest']]
 
 
 def test_change_pointer():

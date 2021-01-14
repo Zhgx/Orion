@@ -20,11 +20,13 @@ class TestDisk:
         subprocess.run('python3 vtel.py iscsi d s', shell=True)
         self.disk = iscsi.Disk()
 
+
     def teardown_class(self):
         subprocess.run('python3 vtel.py stor r d res_test1 -y', shell=True)
         subprocess.run('python3 vtel.py stor r d res_test2 -y', shell=True)
         subprocess.run('python3 vtel.py stor r s', shell=True)
         # json 文件不能及时更新,调用方法进行手动更新该对象（不调用的话 json 文件的disk 还是在）
+        print('teardown')
         self.disk.show('all')
 
     # 根据 linstor 资源更新 disk，无传入参数，返回 disks 字典(可能为空)
@@ -228,10 +230,10 @@ class TestDiskGroup:
         subprocess.run('python3 vtel.py stor r c res_a -s 10m -a -num 1', shell=True)
         subprocess.run('python3 vtel.py iscsi d s', shell=True)
         # subprocess.run('python3 vtel.py iscsi h c test_host iqn.2020-04.feixitek.com:pytest0999', shell=True)
-        # # subprocess.run('python3 vtel.py iscsi d s', shell=True)
-        # # subprocess.run('python3 vtel.py iscsi dg c test_dg res_test', shell=True)
+        # subprocess.run('python3 vtel.py iscsi d s', shell=True)
+        # subprocess.run('python3 vtel.py iscsi dg c test_dg res_test', shell=True)
         # subprocess.run('python3 vtel.py iscsi hg c test_hg test_host', shell=True)
-        # # 创建 Map
+        # 创建 Map
         # subprocess.run('python3 vtel.py iscsi m c map1 -dg test_dg -hg test_hg', shell=True)
         # subprocess.run('python3 vtel.py iscsi m s', shell=True)
         self.host = iscsi.Host()
@@ -256,11 +258,10 @@ class TestDiskGroup:
             subprocess.run('python3 vtel.py stor r d res_test -y', shell=True)
             subprocess.run('python3 vtel.py stor r d res_a -y', shell=True)
         subprocess.run('python3 vtel.py iscsi d s', shell=True)
+
         self.hostg.delete('test_hg')
         self.host.delete('test_host')
-
-        # subprocess.run('python3 vtel.py iscsi hg d test_hg -y', shell=True)
-        # subprocess.run('python3 vtel.py iscsi h d test_host -y', shell=True)
+        subprocess.run('python3 vtel.py iscsi d s', shell=True)
 
     # # 1.判断 DiskGroup 是否存在，存在返回 None 2.遍历 disk 列表，若发现 disk 不存在返回 None 3.创建成功返回 True
     # def test_create_diskgroup(self):
@@ -359,7 +360,8 @@ class TestDiskGroup:
 
     def test_remove_disk(self):
         """diskgroup 移除 disk"""
-        assert not self.diskg.remove_disk('test_dg', ['res_a'])
+        print(self.diskg.show('test_dg'))
+        assert not self.diskg.remove_disk('test_dg', ['res_test'])
         # 移除失败
         with patch('builtins.print') as terminal_print:
             self.diskg.remove_disk('test_dg2', ['res_a'])
@@ -369,7 +371,7 @@ class TestDiskGroup:
             terminal_print.assert_called_with('test_dg中不存在成员res_O，无法进行移除')
         # 只有一个资源移除后是否会删掉该dg , 会移除该 hg 和 所配置该 hg 的map
         with patch('builtins.print') as terminal_print:
-            self.diskg.remove_disk('test_dg', ['res_test'])
+            self.diskg.remove_disk('test_dg', ['res_a'])
             terminal_print.assert_called_with('相关的map已经修改/删除')
         # self.map.delete_map('map1')
         # self.diskg.delete_diskgroup('test_dg')
@@ -398,7 +400,7 @@ class TestHostGroup:
         # subprocess.run('python3 vtel.py iscsi dg c test_dg res_test', shell=True)
         # subprocess.run('python3 vtel.py iscsi hg c test_hg test_host1', shell=True)
         # subprocess.run('python3 vtel.py iscsi hg s', shell=True)
-        # # 创建 Map
+        # 创建 Map
         # subprocess.run('python3 vtel.py iscsi m c map1 -dg test_dg -hg test_hg', shell=True)
         # subprocess.run('python3 vtel.py iscsi m s', shell=True)
         self.host = iscsi.Host()
@@ -605,7 +607,9 @@ class TestMap:
         execute_crm_cmd('crm conf del res_test1')
         subprocess.run('python3 vtel.py stor r d res_test -y', shell=True)
         subprocess.run('python3 vtel.py stor r d res_test1 -y', shell=True)
+
         subprocess.run('python3 vtel.py iscsi d s', shell=True)
+
 
     # 函数已修改
     # # 1.map 是否存在/hostgroup是否存在/diskgroup是否存在
@@ -833,7 +837,10 @@ class TestMap:
 class TestPortal:
     # 注意测试用例 IP 不能是本机 ip 10.201.3.76
     def setup_class(self):
+        subprocess.run('python3 vtel.py iscsi d s', shell=True)
+        subprocess.run('python3 vtel.py iscsi sync', shell=True)
         self.portal = iscsi.Portal()
+        # print(self.portal.js.read_json())
         self.portal.create('vip_test1', '10.203.1.210')
 
     def teardown_class(self):
@@ -844,11 +851,23 @@ class TestPortal:
     def test_create(self):
         """创建portal，测试用例包括：(名字不合规范/ip不合规范/port超出范围/netmark超出范围[已测试其校验函数])portal已存在/ip已被使用"""
         with patch('builtins.print') as terminal_print:
+            self.portal.create('$%^vip_test1', '10.203.1.211', 3260, 24)
+            terminal_print.assert_called_with('$%^vip_test1 naming does not conform to the specification')
+        with patch('builtins.print') as terminal_print:
+            self.portal.create('vip_test0', '10.203.1...34211', 3260, 24)
+            terminal_print.assert_called_with('10.203.1...34211 does not meet specifications')
+        with patch('builtins.print') as terminal_print:
+            self.portal.create('vip_test0', '10.203.1.211', 65555, 24)
+            terminal_print.assert_called_with('65555 does not meet specifications(Range：3260-65535)')
+        with patch('builtins.print') as terminal_print:
+            self.portal.create('vip_test0', '10.203.1.211', 3260, 40)
+            terminal_print.assert_called_with('40 does not meet specifications(Range：1-32)')
+        with patch('builtins.print') as terminal_print:
             self.portal.create('vip_test1', '10.203.1.211', 3260, 24)
-        terminal_print.assert_called_with('vip_test1已存在')
+            terminal_print.assert_called_with('vip_test1 already exists, please use another name')
         with patch('builtins.print') as terminal_print:
             self.portal.create('vip_pytest', '10.203.1.210')
-            terminal_print.assert_called_with('10.203.1.210已被使用')
+            terminal_print.assert_called_with('10.203.1.210 is already in use, please use another IP')
         with patch('builtins.print') as terminal_print:
             self.portal.create('vip_pytest', '10.203.1.211')
             terminal_print.assert_called_with('Create vip_pytest successfully')
@@ -858,24 +877,29 @@ class TestPortal:
         """修改 portal,测试用例包括：portal不存在/ip格式不对正确/port范围不正确/修改内容与原来一致/修改的portal已配置了target/修改的portal没有配置target"""
         with patch('builtins.print') as terminal_print:
             self.portal.modify('vip_pytest0', '10.203.1.212', 3260)
-        terminal_print.assert_called_with('Fail！Can\'t find vip_pytest0')
+            terminal_print.assert_called_with('Fail！Can\'t find vip_pytest0')
+        with patch('builtins.print') as terminal_print:
+            self.portal.modify('vip_pytest', '10.203.1.75', 3260)
+            terminal_print.assert_called_with('10.203.1.75 is already in use, please use another IP')
         with patch('builtins.print') as terminal_print:
             self.portal.modify('vip', '10.203.1.212...', 3260)
-        terminal_print.assert_called_with('10.203.1.212...不符合规范')
+            terminal_print.assert_called_with('10.203.1.212... does not meet specifications')
         with patch('builtins.print') as terminal_print:
             self.portal.modify('vip', '10.203.1.212', 3200)
-        terminal_print.assert_called_with('3200不符合规范，范围：3260-65535')
+            terminal_print.assert_called_with('3200 does not meet specifications(Range：3260-65535)')
         with patch('builtins.print') as terminal_print:
             self.portal.modify('vip', '10.203.1.75', 3260)
-        terminal_print.assert_called_with('IP和Port都相同，不需要修改')
-        # 修改的portal已配置了target，运行失败
-        # with patch('builtins.print') as terminal_print:
-        #     self.portal.modify('vip', '10.203.1.80', 3260)
-        # terminal_print.assert_called_with('Modify vip successfully')
-        # vip_test2
+            terminal_print.assert_called_with('IP and port are the same as the before, no need to modify')
+        # 修改的portal已配置了target，修改portblk的时候注意命名是否能找到
+        with patch('builtins.print') as terminal_print:
+            self.portal.modify('vip_test2', '10.203.1.205', 3260)
+            # terminal_print.assert_called_with('Modify target_test successfully')
+            terminal_print.assert_called_with('Modify vip_test2 successfully')
         with patch('builtins.print') as terminal_print:
             self.portal.modify('vip_pytest', '10.203.1.214', 3260)
-        terminal_print.assert_called_with('Modify vip_pytest successfully')
+            terminal_print.assert_called_with('Modify vip_pytest successfully')
+
+        self.portal.modify('vip_test2', '10.203.1.206', 3260)
         self.portal.delete('vip_pytest')
 
     def test__check_status(self):
@@ -913,8 +937,7 @@ class TestPortal:
         assert not self.portal._check_name('_sgfbfuhf')
         assert not self.portal._check_name('7_sgfbfuhf')
         assert not self.portal._check_name('sgfb*f$uhf')
-        # 中文过了，存疑
-        # assert self.portal._check_name('sgfbf你uhf')
+        assert not self.portal._check_name('sgfbf你uhf')
 
     def test__check_ip(self):
         """检查 ip 格式，测试用例包括：包含其他字符/格式不正确/正确命名"""

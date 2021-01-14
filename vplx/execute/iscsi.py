@@ -170,6 +170,7 @@ class Disk():
 
         table = s.make_table(list_header, list_data)
         s.prt_log(table, 0)
+        return list_data
 
 
 class Host():
@@ -215,6 +216,8 @@ class Host():
                 list_data.append([host, host_all[host]])
         table = s.make_table(list_header, list_data)
         s.prt_log(table, 0)
+        return list_data
+
 
     def delete(self, host):
         if not self.js.check_key('Host', host):
@@ -291,6 +294,8 @@ class DiskGroup():
 
         table = s.make_table(list_header, list_data)
         s.prt_log(table, 0)
+        return list_data
+
 
     def delete(self, dg):
         if not self.js.check_key('DiskGroup', dg):
@@ -338,7 +343,7 @@ class DiskGroup():
             s.prt_log(f"Fail！Can't find {dg}", 1)
             return
         for disk in list_disk:
-            if disk in self.js.json_data['DiskGroup'][dg]:
+            if disk not in self.js.json_data['DiskGroup'][dg]:
                 s.prt_log(f'{dg}中不存在成员{disk}，无法进行移除', 1)
                 return
 
@@ -410,6 +415,8 @@ class HostGroup():
 
         table = s.make_table(list_header, list_data)
         s.prt_log(table, 0)
+        return list_data
+
 
     # 问题，现在这个delete是要判断有没有Map使用这个hg，有的话不能删除，但是修改功能是可以把hg的成员全部移除的，然后这个hg就会被删除
     # 要怎么处理？
@@ -584,6 +591,8 @@ class Map():
 
         table = s.make_table(list_header, list_data)
         s.prt_log(table, 0)
+        return list_data
+
 
     #  执行map展示的时候，会展示对应dg和hg的数据（全部三个表格），暂时保留代码
     # def get_spe_map(self, map):
@@ -919,6 +928,8 @@ class Portal():
             list_data.append([portal, data['ip'], data['port'], data['netmask'], ",".join(data['target'])])
         table = s.make_table(list_header, list_data)
         s.prt_log(table, 0)
+        return list_data
+
 
     def _check_name(self, name):
         result = s.re_search(r'^[a-zA-Z][a-zA-Z0-9_]*$', name)

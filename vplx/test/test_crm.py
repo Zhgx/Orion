@@ -5,6 +5,7 @@ from unittest.mock import patch
 import pytest
 
 import consts
+import iscsi_json
 import log
 import sundry
 from execute import crm, iscsi
@@ -15,7 +16,7 @@ from execute.crm import execute_crm_cmd
 
 
 def test_module():
-    print('test_module')
+    # print('test_module')
     sys.path.append('../')
     consts.init()
 
@@ -65,7 +66,7 @@ class TestCRMData:
     @pytest.mark.portal
     def test_get_vip(self):
         """获取 crm 全部 vip 信息"""
-        print('get_vip', self.crmdata.get_vip())
+        # print('get_vip', self.crmdata.get_vip())
         # assert self.crmdata.get_vip() == {'portal_test_4': {'ip': '10.203.1.201', 'netmask': '24'},
         #                                   'vip': {'ip': '10.203.1.75', 'netmask': '24'},
         #                                   'vip_test2': {'ip': '10.203.1.206', 'netmask': '24'}}
@@ -74,7 +75,7 @@ class TestCRMData:
     @pytest.mark.portal
     def test_get_portblock(self):
         """获取 crm 全部 portblock 信息"""
-        print('get_portblock', self.crmdata.get_portblock())
+        # print('get_portblock', self.crmdata.get_portblock())
         # assert self.crmdata.get_portblock() == {
         #     'p_iscsi_portblock_off': {'ip': '10.203.1.75', 'port': '3260', 'type': 'unblock'},
         #     'p_iscsi_portblock_on': {'ip': '10.203.1.75', 'port': '3260', 'type': 'block'},
@@ -87,7 +88,7 @@ class TestCRMData:
     @pytest.mark.portal
     def test_get_target(self):
         """获取 crm 全部 target 信息"""
-        print('get_target', self.crmdata.get_target())
+        # print('get_target', self.crmdata.get_target())
         # assert self.crmdata.get_target() == {
         #     't_test': {'target_iqn': 'iqn.2020-04.feixitek.com:versaplx00', 'ip': '10.203.1.75', 'port': '3260'}}
         assert self.crmdata.get_target() is not None
@@ -95,8 +96,8 @@ class TestCRMData:
     @pytest.mark.portal
     def test_get_portal_data(self):
         """获取 crm 全部 portal data 信息"""
-        print('get_portal_data', self.crmdata.get_portal_data(self.crmdata.get_vip(), self.crmdata.get_portblock(),
-                                           self.crmdata.get_target()))
+        # print('get_portal_data', self.crmdata.get_portal_data(self.crmdata.get_vip(), self.crmdata.get_portblock(),
+        #                                    self.crmdata.get_target()))
         # assert self.crmdata.get_portal_data(self.crmdata.get_vip(), self.crmdata.get_portblock(),
         #                                     self.crmdata.get_target()) == {
         #            'portal_test_4': {'ip': '10.203.1.201', 'port': '3260', 'netmask': '24', 'target': []},
@@ -121,7 +122,9 @@ class TestCRMData:
         subprocess.run('crm res stop vip_pytest03', shell=True)
         subprocess.run('crm conf del vip_pytest03', shell=True)
         # 重新初始化对象
-        subprocess.run('crm cof primitive vip_pytest03_prtblk_on portblock params ip=10.203.1.202 portno=24 protocol=tcp action=block op monitor timeout=20 interval=20 -y', shell=True)
+        subprocess.run(
+            'crm cof primitive vip_pytest03_prtblk_on portblock params ip=10.203.1.202 portno=24 protocol=tcp action=block op monitor timeout=20 interval=20 -y',
+            shell=True)
         crmdata = crm.CRMData()
         with pytest.raises(SystemExit) as exsinfo:
             crmdata.check_portal_component(crmdata.get_vip(), crmdata.get_portblock())
@@ -132,14 +135,112 @@ class TestCRMData:
         crmdata = crm.CRMData()
         assert crmdata.check_portal_component(crmdata.get_vip(), crmdata.get_portblock()) is None
 
-    def test_check_env_sync(self):
-        assert self.crmdata.check_env_sync(self.crmdata.get_vip(), self.crmdata.get_portblock(),
-                                           self.crmdata.get_target()) is None
-
     # check 函数调用 check_portal_component 和 check_env_sync 函数不作用例分析
+    @pytest.mark.portal
     def test_check(self):
         """check 函数调用 check_portal_component 和 check_env_sync 函数不作用例分析"""
         assert self.crmdata.check() is None
+
+    @pytest.mark.portal
+    def test_check_env_sync(self):
+        """检查CRM环境与JSON配置文件所记录的Portal、Target的数据是否一致,测试用例包括：json文件不包含Portal/json文件不包括Target/json文件的portal与crm不一致/json文件的target与crm的不一致"""
+        assert self.crmdata.check_env_sync(self.crmdata.get_vip(), self.crmdata.get_portblock(),
+                                           self.crmdata.get_target()) is None
+        js = iscsi_json.JsonOperation()
+        js.json_data = {
+            "Host": {},
+            "Disk": {},
+            "HostGroup": {},
+            "DiskGroup": {},
+            "Map": {}
+        }
+        with pytest.raises(SystemExit) as exsinfo:
+            self.crmdata.check_env_sync(self.crmdata.get_vip(), self.crmdata.get_portblock(),
+                                        self.crmdata.get_target())
+        assert exsinfo.type == SystemExit
+        js.json_data = {
+            "Host": {},
+            "Disk": {},
+            "HostGroup": {},
+            "DiskGroup": {},
+            "Map": {},
+            "Portal": {}
+        }
+        with pytest.raises(SystemExit) as exsinfo:
+            self.crmdata.check_env_sync(self.crmdata.get_vip(), self.crmdata.get_portblock(),
+                                        self.crmdata.get_target())
+        assert exsinfo.type == SystemExit
+        js.json_data = {
+            "Host": {},
+            "Disk": {},
+            "HostGroup": {},
+            "DiskGroup": {},
+            "Map": {},
+            "Portal": {
+                "portal_test_6": {
+                    "ip": "10.203.1.201",
+                    "port": "3260",
+                    "netmask": "24",
+                    "target": []
+                }
+            },
+            "Target": {}
+        }
+        with pytest.raises(SystemExit) as exsinfo:
+            self.crmdata.check_env_sync(self.crmdata.get_vip(), self.crmdata.get_portblock(),
+                                        self.crmdata.get_target())
+        assert exsinfo.type == SystemExit
+        js.json_data = {
+            "Host": {},
+            "Disk": {},
+            "HostGroup": {},
+            "DiskGroup": {},
+            "Map": {},
+            "Portal": {
+                "portal_test_4": {
+                    "ip": "10.203.1.201",
+                    "port": "3260",
+                    "netmask": "24",
+                    "target": []
+                },
+                "vip": {
+                    "ip": "10.203.1.75",
+                    "port": "3260",
+                    "netmask": "24",
+                    "target": [
+                        "t_test"
+                    ]
+                },
+                "vip_test2": {
+                    "ip": "10.203.1.206",
+                    "port": "3260",
+                    "netmask": "24",
+                    "target": [
+                        "target_test"
+                    ]
+                }
+            },
+            "Target": {
+                "t_test": {
+                    "target_iqn": "iqn.2020-04.feixitek.com:versaplx00",
+                    "ip": "10.203.1.75",
+                    "port": "3260"
+                }
+            }
+        }
+        with pytest.raises(SystemExit) as exsinfo:
+            self.crmdata.check_env_sync(self.crmdata.get_vip(), self.crmdata.get_portblock(),
+                                        self.crmdata.get_target())
+        assert exsinfo.type == SystemExit
+        target = self.crmdata.get_target()
+        vip = self.crmdata.get_vip()
+        portblock = self.crmdata.get_portblock()
+        portal = self.crmdata.get_portal_data(vip, portblock, target)
+        js.cover_data('Portal', portal)
+        js.cover_data('Target', target)
+        js.commit_json()
+        # print(js.json_data)
+        subprocess.run('python3 vtel.py iscsi sync', shell=True)
 
 
 class TestCRMConfig:
@@ -265,8 +366,8 @@ class TestCRMConfig:
     @pytest.mark.portal
     def test_get_crm_res_status(self):
         """获取crm res的状态，测试用例包括：获取状态成功/资源类型输入错误/资源名字与类型不对应"""
-        assert self.crmconfig.get_crm_res_status('p_iscsi_portblock_off', 'IPaddr2') is None
         assert self.crmconfig.get_crm_res_status('vip', 'IPaddr2')
+        assert self.crmconfig.get_crm_res_status('p_iscsi_portblock_off', 'IPaddr2') is None
         with pytest.raises(ValueError) as exsinfo:
             self.crmconfig.get_crm_res_status('vip', 'IPaddr1')
         assert exsinfo.type == ValueError
@@ -299,7 +400,9 @@ class TestIPaddr2:
     def test_create(self):
         """创建IPaddr2，测试用例包括：创建IPaddr2成功/IPaddr2已存在创建失败"""
         # 端口 与ip 前面函数已校验
-        assert self.ipaddr2.create.__wrapped__(self, 'vip_pytest03', '10.203.1.202', '24')
+        with patch('builtins.print') as terminal_print:
+            self.ipaddr2.create('vip_pytest03', '10.203.1.202', '24')
+            terminal_print.assert_called_with('Create vip_pytest03 successfully')
         # with pytest.raises(consts.CmdError) as exsinfo:
         #     self.ipaddr2.create.__wrapped__(self, 'vip_pytest04', '10.203.1....202', '24')
         # assert exsinfo.type == consts.CmdError
@@ -307,25 +410,29 @@ class TestIPaddr2:
         #     self.ipaddr2.create.__wrapped__(self, 'vip_pytest05', '10.203.1.206', '40')
         # assert exsinfo.type == consts.CmdError
         with pytest.raises(consts.CmdError) as exsinfo:
-            self.ipaddr2.create.__wrapped__(self, 'vip_pytest03', '10.203.1.202', '40')
+            self.ipaddr2.create('vip_pytest03', '10.203.1.202', '40')
         assert exsinfo.type == consts.CmdError
 
     def test_modify(self):
         """修改IPaddr2，测试用例包括：修改IPaddr2成功/IPaddr2不存在修改失败"""
-        assert self.ipaddr2.modify.__wrapped__(self, 'vip_pytest03', '10.203.1.203')
+        with patch('builtins.print') as terminal_print:
+            self.ipaddr2.modify('vip_pytest03', '10.203.1.203')
+            terminal_print.assert_called_with('vip_pytest03\'s ip and port have been modified successfully')
         # ip格式问题前面函数已校验
         # with pytest.raises(consts.CmdError) as exsinfo:
         #     self.ipaddr2.modify.__wrapped__(self, 'vip_pytest03', '10.203.1.202....')
         # assert exsinfo.type == consts.CmdError
         with pytest.raises(consts.CmdError) as exsinfo:
-            self.ipaddr2.modify.__wrapped__(self, 'vip_pytest05', '10.203.1.202')
+            self.ipaddr2.modify('vip_pytest05', '10.203.1.202')
         assert exsinfo.type == consts.CmdError
 
     def test_delete(self):
         """删除IPaddr2，测试用例包括：删除IPaddr2成功/IPaddr2不存在删除失败"""
-        assert self.ipaddr2.delete.__wrapped__(self, 'vip_pytest03')
+        with patch('builtins.print') as terminal_print:
+            self.ipaddr2.delete('vip_pytest03')
+            terminal_print.assert_called_with('Delete vip_pytest03 successfully')
         with pytest.raises(consts.CmdError) as exsinfo:
-            self.ipaddr2.delete.__wrapped__(self, 'vip_pytest05')
+            self.ipaddr2.delete('vip_pytest05')
         assert exsinfo.type == consts.CmdError
 
 
@@ -338,27 +445,49 @@ class TestPortBlockGroup:
     def test_create(self):
         """创建PortBlockGroup，测试用例包括：创建类型非block/unblock创建失败/创建成功/已存在创建失败"""
         with pytest.raises(TypeError) as exsinfo:
-            self.pbg.create.__wrapped__(self, 'vip_pytest03_prtblk_on', '10.203.1.202', '24', None)
+            self.pbg.create('vip_pytest03_prtblk_on', '10.203.1.202', '24', None)
         assert exsinfo.type == TypeError
+        with patch('builtins.print') as terminal_print:
+            self.pbg.create('vip_pytest03_prtblk_on', '10.203.1.202', '24', 'block')
+            terminal_print.assert_called_with('Create vip_pytest03_prtblk_on successfully')
 
-        assert self.pbg.create.__wrapped__(self, 'vip_pytest03_prtblk_on', '10.203.1.202', '24', 'block')
-        assert self.pbg.create.__wrapped__(self, 'vip_pytest03_prtblk_off', '10.203.1.202', '24', 'unblock')
+        with patch('builtins.print') as terminal_print:
+            self.pbg.create('vip_pytest03_prtblk_off', '10.203.1.202', '24', 'unblock')
+            terminal_print.assert_called_with('Create vip_pytest03_prtblk_off successfully')
 
         with pytest.raises(consts.CmdError) as exsinfo:
-            self.pbg.create.__wrapped__(self, 'vip_pytest03_prtblk_off', '10.203.1.202', '24', 'unblock')
+            self.pbg.create('vip_pytest03_prtblk_off', '10.203.1.202', '24', 'unblock')
         assert exsinfo.type == consts.CmdError
 
     def test_modify(self):
         """修改PortBlockGroup，测试用例包括：修改成功/不存在修改失败"""
-        assert self.pbg.modify.__wrapped__(self, 'vip_pytest03_prtblk_on', '10.203.1.203', '24')
-        assert self.pbg.modify.__wrapped__(self, 'vip_pytest03_prtblk_off', '10.203.1.203', '24')
+        with patch('builtins.print') as terminal_print:
+            self.pbg.modify('vip_pytest03_prtblk_on', '10.203.1.203', '24')
+            terminal_print.assert_called_with('Modify vip_pytest03_prtblk_on (IP and Port) successfully')
+
+        with patch('builtins.print') as terminal_print:
+            self.pbg.modify('vip_pytest03_prtblk_off', '10.203.1.203', '24')
+            terminal_print.assert_called_with('Modify vip_pytest03_prtblk_off (IP and Port) successfully')
+        with pytest.raises(consts.CmdError) as exsinfo:
+            self.pbg.modify('vip_pytest0000_prtblk_off', '10.203.1.203', '24')
+        assert exsinfo.type == consts.CmdError
 
     def test_delete(self):
         """删除PortBlockGroup，测试用例包括：删除成功/不存在删除失败"""
-        assert self.pbg.delete.__wrapped__(self, 'vip_pytest03_prtblk_on')
-        assert self.pbg.delete.__wrapped__(self, 'vip_pytest03_prtblk_off')
+        with patch('builtins.print') as terminal_print:
+            self.pbg.delete('vip_pytest03_prtblk_on')
+            terminal_print.assert_called_with('Delete vip_pytest03_prtblk_on successfully')
+
+        with patch('builtins.print') as terminal_print:
+            self.pbg.delete('vip_pytest03_prtblk_off')
+            terminal_print.assert_called_with('Delete vip_pytest03_prtblk_off successfully')
+
+        with pytest.raises(consts.CmdError) as exsinfo:
+            self.pbg.delete('vip_pytest0000_prtblk_off')
+        assert exsinfo.type == consts.CmdError
 
 
+@pytest.mark.portal
 class TestColocation:
     def test_create(self):
         """创建Colocation，测试用例包括：创建Colocation成功/使用不存在资源创建Colocation"""
@@ -385,6 +514,7 @@ class TestColocation:
         assert exsinfo.type == consts.CmdError
 
 
+@pytest.mark.portal
 class TestOrder:
     def test_create(self):
         """创建Order，测试用例包括：创建Colocation成功/使用不存在资源创建Colocation"""
@@ -411,16 +541,20 @@ class TestOrder:
         assert exsinfo.type == consts.CmdError
 
 
+@pytest.mark.portal
 class TestISCSITarget:
     def test_modify(self):
         """修改ISCSITarget，当修改已配置target的portal信息时，对应的target也会修改,测试用例包括：修改target成功/target不存在修改失败"""
         iscsi_target = iscsi.ISCSITarget()
-        assert iscsi_target.modify.__wrapped__(self, 't_test', '10.203.1.75', '3260')
+        with patch('builtins.print') as terminal_print:
+            iscsi_target.modify('t_test', '10.203.1.75', '3260')
+            terminal_print.assert_called_with('Modify t_test successfully')
         with pytest.raises(consts.CmdError) as exsinfo:
-            assert iscsi_target.modify.__wrapped__(self, 't_test0', '10.203.1.75', '3260')
+            assert iscsi_target.modify('t_test0', '10.203.1.75', '3260')
         assert exsinfo.type == consts.CmdError
 
 
+@pytest.mark.portal
 class TestISCSILogicalUnit:
 
     def setup_class(self):
