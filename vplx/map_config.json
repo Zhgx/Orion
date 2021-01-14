@@ -1,0 +1,112 @@
+{
+    "Host": {
+        "h1": "iqn.2020-11.com.example:pytest01",
+        "h2": "iqn.2020-11.com.example:pytest02",
+        "h3": "iqn.2020-11.com.example:pytest03",
+        "h4": "iqn.2020-11.com.example:pytest04",
+        "h5": "iqn.2020-11.com.example:pytest05",
+        "h6": "iqn.2020-11.com.example:pytest06",
+        "h7": "iqn.2020-11.com.example:pytest07"
+    },
+    "Disk": {},
+    "HostGroup": {
+        "hg1": [
+            "h1",
+            "h2"
+        ],
+        "hg2": [
+            "h3",
+            "h4"
+        ],
+        "hg3": [
+            "h5",
+            "h3"
+        ],
+        "hg4": [
+            "h6"
+        ],
+        "hg5": [
+            "h7"
+        ],
+        "hg6": [
+            "h6"
+        ],
+        "hg7": [
+            "h7"
+        ]
+    },
+    "DiskGroup": {
+        "dg1": [
+            "res_a",
+            "res_b"
+        ],
+        "dg2": [
+            "res_b"
+        ],
+        "dg3": [
+            "res_c",
+            "res_d"
+        ],
+        "dg4": [
+            "res_e"
+        ]
+    },
+    "Map": {
+        "map1": {
+            "HostGroup": [
+                "hg7",
+                "hg1"
+            ],
+            "DiskGroup": [
+                "dg1",
+                "dg2",
+                "dg4"
+            ]
+        },
+        "map2": {
+            "HostGroup": [
+                "hg2",
+                "hg1",
+                "hg3",
+                "hg4",
+                "hg5",
+                "hg7"
+            ],
+            "DiskGroup": [
+                "dg2"
+            ]
+        },
+        "map3": {
+            "HostGroup": [
+                "hg1",
+                "hg2"
+            ],
+            "DiskGroup": [
+                "dg1",
+                "dg2"
+            ]
+        }
+    },
+    "crm": {
+        "resource": [],
+        "vip": [
+            [
+                "vip",
+                "10.203.1.75",
+                "24"
+            ],
+            [
+                "vip_test1",
+                "10.203.1.71",
+                "24"
+            ]
+        ],
+        "target": [
+            [
+                "t_test",
+                "iqn.2020-04.feixitek.com:versaplx00",
+                "10.203.1.75"
+            ]
+        ]
+    }
+}
