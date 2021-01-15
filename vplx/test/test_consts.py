@@ -2,7 +2,7 @@ import consts
 
 
 def test_init():
-    consts._init()
+    consts.init()
     assert consts._GLOBAL_DICT != None
 
 
@@ -43,6 +43,7 @@ def test_set_glo_log_id():
 def test_set_glo_log_switch():
     consts.set_glo_log_switch('test_switch')
     assert consts._GLOBAL_DICT['LOG_SWITCH'] == 'test_switch'
+
 
 def test_set_glo_gui_tid():
     consts.set_glo_gui_tid('test_tid')

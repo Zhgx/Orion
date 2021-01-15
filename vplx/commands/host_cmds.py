@@ -1,4 +1,3 @@
-import pickle
 import execute as ex
 import sundry as sd
 import consts
@@ -74,7 +73,7 @@ class HostCommands():
         Show iSCSI Host
         """
         p_show_host = host_subp.add_parser(
-            'show', aliases='s', help='Displays the host data', usage=Usage.host_modify)
+            'show', aliases='s', help='Displays the host data', usage=Usage.host_show)
 
         # add arguments of host show
         p_show_host.add_argument(
@@ -109,26 +108,23 @@ class HostCommands():
     @sd.deco_record_exception
     def create(self, args):
         host = ex.Host()
-        host.create_host(args.host, args.iqn)
+        host.create(args.host, args.iqn)
 
     @sd.deco_record_exception
     def show(self, args):
         host = ex.Host()
-        if args.host == 'all' or args.host is None:
-            host.show_all_host()
-        else:
-            host.show_spe_host(args.host)
+        host.show(args.host)
 
     @sd.deco_record_exception
     @sd.deco_comfirm_del('host')
     def delete(self, args):
         host = ex.Host()
-        host.delete_host(args.host)
+        host.delete(args.host)
 
     @sd.deco_record_exception
     def modify(self, args):
         host = ex.Host()
-        host.modify_host(args.host,args.iqn)
+        host.modify(args.host,args.iqn)
 
     def print_host_help(self, *args):
         self.host_parser.print_help()

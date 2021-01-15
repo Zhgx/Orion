@@ -1,7 +1,7 @@
-import traceback
 import execute as ex
 import consts
 import sundry as sd
+
 
 class Usage():
     # host部分使用手册
@@ -10,7 +10,6 @@ class Usage():
 
     disk_show = '''
     disk(d) show(s) [DISK]'''
-
 
 
 class DiskCommands():
@@ -22,7 +21,7 @@ class DiskCommands():
         Add commands for the disk management:create,delete,show
         """
         disk_parser = parser.add_parser(
-            'disk', aliases='d', help='disk operation',usage=Usage.disk)
+            'disk', aliases='d', help='disk operation', usage=Usage.disk)
         disk_parser.set_defaults(func=self.print_disk_help)
 
         disk_subp = disk_parser.add_subparsers(dest='subargs_disk')
@@ -32,7 +31,7 @@ class DiskCommands():
         """
 
         p_show_disk = disk_subp.add_parser(
-            'show', aliases='s', help='disk show',usage=Usage.disk_show)
+            'show', aliases='s', help='disk show', usage=Usage.disk_show)
 
         p_show_disk.add_argument(
             'disk',
@@ -48,10 +47,7 @@ class DiskCommands():
     @sd.deco_record_exception
     def show(self, args):
         disk = ex.Disk()
-        if args.disk == 'all' or args.disk is None:
-            disk.show_all_disk()
-        else:
-            disk.show_spe_disk(args.disk)
+        disk.show(args.disk)
 
     def print_disk_help(self, *args):
         self.disk_parser.print_help()

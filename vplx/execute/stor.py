@@ -119,7 +119,7 @@ class Node():
         else:
             data = collecter.get_all_node()
         header = ["node", "node type", "res num", "stp num", "addr", "status"]
-        table = s.show_linstor_data(header, data)
+        table = s.make_table(header, data)
         s.prt_log(table,0)
 
     def show_one_node(self, node, no_color='no'):
@@ -139,8 +139,8 @@ class Node():
             header_node = ['res_name', 'stp_name', 'size', 'device_name', 'used', 'status']
             header_stp = ['stp_name', 'node_name', 'res_num', 'driver', 'pool_name', 'free_size', 'total_size', 'snapshots',
                           'status']
-            table_node = s.show_linstor_data(header_node, data_node)
-            table_stp = s.show_linstor_data(header_stp, data_stp)
+            table_node = s.make_table(header_node, data_node)
+            table_stp = s.make_table(header_stp, data_stp)
             result = '\n'.join([info, str(table_node), str(table_stp)])
             s.prt_log(result,0)
 
@@ -205,7 +205,7 @@ class StoragePool():
         else:
             data = collector.get_all_sp()
         header = ['stp_name','node_name','res_num','driver','pool_name','free_size','total_size','snapshots','status']
-        table = s.show_linstor_data(header, data)
+        table = s.make_table(header, data)
         s.prt_log(table,0)
 
 
@@ -221,7 +221,7 @@ class StoragePool():
             else:
                 data = collector.get_one_sp(sp)
             header = ['res_name', 'size', 'device_name', 'used', 'status']
-            table = s.show_linstor_data(header, data)
+            table = s.make_table(header, data)
             result = '\n'.join([info, str(table)])
             s.prt_log(result,0)
 
@@ -435,7 +435,7 @@ class Resource():
         else:
             data = collecter.get_all_res()
         header = ["resource", "mirror_way", "size", "device_name", "used"]
-        table = s.show_linstor_data(header,data)
+        table = s.make_table(header,data)
         s.prt_log(table,0)
 
 
@@ -451,6 +451,6 @@ class Resource():
             else:
                 data = collecter.get_one_res(res)
             header = ['node_name', 'stp_name', 'drbd_role', 'status']
-            table = s.show_linstor_data(header,data)
+            table = s.make_table(header,data)
             result = '\n'.join([info, str(table)])
             s.prt_log(result,0)
