@@ -4,7 +4,7 @@ import log
 import sundry
 
 sys.path.append('../')
-consts._init()
+consts.init()
 
 # transaction_id = s.create_transaction_id()
 # logger = log.Log('test',transaction_id)

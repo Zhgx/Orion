@@ -15,7 +15,7 @@ import consts
 def execute_crm_cmd(cmd, timeout=60):
     """
     Execute the command cmd to return the content of the command output.
-    If it times out, a TimeoutError exception will be thrown.
+    If it times out, a TimeoutError exception will be thrown.
     cmd - Command to be executed
     timeout - The longest waiting time(unit:second)
     """
@@ -471,7 +471,6 @@ class PortBlockGroup():
     @RollBack
     def create(self,name,ip,port,action):
         """
-
         :param name:
         :param ip:
         :param port:
@@ -667,20 +666,3 @@ class ISCSILogicalUnit():
 
         # 验证？
         return True
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

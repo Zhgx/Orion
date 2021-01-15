@@ -1,0 +1,43 @@
+{
+    "Host": {},
+    "Disk": {},
+    "HostGroup": {},
+    "DiskGroup": {},
+    "Map": {},
+    "Portal": {
+        "portal_test_4": {
+            "ip": "10.203.1.201",
+            "port": "3260",
+            "netmask": "24",
+            "target": []
+        },
+        "vip": {
+            "ip": "10.203.1.75",
+            "port": "3260",
+            "netmask": "24",
+            "target": [
+                "t_test"
+            ]
+        },
+        "vip_test2": {
+            "ip": "10.203.1.206",
+            "port": "3260",
+            "netmask": "24",
+            "target": [
+                "target_test"
+            ]
+        }
+    },
+    "Target": {
+        "t_test": {
+            "target_iqn": "iqn.2020-04.feixitek.com:versaplx00",
+            "ip": "10.203.1.75",
+            "port": "3260"
+        },
+        "target_test": {
+            "target_iqn": "iqn.2020-12.com.example:test206",
+            "ip": "10.203.1.206",
+            "port": "3260"
+        }
+    }
+}

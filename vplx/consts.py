@@ -117,3 +117,4 @@ def glo_log_switch():
 def glo_rollback():
     return get_value('ROLLBACK')
 
+# 77777
