@@ -116,17 +116,17 @@ class Log(object):
 
     # write to log file
     def write_to_log(self, t1, t2, d1, d2, data):
-        vtel_logger = Log._instance.logger
+        logger = Log._instance.logger
         # 获取到日志开关不为True时，移除处理器，不再将数据记录到文件中
         if not self.log_switch:
-            vtel_logger.remove_my_handler()
+            logger.remove_my_handler()
 
         if not self.user:
             self.user = get_username()
         if not self.tid:
             self.tid = create_transaction_id()
 
-        vtel_logger.debug(
+        logger.debug(
             '',
             extra={
                 'user': self.user,
