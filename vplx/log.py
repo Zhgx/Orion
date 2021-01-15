@@ -110,7 +110,7 @@ class Log(object):
             with Log._instance_lock:
                 if not hasattr(cls, '_instance'):
                     Log._instance = super().__new__(cls)
-                    Log._instance.logger = MyLoggerAdapter(LOG_PATH,CLI_LOG_NAME)
+                    Log._instance.logger = MyLoggerAdapter(cls.log_path,cls.file_name)
 
         return Log._instance
 
