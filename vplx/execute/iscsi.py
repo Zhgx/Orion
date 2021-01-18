@@ -516,37 +516,6 @@ class Map():
         # 用于收集创建成功的resource
         # self.target_name, self.target_iqn = self.get_target()
 
-    # def create_mapping(self,name,list_iqn):
-    #     path = self.js.get_data('Disk')[name]
-    #     lunid = int(path[-4:]) - 1000
-    #     initiator = ' '.join(list_iqn)
-    #
-    #     try:
-    #         # 执行iscsilogicalunit创建
-    #         self.create(name,self.target_iqn,lunid,path,initiator)
-    #         self.list_res_created.append(name)
-    #
-    #         #Colocation和Order创建
-    #         Colocation.create(f'col_{name}', name, self.target_name)
-    #         Order.create(f'or_{name}', self.target_name, name)
-    #         s.prt_log(f'create colocation:co_{name}, order:or_{name} success', 0)
-    #     except Exception as ex:
-    #         # 回滚（暂用这种方法）
-    #         s.prt_log('Fail to create iSCSILogicalUnit', 1)
-    #         for i in self.list_res_created:
-    #             self.delete(i)
-    #         print('创建途中失败，以下是报错信息')
-    #         print(str(traceback.format_exc()))
-    #         return False
-    #
-    #     else:
-    #         #启动资源,成功与否不影响创建
-    #         obj_crm = CRMConfig()
-    #         obj_crm.start_res(name)
-    #         obj_crm.checkout_status(name, 'iSCSILogicalUnit', 'STARTED')
-    #
-    #     # 验证？
-    #     return True
 
     def create(self, map, list_hg, list_dg):
         """
@@ -648,9 +617,8 @@ class Map():
         json_data_before = copy.deepcopy(self.js.json_data)
         self.js.delete_data('Map', map)
         obj_iscsi = IscsiConfig(json_data_before, self.js.json_data)
-        obj_iscsi.delete_iscsilogicalunit()
-        obj_iscsi.modify_iscsilogicalunit()
-
+        obj_iscsi.comfirm_modify()
+        obj_iscsi.crm_conf_change()
         self.js.commit_data()
         s.prt_log("Delete map successfully", 0)
         return True

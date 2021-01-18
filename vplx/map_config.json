@@ -14,10 +14,6 @@
         "res_e": "/dev/drbd1004"
     },
     "HostGroup": {
-        "hg2": [
-            "h3",
-            "h4"
-        ],
         "hg3": [
             "h5",
             "h3"
@@ -36,13 +32,6 @@
         ]
     },
     "DiskGroup": {
-        "dg1": [
-            "res_a",
-            "res_b"
-        ],
-        "dg2": [
-            "res_b"
-        ],
         "dg3": [
             "res_c",
             "res_d"
@@ -51,26 +40,7 @@
             "res_e"
         ]
     },
-    "Map": {
-        "map1": {
-            "HostGroup": [
-                "hg2"
-            ],
-            "DiskGroup": [
-                "dg1",
-                "dg2"
-            ]
-        },
-        "map2": {
-            "HostGroup": [
-                "hg3"
-            ],
-            "DiskGroup": [
-                "dg1",
-                "dg3"
-            ]
-        }
-    },
+    "Map": {},
     "Portal": {
         "pt2": {
             "ip": "10.203.1.152",
