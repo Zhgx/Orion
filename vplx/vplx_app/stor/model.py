@@ -7,7 +7,7 @@ Created on 2020/3/2
 
 from flask import Flask, jsonify, render_template, request, make_response, views
 import process
-import log
+from public import log
 
 def cors_data(datadict):
     response = make_response(jsonify(datadict))

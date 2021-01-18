@@ -659,13 +659,14 @@ function btn_show_delete(obj) {
 	};
 	$("#dg_delete_data").val(td_dg_name);
 	$.ajax({
-		url : vplxIp + "/dg/delete/check",
+		url : vplxIp + "/all/delete/check",
 		type : "get",
 		dataType : "json",
 		data : {
 			tid : tid,
 			ip : mgtIp,
-			dg_name: td_dg_name
+			iscsi_type:'diskgroup',
+			iscsi_name: td_dg_name
 		},
 		async : false,
 		success : function(dg_result) {
@@ -677,13 +678,14 @@ function btn_show_delete(obj) {
 function affirm_delete(obj) {
 	dg_delete_name = $("#dg_delete_data").val();
 	$.ajax({
-		url : vplxIp + "/dg/delete",
+		url : vplxIp + "/all/delete",
 		type : "get",
 		dataType : "json",
 		data : {
 			tid : tid,
 			ip : mgtIp,
-			dg_name: dg_delete_name
+			iscsi_type:'diskgroup',
+			iscsi_name: dg_delete_name
 		},
 		async : false,
 		success : function(dg_result) {

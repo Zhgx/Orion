@@ -510,86 +510,107 @@ class MapModify(views.MethodView):
 
 
 '''
-class CheckHostDelete(views.MethodView):
+class CheckAllDelete(views.MethodView):
  
     def get(self):
         dict_data = get_request_data()
-        host_name = dict_data['host_name']
-        # js_modify对象更新数据{hg_name:list_host},然后跟js对象对比，返回改动的信息
-        print(host_name)
-        message = '返回到后台的数据是'
-        dict = {'iscsi_data':True, 'info':message}
-        return cors_data(dict)
- 
- 
-class HostDelete(views.MethodView):
- 
-    def get(self):
-        dict_data = get_request_data()
-        host_name = dict_data['host_name']
-        message = '操作完成'
-        return cors_data(message)    
+        iscsi_type = dict_data['iscsi_type']
+        iscsi_name = dict_data['iscsi_name']
 
-class CheckHgDelete(views.MethodView):
- 
-    def get(self):
-        dict_data = get_request_data()
-        hg_name = dict_data['hg_name']
-        # js_modify对象更新数据{hg_name:list_host},然后跟js对象对比，返回改动的信息
-        print(hg_name)
-        message = '返回到后台的数据是'
-        dict = {'iscsi_data':True, 'info':message}
-        return cors_data(dict)
- 
- 
-class HgDelete(views.MethodView):
- 
-    def get(self):
-        dict_data = get_request_data()
-        hg_name = dict_data['hg_name']
-        message = '操作完成'
-        return cors_data(message)    
+        js = iscsi_json.JsonOperation()
 
-class CheckDgDelete(views.MethodView):
- 
-    def get(self):
-        dict_data = get_request_data()
-        dg_name = dict_data['dg_name']
+        if iscsi_type == 'host':
+
+            message = None
+        elif iscsi_type == 'hostgroup':
+            message = None
+
+        elif iscsi_type == 'diskgroup':
+            message = None
+
+        elif iscsi_type == 'map':
+            message = None
+
+        else:
+            raise TypeError('iscsi_type Error')
+
+
         # js_modify对象更新数据{hg_name:list_host},然后跟js对象对比，返回改动的信息
-        print(dg_name)
+        print(iscsi_type,iscsi_name)
         message = '返回到后台的数据是'
         dict = {'iscsi_data':True, 'info':message}
         return cors_data(dict)
  
  
-class DgDelete(views.MethodView):
+class AllDelete(views.MethodView):
  
     def get(self):
         dict_data = get_request_data()
-        dg_name = dict_data['dg_name']
-        message = '操作完成'
-        return cors_data(message) 
-    
-class CheckMapDelete(views.MethodView):
- 
-    def get(self):
-        dict_data = get_request_data()
-        map_name = dict_data['map_name']
-        # js_modify对象更新数据{hg_name:list_host},然后跟js对象对比，返回改动的信息
-        print(map_name)
-        message = '返回到后台的数据是'
-        dict = {'iscsi_data':True, 'info':message}
-        return cors_data(dict)
- 
- 
-class MapDelete(views.MethodView):
- 
-    def get(self):
-        dict_data = get_request_data()
-        map_name = dict_data['map_name']
+        iscsi_type = dict_data['iscsi_type']
+        iscsi_name = dict_data['iscsi_name']
         message = '操作完成'
         return cors_data(message)    
-    
-    
-    
-       
+# 
+# class CheckHgDelete(views.MethodView):
+#  
+#     def get(self):
+#         dict_data = get_request_data()
+#         hg_name = dict_data['hg_name']
+#         # js_modify对象更新数据{hg_name:list_host},然后跟js对象对比，返回改动的信息
+#         print(hg_name)
+#         message = '返回到后台的数据是'
+#         dict = {'iscsi_data':True, 'info':message}
+#         return cors_data(dict)
+#  
+#  
+# class HgDelete(views.MethodView):
+#  
+#     def get(self):
+#         dict_data = get_request_data()
+#         hg_name = dict_data['hg_name']
+#         message = '操作完成'
+#         return cors_data(message)    
+# 
+# class CheckDgDelete(views.MethodView):
+#  
+#     def get(self):
+#         dict_data = get_request_data()
+#         dg_name = dict_data['dg_name']
+#         # js_modify对象更新数据{hg_name:list_host},然后跟js对象对比，返回改动的信息
+#         print(dg_name)
+#         message = '返回到后台的数据是'
+#         dict = {'iscsi_data':True, 'info':message}
+#         return cors_data(dict)
+#  
+#  
+# class DgDelete(views.MethodView):
+#  
+#     def get(self):
+#         dict_data = get_request_data()
+#         dg_name = dict_data['dg_name']
+#         message = '操作完成'
+#         return cors_data(message) 
+#     
+# class CheckMapDelete(views.MethodView):
+#  
+#     def get(self):
+#         dict_data = get_request_data()
+#         map_name = dict_data['map_name']
+#         # js_modify对象更新数据{hg_name:list_host},然后跟js对象对比，返回改动的信息
+#         print(map_name)
+#         message = '返回到后台的数据是'
+#         dict = {'iscsi_data':True, 'info':message}
+#         return cors_data(dict)
+#  
+#  
+# class MapDelete(views.MethodView):
+#  
+#     def get(self):
+#         dict_data = get_request_data()
+#         map_name = dict_data['map_name']
+#         message = '操作完成'
+#         return cors_data(message)    
+#     
+#     
+#     
+#        

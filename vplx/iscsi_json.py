@@ -52,6 +52,8 @@ class JsonOperation(object):
     json_data = None
 
     def __init__(self):
+        consts.init()
+        
         if self.json_data is None:
             self.json_data = self.read_json()
 
@@ -207,6 +209,7 @@ class JsonOperation(object):
             self.update_data('Map',target,dict_map)
         else:
             self.update_data(iscsi_type, target, list(set(list_member)))
+
 
 
 

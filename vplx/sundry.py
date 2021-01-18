@@ -11,7 +11,7 @@ from functools import wraps
 import colorama as ca
 
 import consts
-import log
+from public import log
 
 
 

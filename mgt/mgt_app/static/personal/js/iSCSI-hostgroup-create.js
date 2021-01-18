@@ -635,13 +635,14 @@ function btn_show_delete(obj) {
 	};
 	$("#hg_delete_data").val(td_hg_name);
 	$.ajax({
-		url : vplxIp + "/hg/delete/check",
+		url : vplxIp + "/all/delete/check",
 		type : "get",
 		dataType : "json",
 		data : {
 			tid : tid,
 			ip : mgtIp,
-			hg_name: td_hg_name
+			iscsi_type:'hostgroup',
+			iscsi_name: td_hg_name
 		},
 		async : false,
 		success : function(hg_result) {
@@ -659,7 +660,8 @@ function affirm_delete(obj) {
 		data : {
 			tid : tid,
 			ip : mgtIp,
-			hg_name: hg_delete_name
+			iscsi_type:'hostgroup',
+			iscsi_name: hg_delete_name
 		},
 		async : false,
 		success : function(hg_result) {
