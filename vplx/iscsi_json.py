@@ -79,7 +79,8 @@ class JsonOperation(object):
                     "HostGroup": {},
                     "DiskGroup": {},
                     "Map": {},
-                    "Portal":{}}
+                    "Portal":{},
+                    "Target":{}}
                 json.dump(json_dict, fw, indent=4, separators=(',', ': '))
             return json_dict
         except json.decoder.JSONDecodeError:
