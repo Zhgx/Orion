@@ -1,5 +1,4 @@
 import execute as ex
-import consts
 import sundry as s
 
 class Usage():
@@ -23,7 +22,7 @@ class Usage():
 class PortalCommands():
 
     def __init__(self):
-        self.logger = consts.glo_log()
+        pass
 
     def setup_commands(self, parser):
         """
@@ -66,7 +65,7 @@ class PortalCommands():
             dest='netmask',
             action='store',
             default=24,
-            help='Netmask：0-32.It default is 24.')
+            help='Netmask：1-32.It default is 24.')
 
         p_create_portal.add_argument(
             '-p',

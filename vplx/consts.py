@@ -34,7 +34,6 @@ def init():
     _GLOBAL_DICT = {}
     _GLOBAL_DICT['LOG_ID'] = 0
     _GLOBAL_DICT['RPL'] = 'no'
-    _GLOBAL_DICT['LOG_SWITCH'] = 'yes'
     _GLOBAL_DICT['ROLLBACK'] = {}
 
 def set_value(key, value):
@@ -48,10 +47,6 @@ def get_value(key, dft_val = None):
         return _GLOBAL_DICT[key]
     except KeyError:
         return dft_val
-
-
-def set_glo_log(value):
-    set_value('LOG', value)
 
 
 def set_glo_db(value):
@@ -70,24 +65,13 @@ def set_glo_log_id(value):
     set_value('LOG_ID', value)
 
 
-def set_glo_log_switch(value):
-    set_value('LOG_SWITCH', value)
-
-
 def set_glo_gui_tid(value):
     set_value('GUI_TID',value)
-
-def set_glo_rollback(value):
-    set_value('ROLLBACK',value)
-
 
 
 def glo_gui_tid():
     return get_value('GUI_TID')
 
-
-def glo_log():
-    return get_value('LOG')
 
 
 def glo_db():
@@ -110,11 +94,7 @@ def glo_log_id():
     return get_value('LOG_ID')
 
 
-def glo_log_switch():
-    return get_value('LOG_SWITCH')
 
 
-def glo_rollback():
-    return get_value('ROLLBACK')
 
 # 77777

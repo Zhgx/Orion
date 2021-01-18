@@ -1,6 +1,5 @@
 import execute as ex
 import sundry as sd
-import consts
 
 
 class Usage():
@@ -23,7 +22,7 @@ class Usage():
 
 class HostCommands():
     def __init__(self):
-        self.logger = consts.glo_log()
+        pass
 
     def setup_commands(self, parser):
         """
@@ -116,7 +115,6 @@ class HostCommands():
         host.show(args.host)
 
     @sd.deco_record_exception
-    @sd.deco_comfirm_del('host')
     def delete(self, args):
         host = ex.Host()
         host.delete(args.host)

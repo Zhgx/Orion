@@ -25,12 +25,9 @@ def test_create_oprt_id():
     assert sundry.create_oprt_id() is not None
 
 
-def test_get_username():
-    assert sundry.get_username() == 'root'
+# def test_get_username():
+#     assert sundry.get_username() == 'root'
 
-
-def test_get_hostname():
-    assert sundry.get_hostname() == 'ubuntu'
 
 
 def test_get_path():
