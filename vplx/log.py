@@ -8,9 +8,6 @@ import time
 from random import shuffle
 
 
-
-
-
 LOG_PATH = '../vplx/'
 # LOG_PATH = '/var/log/vtel/'
 CLI_LOG_NAME = 'cli.log'
@@ -88,6 +85,7 @@ class Log(object):
     logger = None
 
     def __init__(self):
+
         """
         日志格式：
         asctime：时间
@@ -136,4 +134,3 @@ class Log(object):
                 'd1': d1,
                 'd2': d2,
                 'data': data})
-

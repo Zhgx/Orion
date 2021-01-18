@@ -25,29 +25,28 @@ class IscsiConfig():
         if any([self.modify, self.delete]):
             self.obj_crm = CRMConfig()
 
-
         self.obj_iscsiLU = ISCSILogicalUnit()
 
         # 记载需要进行恢复的disk
         self.recovery_list = {'delete': set(), 'create': {}, 'modify': {}}
 
-
-    def get_map_relation(self,data):
+    def get_map_relation(self, data):
         dict_map_relation = {}
         for disk in data['Disk']:
             dict_map_relation.update({disk: set()})
-
-        for map in data['Map'].values():
-            for dg in map['DiskGroup']:
-                for disk in data['DiskGroup'][dg]:
-                    set_iqn = set()
-                    for hg in map['HostGroup']:
-                        for host in data['HostGroup'][hg]:
-                            set_iqn.add(data['Host'][host])
-                    dict_map_relation[disk] = dict_map_relation[disk] | set_iqn
+        try:
+            for map in data['Map'].values():
+                for dg in map['DiskGroup']:
+                    for disk in data['DiskGroup'][dg]:
+                        set_iqn = set()
+                        for hg in map['HostGroup']:
+                            for host in data['HostGroup'][hg]:
+                                set_iqn.add(data['Host'][host])
+                        dict_map_relation[disk] = dict_map_relation[disk] | set_iqn
+        except KeyError as a:
+            s.prt_log(f'{a} does not exist in the configuration file, please check', 2)
 
         return dict_map_relation
-
 
     def get_dict_diff(self, dict1, dict2):
         # 判断dict2有没有dict1没有的key，如有dict1进行补充
@@ -70,7 +69,7 @@ class IscsiConfig():
                     diff['modify'].update({key: dict2[key]})
                     recover['modify'].update({key: dict1[key]})
 
-        self.logger.write_to_log('DATA','iSCSILogicalUnit','Data to be modified','',diff)
+        self.logger.write_to_log('DATA', 'iSCSILogicalUnit', 'Data to be modified', '', diff)
         return diff, recover
 
     def show_info(self):
@@ -101,7 +100,7 @@ class IscsiConfig():
     def modify_iscsilogicalunit(self):
         for disk, iqn in self.modify.items():
             self.recovery_list['modify'].update({disk: self.recover['modify'][disk]})
-            self.obj_iscsiLU.modify(disk,iqn)
+            self.obj_iscsiLU.modify(disk, iqn)
 
     def rollback(self):
         print("Mapping relationship rollback")
@@ -119,8 +118,6 @@ class IscsiConfig():
         answer = s.get_answer()
         if not answer in ['y', 'yes', 'Y', 'YES']:
             s.prt_log(f'Cancel operation', 2)
-
-
 
     def crm_conf_change(self):
         try:
@@ -142,6 +139,7 @@ class Disk():
     """
     Disk
     """
+
     def __init__(self):
         self.js = iscsi_json.JsonOperation()
 
@@ -156,28 +154,30 @@ class Disk():
         self.js.cover_data('Disk', disks)
         self.js.commit_data()
         return disks
-    
-    def show(self,disk):
+
+    def show(self, disk):
         disk_all = self.update_disk()
         list_header = ["ResourceName", "Path"]
         list_data = []
         if disk == 'all' or disk is None:
             # show all
-            for disk,path in disk_all.items():
-                list_data.append([disk,path])
+            for disk, path in disk_all.items():
+                list_data.append([disk, path])
         else:
             # show one
             if self.js.check_key('Disk', disk):
-                list_data.append([disk,disk_all[disk]])
+                list_data.append([disk, disk_all[disk]])
 
         table = s.make_table(list_header, list_data)
         s.prt_log(table, 0)
+        return list_data
 
 
 class Host():
     """
     Host
     """
+
     def __init__(self):
         self.js = iscsi_json.JsonOperation()
 
@@ -185,7 +185,9 @@ class Host():
         """
         判断iqn是否符合格式
         """
-        result = s.re_findall(r'^iqn\.\d{4}-\d{2}\.[a-zA-Z0-9.:-]+', iqn)
+        result = s.re_findall(
+            r'^iqn\.\d{4}-\d{2}\.[a-zA-Z0-9][-a-zA-Z0-9]{0,62}(\.[a-zA-Z0-9][-a-zA-Z0-9]{0,62})+(:[a-zA-Z0-9.:-]+)?$',
+            iqn)
         return True if result else False
 
     def create(self, host, iqn):
@@ -200,21 +202,21 @@ class Host():
         s.prt_log("Create success!", 0)
         return True
 
-
-    def show(self,host):
+    def show(self, host):
         list_header = ["HostName", "IQN"]
         list_data = []
         host_all = self.js.json_data['Host']
         if host == 'all' or host is None:
             # show all
-            for host,iqn in host_all.items():
-                list_data.append([host,iqn])
+            for host, iqn in host_all.items():
+                list_data.append([host, iqn])
         else:
             # show one
             if self.js.check_key('Host', host):
-                list_data.append([host,host_all[host]])
+                list_data.append([host, host_all[host]])
         table = s.make_table(list_header, list_data)
         s.prt_log(table, 0)
+        return list_data
 
 
     def delete(self, host):
@@ -236,8 +238,6 @@ class Host():
 
         self.js.commit_data()
         s.prt_log(f"Delete {host} successfully", 0)
-
-
 
     def modify(self, host, iqn):
         if not self.js.check_key('Host', host):
@@ -263,6 +263,7 @@ class DiskGroup():
     """
     DiskGroup
     """
+
     def __init__(self):
         # 更新json文档中的disk信息
         disk = Disk()
@@ -283,23 +284,23 @@ class DiskGroup():
         s.prt_log("Create success!", 0)
         return True
 
-    def show(self,dg):
+    def show(self, dg):
         list_header = ["DiskgroupName", "DiskName"]
         list_data = []
         hg_all = self.js.json_data['DiskGroup']
 
         if dg == 'all' or dg is None:
             # show all
-            for dg,disk in hg_all.items():
+            for dg, disk in hg_all.items():
                 list_data.append([dg, ' '.join(disk)])
         else:
             # show one
             if self.js.check_key('DiskGroup', dg):
-                list_data.append([dg,' '.join(hg_all[dg])])
+                list_data.append([dg, ' '.join(hg_all[dg])])
 
         table = s.make_table(list_header, list_data)
         s.prt_log(table, 0)
-
+        return list_data
 
 
     def delete(self, dg):
@@ -321,7 +322,6 @@ class DiskGroup():
 
         self.js.commit_data()
         s.prt_log(f"Delete {dg} success!", 0)
-
 
     def add_disk(self, dg, list_disk):
         if not self.js.check_key('DiskGroup', dg):
@@ -347,8 +347,6 @@ class DiskGroup():
         else:
             s.prt_log('The configuration file has been modified, please try again', 2)
         self.js.commit_data()
-
-
 
     def remove_disk(self, dg, list_disk):
         if not self.js.check_key('DiskGroup', dg):
@@ -379,8 +377,6 @@ class DiskGroup():
 
         self.js.commit_data()
 
-
-
     """
     hostgroup 操作
     """
@@ -404,22 +400,23 @@ class HostGroup():
         s.prt_log("Create success!", 0)
         return True
 
-    def show(self,hg):
+    def show(self, hg):
         list_header = ["HostGroupName", "HostName"]
         list_data = []
         hg_all = self.js.json_data['HostGroup']
 
         if hg == 'all' or hg is None:
             # show all
-            for hg,host in hg_all.items():
+            for hg, host in hg_all.items():
                 list_data.append([hg, ' '.join(host)])
         else:
             # show one
             if self.js.check_key('HostGroup', hg):
-                list_data.append([hg,' '.join(hg_all[hg])])
+                list_data.append([hg, ' '.join(hg_all[hg])])
 
         table = s.make_table(list_header, list_data)
         s.prt_log(table, 0)
+        return list_data
 
 
     def delete(self, hg):
@@ -442,8 +439,6 @@ class HostGroup():
         self.js.commit_data()
         s.prt_log(f"Delete {hg} success!", 0)
 
-
-
     def add_host(self, hg, list_host):
         if not self.js.check_key('HostGroup', hg):
             s.prt_log(f"Fail！Can't find {hg}", 1)
@@ -455,7 +450,6 @@ class HostGroup():
             if not self.js.check_key("Host", host):
                 s.prt_log(f'{host} does not exist in the configuration file and cannot be added', 1)
                 return
-
 
         json_data_before = copy.deepcopy(self.js.json_data)
         self.js.append_member('HostGroup', hg, list_host)
@@ -471,7 +465,6 @@ class HostGroup():
 
         # 配置文件更新修改的资源
         self.js.commit_data()
-
 
     def remove_host(self, hg, list_host):
         if not self.js.check_key('HostGroup', hg):
@@ -500,8 +493,6 @@ class HostGroup():
         # 配置文件的改变
         self.js.commit_data()
 
-
-
     """
     map操作
     """
@@ -526,23 +517,21 @@ class Map():
         :return:T/F
         """
         # 创建前的检查
-        if self.js.check_key('Map',map):
+        if self.js.check_key('Map', map):
             s.prt_log(f'The Map "{map}" already existed.', 2)
             return
         for hg in list_hg:
-            if not self.js.check_key('HostGroup',hg):
+            if not self.js.check_key('HostGroup', hg):
                 s.prt_log(f"Can't find {hg}", 2)
                 return
         for dg in list_dg:
-            if not self.js.check_key('DiskGroup',dg):
+            if not self.js.check_key('DiskGroup', dg):
                 s.prt_log(f"Can't find {dg}", 2)
                 return
-
 
         json_data_before = copy.deepcopy(self.js.json_data)
         self.js.update_data('Map', map, {'HostGroup': list_hg, 'DiskGroup': list_dg})
         obj_iscsi = IscsiConfig(json_data_before, self.js.json_data)
-
 
         # 已经被使用过的disk(ilu)需不需要提示
         dict_disk_inuse = obj_iscsi.modify
@@ -556,23 +545,24 @@ class Map():
         s.prt_log('Create map success!', 0)
         return True
 
-
-    def show(self,map):
+    def show(self, map):
         list_header = ["MapName", "HostGroup", "DiskGroup"]
         list_data = []
         map_all = self.js.json_data['Map']
 
         if map == 'all' or map is None:
             # show all
-            for map,data in map_all.items():
-                list_data.append([map," ".join(data['HostGroup'])," ".join(data['DiskGroup'])])
+            for map, data in map_all.items():
+                list_data.append([map, " ".join(data['HostGroup']), " ".join(data['DiskGroup'])])
         else:
             # show one
             if self.js.check_key('Map', map):
-                list_data.append([map," ".join(map_all[map]['HostGroup'])," ".join(map_all[map]['DiskGroup'])])
+                list_data.append([map, " ".join(map_all[map]['HostGroup']), " ".join(map_all[map]['DiskGroup'])])
 
         table = s.make_table(list_header, list_data)
         s.prt_log(table, 0)
+        return list_data
+
 
     #  执行map展示的时候，会展示对应dg和hg的数据（全部三个表格），暂时保留代码
     # def get_spe_map(self, map):
@@ -610,7 +600,7 @@ class Map():
 
     # 调用crm删除map
     def delete_map(self, map):
-        if not self.js.check_key('Map',map):
+        if not self.js.check_key('Map', map):
             s.prt_log(f"Fail！Can't find {map}", 2)
             return
 
@@ -622,9 +612,6 @@ class Map():
         self.js.commit_data()
         s.prt_log("Delete map successfully", 0)
         return True
-
-
-
 
     def add_hg(self, map, list_hg):
         if not self.js.check_key('Map', map):
@@ -652,8 +639,6 @@ class Map():
 
         # 提交json的修改
         self.js.commit_data()
-
-
 
     def add_dg(self, map, list_dg):
         if not self.js.check_key('Map', map):
@@ -746,38 +731,37 @@ class Portal():
         self.logger = log.Log()
         self.js = iscsi_json.JsonOperation()
 
-    def create(self, name, ip, port=3260 ,netmask=24):
+    def create(self, name, ip, port=3260, netmask=24):
         if not self._check_name(name):
-            s.prt_log(f'{name} naming does not conform to the specification',1)
+            s.prt_log(f'{name} naming does not conform to the specification', 1)
             return
         if not self._check_IP(ip):
-            s.prt_log(f'{ip} does not meet specifications',1)
+            s.prt_log(f'{ip} does not meet specifications', 1)
             return
         if not self._check_port(port):
-            s.prt_log(f'{port} does not meet specifications(Range：3260-65535)',1)
+            s.prt_log(f'{port} does not meet specifications(Range：3260-65535)', 1)
             return
         if not self._check_netmask(netmask):
             s.prt_log(f'{netmask} does not meet specifications(Range：1-32)',1)
             return
-        if self.js.check_key('Portal',name):
-            s.prt_log(f'{name} already exists, please use another name',1)
+        if self.js.check_key('Portal', name):
+            s.prt_log(f'{name} already exists, please use another name', 1)
             return
         if self.js.check_in_res('Portal','ip',ip):
             s.prt_log(f'{ip} is already in use, please use another IP',1)
             return
 
-
         try:
             obj_ipadrr = IPaddr2()
-            obj_ipadrr.create(name,ip,netmask)
+            obj_ipadrr.create(name, ip, netmask)
 
             obj_portblock = PortBlockGroup()
-            obj_portblock.create(f'{name}_prtblk_on',ip,port,action='block')
-            obj_portblock.create(f'{name}_prtblk_off',ip,port,action='unblock')
+            obj_portblock.create(f'{name}_prtblk_on', ip, port, action='block')
+            obj_portblock.create(f'{name}_prtblk_off', ip, port, action='unblock')
 
-            Colocation.create(f'col_{name}_prtblk_on',f'{name}_prtblk_on', name)
+            Colocation.create(f'col_{name}_prtblk_on', f'{name}_prtblk_on', name)
             Colocation.create(f'col_{name}_prtblk_off', f'{name}_prtblk_off', name)
-            Order.create(f'or_{name}_prtblk_on',name, f'{name}_prtblk_on')
+            Order.create(f'or_{name}_prtblk_on', name, f'{name}_prtblk_on')
 
         except Exception as ex:
             self.logger.write_to_log('DATA', 'DEBUG', 'exception', 'Rollback', str(traceback.format_exc()))
@@ -796,16 +780,14 @@ class Portal():
             obj_portblock.delete(f'{name}_prtblk_off')
             s.prt_log('The portal cannot be created normally due to the wrong IP address network segment or other network problems, please reconfigure', 1)
 
-
     def delete(self, name):
-        if not self.js.check_key('Portal',name):
+        if not self.js.check_key('Portal', name):
             s.prt_log(f"Fail！Can't find {name}", 1)
             return
         target = self.js.json_data['Portal'][name]['target']
         if target:
-            s.prt_log(f'In use：{",".join(target)}. Can not delete',1)
+            s.prt_log(f'In use：{",".join(target)}. Can not delete', 1)
             return
-
 
         try:
             obj_ipadrr = IPaddr2()
@@ -818,12 +800,12 @@ class Portal():
         except Exception as ex:
             self.logger.write_to_log('DATA', 'DEBUG', 'exception', 'Rollback', str(traceback.format_exc()))
             portal = self.js.json_data['Portal'][name]
-            RollBack.rollback(portal['ip'],portal['port'],portal['netmask'])
+            RollBack.rollback(portal['ip'], portal['port'], portal['netmask'])
             # 恢复colocation和order
             if RollBack.dict_rollback['IPaddr2']:
-                Colocation.create(f'col_{name}_prtblk_on',f'{name}_prtblk_on', name)
+                Colocation.create(f'col_{name}_prtblk_on', f'{name}_prtblk_on', name)
                 Colocation.create(f'col_{name}_prtblk_off', f'{name}_prtblk_off', name)
-                Order.create(f'or_{name}_prtblk_on',name, f'{name}_prtblk_on')
+                Order.create(f'or_{name}_prtblk_on', name, f'{name}_prtblk_on')
             return
 
         # 验证
@@ -836,27 +818,25 @@ class Portal():
         else:
             print(f'Failed to delete {name}, please check')
 
-
     def modify(self, name, ip, port):
         # CRM和JSON数据对比检查
-        if not self.js.check_key('Portal',name):
+        if not self.js.check_key('Portal', name):
             s.prt_log(f"Fail！Can't find {name}", 1)
             return
         if not self._check_IP(ip):
-            s.prt_log(f'{ip} does not meet specifications',1)
+            s.prt_log(f'{ip} does not meet specifications', 1)
             return
         if not self._check_port(port):
-            s.prt_log(f'{port} does not meet specifications(Range：3260-65535)',1)
+            s.prt_log(f'{port} does not meet specifications(Range：3260-65535)', 1)
             return
 
         portal = self.js.json_data['Portal'][name]
         if portal['ip'] == ip and portal['port'] == str(port):
-            s.prt_log(f'IP and port are the same as the before, no need to modify',1)
+            s.prt_log(f'IP and port are the same as the before, no need to modify', 1)
             return
         if self.js.check_in_res('Portal','ip',ip):
             s.prt_log(f'{ip} is already in use, please use another IP',1)
             return
-
 
         # 查询有没有target使用这个vip
         if portal['target']:
@@ -868,33 +848,32 @@ class Portal():
 
             try:
                 obj_ipadrr = IPaddr2()
-                obj_ipadrr.modify(name,ip)
+                obj_ipadrr.modify(name, ip)
 
                 obj_portblock = PortBlockGroup()
-                obj_portblock.modify(f'{name}_prtblk_on',ip, port)
-                obj_portblock.modify(f'{name}_prtblk_off',ip, port)
+                obj_portblock.modify(f'{name}_prtblk_on', ip, port)
+                obj_portblock.modify(f'{name}_prtblk_off', ip, port)
 
                 obj_target = ISCSITarget()
                 for target in portal['target']:
-                    obj_target.modify(target,ip,port)
+                    obj_target.modify(target, ip, port)
             except Exception as ex:
-                RollBack.rollback(portal['ip'],portal['port'],portal['netmask'])
+                RollBack.rollback(portal['ip'], portal['port'], portal['netmask'])
                 return
 
         else:
             # 直接修改
             try:
                 obj_ipadrr = IPaddr2()
-                obj_ipadrr.modify(name,ip)
+                obj_ipadrr.modify(name, ip)
 
                 obj_portblock = PortBlockGroup()
-                obj_portblock.modify(f'{name}_prtblk_on',ip, port)
-                obj_portblock.modify(f'{name}_prtblk_off',ip, port)
+                obj_portblock.modify(f'{name}_prtblk_on', ip, port)
+                obj_portblock.modify(f'{name}_prtblk_off', ip, port)
             except Exception as ex:
                 self.logger.write_to_log('DATA', 'DEBUG', 'exception', 'Rollback', str(traceback.format_exc()))
                 RollBack.rollback(portal['ip'],portal['port'],portal['netmask'])
                 return
-
 
         # 暂不验证（见需求）
 
@@ -913,29 +892,30 @@ class Portal():
         用表格展示所有portal数据
         :return: all portal
         """
-        list_header = ["Portal","IP","Port","Netmask","iSCSITarget"]
+        list_header = ["Portal", "IP", "Port", "Netmask", "iSCSITarget"]
         list_data = []
-        for portal,data in self.js.json_data['Portal'].items():
-            list_data.append([portal,data['ip'],data['port'],data['netmask'],",".join(data['target'])])
-        table = s.make_table(list_header,list_data)
+        for portal, data in self.js.json_data['Portal'].items():
+            list_data.append([portal, data['ip'], data['port'], data['netmask'], ",".join(data['target'])])
+        table = s.make_table(list_header, list_data)
         s.prt_log(table, 0)
+        return list_data
 
 
     def _check_name(self, name):
-        result = s.re_search(r'^[a-zA-Z]\w*$',name)
+        result = s.re_search(r'^[a-zA-Z][a-zA-Z0-9_]*$', name)
         # 添加从JSON中验证这个Name有没有被portal使用
         return True if result else False
 
     def _check_IP(self, ip):
         result = s.re_search(
-            r'^((2([0-4]\d|5[0-5]))|[1-9]?\d|1\d{2})(\.((2([0-4]\d|5[0-5]))|[1-9]?\d|1\d{2})){3}$',ip)
+            r'^((2([0-4]\d|5[0-5]))|[1-9]?\d|1\d{2})(\.((2([0-4]\d|5[0-5]))|[1-9]?\d|1\d{2})){3}$', ip)
         # 添加从JSON中验证这个IP有没有被portal使用
         return True if result else False
 
     def _check_port(self, port):
-        if not isinstance(port,int):
+        if not isinstance(port, int):
             return False
-        return True if 3260<=port<=65535 else False
+        return True if 3260 <= port <= 65535 else False
 
     def _check_netmask(self, netmask):
         if not isinstance(netmask, int):
@@ -952,21 +932,18 @@ class Portal():
         obj_crm = CRMConfig()
         status = obj_crm.get_crm_res_status(name, type='IPaddr2')
         if status == 'STARTED':
-            s.prt_log(f'Create {name} successfully',1)
+            s.prt_log(f'Create {name} successfully', 1)
             return 'OK'
         elif status == 'NOT_STARTED':
             failed_actions = obj_crm.get_failed_actions(name)
             if failed_actions == 0:
                 return 'NETWORK_ERROR'
             elif failed_actions:
-                s.prt_log(failed_actions,1)
+                s.prt_log(failed_actions, 1)
                 return 'OTHER_ERROR'
             else:
-                s.prt_log('Unknown error, please check',1)
+                s.prt_log('Unknown error, please check', 1)
                 return 'UNKNOWN_ERROR'
         else:
-            s.prt_log(f'Failed to create {name}, please check',1)
+            s.prt_log(f'Failed to create {name}, please check', 1)
             return 'FAIL'
-
-
-
