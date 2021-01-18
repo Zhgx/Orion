@@ -209,4 +209,50 @@ class JsonOperation(object):
             self.update_data(iscsi_type, target, list(set(list_member)))
 
 
+    def arrange_data(self,type,res):
+        """
+        删除了传入的资源之后，处理与之相关的其他资源数据
+        :param type: 被删除的资源类型 host/hg/dg
+        :param res: 被删除的资源名称
+        :return:
+        """
+        import copy
+        data = copy.deepcopy(self.json_data)
+
+        if type == 'Host':
+            # 会影响到hg，map
+            list_hg_delete = []
+            for hg,list_host in data['HostGroup'].items():
+                if res in list_host:
+                    if len(list_host) > 1:
+                        self.remove_member('HostGroup',hg,[res])
+                    else:
+                        list_hg_delete.append(hg)
+                        self.delete_data('HostGroup',hg)
+            for hg in list_hg_delete:
+                for map,map_data in data['Map'].items():
+                    if hg in map_data['HostGroup']:
+                        if len(data['Map'][map]['HostGroup'])>1:
+                            self.remove_member('HostGroup', map, [hg], type='Map')
+                        else:
+                            self.delete_data('Map', map)
+
+        elif type == 'hg' or type == 'HostGroup':
+            # 会影响到map
+            for map in data['Map']:
+                if len(data['Map'][map]['HostGroup']) > 1:
+                    self.remove_member('HostGroup', map, [res], type='Map')
+                else:
+                    self.delete_data('Map', map)
+
+        elif type == 'dg' or type == 'DiskGroup':
+            # 会影响到map
+            for map in data['Map']:
+                if len(data['Map'][map]['DiskGroup']) > 1:
+                    self.remove_member('DiskGroup', map, [res], type='Map')
+                else:
+                    self.delete_data('Map', map)
+        else:
+            raise TypeError('type must be "host/hg/dg"')
+
 
