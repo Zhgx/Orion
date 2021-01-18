@@ -25,7 +25,8 @@ def deco_record_exception(func):
         try:
             return func(self,*args)
         except Exception as e:
-            self.logger.write_to_log('DATA','DEBUG','exception','', str(traceback.format_exc()))
+            logger = log.Log()
+            logger.write_to_log('DATA','DEBUG','exception','', str(traceback.format_exc()))
             raise e
     return wrapper
 

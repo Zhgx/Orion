@@ -437,7 +437,7 @@ class OprtStoragepool(views.MethodView):
 
     def get(self):
         dict_data = get_request_data()
-        logger = consts.glo_log()
+        logger = log.Log()
         logger.write_to_log('OPRT', 'ROUTE', '/storagepool/show/oprt', dict_data['ip'], '')
         if get_all_storagepool():
             logger.write_to_log('DATA', 'RETURN', 'OprtStoragepool', 'result', '0')

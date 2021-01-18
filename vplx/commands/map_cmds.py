@@ -150,7 +150,6 @@ class MapCommands():
         map.show(args.map)
 
     @sd.deco_record_exception
-    @sd.deco_comfirm_del('map')
     def delete(self, args):
         map = ex.Map()
         map.delete_map(args.map)

@@ -34,7 +34,6 @@ def init():
     _GLOBAL_DICT = {}
     _GLOBAL_DICT['LOG_ID'] = 0
     _GLOBAL_DICT['RPL'] = 'no'
-    _GLOBAL_DICT['LOG_SWITCH'] = 'yes'
     _GLOBAL_DICT['ROLLBACK'] = {}
 
 def set_value(key, value):
@@ -73,9 +72,6 @@ def set_glo_gui_tid(value):
 def glo_gui_tid():
     return get_value('GUI_TID')
 
-
-def glo_log():
-    return get_value('LOG')
 
 
 def glo_db():

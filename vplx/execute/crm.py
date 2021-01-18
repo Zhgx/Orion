@@ -585,7 +585,11 @@ class ISCSILogicalUnit():
 
     def get_target(self):
         # 获取target及对应的target_iqn
-        target_all = self.js.json_data['Target']
+        try:
+            target_all = self.js.json_data['Target']
+        except KeyError:
+            s.prt_log('please execute commands: vtel iscsi sync',2)
+
         if target_all:
             # 目前的设计只有一个target（现在可能target有多个），所以直接取一个
             target = next(iter(target_all.keys()))
