@@ -1,5 +1,4 @@
 import execute as ex
-import consts
 import sundry as s
 
 class Usage():
@@ -23,7 +22,7 @@ class Usage():
 class PortalCommands():
 
     def __init__(self):
-        self.logger = consts.glo_log()
+        pass
 
     def setup_commands(self, parser):
         """

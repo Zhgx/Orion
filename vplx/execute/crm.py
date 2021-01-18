@@ -57,11 +57,23 @@ class RollBack():
     dict_rollback = {'IPaddr2':{}, 'PortBlockGroup':{} , 'ISCSITarget':{}}
     def __init__(self, func):
         self.func = func
-        self.type,self.oprt = func.__qualname__.split('.')
 
     def __call__(self, *args, **kwargs):
+        self.type,self.oprt = self.func.__qualname__.split('.')
         if self.func(self, *args, **kwargs):
             self.dict_rollback[self.type].update({args[0]:self.oprt})
+
+    # def __init__(self,func):
+    #     self.func = func
+    #     wraps(func)(self)
+    #     self.type,self.oprt = func.__qualname__.split('.')
+    #
+    #
+    # def __call__(self,*args, **kwargs):
+    #     wraps(self.func)(self)
+    #     self.type,self.oprt = self.func.__qualname__.split('.')
+    #     if self.__wrapped__(*args, **kwargs):
+    #         self.dict_rollback[self.type].update({args[1]:self.oprt})
 
     # 带参数的编写方式
     # def __init__(self,type):
@@ -90,12 +102,11 @@ class RollBack():
     @classmethod
     def rollback(cls,ip,port,netmask):
         # 目前只用于Portal的回滚，之后Target的回滚可以根据需要增加一个判断类型的参数
-        print("程序中途错误，开始进行资源回滚")
-        print("需要回滚的资源：",cls.dict_rollback)
+        print("Execution error, resource rollback")
         cls.rb_ipaddr2(cls,ip,port,netmask)
         cls.rb_block(cls,ip,port,netmask)
         cls.rb_target(cls,ip,port,netmask)
-        print("回滚结束")
+        print("resource rollback ends")
 
     # 回滚完之后考虑做一个对crm配置的检查？跟name相关的资源如果还存在，进行提示？
 
@@ -231,14 +242,14 @@ class CRMData():
 
         error_portblock = set(portblock.keys()) - set(list_normal_portblock)
         if error_portblock:
-            s.prt_log(f'{",".join(error_portblock)}没有对应的VIP，请进行处理',2)
+            s.prt_log(f'Portblock:{",".join(error_portblock)} do not have corresponding VIP, please proceed',2)
         list_portal = [] # portal如果没有block和unblock，则会加进这个列表
 
         for portal_name,portal_data in list(dict_portal.items()):
             if portal_data['status'] == 'ERROR':
                 list_portal.append(portal_name)
         if list_portal:
-            s.prt_log(f'{",".join(list_portal)}这些portal无法正常使用，请进行处理',2)
+            s.prt_log(f'Portal:{",".join(list_portal)} can not be used normally,  please proceed',2)
 
     def check_env_sync(self,vip,portblock,target):
         """
@@ -387,6 +398,7 @@ class CRMConfig():
                 s.prt_log(f"Delete {res} success(including colocation and order)", 0)
                 return True
             else:
+                s.prt_log(result['rst'],1)
                 return False
 
     def delete_res(self, res, type):
@@ -412,13 +424,6 @@ class CRMConfig():
             s.prt_log("refresh",0)
             return True
 
-    # def change_initiator(self, res, iqns):
-    #     iqns = ' '.join(iqns)
-    #     cmd = f"crm config set {res}.allowed_initiators \"{iqns}\""
-    #     result = execute_crm_cmd(cmd)
-    #     if result['sts']:
-    #         s.prt_log(f"Change {res} allowed_initiators success!",0)
-    #         return True
 
 
 
@@ -478,7 +483,7 @@ class PortBlockGroup():
         :return:
         """
         if not action in ['block','unblock']:
-            raise TypeError('action参数输入错误：block/unblock')
+            raise TypeError('Parameters "action" must be selected：block/unblock')
 
         cmd = f'crm cof primitive {name} portblock params ip={ip} portno={port} protocol=tcp action={action} op monitor timeout=20 interval=20'
         cmd_result = execute_crm_cmd(cmd)
@@ -560,8 +565,6 @@ class ISCSITarget():
 
     @RollBack
     def modify(self,name,ip,port):
-        print('开始修改iSCSITarget')
-
         cmd = f'crm cof set {name}.portals {ip}:{port}'
         cmd_result = execute_crm_cmd(cmd)
         if not cmd_result['sts']:
@@ -581,7 +584,11 @@ class ISCSILogicalUnit():
 
     def get_target(self):
         # 获取target及对应的target_iqn
-        target_all = self.js.json_data['Target']
+        try:
+            target_all = self.js.json_data['Target']
+        except KeyError:
+            s.prt_log('please execute commands: vtel iscsi sync',2)
+
         if target_all:
             # 目前的设计只有一个target（现在可能target有多个），所以直接取一个
             target = next(iter(target_all.keys()))
@@ -636,7 +643,7 @@ class ISCSILogicalUnit():
 
 
     def create_mapping(self,name,list_iqn):
-        path = self.js.get_data('Disk')[name]
+        path = self.js.json_data['Disk'][name]
         lunid = int(path[-4:]) - 1000
         initiator = ' '.join(list_iqn)
 
@@ -654,7 +661,7 @@ class ISCSILogicalUnit():
             s.prt_log('Fail to create iSCSILogicalUnit', 1)
             for i in self.list_res_created:
                 self.delete(i)
-            print('创建途中失败，以下是报错信息')
+            print('Failed during creation, the following is the error message：')
             print(str(traceback.format_exc()))
             return False
 

@@ -1,21 +1,22 @@
 # coding=utf-8
 import re
-import consts
-import sundry as s
 import sys
+
+import sundry as s
+import log
 
 
 
 class Linstor():
     def __init__(self):
-        self.logger = consts.glo_log()
+        self.logger = log.Log()
 
     def refine_linstor(self,data):
         reSeparate = re.compile(r'(.*?\s\|)')
         list_table = data.split('\n')
         list_data_all = []
 
-        oprt_id = s.create_oprt_id()
+        oprt_id = log.create_oprt_id()
         self.logger.write_to_log('DATA','STR','refine_linstor','',oprt_id)
         self.logger.write_to_log('OPRT','REGULAR','findall',oprt_id,{'re':reSeparate})
 
@@ -33,12 +34,11 @@ class Linstor():
         try:
             list_data_all.pop(0)
         except IndexError:
-            s.prt_log('The data cannot be read, please check whether LINSTOR is normal.',2)
+            s.prt_log('Error, please check whether LINSTOR is normal.',2)
             sys.exit()
         if list_data_all:
             if not list_data_all[0]:
-                s.prt_log('正则匹配出错,程序退出',2)
-                sys.exit()
+                s.prt_log('Error, please check whether LINSTOR is normal.', 2)
 
         self.logger.write_to_log('DATA', 'REGULAR', 'findall', oprt_id, list_data_all)
         return list_data_all

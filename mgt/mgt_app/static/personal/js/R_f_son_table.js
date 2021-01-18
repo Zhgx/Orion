@@ -79,32 +79,29 @@ function resource_oprt() {
 				success : function(status) {
 					write_to_log(tid,'OPRT','ROUTE',vplxIp,'/resource/show/oprt',status);
 					resource_show_data_log();
-					layui
-							.use(
-									[ 'laydate', 'laypage', 'layer', 'table',
-											'carousel', 'upload', 'element',
-											'slider' ],
-									function() {
+					layui.use(['laydate', 'laypage', 'layer', 'table', 'carousel', 'upload', 'element', 'slider'], function(){
 										var table = layui.table // 表格
 										// 执行一个 table 实例
 										table
 												.render({
-													elem : '#demo',
+													elem : '#resource_test',
 													url : vplxIp+ "/resource/show/data", // 数据接口
-													title : '用户表',
-													cols : [ [ // 表头
+													title : '用户表'
+													,toolbar: '#toolbarDemo'
+													,page: true
+													,cols : [ [ // 表头
 															{
-																type : 'checkbox',
-																fixed : 'left'
-															},
-															{
-																field : 'resource',
-																title : 'resource',
-																sort : true
+																type : 'checkbox'
+															}
+															,{field : 'resource',title : 'resource',
+																width: 150,
+																sort : true,
+																event: 'setSign'
 															},
 															{
 																field : 'mirror_way',
 																title : 'mirror_way',
+																width: 150,
 																event : 'collapse',
 																templet : function(
 																		d) {
@@ -122,20 +119,76 @@ function resource_oprt() {
 															{
 																field : 'size',
 																title : 'size',
+																width: 100,
 																sort : true
 															},
 															{
 																field : 'used',
 																title : 'used',
+																width: 100,
 																sort : true
 															},
 															{
-																fixed : 'right',
 																align : 'center',
+																width: 200,
 																toolbar : '#barDemo'
 															} ] ]
 												});
-
+										
+										
+										 table.on('toolbar(test)', function(obj){
+											    var checkStatus = table.checkStatus(obj.config.id);
+											    switch(obj.event){
+											      case 'getCheckData':
+// var data = checkStatus.data;
+// layer.alert(JSON.stringify(data));
+											    	  var that = this; 
+											          // 多窗口模式，层叠置顶
+											          layer.open({
+											            type: 2 // 此处以iframe举例
+											            ,title: 'Resource创建'
+											            ,area: ['390px', '260px']
+											            ,shade: 0
+											            ,maxmin: true
+											            ,offset: [ // 为了演示，随机坐标
+											              Math.random()*($(window).height()-300)
+											              ,Math.random()*($(window).width()-390)
+											            ] 
+											            ,content: {
+											            p:222,
+											            	
+											            	
+											            }
+											            ,btn: ['关闭', '继续创建'] // 只是为了演示
+											            ,yes: function(){
+											            	layer.closeAll();
+											            }
+											            ,btn2: function(){
+											            	$(that).click(); 
+											            }
+											            ,zIndex: layer.zIndex // 重点1
+											            ,success: function(layero){
+											              layer.setTop(layero); // 重点2
+											            }
+											          });
+											      break;
+// case 'getCheckLength':
+// var data = checkStatus.data;
+// layer.msg('选中了：'+ data.length + ' 个');
+// break;
+// case 'isAll':
+// layer.msg(checkStatus.isAll ? '全选': '未全选');
+// break;
+											      
+											      // 自定义头工具栏右侧图标 - 提示
+											      case 'LAYTABLE_TIPS':
+											        layer.alert('这是工具栏右侧自定义的一个图标按钮');
+											      break;
+											    };
+											  });
+										
+										
+										
 										// 监听工具条
 										table
 												.on(
@@ -215,7 +268,62 @@ function resource_oprt() {
 																	}
 																});
 
-															}
+															}   
+														    if(obj.event === 'detail'){
+														      layer.msg('查看操作');
+														    } else if(obj.event === 'del'){
+														    	  data_dict = obj.data
+															      resource_data =  data_dict.resource
+														      layer.confirm('真的删除'+ resource_data+'的数据么' , function(index){
+														        obj.del(); // 删除对应行（tr）的DOM结构
+														        layer.close(index);
+														        // 这里一般是发送修改的Ajax请求
+													            // 同步更新表格和缓存对应的值
+														        // 向服务端发送删除指令
+														    	$.ajax({
+														    		url :  vplxIp +'/resource/show/delete',
+														    		type : "get",
+														    		dataType : "json",
+														    		data : {
+														    			tid : tid,
+														    			resource_data : resource_data
+														    		},
+														    		async : false,
+														    		success : function(delete_result) {
+														    			alert(delete_result);
+														    		}
+														    	});
+														      });
+														    } else if(obj.event === 'edit'){
+														      layer.msg('编辑操作');
+														    } else if(obj.event === 'setSign'){
+														    	var data_F = obj.data
+														        layer.prompt({
+														            formType: 3
+														            ,title: '把[resource] 为 '+ data_F.resource +'改成如下值'
+														            ,value: data_F.resource
+														          }, function(value, index){
+														            layer.close(index);
+														            // 这里一般是发送修改的Ajax请求
+														            // 同步更新表格和缓存对应的值
+														        	$.ajax({
+															    		url :  vplxIp +'/LINSTOR/modify',
+															    		type : "get",
+															    		dataType : "json",
+															    		data : {
+															    			tid : tid,
+															    			resource_data : value
+															    		},
+															    		async : false,
+															    		success : function(modify_result) {
+															    			alert(modify_result);
+															    		}
+															    	});
+														            obj.update({
+														            resource:value
+														            });
+														          });
+														        }
 														});
 
 										function collapseTable(options) {
@@ -317,7 +425,35 @@ function resource_oprt() {
 										}
 
 									});
+					
+					layui.use(['form', 'layedit', 'laydate','element'], function(){
+						  var form = layui.form
+						  ,layer = layui.layer
+						  ,layedit = layui.layedit
+						  ,laydate = layui.laydate;
+						  var $ = layui.jquery
+						  ,element = layui.element;
 
+							 
+							 // 监听提交
+							  form.on('submit(demo1)', function(data){
+								  resource_data = JSON.stringify(data.field);
+									$.ajax({
+							    		url :  vplxIp +'/LINSTOR/Create',
+							    		type : "get",
+							    		dataType : "json",
+							    		data : {
+							    			tid : tid,
+							    			resource_data : resource_data
+							    		},
+							    		async : false,
+							    		success : function(delete_result) {
+							    		}
+							    	});
+								  
+							  });
+					});
+							
 				},
 				error:function () {
 					write_to_log(tid,'OPRT','ROUTE',vplxIp,'/resource/show/oprt','error');
@@ -327,3 +463,7 @@ function resource_oprt() {
 			});
 };
 resource_oprt();
+
+
+
+

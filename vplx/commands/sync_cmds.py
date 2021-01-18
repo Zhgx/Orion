@@ -7,7 +7,7 @@ import iscsi_json
 
 class SyncCommands():
     def __init__(self):
-        self.logger = consts.glo_log()
+        pass
 
     def setup_commands(self, parser):
         """
@@ -37,7 +37,7 @@ class SyncCommands():
         js.cover_data('Target',target)
         # js.cover_data({'Portal': portal})
         # js.json_data.update({'Target': target})
-        js.commit_json()
+        js.commit_data()
         sd.prt_log('Configuration file data update completed', 1)
 
 
