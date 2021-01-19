@@ -1,6 +1,7 @@
 # coding:utf-8
 from flask import Flask, jsonify, render_template, request, make_response, views
 from flask_cors import *
+import copy
 from execute import iscsi
 import iscsi_json
 import consts
@@ -134,8 +135,8 @@ AllxxxResult为获取数据路由
 HOST_RESULT = None
 def update_host():
     global HOST_RESULT
-   
     js = iscsi_json.JsonOperation()
+    js.json_data = js.read_json()
     HOST_RESULT = js.json_data['Host']
     
     return True
@@ -173,9 +174,10 @@ DISK_RESULT = None
 
 def update_disk():
     global DISK_RESULT
-    
     disk = iscsi.Disk()
-    DISK_RESULT = disk.update_disk()
+    disk.update_disk()
+    js = iscsi_json.JsonOperation()
+    DISK_RESULT = js.read_json()['Disk']
     return True
 
 
@@ -202,6 +204,7 @@ class AllDiskResult(views.MethodView):
         if not DISK_RESULT:
             update_disk()
         logger.write_to_log('DATA', 'RETURN', 'AllDiskResult', 'result', DISK_RESULT)
+        print(DISK_RESULT)
         return cors_data(DISK_RESULT)
 
 
@@ -214,6 +217,7 @@ def update_hg():
 
     js = iscsi_json.JsonOperation()
     host_group = iscsi.HostGroup()
+    js.json_data = js.read_json()
     HOSTGROUP_RESULT = js.json_data['HostGroup']
     return True
 
@@ -250,9 +254,10 @@ DISKGROUP_RESULT = None
 
 def update_dg():
     global DISKGROUP_RESULT
-
     js = iscsi_json.JsonOperation()
+    js.json_data = js.read_json()
     DISKGROUP_RESULT = js.json_data['DiskGroup']
+    print(DISKGROUP_RESULT)
     return True
 
 
@@ -288,8 +293,8 @@ MAP_RESULT = None
 
 def update_map():
     global MAP_RESULT
-
     js = iscsi_json.JsonOperation()
+    js.json_data = js.read_json()
     MAP_RESULT = js.json_data['Map']
     return True
 
@@ -333,9 +338,11 @@ class CheckHostModify(views.MethodView):
         dict_data = get_request_data()
         host_name = dict_data['host_name']
         host_iqn = dict_data['host_iqn']
-        # js_modify对象更新数据{hg_name:list_host},然后跟js对象对比，返回改动的信息
-        print(hg_name, host)
-        message = '返回到后台的数据是'
+        js = iscsi_json.JsonOperation()
+        json_data_before = copy.deepcopy(js.json_data)
+        js.update_data('Host', host_name, host_iqn)
+        obj_iscsi = iscsi.IscsiConfig(json_data_before, js.json_data)
+        message = '\n'.join(obj_iscsi.show_info())
         dict = {'iscsi_data':True, 'info':message}
         return cors_data(dict)
 
@@ -346,7 +353,21 @@ class HostModify(views.MethodView):
         dict_data = get_request_data()
         host_name = dict_data['host_name']
         host_iqn = dict_data['host_iqn']
-        message = '操作完成'
+        js = iscsi_json.JsonOperation()
+        js.json_data = js.read_json()
+        json_data_before = copy.deepcopy(js.json_data)
+        js.update_data('Host', host_name, host_iqn)
+        obj_iscsi = iscsi.IscsiConfig(json_data_before, js.json_data)
+        # 确认JSON文件在途中未被修改
+        json_data_now = js.read_json()
+        if json_data_before == json_data_now:
+            obj_iscsi.create_iscsilogicalunit()
+            obj_iscsi.delete_iscsilogicalunit()
+            obj_iscsi.modify_iscsilogicalunit()
+            js.commit_data()
+            message = '操作完成'
+        else:
+            message = '配置文件已被修改，请重新操作'
         return cors_data(message)
 
   
@@ -354,14 +375,15 @@ class CheckHgModify(views.MethodView):
 
     def get(self):
         dict_data = get_request_data()
-        hg_name = dict_data['hg_name']
-        host = dict_data['host']
-        list_host = host.split()
-        # js_modify对象更新数据{hg_name:list_host},然后跟js对象对比，返回改动的信息
-        
-        print(hg_name, host)
-        message = '返回到后台的数据是'
-        dict = {'iscsi_data':True, 'info':message}
+        hg = dict_data['hg_name']
+        list_host = dict_data['host'].split(',') if dict_data['host'] else []
+
+        js = iscsi_json.JsonOperation()
+        json_data_before = copy.deepcopy(js.json_data)
+        js.update_data('HostGroup', hg, list_host)
+        obj_iscsi = iscsi.IscsiConfig(json_data_before, js.json_data)
+        message = '\n'.join(obj_iscsi.show_info())
+        dict = {'iscsi_data': True, 'info': message}
         return cors_data(dict)
 
 
@@ -369,9 +391,27 @@ class HgModify(views.MethodView):
 
     def get(self):
         dict_data = get_request_data()
-        hg_name = dict_data['hg_name']
-        host = dict_data['host']
-        message = '操作完成'
+        hg = dict_data['hg_name']
+        list_host = dict_data['host'].split(',') if dict_data['host'] else []
+        js = iscsi_json.JsonOperation()
+        js.json_data = js.read_json()
+        json_data_before = copy.deepcopy(js.json_data)
+        if not list_host:
+            js.delete_data('HostGroup',hg)
+            js.arrange_data('HostGroup',hg)
+        else:
+            js.update_data('HostGroup', hg, list_host)
+        obj_iscsi = iscsi.IscsiConfig(json_data_before, js.json_data)
+        # 确认JSON文件在途中未被修改
+        json_data_now = js.read_json()
+        if json_data_before == json_data_now:
+            obj_iscsi.create_iscsilogicalunit()
+            obj_iscsi.delete_iscsilogicalunit()
+            obj_iscsi.modify_iscsilogicalunit()
+            js.commit_data()
+            message = '操作完成'
+        else:
+            message = '配置文件已被修改，请重新操作'
         return cors_data(message)
     
 
@@ -379,14 +419,15 @@ class CheckDgModify(views.MethodView):
 
     def get(self):
         dict_data = get_request_data()
-        dg_name = dict_data['dg_name']
-        disk = dict_data['disk']
-        list_disk = host.split()
-        # js_modify对象更新数据{hg_name:list_host},然后跟js对象对比，返回改动的信息
-        
-        print(dg_name, disk)
-        message = '返回到后台的数据是'
-        dict = {'iscsi_data':True, 'info':message}
+        dg = dict_data['dg_name']
+        list_disk = dict_data['disk'].split(',') if dict_data['disk'] else []
+
+        js = iscsi_json.JsonOperation()
+        json_data_before = copy.deepcopy(js.json_data)
+        js.update_data('DiskGroup', dg, list_disk)
+        obj_iscsi = iscsi.IscsiConfig(json_data_before, js.json_data)
+        message = '\n'.join(obj_iscsi.show_info())
+        dict = {'iscsi_data': True, 'info': message}
         return cors_data(dict)
 
 
@@ -394,114 +435,84 @@ class DgModify(views.MethodView):
 
     def get(self):
         dict_data = get_request_data()
-        dg_name = dict_data['dg_name']
-        disk = dict_data['disk']
-        message = '操作完成'
-        return cors_data(message)    
+        dg = dict_data['dg_name']
+        list_disk = dict_data['disk'].split(',') if dict_data['disk'] else []
+
+        js = iscsi_json.JsonOperation()
+        js.json_data = js.read_json()
+        json_data_before = copy.deepcopy(js.json_data)
+        if not list_disk:
+            js.delete_data('DiskGroup',dg)
+            js.arrange_data('DiskGroup',dg)
+        else:
+            js.update_data('DiskGroup', dg, list_disk)
+        obj_iscsi = iscsi.IscsiConfig(json_data_before, js.json_data)
+        # 确认JSON文件在途中未被修改
+        json_data_now = js.read_json()
+        if json_data_before == json_data_now:
+            obj_iscsi.create_iscsilogicalunit()
+            obj_iscsi.delete_iscsilogicalunit()
+            obj_iscsi.modify_iscsilogicalunit()
+            js.commit_data()
+            message = '操作完成'
+        else:
+            message = '配置文件已被修改，请重新操作'
+        return cors_data(message)
     
 
 class CheckMapModify(views.MethodView):
 
     def get(self):
         dict_data = get_request_data()
-        print(dict_data)
-        map_name = dict_data['map_name']
-        hg = dict_data['hg']
-        dg = dict_data['dg']
-        list_hg = hg.split()
-        list_dg = dg.split()
-        # js_modify对象更新数据{hg_name:list_host},然后跟js对象对比，返回改动的信息
-        print(list_hg, list_dg, map_name)
-        message = '返回到后台的数据是'
-        dict = {'iscsi_data':True, 'info':message}
+        map = dict_data['map_name']
+        list_hg = dict_data['hg'].split(',') if dict_data['disk'] else []
+        list_dg = dict_data['dg'].split(',') if dict_data['disk'] else []
+        js = iscsi_json.JsonOperation()
+        json_data_before = copy.deepcopy(js.json_data)
+        if not list_hg or not list_dg:
+            js.delete_data('Map',map)
+        else:
+            js.update_data('Map',map,{'HostGroup': list_hg, 'DiskGroup': list_dg})
+        obj_iscsi = iscsi.IscsiConfig(json_data_before, js.json_data)
+        message = '\n'.join(obj_iscsi.show_info())
+        dict = {'iscsi_data': True, 'info': message}
         return cors_data(dict)
 
 
 class MapModify(views.MethodView):
 
     def get(self):
-        dict_data = get_request_data()
-        map_name = dict_data['map_name']
-        hg = dict_data['hg']
-        print(type(dict_data['iscsi_data']))
-        iscsi_data = eval(dict_data['iscsi_data'])
-        js_now = iscsi_json.JsonOperation()
-        print("1:", type(iscsi_data))
-        print("2:", type(js_now.iscsi_data))
-        if iscsi_data == js_now.iscsi_data:
-            js_modify = iscsi_json.JsonMofidy()
-            js_modify.remove_member('HostGroup', map, [hg], type='Map')
-            dict_before = js_now.get_disk_with_iqn()
-            dict_now = js_modify.get_disk_with_iqn()
-            obj_ilu = iscsi.IscsiConfig(dict_before, dict_now)
-            try:
-                obj_ilu.create_iscsilogicalunit()
-                obj_ilu.delete_iscsilogicalunit()
-                obj_ilu.modify_iscsilogicalunit()
-            except Exception:
-                print('异常,暂无回退')
-                info = '执行失败，已回退'
-            if not js_modify.json_data['Map'][map]['HostGroup']:
-                js_now.delete_data('Map', map)
-            else:
-                js_now.remove_member('HostGroup', map, [hg], type='Map')
-            info = '删除成功'
-        else:
-            print('json配置文件已改变')
-            info = 'json配置文件已改变,请重新操作'
-        return cors_data(info)
 
-# class CheckMapModify(views.MethodView):
-# 
-#     def get(self):
-#         dict_data = get_request_data()
-#         map = dict_data['map']
-#         hg = dict_data['hg']
-#         js = iscsi_json.JsonOperation()
-#         js_modify = iscsi_json.JsonMofidy()
-#         js_modify.remove_member('HostGroup', map, [hg], type='Map')
-#         dict_before = js.get_disk_with_iqn()
-#         dict_now = js_modify.get_disk_with_iqn()
-#         obj_ilu = iscsi.IscsiConfig(dict_before, dict_now)
-#         info = f"删除：{','.join(obj_ilu.delete)}\n新增：{','.join(obj_ilu.create)}\n修改：{','.join(obj_ilu.modify)}"
-#         dict = {'iscsi_data':js.iscsi_data,'info':info}
-#         return cors_data(dict)
-# 
-#     
-# class MapModify(views.MethodView):
-# 
-#     def get(self):
-#         dict_data = get_request_data()
-#         print(dict_data)
-#         map = dict_data['map']
-#         hg = dict_data['hg']
-#         print(type(dict_data['iscsi_data']))
-#         iscsi_data = eval(dict_data['iscsi_data'])
-#         js_now = iscsi_json.JsonOperation()
-#         print("1:",type(iscsi_data))
-#         print("2:",type(js_now.iscsi_data))
-#         if iscsi_data == js_now.iscsi_data:
-#             js_modify = iscsi_json.JsonMofidy()
-#             js_modify.remove_member('HostGroup', map, [hg], type='Map')
-#             dict_before = js_now.get_disk_with_iqn()
-#             dict_now = js_modify.get_disk_with_iqn()
-#             obj_ilu = iscsi.IscsiConfig(dict_before, dict_now)
-#             try:
-#                 obj_ilu.create_iscsilogicalunit()
-#                 obj_ilu.delete_iscsilogicalunit()
-#                 obj_ilu.modify_iscsilogicalunit()
-#             except Exception:
-#                 print('异常,暂无回退')
-#                 info = '执行失败，已回退'
-#             if not js_modify.json_data['Map'][map]['HostGroup']:
-#                 js_now.delete_data('Map',map)
-#             else:
-#                 js_now.remove_member('HostGroup', map, [hg], type='Map')
-#             info = '删除成功'
-#         else:
-#             print('json配置文件已改变')
-#             info = 'json配置文件已改变,请重新操作'
-#         return cors_data(info)
+        dict_data = get_request_data()
+        map = dict_data['map_name']
+        list_hg = dict_data['hg'].split(',') if dict_data['disk'] else []
+        list_dg = dict_data['dg'].split(',') if dict_data['disk'] else []
+        js = iscsi_json.JsonOperation()
+        js.json_data = js.read_json()
+        json_data_before = copy.deepcopy(js.json_data)
+        if not list_hg or not list_dg:
+            js.delete_data('Map',map)
+        else:
+            js.update_data('Map',map,{'HostGroup': list_hg, 'DiskGroup': list_dg})
+
+        obj_iscsi = iscsi.IscsiConfig(json_data_before, js.json_data)
+        # 确认JSON文件在途中未被修改
+        json_data_now = js.read_json()
+        if json_data_before == json_data_now:
+            try:
+                obj_iscsi.create_iscsilogicalunit()
+                obj_iscsi.delete_iscsilogicalunit()
+                obj_iscsi.modify_iscsilogicalunit()
+            except Exception:
+                message = '执行失败'
+            else:
+                js.commit_data()
+                message = '操作完成'
+        else:
+            message = '配置文件已被修改，请重新操作'
+        return cors_data(message)
+
+
 '''
 
 @author: paul
@@ -517,27 +528,15 @@ class CheckAllDelete(views.MethodView):
         iscsi_type = dict_data['iscsi_type']
         iscsi_name = dict_data['iscsi_name']
 
+        print(iscsi_type, iscsi_name)
+
         js = iscsi_json.JsonOperation()
-
-        if iscsi_type == 'host':
-
-            message = None
-        elif iscsi_type == 'hostgroup':
-            message = None
-
-        elif iscsi_type == 'diskgroup':
-            message = None
-
-        elif iscsi_type == 'map':
-            message = None
-
-        else:
-            raise TypeError('iscsi_type Error')
-
-
-        # js_modify对象更新数据{hg_name:list_host},然后跟js对象对比，返回改动的信息
-        print(iscsi_type,iscsi_name)
-        message = '返回到后台的数据是'
+        json_data_before = copy.deepcopy(js.json_data)
+        js.delete_data(iscsi_type,iscsi_name)
+        if iscsi_type != 'Map':
+            js.arrange_data(iscsi_type, iscsi_name)
+        obj_iscsi = iscsi.IscsiConfig(json_data_before, js.json_data)
+        message = '\n'.join(obj_iscsi.show_info())
         dict = {'iscsi_data':True, 'info':message}
         return cors_data(dict)
  
@@ -548,69 +547,24 @@ class AllDelete(views.MethodView):
         dict_data = get_request_data()
         iscsi_type = dict_data['iscsi_type']
         iscsi_name = dict_data['iscsi_name']
-        message = '操作完成'
-        return cors_data(message)    
-# 
-# class CheckHgDelete(views.MethodView):
-#  
-#     def get(self):
-#         dict_data = get_request_data()
-#         hg_name = dict_data['hg_name']
-#         # js_modify对象更新数据{hg_name:list_host},然后跟js对象对比，返回改动的信息
-#         print(hg_name)
-#         message = '返回到后台的数据是'
-#         dict = {'iscsi_data':True, 'info':message}
-#         return cors_data(dict)
-#  
-#  
-# class HgDelete(views.MethodView):
-#  
-#     def get(self):
-#         dict_data = get_request_data()
-#         hg_name = dict_data['hg_name']
-#         message = '操作完成'
-#         return cors_data(message)    
-# 
-# class CheckDgDelete(views.MethodView):
-#  
-#     def get(self):
-#         dict_data = get_request_data()
-#         dg_name = dict_data['dg_name']
-#         # js_modify对象更新数据{hg_name:list_host},然后跟js对象对比，返回改动的信息
-#         print(dg_name)
-#         message = '返回到后台的数据是'
-#         dict = {'iscsi_data':True, 'info':message}
-#         return cors_data(dict)
-#  
-#  
-# class DgDelete(views.MethodView):
-#  
-#     def get(self):
-#         dict_data = get_request_data()
-#         dg_name = dict_data['dg_name']
-#         message = '操作完成'
-#         return cors_data(message) 
-#     
-# class CheckMapDelete(views.MethodView):
-#  
-#     def get(self):
-#         dict_data = get_request_data()
-#         map_name = dict_data['map_name']
-#         # js_modify对象更新数据{hg_name:list_host},然后跟js对象对比，返回改动的信息
-#         print(map_name)
-#         message = '返回到后台的数据是'
-#         dict = {'iscsi_data':True, 'info':message}
-#         return cors_data(dict)
-#  
-#  
-# class MapDelete(views.MethodView):
-#  
-#     def get(self):
-#         dict_data = get_request_data()
-#         map_name = dict_data['map_name']
-#         message = '操作完成'
-#         return cors_data(message)    
-#     
-#     
-#     
-#        
+
+        print(iscsi_type,iscsi_name)
+
+        js = iscsi_json.JsonOperation()
+        js.json_data = js.read_json()
+        json_data_before = copy.deepcopy(js.json_data)
+        js.delete_data(iscsi_type, iscsi_name)
+        if iscsi_type != 'Map':
+            js.arrange_data(iscsi_type, iscsi_name)
+        obj_iscsi = iscsi.IscsiConfig(json_data_before, js.json_data)
+        # 确认JSON文件在途中未被修改
+        json_data_now = js.read_json()
+        if json_data_before == json_data_now:
+            obj_iscsi.create_iscsilogicalunit()
+            obj_iscsi.delete_iscsilogicalunit()
+            obj_iscsi.modify_iscsilogicalunit()
+            js.commit_data()
+            message = '操作完成'
+        else:
+            message = '配置文件已被修改，请重新操作'
+        return cors_data(message)

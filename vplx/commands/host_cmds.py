@@ -115,7 +115,6 @@ class HostCommands():
         host.show(args.host)
 
     @sd.deco_record_exception
-    @sd.deco_comfirm_del('host')
     def delete(self, args):
         host = ex.Host()
         host.delete(args.host)

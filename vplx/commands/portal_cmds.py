@@ -65,7 +65,7 @@ class PortalCommands():
             dest='netmask',
             action='store',
             default=24,
-            help='Netmask：0-32.It default is 24.')
+            help='Netmask：1-32.It default is 24.')
 
         p_create_portal.add_argument(
             '-p',

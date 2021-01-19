@@ -515,6 +515,10 @@ function disk_compile(obj) {
 					var list_disk = []
 					for ( var i in disk_result) {
 						list_disk.push(i);
+//						for(var ii in disk_result[i]){
+//							res.push(disk_result[i][ii]);
+////							var list_disk = res.filter((e,i)=>res.indexOf(e)==i)
+//						}
 					}
 					// 表格清空刷新
 					$("#DTable_second_all tr:not(:first)").html("");
@@ -532,7 +536,6 @@ function disk_compile(obj) {
 						  if (!td_disk.includes(items)) return items;
 						})
 						// 放入表格
-						console.log(new_list);
 					for (var i = 0; i < new_list.length; i++) {
 						tr =  '<td >'
 							+ new_list[i] + '</td>';
@@ -665,7 +668,7 @@ function btn_show_delete(obj) {
 		data : {
 			tid : tid,
 			ip : mgtIp,
-			iscsi_type:'diskgroup',
+			iscsi_type:'DiskGroup',
 			iscsi_name: td_dg_name
 		},
 		async : false,
@@ -684,7 +687,7 @@ function affirm_delete(obj) {
 		data : {
 			tid : tid,
 			ip : mgtIp,
-			iscsi_type:'diskgroup',
+			iscsi_type:'DiskGroup',
 			iscsi_name: dg_delete_name
 		},
 		async : false,

@@ -148,7 +148,6 @@ class DiskGroupCommands():
         diskgroup.show(args.diskgroup)
 
     @sd.deco_record_exception
-    @sd.deco_comfirm_del('diskgroup')
     def delete(self, args):
         diskgroup = ex.DiskGroup()
         diskgroup.delete(args.diskgroup)
