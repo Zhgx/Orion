@@ -1,7 +1,5 @@
 {
     "Host": {
-        "h1": "iqn.2020-11.com.example:pytest01",
-        "h2": "iqn.2020-11.com.example:pytest02",
         "h3": "iqn.2020-11.com.example:pytest03",
         "h4": "iqn.2020-11.com.example:pytest04",
         "h5": "iqn.2020-11.com.example:pytest05",
@@ -16,10 +14,6 @@
         "res_e": "/dev/drbd1004"
     },
     "HostGroup": {
-        "hg1": [
-            "h1",
-            "h2"
-        ],
         "hg3": [
             "h3",
             "h5"
@@ -39,7 +33,8 @@
     },
     "DiskGroup": {
         "dg1": [
-            ""
+            "res_a",
+            "res_b"
         ],
         "dg2": [
             "res_b",
@@ -53,7 +48,58 @@
             "res_e"
         ]
     },
-    "Map": {},
+    "Map": {
+        "map1": {
+            "HostGroup": [
+                "hg3",
+                "hg4"
+            ],
+            "DiskGroup": [
+                "dg3",
+                "dg4"
+            ]
+        },
+        "map2": {
+            "HostGroup": [
+                "hg3",
+                "hg4"
+            ],
+            "DiskGroup": [
+                "dg3",
+                "dg4"
+            ]
+        },
+        "Map2": {
+            "HostGroup": [
+                "hg3",
+                "hg4"
+            ],
+            "DiskGroup": [
+                "dg3",
+                "dg4"
+            ]
+        },
+        "Map223": {
+            "HostGroup": [
+                "hg3",
+                "hg4"
+            ],
+            "DiskGroup": [
+                "dg3",
+                "dg4"
+            ]
+        },
+        "map244": {
+            "HostGroup": [
+                "hg3",
+                "hg4"
+            ],
+            "DiskGroup": [
+                "dg2",
+                "dg3"
+            ]
+        }
+    },
     "Portal": {
         "pt2": {
             "ip": "10.203.1.152",

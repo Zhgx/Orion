@@ -407,7 +407,7 @@ layui.use(['form', 'layedit', 'laydate','element'], function(){
 	  var $ = layui.jquery
 	  ,element = layui.element;
 	  getClassify();
-
+	  grouping();
 		 
 		 // 监听提交
 		  form.on('submit(demo1)', function(data){
@@ -472,7 +472,6 @@ function getClassify(){
     $.ajax({
         url: vplxIp + '/LINSTOR/Create/lvm',
         success:function(lvm_data){
-        	console.log(lvm_data);
             if(lvm_data.lvm){
                 for(var i =0;i<lvm_data.lvm.length;i++){
                     $("#classifyId").append("<option value=\""+lvm_data.lvm[i].node_key+"\">"+lvm_data.lvm[i].node_key+"</option>");
@@ -484,7 +483,30 @@ function getClassify(){
     });
 }
 
-
+function grouping(){
+	 $("#grouping").empty();
+   $.ajax({
+       url: vplxIp + '/LINSTOR/Create/sp',
+       success:function(lvm_data){
+       	console.log(lvm_data);
+           if(lvm_data){
+        	   var  html="";
+               for(var i in lvm_data ){
+            	   var NName = lvm_data[i].NodeName
+            	   var device_name = lvm_data[i].Spool
+            	   html += '<optgroup   label='+NName+'>'
+            	   for(var a in device_name){
+            		   html += '<option  value='+NName+'>' + device_name[a].device_name+ '</option>'
+            		  }
+            	   	html += '</optgroup>'
+            	   	$("#grouping").append(html);
+            	}
+               }
+               //重新渲染
+               layui.form.render("select");
+       }
+   });
+}
 
 
 
