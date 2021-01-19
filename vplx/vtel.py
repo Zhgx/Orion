@@ -92,8 +92,7 @@ class VtelCLI(object):
 
         parser_iscsi = subp.add_parser(
             'iscsi',
-            help='Management operations for iSCSI',
-            add_help=False)
+            help='Management operations for iSCSI')
 
         # replay function related parameter settings
         parser_replay = subp.add_parser(

@@ -1,51 +1,14 @@
 {
-    "Host": {
-        "h3": "iqn.2020-11.com.example:pytest03",
-        "h4": "iqn.2020-11.com.example:pytest04",
-        "h5": "iqn.2020-11.com.example:pytest05",
-        "h6": "iqn.2020-11.com.example:pytest06",
-        "h7": "iqn.2020-11.com.example:pytest07"
-    },
-    "Disk": {
-        "res_a": "/dev/drbd1000",
-        "res_b": "/dev/drbd1001",
-        "res_c": "/dev/drbd1002",
-        "res_d": "/dev/drbd1003",
-        "res_e": "/dev/drbd1004"
-    },
-    "HostGroup": {
-        "hg3": [
-            "h5",
-            "h3"
-        ],
-        "hg4": [
-            "h6"
-        ],
-        "hg5": [
-            "h7"
-        ],
-        "hg6": [
-            "h6"
-        ],
-        "hg7": [
-            "h7"
-        ]
-    },
-    "DiskGroup": {
-        "dg3": [
-            "res_c",
-            "res_d"
-        ],
-        "dg4": [
-            "res_e"
-        ]
-    },
+    "Host": {},
+    "Disk": {},
+    "HostGroup": {},
+    "DiskGroup": {},
     "Map": {},
     "Portal": {
         "pt2": {
-            "ip": "10.203.1.152",
+            "ip": "10.203.1.158",
             "port": "3260",
-            "netmask": "24",
+            "netmask": "28",
             "target": []
         },
         "vip": {

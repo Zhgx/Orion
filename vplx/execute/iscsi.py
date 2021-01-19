@@ -36,16 +36,17 @@ class IscsiConfig():
         dict_map_relation = {}
         for disk in data['Disk']:
             dict_map_relation.update({disk: set()})
-
-        for map in data['Map'].values():
-            for dg in map['DiskGroup']:
-                for disk in data['DiskGroup'][dg]:
-                    set_iqn = set()
-                    for hg in map['HostGroup']:
-                        for host in data['HostGroup'][hg]:
-                            set_iqn.add(data['Host'][host])
-                    dict_map_relation[disk] = dict_map_relation[disk] | set_iqn
-
+        try:
+            for map in data['Map'].values():
+                for dg in map['DiskGroup']:
+                    for disk in data['DiskGroup'][dg]:
+                        set_iqn = set()
+                        for hg in map['HostGroup']:
+                            for host in data['HostGroup'][hg]:
+                                set_iqn.add(data['Host'][host])
+                        dict_map_relation[disk] = dict_map_relation[disk] | set_iqn
+        except KeyError:
+            print(KeyError)
         return dict_map_relation
 
 
@@ -242,6 +243,9 @@ class Host():
     def modify(self, host, iqn):
         if not self.js.check_key('Host', host):
             s.prt_log(f"Fail! Can't find {host}", 1)
+            return
+        if not self._check_iqn(iqn):
+            s.prt_log(f"The format of IQN is wrong. Please confirm and fill in again.", 1)
             return
 
         json_data_before = copy.deepcopy(self.js.json_data)
@@ -837,70 +841,102 @@ class Portal():
             print(f'Failed to delete {name}, please check')
 
 
-    def modify(self, name, ip, port):
-        # CRM和JSON数据对比检查
+    def modify(self, name, ip, port ,netmask):
         if not self.js.check_key('Portal',name):
             s.prt_log(f"Fail！Can't find {name}", 1)
             return
-        if not self._check_IP(ip):
-            s.prt_log(f'{ip} does not meet specifications',1)
-            return
-        if not self._check_port(port):
-            s.prt_log(f'{port} does not meet specifications(Range：3260-65535)',1)
-            return
-
+        flag_only_netmask = True
         portal = self.js.json_data['Portal'][name]
-        if portal['ip'] == ip and portal['port'] == str(port):
-            s.prt_log(f'IP and port are the same as the before, no need to modify',1)
-            return
-        if self.js.check_in_res('Portal','ip',ip):
-            s.prt_log(f'{ip} is already in use, please use another IP',1)
-            return
 
-
-        # 查询有没有target使用这个vip
-        if portal['target']:
-            # 反馈修改影响
-            print(f'Target：{",".join(portal["target"])}using this portal.These targets will be modified synchronously, whether to continue?y/n')
-            answer = s.get_answer()
-            if not answer in ['y', 'yes', 'Y', 'YES']:
-                s.prt_log('Modify canceled', 2)
-
-            try:
-                obj_ipadrr = IPaddr2()
-                obj_ipadrr.modify(name,ip)
-
-                obj_portblock = PortBlockGroup()
-                obj_portblock.modify(f'{name}_prtblk_on',ip, port)
-                obj_portblock.modify(f'{name}_prtblk_off',ip, port)
-
-                obj_target = ISCSITarget()
-                for target in portal['target']:
-                    obj_target.modify(target,ip,port)
-            except Exception as ex:
-                RollBack.rollback(portal['ip'],portal['port'],portal['netmask'])
+        # 指定了ip
+        if ip:
+            if not self._check_IP(ip):
+                s.prt_log(f'{ip} does not meet specifications',1)
                 return
+            if self.js.check_in_res('Portal', 'ip', ip):
+                s.prt_log(f'{ip} is already in use, please use another IP', 1)
+                return
+            flag_only_netmask = False
+        else:
+            ip = portal['ip']
+
+        # 指定了port
+        if port:
+            if not self._check_port(port):
+                s.prt_log(f'{port} does not meet specifications(Range：3260-65535)',1)
+                return
+            flag_only_netmask = False
+        else:
+            port = portal['port']
+        # 指定了netmask
+        if netmask:
+            if not self._check_netmask(netmask):
+                s.prt_log(f'{netmask} does not meet specifications(Range：1-32)', 1)
 
         else:
-            # 直接修改
+            netmask = portal['netmask']
+
+        if portal['ip'] == ip and portal['port'] == str(port) and portal['netmask'] == str(netmask):
+            s.prt_log(f'The parameters are the same, no need to modify',1)
+            return
+
+        if flag_only_netmask:
+            # 只执行了netmask进行修改，这种情况下只需要对vip的netmask进行修改就行
             try:
                 obj_ipadrr = IPaddr2()
-                obj_ipadrr.modify(name,ip)
-
-                obj_portblock = PortBlockGroup()
-                obj_portblock.modify(f'{name}_prtblk_on',ip, port)
-                obj_portblock.modify(f'{name}_prtblk_off',ip, port)
+                obj_ipadrr.modify(name, ip, netmask)
+                raise TypeError
             except Exception as ex:
                 self.logger.write_to_log('DATA', 'DEBUG', 'exception', 'Rollback', str(traceback.format_exc()))
                 RollBack.rollback(portal['ip'],portal['port'],portal['netmask'])
                 return
 
+        else:
+            if portal['target']:
+                # 反馈修改影响
+                print(f'Target：{",".join(portal["target"])}using this portal.These targets will be modified synchronously, whether to continue?y/n')
+                answer = s.get_answer()
+                if not answer in ['y', 'yes', 'Y', 'YES']:
+                    s.prt_log('Modify canceled', 2)
+
+                try:
+                    obj_ipadrr = IPaddr2()
+                    obj_ipadrr.modify(name, ip)
+
+                    obj_portblock = PortBlockGroup()
+                    obj_portblock.modify(f'{name}_prtblk_on', ip, port)
+                    obj_portblock.modify(f'{name}_prtblk_off', ip, port)
+
+                    obj_target = ISCSITarget()
+                    for target in portal['target']:
+                        obj_target.modify(target, ip, port)
+                except Exception as ex:
+                    self.logger.write_to_log('DATA', 'DEBUG', 'exception', 'Rollback', str(traceback.format_exc()))
+                    RollBack.rollback(portal['ip'], portal['port'], portal['netmask'])
+                    return
+
+            else:
+                # 直接修改
+                try:
+                    obj_ipadrr = IPaddr2()
+                    obj_ipadrr.modify(name, ip, netmask)
+
+                    obj_portblock = PortBlockGroup()
+                    obj_portblock.modify(f'{name}_prtblk_on', ip, port)
+                    obj_portblock.modify(f'{name}_prtblk_off', ip, port)
+                except Exception as ex:
+                    self.logger.write_to_log('DATA', 'DEBUG', 'exception', 'Rollback', str(traceback.format_exc()))
+                    RollBack.rollback(portal['ip'], portal['port'], portal['netmask'])
+                    return
+
+
 
         # 暂不验证（见需求）
 
         # 更新数据
-        self.js.json_data['Portal'][name]['ip'] = ip
-        self.js.json_data['Portal'][name]['port'] = str(port)
+        portal['ip'] = ip
+        portal['port'] = str(port)
+        portal['netmask'] = str(netmask)
         for target in portal['target']:
             self.js.json_data['Target'][target]['ip'] = ip
             self.js.json_data['Target'][target]['port'] = str(port)

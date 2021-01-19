@@ -81,7 +81,8 @@ class JsonOperation(object):
                     "HostGroup": {},
                     "DiskGroup": {},
                     "Map": {},
-                    "Portal":{}}
+                    "Portal":{},
+                    "Target":{}}
                 json.dump(json_dict, fw, indent=4, separators=(',', ': '))
             s.prt_log('The configuration file has been created, you can enter "vtel iscsi sync" to synchronize data later',2)
         except json.decoder.JSONDecodeError:

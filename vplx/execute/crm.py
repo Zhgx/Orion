@@ -120,7 +120,7 @@ class RollBack():
                 elif oprt == 'delete':
                     obj_ipaddr2.create(name,ip,netmask)
                 elif oprt == 'modify':
-                    obj_ipaddr2.modify(name,ip)
+                    obj_ipaddr2.modify(name,ip,netmask)
 
 
     def rb_block(self,ip,port,netmask):
@@ -440,7 +440,7 @@ class IPaddr2():
             s.prt_log(cmd_result['rst'],1)
             raise consts.CmdError
         else:
-            s.prt_log(f'Create {name} successfully',0)
+            s.prt_log(f'Create vip:{name} successfully',0)
             return True
 
     @RollBack
@@ -450,21 +450,23 @@ class IPaddr2():
         if not result:
             raise consts.CmdError
         else:
-            s.prt_log(f'Delete {name} successfully',0)
+            s.prt_log(f'Delete vip:{name} successfully',0)
             return True
 
     @RollBack
-    def modify(self,name,ip):
-        cmd = f'crm cof set {name}.ip {ip}'
-        cmd_result = execute_crm_cmd(cmd)
-        if not cmd_result['sts']:
+    def modify(self,name,ip,netmask):
+        cmd_ip = f'crm cof set {name}.ip {ip}'
+        cmd_netmask = f'crm conf set {name}.cidr_netmask {netmask}'
+        cmd_result_ip = execute_crm_cmd(cmd_ip)
+        cmd_result_netmask = execute_crm_cmd(cmd_netmask)
+        if not cmd_result_ip['sts'] or not cmd_result_netmask['sts']:
             # 创建失败，输出原命令报错信息
-            s.prt_log(cmd_result['rst'],1)
+            s.prt_log(cmd_result_ip['rst'],1)
+            s.prt_log(cmd_result_netmask['rst'],1)
             raise consts.CmdError
         else:
-            s.prt_log(f'{name}\'s ip and port have been modified successfully',0)
+            s.prt_log(f'Modify vip:{name} (IP and Netmask) successfully',0)
             return True
-
 
 
 class PortBlockGroup():
@@ -496,7 +498,6 @@ class PortBlockGroup():
             s.prt_log(f'Create {name} successfully',0)
             return True
 
-
     @RollBack
     def delete(self,name):
         obj_crm = CRMConfig()
@@ -506,7 +507,6 @@ class PortBlockGroup():
         else:
             s.prt_log(f'Delete {name} successfully',0)
             return True
-
 
     @RollBack
     def modify(self,name,ip,port):
