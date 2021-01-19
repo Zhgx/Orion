@@ -657,7 +657,7 @@ function btn_show_delete(obj) {
 function affirm_delete(obj) {
 	hg_delete_name = $("#hg_delete_data").val();
 	$.ajax({
-		url : vplxIp + "/hg/delete",
+		url : vplxIp + "/all/delete",
 		type : "get",
 		dataType : "json",
 		data : {

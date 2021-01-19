@@ -16,14 +16,6 @@
         "res_e": "/dev/drbd1004"
     },
     "HostGroup": {
-        "hg1": [
-            "h1",
-            "h2"
-        ],
-        "hg2": [
-            "h3",
-            "h4"
-        ],
         "hg3": [
             "h3",
             "h5"
@@ -58,38 +50,46 @@
             "res_e"
         ]
     },
-    "Map": {
-        "map1": {
-            "HostGroup": [
-                "hg1",
-                "hg2"
-            ],
-            "DiskGroup": [
-                "dg1",
-                "dg2"
-            ]
-        }
-    },
+    "Map": {},
     "Portal": {
-        "pt2": {
-            "ip": "10.203.1.152",
+        "portal_test_4": {
+            "ip": "10.203.1.201",
+            "port": "3260",
+            "netmask": "24",
+            "target": []
+        },
+        "pt_1": {
+            "ip": "10.203.1.204",
             "port": "3260",
             "netmask": "24",
             "target": []
         },
         "vip": {
-            "ip": "10.203.1.153",
+            "ip": "10.203.1.75",
             "port": "3260",
             "netmask": "24",
             "target": [
                 "t_test"
+            ]
+        },
+        "vip_test2": {
+            "ip": "10.203.1.206",
+            "port": "3260",
+            "netmask": "24",
+            "target": [
+                "target_test"
             ]
         }
     },
     "Target": {
         "t_test": {
             "target_iqn": "iqn.2020-04.feixitek.com:versaplx00",
-            "ip": "10.203.1.153",
+            "ip": "10.203.1.75",
+            "port": "3260"
+        },
+        "target_test": {
+            "target_iqn": "iqn.2020-12.com.example:test206",
+            "ip": "10.203.1.206",
             "port": "3260"
         }
     }
