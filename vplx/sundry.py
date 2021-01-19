@@ -11,8 +11,8 @@ from functools import wraps
 import colorama as ca
 
 import consts
+# from public import log
 import log
-
 
 
 def deco_record_exception(func):

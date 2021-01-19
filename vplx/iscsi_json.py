@@ -52,6 +52,8 @@ class JsonOperation(object):
     json_data = None
 
     def __init__(self):
+        consts.init()
+        
         if self.json_data is None:
             self.json_data = self.read_json()
 
@@ -81,7 +83,8 @@ class JsonOperation(object):
                     "HostGroup": {},
                     "DiskGroup": {},
                     "Map": {},
-                    "Portal":{}}
+                    "Portal":{},
+                    "Target":{}}
                 json.dump(json_dict, fw, indent=4, separators=(',', ': '))
             s.prt_log('The configuration file has been created, you can enter "vtel iscsi sync" to synchronize data later',2)
         except json.decoder.JSONDecodeError:
@@ -254,5 +257,7 @@ class JsonOperation(object):
                     self.delete_data('Map', map)
         else:
             raise TypeError('type must be "host/hg/dg"')
+
+
 
 
