@@ -421,7 +421,6 @@ class CheckDgModify(views.MethodView):
         dict_data = get_request_data()
         dg = dict_data['dg_name']
         list_disk = dict_data['disk'].split(',') if dict_data['disk'] else []
-
         js = iscsi_json.JsonOperation()
         json_data_before = copy.deepcopy(js.json_data)
         js.update_data('DiskGroup', dg, list_disk)
