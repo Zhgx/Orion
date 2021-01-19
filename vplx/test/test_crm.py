@@ -27,9 +27,10 @@ def test_module():
     # # consts.set_glo_id(99)
     # # consts.set_glo_str('test')
     # consts.set_glo_rpl('no')
-    transaction_id = sundry.create_transaction_id()
-    logger = log.Log('test', transaction_id)
-    consts.set_glo_log(logger)
+    # transaction_id = sundry.create_transaction_id()
+    # logger = log.Log('test', transaction_id)
+    logger = log.Log()
+    # consts.set_glo_log(logger)
     consts.set_glo_rpl('no')
 
 
@@ -67,30 +68,18 @@ class TestCRMData:
     def test_get_vip(self):
         """获取 crm 全部 vip 信息"""
         # print('get_vip', self.crmdata.get_vip())
-        # assert self.crmdata.get_vip() == {'portal_test_4': {'ip': '10.203.1.201', 'netmask': '24'},
-        #                                   'vip': {'ip': '10.203.1.75', 'netmask': '24'},
-        #                                   'vip_test2': {'ip': '10.203.1.206', 'netmask': '24'}}
         assert self.crmdata.get_vip() is not None
 
     @pytest.mark.portal
     def test_get_portblock(self):
         """获取 crm 全部 portblock 信息"""
         # print('get_portblock', self.crmdata.get_portblock())
-        # assert self.crmdata.get_portblock() == {
-        #     'p_iscsi_portblock_off': {'ip': '10.203.1.75', 'port': '3260', 'type': 'unblock'},
-        #     'p_iscsi_portblock_on': {'ip': '10.203.1.75', 'port': '3260', 'type': 'block'},
-        #     'portal_test_4_prtblk_off': {'ip': '10.203.1.201', 'port': '3260', 'type': 'unblock'},
-        #     'portal_test_4_prtblk_on': {'ip': '10.203.1.201', 'port': '3260', 'type': 'block'},
-        #     'vip_test2_prtblk_off': {'ip': '10.203.1.200', 'port': '3260', 'type': 'unblock'},
-        #     'vip_test2_prtblk_on': {'ip': '10.203.1.200', 'port': '3260', 'type': 'block'}}
         assert self.crmdata.get_portblock() is not None
 
     @pytest.mark.portal
     def test_get_target(self):
         """获取 crm 全部 target 信息"""
         # print('get_target', self.crmdata.get_target())
-        # assert self.crmdata.get_target() == {
-        #     't_test': {'target_iqn': 'iqn.2020-04.feixitek.com:versaplx00', 'ip': '10.203.1.75', 'port': '3260'}}
         assert self.crmdata.get_target() is not None
 
     @pytest.mark.portal
@@ -98,11 +87,6 @@ class TestCRMData:
         """获取 crm 全部 portal data 信息"""
         # print('get_portal_data', self.crmdata.get_portal_data(self.crmdata.get_vip(), self.crmdata.get_portblock(),
         #                                    self.crmdata.get_target()))
-        # assert self.crmdata.get_portal_data(self.crmdata.get_vip(), self.crmdata.get_portblock(),
-        #                                     self.crmdata.get_target()) == {
-        #            'portal_test_4': {'ip': '10.203.1.201', 'port': '3260', 'netmask': '24', 'target': []},
-        #            'vip': {'ip': '10.203.1.75', 'port': '3260', 'netmask': '24', 'target': ['t_test']},
-        #            'vip_test2': {'ip': '10.203.1.200', 'port': '3260', 'netmask': '24', 'target': []}}
         assert self.crmdata.get_portal_data(self.crmdata.get_vip(), self.crmdata.get_portblock(),
                                             self.crmdata.get_target()) is not None
 

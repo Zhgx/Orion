@@ -74,5 +74,5 @@ def test_glo_log_id():
     assert consts.glo_log_id() == 'test_log_id'
 
 
-def test_glo_log_switch():
-    assert consts.glo_log_switch() == 'test_switch'
+# def test_glo_log_switch():
+#     assert consts.glo_log_switch() == 'test_switch'

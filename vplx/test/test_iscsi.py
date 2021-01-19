@@ -20,7 +20,6 @@ class TestDisk:
         subprocess.run('python3 vtel.py iscsi d s', shell=True)
         self.disk = iscsi.Disk()
 
-
     def teardown_class(self):
         subprocess.run('python3 vtel.py stor r d res_test1 -y', shell=True)
         subprocess.run('python3 vtel.py stor r d res_test2 -y', shell=True)
@@ -72,11 +71,6 @@ class TestDisk:
 class TestHost:
 
     def setup_class(self):
-        # subprocess.run('python3 vtel.py iscsi h c test_host iqn.2020-04.feixitek.com:pytest0001', shell=True)
-        # subprocess.run('python3 vtel.py iscsi h c test_host_hg iqn.2020-04.feixitek.com:pytest0991', shell=True)
-        # subprocess.run('python3 vtel.py iscsi h s', shell=True)
-        # subprocess.run('python3 vtel.py iscsi hg c test_hg test_host_hg', shell=True)
-        # subprocess.run('python3 vtel.py iscsi h s', shell=True)
         self.host = iscsi.Host()
         self.hostg = iscsi.HostGroup()
         self.host.create('test_host', 'iqn.2020-04.feixitek.com:pytest001')
@@ -229,10 +223,6 @@ class TestDiskGroup:
         subprocess.run('python3 vtel.py stor r c res_test -s 10m -a -num 1', shell=True)
         subprocess.run('python3 vtel.py stor r c res_a -s 10m -a -num 1', shell=True)
         subprocess.run('python3 vtel.py iscsi d s', shell=True)
-        # subprocess.run('python3 vtel.py iscsi h c test_host iqn.2020-04.feixitek.com:pytest0999', shell=True)
-        # subprocess.run('python3 vtel.py iscsi d s', shell=True)
-        # subprocess.run('python3 vtel.py iscsi dg c test_dg res_test', shell=True)
-        # subprocess.run('python3 vtel.py iscsi hg c test_hg test_host', shell=True)
         # 创建 Map
         # subprocess.run('python3 vtel.py iscsi m c map1 -dg test_dg -hg test_hg', shell=True)
         # subprocess.run('python3 vtel.py iscsi m s', shell=True)
@@ -356,7 +346,7 @@ class TestDiskGroup:
             terminal_print.assert_called_with('res_test已存在test_dg中')
         with patch('builtins.print') as terminal_print:
             self.diskg.add_disk('test_dg', ['res_O'])
-            terminal_print.assert_called_with('json文件中不存在res_O，无法进行添加')
+            terminal_print.assert_called_with('The disk does not exist in the configuration file and cannot be added')
 
     def test_remove_disk(self):
         """diskgroup 移除 disk"""
@@ -368,11 +358,11 @@ class TestDiskGroup:
             terminal_print.assert_called_with('Fail！Can\'t find test_dg2')
         with patch('builtins.print') as terminal_print:
             self.diskg.remove_disk('test_dg', ['res_O'])
-            terminal_print.assert_called_with('test_dg中不存在成员res_O，无法进行移除')
+            terminal_print.assert_called_with('res_O does not exist in test_dg and cannot be removed')
         # 只有一个资源移除后是否会删掉该dg , 会移除该 hg 和 所配置该 hg 的map
         with patch('builtins.print') as terminal_print:
             self.diskg.remove_disk('test_dg', ['res_a'])
-            terminal_print.assert_called_with('相关的map已经修改/删除')
+            terminal_print.assert_called_with('test_dg and the map related to test_dg have been modified/deleted')
         # self.map.delete_map('map1')
         # self.diskg.delete_diskgroup('test_dg')
 
@@ -392,14 +382,8 @@ class TestDiskGroup:
 class TestHostGroup:
 
     def setup_class(self):
-        # 请注意对象实例化与命令运行顺序
-        # subprocess.run('python3 vtel.py iscsi h c test_host1 iqn.2020-04.feixitek.com:pytest01', shell=True)
-        # subprocess.run('python3 vtel.py iscsi h c test_host2 iqn.2020-04.feixitek.com:pytest002', shell=True)
         subprocess.run('python3 vtel.py stor r c res_test -s 10m -a -num 1', shell=True)
         subprocess.run('python3 vtel.py iscsi d s', shell=True)
-        # subprocess.run('python3 vtel.py iscsi dg c test_dg res_test', shell=True)
-        # subprocess.run('python3 vtel.py iscsi hg c test_hg test_host1', shell=True)
-        # subprocess.run('python3 vtel.py iscsi hg s', shell=True)
         # 创建 Map
         # subprocess.run('python3 vtel.py iscsi m c map1 -dg test_dg -hg test_hg', shell=True)
         # subprocess.run('python3 vtel.py iscsi m s', shell=True)
@@ -414,11 +398,6 @@ class TestHostGroup:
         self.map.create('map1', ['test_hg'], ['test_dg'])
 
     def teardown_class(self):
-        # subprocess.run('python3 vtel.py iscsi m d map1 -y', shell=True)
-        # subprocess.run('python3 vtel.py iscsi dg d test_dg -y', shell=True)
-        # subprocess.run('python3 vtel.py iscsi hg d test_hg -y', shell=True)
-        # subprocess.run('python3 vtel.py iscsi h d test_host1 -y', shell=True)
-        # subprocess.run('python3 vtel.py iscsi h d test_host2 -y', shell=True)
         # self.map.delete_map('map1')
         self.diskg.delete('test_dg')
         self.hostg.delete('test_hg')
@@ -524,10 +503,10 @@ class TestHostGroup:
             terminal_print.assert_called_with('Fail！Can\'t find test_hg2')
         with patch('builtins.print') as terminal_print:
             self.hostg.add_host('test_hg', ['test_host1'])
-            terminal_print.assert_called_with('test_host1已存在test_hg中')
+            terminal_print.assert_called_with('test_host1 already exists in test_hg')
         with patch('builtins.print') as terminal_print:
             self.hostg.add_host('test_hg', ['test_host0'])
-            terminal_print.assert_called_with('json文件中不存在test_host0，无法进行添加')
+            terminal_print.assert_called_with('test_host0 does not exist in the configuration file and cannot be added')
 
     def test_remove_host(self):
         """hostgroup 移除 host"""
@@ -539,11 +518,11 @@ class TestHostGroup:
             terminal_print.assert_called_with('Fail！Can\'t find test_hg2')
         with patch('builtins.print') as terminal_print:
             self.hostg.remove_host('test_hg', ['test_host0'])
-            terminal_print.assert_called_with('test_hg中不存在成员test_host0，无法进行移除')
+            terminal_print.assert_called_with('test_host0 does not exist in test_hg and cannot be removed')
         # hg 的 host 全部移除，配置了该 hg 的 map 同时被删除
         with patch('builtins.print') as terminal_print:
             self.hostg.remove_host('test_hg', ['test_host1'])
-            terminal_print.assert_called_with('相关的map已经修改/删除')
+            terminal_print.assert_called_with('test_hg and the map related to test_hg have been modified/deleted')
 
     # # 返回所有 HostGroup，如果为 HostGroup 空，返回{},否则返回 HostGroup 非空字典
     # def test_get_all_hostgroup(self):
@@ -569,10 +548,6 @@ class TestMap:
 
         subprocess.run('python3 vtel.py stor r c res_test -s 10m -a -num 1', shell=True)
         subprocess.run('python3 vtel.py iscsi d s', shell=True)
-        # subprocess.run('python3 vtel.py iscsi dg c test_dg res_test', shell=True)
-        # subprocess.run('python3 vtel.py iscsi h c test_host iqn.2020-04.feixitek.com:pytest01', shell=True)
-        # subprocess.run('python3 vtel.py iscsi hg c test_hg test_host', shell=True)
-        # subprocess.run('python3 vtel.py iscsi m c test_map -dg test_dg -hg test_hg', shell=True)
         self.host = iscsi.Host()
         self.hostg = iscsi.HostGroup()
         self.map = iscsi.Map()
@@ -586,13 +561,6 @@ class TestMap:
         self.map.create('test_map', ['test_hg'], ['test_dg'])
 
     def teardown_class(self):
-        # subprocess.run('python3 vtel.py iscsi m d test_map -y', shell=True)
-        # subprocess.run('python3 vtel.py iscsi hg d test_hg -y', shell=True)
-        # subprocess.run('python3 vtel.py iscsi hg d test_hg1 -y', shell=True)
-        # subprocess.run('python3 vtel.py iscsi h d test_host -y', shell=True)
-        # subprocess.run('python3 vtel.py iscsi h d test_host1 -y', shell=True)
-        # subprocess.run('python3 vtel.py iscsi dg d test_dg -y', shell=True)
-        # subprocess.run('python3 vtel.py iscsi dg d test_dg1 -y', shell=True)
         self.map.delete_map('test_map')
         self.hostg.delete('test_hg')
         self.hostg.delete('test_hg1')
@@ -609,7 +577,6 @@ class TestMap:
         subprocess.run('python3 vtel.py stor r d res_test1 -y', shell=True)
 
         subprocess.run('python3 vtel.py iscsi d s', shell=True)
-
 
     # 函数已修改
     # # 1.map 是否存在/hostgroup是否存在/diskgroup是否存在
@@ -751,11 +718,11 @@ class TestMap:
         # 2.hg 已存在 map 中
         with patch('builtins.print') as terminal_print:
             self.map.add_hg('test_map1', ['test_hg'])
-            terminal_print.assert_called_with('test_hg已存在test_map1中')
+            terminal_print.assert_called_with('test_hg already exists in test_map1')
         # 3.hg 不存在 json 文件中
         with patch('builtins.print') as terminal_print:
             self.map.add_hg('test_map1', ['test_hg0'])
-            terminal_print.assert_called_with('json文件中不存在test_hg0，无法进行添加')
+            terminal_print.assert_called_with('test_hg0 does not exist in the configuration file and cannot be added')
 
     # map modify -dg -a 调用
     # 1.map 是否存在
@@ -770,11 +737,11 @@ class TestMap:
         # 2.hg 已存在 map 中
         with patch('builtins.print') as terminal_print:
             self.map.add_dg('test_map2', ['test_dg'])
-            terminal_print.assert_called_with('test_dg已存在test_map2中')
+            terminal_print.assert_called_with('test_dg already exists in test_map2')
         # 3.hg 不存在 json 文件中
         with patch('builtins.print') as terminal_print:
             self.map.add_dg('test_map2', ['test_dg0'])
-            terminal_print.assert_called_with('json文件中不存在test_dg0，无法进行添加')
+            terminal_print.assert_called_with('test_dg0 does not exist in the configuration file and cannot be added')
 
     # map modify -hg -r 调用
     # 1.map 是否存在
@@ -786,7 +753,7 @@ class TestMap:
             terminal_print.assert_called_with('Fail！Can\'t find map0')
         with patch('builtins.print') as terminal_print:
             self.map.remove_hg('test_map1', ['test_hg0'])
-            terminal_print.assert_called_with('test_map1中不存在成员test_hg0，无法进行移除')
+            terminal_print.assert_called_with('test_hg0 does not exist in test_map1 and cannot be removed')
         # 成功移除
         # 移除 map 中 HostGroup 的某些 hg 值，该 map 不会被删除
         self.map.remove_hg('test_map1', ['test_hg'])
@@ -795,7 +762,7 @@ class TestMap:
         # 移除 map 中 HostGroup 的全部 hg 值，该 map 被删除
         with patch('builtins.print') as terminal_print:
             self.map.remove_hg('test_map1', ['test_hg1'])
-            terminal_print.assert_called_with('该test_map1已删除')
+            terminal_print.assert_called_with('test_map1 deleted')
 
     # map modify -dg -r 调用
     # 1.map 是否存在
@@ -807,7 +774,7 @@ class TestMap:
             terminal_print.assert_called_with('Fail！Can\'t find map0')
         with patch('builtins.print') as terminal_print:
             self.map.remove_dg('test_map2', ['test_dg0'])
-            terminal_print.assert_called_with('test_map2中不存在成员test_dg0，无法进行移除')
+            terminal_print.assert_called_with('test_dg0 does not exist in test_map2 and cannot be removed')
         # 成功移除
         # 移除 map 中 HostGroup 的某些 dg 值，该 map 不会被删除
         self.map.remove_dg('test_map2', ['test_dg'])
@@ -816,7 +783,7 @@ class TestMap:
         # 移除 map 中 HostGroup 的全部 dg 值，该 map 被删除
         with patch('builtins.print') as terminal_print:
             self.map.remove_dg('test_map2', ['test_dg1'])
-            terminal_print.assert_called_with('该test_map2已删除')
+            terminal_print.assert_called_with('test_map2 deleted')
 
     # # 获取 map 并返回，map 为空返回 {},不为空返回非空字典
     # def test_get_all_map(self):
