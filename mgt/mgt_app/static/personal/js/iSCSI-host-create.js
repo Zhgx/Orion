@@ -377,7 +377,7 @@ function btn_show_delete(obj) {
 		data : {
 			tid : tid,
 			ip : mgtIp,
-			iscsi_type:'host',
+			iscsi_type:'Host',
 			iscsi_name: td_host_name
 		},
 		async : false,
@@ -396,7 +396,7 @@ function affirm_delete(obj) {
 		data : {
 			tid : tid,
 			ip : mgtIp,
-			iscsi_type:'host',
+			iscsi_type:'Host',
 			iscsi_name: host_delete_name
 		},
 		async : false,

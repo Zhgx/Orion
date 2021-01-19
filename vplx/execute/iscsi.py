@@ -36,15 +36,17 @@ class IscsiConfig():
         dict_map_relation = {}
         for disk in data['Disk']:
             dict_map_relation.update({disk: set()})
-
-        for map in data['Map'].values():
-            for dg in map['DiskGroup']:
-                for disk in data['DiskGroup'][dg]:
-                    set_iqn = set()
-                    for hg in map['HostGroup']:
-                        for host in data['HostGroup'][hg]:
-                            set_iqn.add(data['Host'][host])
-                    dict_map_relation[disk] = dict_map_relation[disk] | set_iqn
+        try:
+            for map in data['Map'].values():
+                for dg in map['DiskGroup']:
+                    for disk in data['DiskGroup'][dg]:
+                        set_iqn = set()
+                        for hg in map['HostGroup']:
+                            for host in data['HostGroup'][hg]:
+                                set_iqn.add(data['Host'][host])
+                        dict_map_relation[disk] = dict_map_relation[disk] | set_iqn
+        except KeyError as ex:
+            s.prt_log(f'Unable to find {ex}, please check configuration file',2)
 
         return dict_map_relation
 
@@ -74,19 +76,21 @@ class IscsiConfig():
         return diff, recover
 
     def show_info(self):
-        if self.create:
-            print('create：')
-            for disk, iqn in self.create.items():
-                print(f'{disk}，its allowed initiators will be set to "{",".join(iqn)}"')
-        if self.delete:
-            print('delete：')
-            print(f'{",".join(self.delete)}')
-        if self.modify:
-            print('modify：')
-            for disk, iqn in self.modify.items():
-                print(f'{disk}，its allowed initiators will be set to "{",".join(iqn)}"')
+        nl = '\n'
+        info = []
         if not any([self.create,self.delete,self.modify]):
-            print('Will not have any effect')
+            return ['Will not have any effect']
+        if self.create:
+            info_create = f'''create:\n{''.join([f"{disk}'s iqn ==> {','.join(iqn)}{nl}" for disk,iqn in self.create.items()])}'''
+            info.append(info_create)
+        if self.delete:
+            info_delete = f'delete:\n{",".join(self.delete)}'
+            info.append(info_delete)
+        if self.modify:
+            info_modify = f'''modify:\n{''.join([f"{disk}'s iqn ==> {','.join(iqn)}{nl}" for disk,iqn in self.modify.items()])}'''
+            info.append(info_modify)
+        return info
+
 
     def create_iscsilogicalunit(self):
         for disk, iqn in self.create.items():
@@ -114,11 +118,11 @@ class IscsiConfig():
         print("Mapping relationship rollback ends")
 
     def comfirm_modify(self):
-        self.show_info()
-        print('Are you sure to modify?y/n')
+        print('\n'.join(self.show_info()))
+        print(f'Are you sure? y/n')
         answer = s.get_answer()
         if not answer in ['y', 'yes', 'Y', 'YES']:
-            s.prt_log('Modify canceled', 2)
+            s.prt_log(f'Cancel operation', 2)
 
 
 
@@ -218,23 +222,24 @@ class Host():
 
 
     def delete(self, host):
-        if not self.js.check_key('Host', host):
-            s.prt_log(f"Fail! Can't find {host}", 1)
+        if not self.js.check_key('Host',host):
+            s.prt_log(f"Fail！Can't find {host}", 1)
             return
 
-        hg_in_used = []
-        for hg,data in self.js.json_data['HostGroup']:
-            if host in data:
-                hg_in_used.append(hg)
-
-        if hg_in_used:
-            s.prt_log(f"Fail! {host} is being used by {','.join(hg_in_used)}.Please delete these hostgroup first", 1)
-
-
+        json_data_before = copy.deepcopy(self.js.json_data)
         self.js.delete_data('Host', host)
+        self.js.arrange_data('Host', host)
+        obj_iscsi = IscsiConfig(json_data_before, self.js.json_data)
+        obj_iscsi.comfirm_modify()
+        # 重新读取配置文件的数据，保证数据一致性
+        json_data_now = self.js.read_json()
+        if json_data_before == json_data_now:
+            obj_iscsi.crm_conf_change()
+        else:
+            s.prt_log('The configuration file has been modified, please try again', 2)
+
         self.js.commit_data()
-        s.prt_log("Delete success!", 0)
-        return True
+        s.prt_log(f"Delete {host} successfully", 0)
 
 
 
@@ -305,13 +310,21 @@ class DiskGroup():
         if not self.js.check_key('DiskGroup', dg):
             s.prt_log(f"Fail! Can't find {dg}", 1)
             return
-        if self.js.check_in_res('Map','DiskGroup', dg):
-            s.prt_log("Fail! The diskgroup already map,Please delete the map", 1)
-            return
 
+        json_data_before = copy.deepcopy(self.js.json_data)
         self.js.delete_data('DiskGroup', dg)
+        self.js.arrange_data('DiskGroup', dg)
+        obj_iscsi = IscsiConfig(json_data_before, self.js.json_data)
+        obj_iscsi.comfirm_modify()
+        # 重新读取配置文件的数据，保证数据一致性
+        json_data_now = self.js.read_json()
+        if json_data_before == json_data_now:
+            obj_iscsi.crm_conf_change()
+        else:
+            s.prt_log('The configuration file has been modified, please try again', 2)
+
         self.js.commit_data()
-        s.prt_log("Delete success!", 0)
+        s.prt_log(f"Delete {dg} success!", 0)
 
 
     def add_disk(self, dg, list_disk):
@@ -353,6 +366,11 @@ class DiskGroup():
 
         json_data_before = copy.deepcopy(self.js.json_data)
         self.js.remove_member('DiskGroup', dg, list_disk)
+        if not self.js.json_data['DiskGroup'][dg]:
+            self.js.delete_data('DiskGroup', dg)
+            self.js.arrange_data('DiskGroup', dg)
+            print(f'{dg} and the map related to {dg} have been modified/deleted')
+
         obj_iscsi = IscsiConfig(json_data_before, self.js.json_data)
         obj_iscsi.comfirm_modify()
 
@@ -362,16 +380,6 @@ class DiskGroup():
             obj_iscsi.crm_conf_change()
         else:
             s.prt_log('The configuration file has been modified, please try again', 2)
-
-        if not self.js.json_data['DiskGroup'][dg]:
-            self.js.delete_data('DiskGroup', dg)
-            list_map = self.js.get_map_by_group('DiskGroup', dg)
-            for map in list_map:
-                if len(self.js.json_data['Map'][map]['DiskGroup']) > 1:
-                    self.js.remove_member('DiskGroup', map, [dg], type='Map')
-                else:
-                    self.js.delete_data('Map', map)
-            print(f'{dg} and the map related to {dg} have been modified/deleted')
 
         self.js.commit_data()
 
@@ -422,13 +430,21 @@ class HostGroup():
         if not self.js.check_key('HostGroup', hg):
             s.prt_log(f"Fail! Can't find {hg}", 1)
             return
-        if self.js.check_in_res('Map', 'HostGroup', hg):
-            s.prt_log("Fail! The hostgroup already map,Please delete the map", 1)
-            return
 
+        json_data_before = copy.deepcopy(self.js.json_data)
         self.js.delete_data('HostGroup', hg)
+        self.js.arrange_data('HostGroup', hg)
+        obj_iscsi = IscsiConfig(json_data_before, self.js.json_data)
+        obj_iscsi.comfirm_modify()
+        # 重新读取配置文件的数据，保证数据一致性
+        json_data_now = self.js.read_json()
+        if json_data_before == json_data_now:
+            obj_iscsi.crm_conf_change()
+        else:
+            s.prt_log('The configuration file has been modified, please try again', 2)
+
         self.js.commit_data()
-        s.prt_log("Delete success!", 0)
+        s.prt_log(f"Delete {hg} success!", 0)
 
 
 
@@ -471,6 +487,10 @@ class HostGroup():
                 return
         json_data_before = copy.deepcopy(self.js.json_data)
         self.js.remove_member('HostGroup', hg, list_host)
+        if not self.js.json_data['HostGroup'][hg]:
+            self.js.delete_data('HostGroup', hg)
+            self.js.arrange_data('HostGroup',hg)
+            print(f'{hg} and the map related to {hg} have been modified/deleted')
         obj_iscsi = IscsiConfig(json_data_before, self.js.json_data)
         obj_iscsi.comfirm_modify()
 
@@ -482,15 +502,6 @@ class HostGroup():
             s.prt_log('The configuration file has been modified, please try again', 2)
 
         # 配置文件的改变
-        if not self.js.json_data['HostGroup'][hg]:
-            self.js.delete_data('HostGroup', hg)
-            list_map = self.js.get_map_by_group('HostGroup', hg)
-            for map in list_map:
-                if len(self.js.json_data['Map'][map]['HostGroup']) > 1:
-                    self.js.remove_member('HostGroup', map, [hg], type='Map')
-                else:
-                    self.js.delete_data('Map', map)
-            print(f'{hg} and the map related to {hg} have been modified/deleted')
         self.js.commit_data()
 
 
@@ -509,37 +520,6 @@ class Map():
         # 用于收集创建成功的resource
         # self.target_name, self.target_iqn = self.get_target()
 
-    # def create_mapping(self,name,list_iqn):
-    #     path = self.js.get_data('Disk')[name]
-    #     lunid = int(path[-4:]) - 1000
-    #     initiator = ' '.join(list_iqn)
-    #
-    #     try:
-    #         # 执行iscsilogicalunit创建
-    #         self.create(name,self.target_iqn,lunid,path,initiator)
-    #         self.list_res_created.append(name)
-    #
-    #         #Colocation和Order创建
-    #         Colocation.create(f'col_{name}', name, self.target_name)
-    #         Order.create(f'or_{name}', self.target_name, name)
-    #         s.prt_log(f'create colocation:co_{name}, order:or_{name} success', 0)
-    #     except Exception as ex:
-    #         # 回滚（暂用这种方法）
-    #         s.prt_log('Fail to create iSCSILogicalUnit', 1)
-    #         for i in self.list_res_created:
-    #             self.delete(i)
-    #         print('创建途中失败，以下是报错信息')
-    #         print(str(traceback.format_exc()))
-    #         return False
-    #
-    #     else:
-    #         #启动资源,成功与否不影响创建
-    #         obj_crm = CRMConfig()
-    #         obj_crm.start_res(name)
-    #         obj_crm.checkout_status(name, 'iSCSILogicalUnit', 'STARTED')
-    #
-    #     # 验证？
-    #     return True
 
     def create(self, map, list_hg, list_dg):
         """
@@ -641,9 +621,8 @@ class Map():
         json_data_before = copy.deepcopy(self.js.json_data)
         self.js.delete_data('Map', map)
         obj_iscsi = IscsiConfig(json_data_before, self.js.json_data)
-        obj_iscsi.delete_iscsilogicalunit()
-        obj_iscsi.modify_iscsilogicalunit()
-
+        obj_iscsi.comfirm_modify()
+        obj_iscsi.crm_conf_change()
         self.js.commit_data()
         s.prt_log("Delete map successfully", 0)
         return True

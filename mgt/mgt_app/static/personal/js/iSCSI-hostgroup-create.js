@@ -419,6 +419,9 @@ function hg_table() {
 						},
 						async : false,
 						success : function(host_group_result) {
+							console.log(host_group_result);
+							$("#Host_Group_Table_Show tr:not(:first)").html("");
+							
 							write_to_log(tid, 'DATA', 'ROUTE', vplxIp,
 									'/hg/show/data', JSON
 											.stringify(host_group_result));
@@ -641,7 +644,7 @@ function btn_show_delete(obj) {
 		data : {
 			tid : tid,
 			ip : mgtIp,
-			iscsi_type:'hostgroup',
+			iscsi_type:'HostGroup',
 			iscsi_name: td_hg_name
 		},
 		async : false,
@@ -660,7 +663,7 @@ function affirm_delete(obj) {
 		data : {
 			tid : tid,
 			ip : mgtIp,
-			iscsi_type:'hostgroup',
+			iscsi_type:'HostGroup',
 			iscsi_name: hg_delete_name
 		},
 		async : false,

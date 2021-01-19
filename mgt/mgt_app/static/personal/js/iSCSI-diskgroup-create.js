@@ -665,7 +665,7 @@ function btn_show_delete(obj) {
 		data : {
 			tid : tid,
 			ip : mgtIp,
-			iscsi_type:'diskgroup',
+			iscsi_type:'DiskGroup',
 			iscsi_name: td_dg_name
 		},
 		async : false,
@@ -684,7 +684,7 @@ function affirm_delete(obj) {
 		data : {
 			tid : tid,
 			ip : mgtIp,
-			iscsi_type:'diskgroup',
+			iscsi_type:'DiskGroup',
 			iscsi_name: dg_delete_name
 		},
 		async : false,

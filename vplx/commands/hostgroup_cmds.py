@@ -153,7 +153,6 @@ class HostGroupCommands():
 
 
     @sd.deco_record_exception
-    @sd.deco_comfirm_del('hostgroup')
     def delete(self, args):
         hostgroup = ex.HostGroup()
         hostgroup.delete(args.hostgroup)

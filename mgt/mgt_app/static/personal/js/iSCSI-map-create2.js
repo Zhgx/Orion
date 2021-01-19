@@ -924,7 +924,7 @@ function btn_show_delete(obj) {
 		data : {
 			tid : tid,
 			ip : mgtIp,
-			iscsi_type:'map',
+			iscsi_type:'Map',
 			iscsi_name: td_map_name
 		},
 		async : false,
@@ -943,7 +943,7 @@ function affirm_delete(obj) {
 		data : {
 			tid : tid,
 			ip : mgtIp,
-			iscsi_type:'map',
+			iscsi_type:'Map',
 			iscsi_name: map_delete_name
 		},
 		async : false,
