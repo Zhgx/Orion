@@ -1,0 +1,41 @@
+[run]
+omit =
+    commands/*
+	test/*
+	 */__init__.py
+	*/test_cover.py
+	vplx_app/*
+	vtel.py
+	daemon.py
+	process.py
+	test.py
+	conftest.py
+
+[report]
+exclude_lines =
+    class RollBack*
+    def rollback*
+    def rb*
+    elif status == 'NOT_STARTED':
+    elif status == 'NETWORK_ERROR':
+    def restore*
+    def refresh*
+    def deco*
+    raise TimeoutError*
+	p.terminate()*
+	def decorate*
+    except Exception as e:
+    except Exception*
+    except IndexError：
+    def get_answer*
+    def handle_exception*
+    def confirm_modify*
+    s.handle_exception()
+    except TimeoutError:
+    if RPL == 'yes':
+    s.prt_log(f"SUCCESS\n{result['rst']}", 1)
+
+
+
+
+
