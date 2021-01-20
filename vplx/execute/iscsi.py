@@ -243,6 +243,9 @@ class Host():
         if not self.js.check_key('Host', host):
             s.prt_log(f"Fail! Can't find {host}", 1)
             return
+        if not self._check_iqn(iqn):
+            s.prt_log(f"The format of IQN is wrong. Please confirm and fill in again.", 1)
+            return
 
         json_data_before = copy.deepcopy(self.js.json_data)
         self.js.update_data('Host', host, iqn)

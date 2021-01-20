@@ -222,7 +222,7 @@ class TestCRMData:
         portal = self.crmdata.get_portal_data(vip, portblock, target)
         js.cover_data('Portal', portal)
         js.cover_data('Target', target)
-        js.commit_json()
+        js.commit_data()
         # print(js.json_data)
         subprocess.run('python3 vtel.py iscsi sync', shell=True)
 
@@ -254,6 +254,7 @@ class TestCRMConfig:
             subprocess.run('python3 vtel.py iscsi d s', shell=True)
 
     def test_create_crm_res(self):
+        """创建"""
         disk = iscsi.Disk()
         # attention
         disk_data = disk.show('res_test')
