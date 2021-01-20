@@ -104,6 +104,9 @@ class TestStoragePool:
         with pytest.raises(SystemExit) as exsinfo:
             self.sp.create_storagepool_lvm('window', 'sp_pytest_lvm', 'drbdpool')
         assert exsinfo.type == SystemExit
+        with patch('builtins.print') as terminal_print:
+            self.sp.create_storagepool_lvm(self.node_name, 'sp_pytest_lvm', 'drbdpool0')
+            terminal_print.assert_called_with('Volume group:"drbdpool0" does not exist')
 
     def test_create_storagepool_thinlv(self):
         sys.stdout = io.StringIO()
@@ -113,6 +116,9 @@ class TestStoragePool:
         with pytest.raises(SystemExit) as exsinfo:
             self.sp.create_storagepool_thinlv('window', 'sp_pytest_thinlv', 'drbdpool/thinlv_test')
         assert exsinfo.type == SystemExit
+        with patch('builtins.print') as terminal_print:
+            self.sp.create_storagepool_thinlv(self.node_name, 'sp_pytest_thinlv', 'drbdpool/thinlv_test0')
+            terminal_print.assert_called_with('Thin logical volume:"drbdpool/thinlv_test0" does not exist')
 
     def test_show_all_sp(self):
         sys.stdout = io.StringIO()
@@ -238,7 +244,8 @@ class TestResource:
         self.res.delete_resource_all('pytest_res')
         assert 'SUCCESS' in sys.stdout.getvalue()
         # 不存在 (抛warning）
-        # self.res.delete_resource_all('pytest_res0')
+        self.res.delete_resource_all('pytest_res0')
+        assert 'FAIL' in sys.stdout.getvalue()
 
     # 成功返回 True 失败返回 result / return ('The resource already exists')
     def test_create_res_auto(self):
