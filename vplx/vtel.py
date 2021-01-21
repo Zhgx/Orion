@@ -162,12 +162,34 @@ class VtelCLI(object):
         if not dict_input:
             print('There is no command to replay')
             return
-        print(f"\n-------------- transaction: {dict_input['tid']}  command: {dict_input['cmd']} --------------")
+
+
+
+
+        import prettytable
+
+        list_header = ["Time", "Operation", "Output"]
+        table = prettytable.PrettyTable()
+        table.title = f"transaction: {dict_input['tid']}  command: {dict_input['cmd']}"
+        table.field_names = list_header
+        table.align['Output'] = 'l'
+
+        # print(f"\n transaction: {dict_input['tid']}  command: {dict_input['cmd']}")
         consts.set_glo_tsc_id(dict_input['tid'])
+
+
         if dict_input['valid'] == '0':
             replay_args = self._parser.parse_args(dict_input['cmd'].split())
             try:
                 replay_args.func(replay_args)
+                list_data = consts.glo_replay_data()
+                import pprint
+                # pprint.pprint(list_data)
+                if list_data:
+                    for i in list_data:
+                        table.add_row(i)
+                print(table)
+
             except consts.ReplayExit:
                 print('The transaction replay ends')
             except Exception:

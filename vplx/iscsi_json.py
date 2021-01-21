@@ -2,11 +2,20 @@ import json
 import threading
 import pprint
 from functools import wraps
+import prettytable
 
 
 import consts
 import sundry as s
 import log
+
+def make_table(list_header,list_data):
+    table = prettytable.PrettyTable()
+    table.field_names = list_header
+    if list_data:
+        for i in list_data:
+            table.add_row(i)
+    return table
 
 
 def deco_oprt_json(str):
@@ -36,9 +45,17 @@ def deco_oprt_json(str):
                 else:
                     result = ''
                 func(self,*args)
-                print(f"RE:{id_result['time']} {str}:")
-                pprint.pprint(result)
-                print()
+
+                # dict_rd = {'time':id_result['time'],'operation':str,'log_output':result}
+                list_rd = [id_result['time'],str,result]
+                replay_data = consts.glo_replay_data()
+                replay_data.append(list_rd)
+                consts.set_glo_replay_data(replay_data)
+
+                # print(f"RE:{id_result['time']} {str}:")
+                # pprint.pprint(result)
+                # print()
+
                 if id_result['db_id']:
                     s.change_pointer(id_result['db_id'])
             return result

@@ -67,7 +67,13 @@ def get_answer():
         time,answer = logdb.get_anwser(transaction_id)
         if not time:
             time = ''
-        print(f'RE:{time:<20} <input> user input: {answer}\n')
+
+        list_rd = [time, '<input> user', answer]
+        replay_data = consts.glo_replay_data()
+        replay_data.append(list_rd)
+        consts.set_glo_replay_data(replay_data)
+
+        # print(f'RE:{time:<20} <input> user input: {answer}\n')
     return answer
 
 
@@ -184,8 +190,15 @@ def deco_cmd(type):
                 else:
                     result = cmd_result['result']
                     result_output = cmd_result['result']
-                print(f"RE:{id_result['time']:<20} <command>cmd：\n{cmd}")
-                print(f"RE:{cmd_result['time']:<20} <command>result：\n{result_output}")
+
+
+                list_rd = [id_result['time'],'<command>cmd',result_output.replace('\t','')]
+                replay_data = consts.glo_replay_data()
+                replay_data.append(list_rd)
+                consts.set_glo_replay_data(replay_data)
+
+                # print(f"RE:{id_result['time']:<20} <command>cmd：\n{cmd}")
+                # print(f"RE:{cmd_result['time']:<20} <command>result：\n{result_output}")
                 if id_result['db_id']:
                     change_pointer(id_result['db_id'])
 
@@ -228,8 +241,14 @@ def prt(str_, warning_level=0):
         data = db.get_cmd_output(consts.glo_tsc_id())
         if not data["time"]:
             data["time"] = ''
-        print(f'RE:{data["time"]:<20} <output>log output：{warning_str:<4}\n{data["output"]}')
-        print(f'RE:{"":<20} <output>this time output：{warning_str:<4}\n{str_}\n')
+
+        list_rd = [data['time'], '<output>', data["output"]]
+        replay_data = consts.glo_replay_data()
+        replay_data.append(list_rd)
+        consts.set_glo_replay_data(replay_data)
+
+        # print(f'RE:{data["time"]:<20} <output>log output：{warning_str:<4}\n{data["output"]}')
+        # print(f'RE:{"":<20} <output>this time output：{warning_str:<4}\n{str_}\n')
         change_pointer(int(data["db_id"]))
 
 def prt_log(str_, warning_level):
@@ -304,9 +323,16 @@ def deco_json_operation(str):
                     result = eval(json_result['result'])
                 else:
                     result = ''
-                print(f"RE:{id_result['time']} {str}:")
-                pprint.pprint(result)
-                print()
+
+                print(type(json_result['result']))
+                list_rd = [id_result['time'],str,'']
+                replay_data = consts.glo_replay_data()
+                replay_data.append(list_rd)
+                consts.set_glo_replay_data(replay_data)
+
+                # print(f"RE:{id_result['time']} {str}:")
+                # pprint.pprint(result)
+                # print()
                 if id_result['db_id']:
                     change_pointer(id_result['db_id'])
             return result
