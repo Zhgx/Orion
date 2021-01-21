@@ -9,16 +9,7 @@ import consts
 import sundry as s
 import log
 
-def make_table(list_header,list_data):
-    table = prettytable.PrettyTable()
-    table.field_names = list_header
-    if list_data:
-        for i in list_data:
-            table.add_row(i)
-    return table
-
-
-def deco_oprt_json(str):
+def deco_json(str):
     """
     Decorator providing confirmation of deletion function.
     :param func: Function to delete linstor resource
@@ -27,8 +18,6 @@ def deco_oprt_json(str):
         @wraps(func)
         def wrapper(self, *args):
             RPL = consts.glo_rpl()
-            # print(traceback.extract_stack()[-2])
-            # print(traceback.extract_stack()[-3])
             if RPL == 'no':
                 logger = log.Log()
                 oprt_id = log.create_oprt_id()
@@ -44,17 +33,33 @@ def deco_oprt_json(str):
                     result = eval(json_result['result'])
                 else:
                     result = ''
-                func(self,*args)
+                result_replay = json.dumps(result, indent=2)
+
+                replay_num = consts.glo_num()
+                replay_data_sp = consts.glo_replay_data_sp()
+
+                if str == 'read json' or str == 'commit data':
+                    str_opertion = str
+                    replay_data_sp.update({replay_num:result_replay})
+                    result_replay = f'...({replay_num})'
+                    replay_num += 1
+                    consts.set_glo_num(replay_num)
+                    consts.set_glo_replay_data_sp(replay_data_sp)
+                elif str == 'check key' or str == 'check value':
+                    str_opertion = f'check {args[1]} in {args[0]}'
+                elif str == 'check if it is used':
+                    str_opertion = f'check {args[3]} in {args[2]} of {args[1]}'
+                elif str == 'update data' or str == 'update all data' or str == 'delete data':
+                    str_opertion = str
+                    func(self,*args)
+                else:
+                    str_opertion = str
 
                 # dict_rd = {'time':id_result['time'],'operation':str,'log_output':result}
-                list_rd = [id_result['time'],str,result]
+                list_rd = [id_result['time'],f'<JSON>{str_opertion}',result_replay]
                 replay_data = consts.glo_replay_data()
                 replay_data.append(list_rd)
                 consts.set_glo_replay_data(replay_data)
-
-                # print(f"RE:{id_result['time']} {str}:")
-                # pprint.pprint(result)
-                # print()
 
                 if id_result['db_id']:
                     s.change_pointer(id_result['db_id'])
@@ -82,7 +87,7 @@ class JsonOperation(object):
 
 
     # 读取json文档
-    @s.deco_json_operation('<JSON>read json:')
+    @deco_json('read json')
     def read_json(self):
         try:
             json_data = open("../vplx/map_config.json", encoding='utf-8')
@@ -105,7 +110,7 @@ class JsonOperation(object):
         except json.decoder.JSONDecodeError:
             s.prt_log('Failed to read configuration file.',2)
 
-    @s.deco_json_operation('<JSON>commit data')
+    @deco_json('commit data')
     def commit_data(self):
         with open('../vplx/map_config.json', "w") as fw:
             json.dump(self.json_data, fw, indent=4, separators=(',', ': '))
@@ -113,7 +118,7 @@ class JsonOperation(object):
 
 
     # 检查key值是否存在
-    @s.deco_json_operation('<JSON>check key:')
+    @deco_json('check key')
     def check_key(self, key, target):
         """
         检查某个类型的目标是不是在存在
@@ -125,7 +130,7 @@ class JsonOperation(object):
 
 
     # 检查value值是否存在
-    @s.deco_json_operation('<JSON>check value:')
+    @deco_json('check value')
     def check_value(self, key, target):
         """
         检查目标是不是作为某种资源的使用
@@ -136,9 +141,10 @@ class JsonOperation(object):
         return False
 
 
-    @s.deco_json_operation('<JSON>check if it is used：')
+    @deco_json('check if it is used')
     def check_in_res(self,res,member,target):
         """
+        check 3 in 2 of 1
         检查目标资源在不在某个res的成员里面，res：Map，Target，Portal
         :param res:
         :param member: 比如HostGroup/DiskGroup
@@ -151,37 +157,37 @@ class JsonOperation(object):
         return False
 
 
-    @s.deco_json_operation('<JSON>get all map:')
-    def get_map_by_group(self,type,group):
-        """
-        通过hg/dg取到使用这个hg的所有map
-        :param type: "HostGroup"/"DiskGroup"
-        :param group: str, hg/dg
-        :return:
-        """
-        list_map = []
-        for map,map_member in self.json_data['Map'].items():
-            if group in map_member[type]:
-                list_map.append(map)
-        return list_map
+    # @s.deco_json_operation('get all map:')
+    # def get_map_by_group(self,type,group):
+    #     """
+    #     通过hg/dg取到使用这个hg的所有map
+    #     :param type: "HostGroup"/"DiskGroup"
+    #     :param group: str, hg/dg
+    #     :return:
+    #     """
+    #     list_map = []
+    #     for map,map_member in self.json_data['Map'].items():
+    #         if group in map_member[type]:
+    #             list_map.append(map)
+    #     return list_map
 
 
     # 更新Host、HostGroup、DiskGroup、Map的某一个成员的数据
-    @deco_oprt_json('<JSON>update data:')
+    @deco_json('update data')
     def update_data(self, first_key, data_key, data_value):
         self.json_data[first_key].update({data_key: data_value})
         return self.json_data[first_key]
 
 
     # 更新该资源的全部数据
-    @deco_oprt_json(f'<JSON>update all data:）')
+    @deco_json('update all data')
     def cover_data(self, first_key, data):
         self.json_data[first_key] = data
         return self.json_data[first_key]
     
     
     # 删除Host、HostGroup、DiskGroup、Map
-    @deco_oprt_json('<JSON>delete data:')
+    @deco_json('delete data')
     def delete_data(self, first_key, data_key):
         self.json_data[first_key].pop(data_key)
         return self.json_data[first_key]
@@ -207,8 +213,6 @@ class JsonOperation(object):
             self.update_data('Map',target,dict_map)
         else:
             self.update_data(iscsi_type, target, list(set(list_member)))
-
-
 
     def remove_member(self,iscsi_type,target,member,type=None):
         if type == 'Map':

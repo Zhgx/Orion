@@ -35,6 +35,9 @@ def init():
     _GLOBAL_DICT['LOG_ID'] = 0
     _GLOBAL_DICT['RPL'] = 'no'
     _GLOBAL_DICT['RD'] = []
+    _GLOBAL_DICT['RD_SP'] = {}
+    _GLOBAL_DICT['NUM'] = 1
+
 
 def set_value(key, value):
     """ 定义一个全局变量 """
@@ -72,6 +75,13 @@ def set_glo_gui_tid(value):
 def set_glo_replay_data(value):
     set_value('RD',value)
 
+def set_glo_replay_data_sp(value):
+    set_value('RD_SP',value)
+
+def set_glo_num(value):
+    set_value('NUM',value)
+
+
 
 def glo_gui_tid():
     return get_value('GUI_TID')
@@ -100,4 +110,11 @@ def glo_log_id():
 
 def glo_replay_data():
     return get_value('RD')
+
+
+def glo_num():
+    return get_value('NUM')
+
+def glo_replay_data_sp():
+    return get_value('RD_SP')
 
