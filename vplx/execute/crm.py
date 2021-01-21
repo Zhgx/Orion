@@ -494,7 +494,7 @@ class PortBlockGroup():
             s.prt_log(cmd_result['rst'],1)
             raise consts.CmdError
         else:
-            s.prt_log(f'Create {name} successfully',0)
+            s.prt_log(f'Create portblock:{name} successfully',0)
             return True
 
     @RollBack
@@ -504,7 +504,7 @@ class PortBlockGroup():
         if not result:
             raise consts.CmdError
         else:
-            s.prt_log(f'Delete {name} successfully',0)
+            s.prt_log(f'Delete portblock:{name} successfully',0)
             return True
 
     @RollBack
@@ -518,7 +518,7 @@ class PortBlockGroup():
             s.prt_log(cmd_result_port['rst'], 1)
             raise consts.CmdError
         else:
-            s.prt_log(f"Modify {name} (IP and Port) successfully",0)
+            s.prt_log(f"Modify portblock:{name} (IP and Port) successfully",0)
             return True
 
 
@@ -536,7 +536,7 @@ class Colocation():
             s.prt_log(cmd_result['rst'],1)
             raise consts.CmdError
         else:
-            s.prt_log(f'Create {name} successfully',0)
+            s.prt_log(f'Create colocation:{name} successfully',0)
             return True
 
 
@@ -554,7 +554,7 @@ class Order():
             s.prt_log(cmd_result['rst'],1)
             raise consts.CmdError
         else:
-            s.prt_log(f'Create {name} successfully',0)
+            s.prt_log(f'Create order:{name} successfully',0)
             return True
 
 

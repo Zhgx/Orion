@@ -853,7 +853,6 @@ class Portal():
         if netmask:
             if not self._check_netmask(netmask):
                 s.prt_log(f'{netmask} does not meet specifications(Range：1-32)', 1)
-
         else:
             netmask = portal['netmask']
 
@@ -874,6 +873,44 @@ class Portal():
                 self.logger.write_to_log('DATA', 'DEBUG', 'exception', 'Rollback', str(traceback.format_exc()))
                 RollBack.rollback(portal['ip'],portal['port'],portal['netmask'])
                 return
+
+        else:
+            if portal['target']:
+                # 反馈修改影响
+                print(f'Target：{",".join(portal["target"])}using this portal.These targets will be modified synchronously, whether to continue?y/n')
+                answer = s.get_answer()
+                if not answer in ['y', 'yes', 'Y', 'YES']:
+                    s.prt_log('Modify canceled', 2)
+
+                try:
+                    obj_ipadrr = IPaddr2()
+                    obj_ipadrr.modify(name, ip)
+
+                    obj_portblock = PortBlockGroup()
+                    obj_portblock.modify(f'{name}_prtblk_on', ip, port)
+                    obj_portblock.modify(f'{name}_prtblk_off', ip, port)
+
+                    obj_target = ISCSITarget()
+                    for target in portal['target']:
+                        obj_target.modify(target, ip, port)
+                except Exception as ex:
+                    self.logger.write_to_log('DATA', 'DEBUG', 'exception', 'Rollback', str(traceback.format_exc()))
+                    RollBack.rollback(portal['ip'], portal['port'], portal['netmask'])
+                    return
+
+            else:
+                # 直接修改
+                try:
+                    obj_ipadrr = IPaddr2()
+                    obj_ipadrr.modify(name, ip, netmask)
+
+                    obj_portblock = PortBlockGroup()
+                    obj_portblock.modify(f'{name}_prtblk_on', ip, port)
+                    obj_portblock.modify(f'{name}_prtblk_off', ip, port)
+                except Exception as ex:
+                    self.logger.write_to_log('DATA', 'DEBUG', 'exception', 'Rollback', str(traceback.format_exc()))
+                    RollBack.rollback(portal['ip'], portal['port'], portal['netmask'])
+                    return
 
         # 暂不验证（见需求）
 

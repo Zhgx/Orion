@@ -13,7 +13,7 @@ class Usage():
     portal delete(d) PORTAL'''
 
     portal_modify = '''
-    portal modify(m) PORTAL -ip IP -port PORT'''
+    portal modify(m) PORTAL -ip IP -port PORT -netmask [NETMASK]'''
 
     portal_show = '''
     portal show(s)'''
