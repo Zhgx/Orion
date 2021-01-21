@@ -239,19 +239,21 @@ class JsonOperation(object):
 
         elif type == 'hg' or type == 'HostGroup':
             # 会影响到map
-            for map in data['Map']:
-                if len(data['Map'][map]['HostGroup']) > 1:
-                    self.remove_member('HostGroup', map, [res], type='Map')
-                else:
-                    self.delete_data('Map', map)
+            for map,map_data in data['Map'].items():
+                if res in map_data['HostGroup']:
+                    if len(data['Map'][map]['HostGroup']) > 1:
+                        self.remove_member('HostGroup', map, [res], type='Map')
+                    else:
+                        self.delete_data('Map', map)
 
         elif type == 'dg' or type == 'DiskGroup':
             # 会影响到map
-            for map in data['Map']:
-                if len(data['Map'][map]['DiskGroup']) > 1:
-                    self.remove_member('DiskGroup', map, [res], type='Map')
-                else:
-                    self.delete_data('Map', map)
+            for map,map_data in data['Map'].items():
+                if res in map_data['DiskGroup']:
+                    if len(data['Map'][map]['DiskGroup']) > 1:
+                        self.remove_member('DiskGroup', map, [res], type='Map')
+                    else:
+                        self.delete_data('Map', map)
         else:
             raise TypeError('type must be "host/hg/dg"')
 
