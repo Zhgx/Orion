@@ -75,22 +75,30 @@ class TestHost:
 
     def setup_class(self):
         subprocess.run('python3 vtel.py stor r c res_test1 -s 10m -a -num 1', shell=True)
-        subprocess.run('python3 vtel.py stor r c res_test2 -s 10m -a -num 1', shell=True)
-        subprocess.run('python3 vtel.py iscsi d s', shell=True)
-
         self.host = iscsi.Host()
         self.hostg = iscsi.HostGroup()
+        self.diskg = iscsi.DiskGroup()
+        self.map = iscsi.Map()
         self.host.create('test_host', 'iqn.2020-04.feixitek.com:pytest001')
-        self.host.create('test_host_hg', 'iqn.2020-04.feixitek.com:pytest0991')
+        self.host.create('test_host_hg1', 'iqn.2020-04.feixitek.com:pytest0991')
+        self.host.create('test_host_hg2', 'iqn.2020-04.feixitek.com:pytest0992')
+        self.host.create('test_host_hg3', 'iqn.2020-04.feixitek.com:pytest0993')
+
         self.host.show('all')
-        self.hostg.create('test_hg', ['test_host_hg'])
+        self.hostg.create('test_hg1', ['test_host_hg1', 'test_host_hg2'])
+        self.hostg.create('test_hg2', ['test_host_hg3'])
+        self.diskg.create('test_dg', ['res_test1'])
+        self.map.create('test_map', ['test_hg1', 'test_hg2'], ['test_dg'])
 
     def teardown_class(self):
-        # self.hostg.delete('test_hg')
-        # self.host.delete('test_host_hg')
-
+        print('\n------teardown-------')
+        self.diskg.delete('test_dg')
         self.host.delete('test_host')
         self.host.show('all')
+        execute_crm_cmd('crm res stop res_test1')
+        execute_crm_cmd('crm conf del res_test1')
+        subprocess.run('python3 vtel.py stor r d res_test1 -y', shell=True)
+        subprocess.run('python3 vtel.py iscsi d s', shell=True)
 
     # -------------  add -------------- 2020.12.28
     def test_check_iqn(self):
@@ -144,11 +152,22 @@ class TestHost:
         with patch('builtins.print') as terminal_print:
             self.host.delete('test_host1')
         terminal_print.assert_called_with('Delete test_host1 successfully')
-        # 已配置 HostGroup , 能删除，同时如果配置该host的hg是最后一个同时删除hg
+        # 已配置 HostGroup , 能删除
         with patch('builtins.print') as terminal_print:
-            self.host.delete('test_host_hg')
-            terminal_print.assert_called_with('Delete test_host_hg successfully')
-        assert self.hostg.show('test_hg') == []
+            self.host.delete('test_host_hg1')
+            terminal_print.assert_called_with('Delete test_host_hg1 successfully')
+        # 同时如果配置该host的hg是最后一个同时删除hg
+        with patch('builtins.print') as terminal_print:
+            self.host.delete('test_host_hg2')
+            terminal_print.assert_called_with('Delete test_host_hg2 successfully')
+        assert self.hostg.show('test_hg1') == []
+        # 该 host 是 test_map 的 hostgroup 唯一成员，删除后该hostgroup被删除，同时test_map也被删除
+        with patch('builtins.print') as terminal_print:
+            self.host.delete('test_host_hg3')
+            terminal_print.assert_called_with('Delete test_host_hg3 successfully')
+        assert self.hostg.show('test_hg2') == []
+        assert self.map.show('test_map') == []
+        self.diskg.show('all')
 
 
 class TestDiskGroup:
@@ -163,16 +182,16 @@ class TestDiskGroup:
         self.map = iscsi.Map()
         self.host.create('test_host', 'iqn.2020-04.feixitek.com:pytest0999')
         self.diskg.create('test_dg', ['res_test', 'res_test1'])
+        self.diskg.create('test_dg2', ['res_test1'])
         self.diskg.show('all')
 
         self.hostg.create('test_hg', ['test_host'])
         self.map.create('map1', ['test_hg'], ['test_dg'])
         self.map.show('all')
 
-
     def teardown_class(self):
         print('\n------teardown-------')
-        # 需要在前面删不然在res删除之后删json文件不一致或者可以先同步res再删
+        # 需要在前面删,不然在res删除之后删json文件不一致或者可以先同步res再删
         self.host.delete('test_host')
         try:
             execute_crm_cmd('crm res stop res_test')
@@ -254,8 +273,8 @@ class TestDiskGroup:
     def test_delete(self):
         """删除 diskgroup，测试用例包括：diskg不存在，删除失败/已配置在map中，删除成功/删除成功"""
         with patch('builtins.print') as terminal_print:
-            self.diskg.delete('test_dg2')
-            terminal_print.assert_called_with('Fail! Can\'t find test_dg2')
+            self.diskg.delete('test_dg0')
+            terminal_print.assert_called_with('Fail! Can\'t find test_dg0')
         # 已配置在map中
         with patch('builtins.print') as terminal_print:
             self.diskg.delete('test_dg')
@@ -269,13 +288,13 @@ class TestDiskGroup:
     def test_add_disk(self):
         """diskgroup 新增 disk，测试用例包括：新增成功/新增失败：使用不存在的dg；使用已存在dg的res资源；使用不存在的res资源"""
         self.diskg.create('test_dg', ['res_test'])
-        self.map.create('map1', ['test_hg'], ['test_dg'])
+        self.map.create('map1', ['test_hg'], ['test_dg', 'test_dg2'])
         # 新增成功
         assert not self.diskg.add_disk('test_dg', ['res_test1'])
         # 不存在
         with patch('builtins.print') as terminal_print:
-            self.diskg.add_disk('test_dg2', ['res_0'])
-            terminal_print.assert_called_with('Fail！Can\'t find test_dg2')
+            self.diskg.add_disk('test_dg0', ['res_0'])
+            terminal_print.assert_called_with('Fail！Can\'t find test_dg0')
         with patch('builtins.print') as terminal_print:
             self.diskg.add_disk('test_dg', ['res_test'])
             terminal_print.assert_called_with('res_test already exists in test_dg')
@@ -288,16 +307,19 @@ class TestDiskGroup:
         assert not self.diskg.remove_disk('test_dg', ['res_test'])
         # 移除失败
         with patch('builtins.print') as terminal_print:
-            self.diskg.remove_disk('test_dg2', ['res_test1'])
-            terminal_print.assert_called_with('Fail！Can\'t find test_dg2')
+            self.diskg.remove_disk('test_dg0', ['res_test1'])
+            terminal_print.assert_called_with('Fail！Can\'t find test_dg0')
         with patch('builtins.print') as terminal_print:
             self.diskg.remove_disk('test_dg', ['res_O'])
             terminal_print.assert_called_with('res_O does not exist in test_dg and cannot be removed')
         # 只有一个资源移除后是否会删掉该dg , 会移除该 dg 和 所配置该 dg 的map
-        with patch('builtins.print') as terminal_print:
-            self.diskg.remove_disk('test_dg', ['res_test1'])
-            # 这里是输出删除 Iscsilogicalunit 提示语句
-            terminal_print.assert_called_with('Delete res_test1 successfully')
+        self.diskg.remove_disk('test_dg', ['res_test1'])
+        assert self.diskg.show('test_dg') == []
+        # 该 map 还剩下一个 test_dg2，移除 test_dg2 的 res_test1 map会被删除
+        self.diskg.remove_disk('test_dg2', ['res_test1'])
+        assert self.diskg.show('test_dg2') == []
+        assert self.map.show('map1') == []
+        # 这里是输出删除 Iscsilogicalunit 提示语句
 
 
 class TestHostGroup:
@@ -314,8 +336,10 @@ class TestHostGroup:
         self.diskg = iscsi.DiskGroup()
         self.host.create('test_host1', 'iqn.2020-04.feixitek.com:pytest01')
         self.host.create('test_host2', 'iqn.2020-04.feixitek.com:pytest002')
+
         self.diskg.create('test_dg', ['res_test'])
         self.hostg.create('test_hg', ['test_host1'])
+        self.hostg.create('test_hg2', ['test_host2'])
         self.map.create('map1', ['test_hg'], ['test_dg'])
 
     def teardown_class(self):
@@ -401,8 +425,8 @@ class TestHostGroup:
         # assert self.hostg.create('test_hg1', ['test_host1'])
         # 不存在
         with patch('builtins.print') as terminal_print:
-            self.hostg.delete('test_hg2')
-            terminal_print.assert_called_with('Fail! Can\'t find test_hg2')
+            self.hostg.delete('test_hg0')
+            terminal_print.assert_called_with('Fail! Can\'t find test_hg0')
         # 已配置在map中
         with patch('builtins.print') as terminal_print:
             self.hostg.delete('test_hg')
@@ -417,13 +441,13 @@ class TestHostGroup:
     # --------------------- add  --------------  2020.12.28
     def test_add_host(self):
         """hostgroup 新增 host,测试用例包括：新增 host 成功/新增失败：新增 host 不存在/新增 host 已存在于该 hostgroup/该 hostgroup 不存在"""
-        self.map.create('map1', ['test_hg'], ['test_dg'])
+        self.map.create('map1', ['test_hg', 'test_hg2'], ['test_dg'])
         # 存在
         assert not self.hostg.add_host('test_hg', ['test_host2'])
         # 不存在
         with patch('builtins.print') as terminal_print:
-            self.hostg.add_host('test_hg2', ['test_host2'])
-            terminal_print.assert_called_with('Fail！Can\'t find test_hg2')
+            self.hostg.add_host('test_hg0', ['test_host2'])
+            terminal_print.assert_called_with('Fail！Can\'t find test_hg0')
         with patch('builtins.print') as terminal_print:
             self.hostg.add_host('test_hg', ['test_host1'])
             terminal_print.assert_called_with('test_host1 already exists in test_hg')
@@ -437,17 +461,21 @@ class TestHostGroup:
         assert not self.hostg.remove_host('test_hg', ['test_host2'])
         # 不存在
         with patch('builtins.print') as terminal_print:
-            self.hostg.remove_host('test_hg2', ['test_host2'])
-            terminal_print.assert_called_with('Fail！Can\'t find test_hg2')
+            self.hostg.remove_host('test_hg0', ['test_host2'])
+            terminal_print.assert_called_with('Fail！Can\'t find test_hg0')
         with patch('builtins.print') as terminal_print:
             self.hostg.remove_host('test_hg', ['test_host0'])
             terminal_print.assert_called_with('test_host0 does not exist in test_hg and cannot be removed')
         # hg 的 host 全部移除，配置了该 hg 的 map 同时被删除
         # with 结构中会屏蔽输出
-        with patch('builtins.print') as terminal_print:
-            self.hostg.remove_host('test_hg', ['test_host1'])
-            # 输出使用 disk iscsilogicalunit 删除提示
-            terminal_print.assert_called_with('Delete res_test successfully')
+        # 移除 test_hg 最后一个 host，test_hg会被删除
+        self.hostg.remove_host('test_hg', ['test_host1'])
+        assert self.hostg.show('test_hg') == []
+        # map1 中 hostgroup 还有最后一个成员 test_hg2 ，test_hg2中还有最后一个成员 test_host2
+        self.hostg.remove_host('test_hg2', ['test_host2'])
+        assert self.hostg.show('test_hg2') == []
+        assert self.map.show('map1') == []
+        # 输出使用 disk iscsilogicalunit 删除提示
 
     # # 返回所有 HostGroup，如果为 HostGroup 空，返回{},否则返回 HostGroup 非空字典
     # def test_get_all_hostgroup(self):

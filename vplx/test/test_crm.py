@@ -16,6 +16,7 @@ from execute.crm import execute_crm_cmd
 
 
 def test_module():
+    """模块初始化函数，初始化 consts 类跨模块变量"""
     # print('test_module')
     sys.path.append('../')
     consts.init()
@@ -35,6 +36,7 @@ def test_module():
 
 
 def test_execute_crm_cmd():
+    """测试执行 crm 命令方法"""
     assert crm.execute_crm_cmd('pwd') is not None
 
 
@@ -45,6 +47,7 @@ class TestCRMData:
 
     # result 类型 str ，命令行输出内容
     def test_get_crm_conf(self):
+        """测试输出 crm 配置文件内容方法"""
         result = self.crmdata.get_crm_conf()
         assert str == type(result)
         # assert 'res_a' in result
@@ -60,9 +63,6 @@ class TestCRMData:
     # def test_get_target_data(self):
     #     assert self.crmdata.get_target_data() is not None
     #
-    # # 无实际调用 iscsi_json 模块有其同名函数
-    # def test_update_crm_conf(self):
-    #     assert self.crmdata.update_crm_conf()
 
     @pytest.mark.portal
     def test_get_vip(self):
@@ -254,7 +254,7 @@ class TestCRMConfig:
             subprocess.run('python3 vtel.py iscsi d s', shell=True)
 
     def test_create_crm_res(self):
-        """创建"""
+        """测试创建 crm res资源方法"""
         disk = iscsi.Disk()
         # attention
         disk_data = disk.show('res_test')
@@ -275,6 +275,7 @@ class TestCRMConfig:
     #     assert self.crmconfig.checkout_status_start('res_test') is True
 
     def test_stop_res(self):
+        """测试停止 crm res资源方法"""
         assert self.crmconfig.stop_res('res_test') is True
 
     # # 函数已删除
@@ -288,6 +289,7 @@ class TestCRMConfig:
     #     assert self.crmconfig.create_order('res_test', 't_test') is True
 
     def test_start_res(self):
+        """测试启动 crm res资源方法"""
         assert self.crmconfig.start_res('res_test') is True
         self.crmconfig.stop_res('res_test')
 
@@ -300,23 +302,27 @@ class TestCRMConfig:
     # def test_change_initiator(self):
     #     assert self.crmconfig.change_initiator('res_test', ['iqn.2020-11.com.example:pytest01'])
 
+    def test_checkout_status(self):
+        """检查crm res的状态"""
+        assert self.crmconfig.checkout_status('res_test', 'iSCSILogicalUnit', 'NOT_STARTED') is True
+
     def test_delete_res(self):
+        """测试删除 crm res资源方法，测试用例包括：删除存在资源/删除不存在资源"""
         assert self.crmconfig.delete_res('res_test', 'iSCSILogicalUnit')
         # 删除一个不存在资源
         with patch('builtins.print') as terminal_print:
             self.crmconfig.delete_res('res_test0', 'iSCSILogicalUnit')
             terminal_print.assert_called_with('Delete res_test0 fail')
 
-    def test_checkout_status(self):
-        assert self.crmconfig.checkout_status('', 'iSCSILogicalUnit', 'STARTED') is None
-
     def test_execute_delete(self):
+        """测试执行删除 res"""
         # 删除不存在资源
         assert not self.crmconfig.execute_delete('res_test0')
 
-    def test_refresh(self):
-        # 暂未调用，单独使用刷新命令result['sts'] == 0 if 条件不通过
-        pass
+    # def test_refresh(self):
+    #     """刷新函数暂时未调用"""
+    #     # 暂未调用，单独使用刷新命令result['sts'] == 0 if 条件不通过
+    #     pass
 
     # 函数已删除
     # 有调用关系，不能单独测，create_res调用create_crm_res再调用create_set然后在调用create_col和create_order
