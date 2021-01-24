@@ -1,13 +1,11 @@
 import json
 import threading
-import pprint
 from functools import wraps
-import prettytable
-
 
 import consts
 import sundry as s
 import log
+from replay import Replay,LogDB
 
 def deco_json(str):
     """
@@ -17,8 +15,8 @@ def deco_json(str):
     def decorate(func):
         @wraps(func)
         def wrapper(self, *args):
-            RPL = consts.glo_rpl()
-            if RPL == 'no':
+            RPL = Replay.switch
+            if not RPL:
                 logger = log.Log()
                 oprt_id = log.create_oprt_id()
                 logger.write_to_log('DATA', 'STR', func.__name__, '', oprt_id)
@@ -26,43 +24,33 @@ def deco_json(str):
                 result = func(self,*args)
                 logger.write_to_log('DATA', 'JSON', func.__name__, oprt_id,result)
             else:
-                logdb = consts.glo_db()
-                id_result = logdb.get_id(consts.glo_tsc_id(), func.__name__)
-                json_result = logdb.get_oprt_result(id_result['oprt_id'])
+                logdb = LogDB()
+                id_result = logdb.get_id(func.__name__)
+                json_result = logdb.get_oprt_result()
                 if json_result['result']:
                     result = eval(json_result['result'])
                 else:
                     result = ''
                 result_replay = json.dumps(result, indent=2)
 
-                replay_num = consts.glo_num()
-                replay_data_sp = consts.glo_replay_data_sp()
-
                 if str == 'read json' or str == 'commit data':
                     str_opertion = str
-                    replay_data_sp.update({replay_num:result_replay})
-                    result_replay = f'...({replay_num})'
-                    replay_num += 1
-                    consts.set_glo_num(replay_num)
-                    consts.set_glo_replay_data_sp(replay_data_sp)
+                    if Replay.mode == 'LITE':
+                        Replay.specific_data.update({Replay.num:result_replay})
+                        result_replay = f'...({Replay.num})'
+                        Replay.num += 1
                 elif str == 'check key' or str == 'check value':
-                    str_opertion = f'check {args[1]} in {args[0]}'
+                    str_opertion = f'check "{args[1]}" in "{args[0]}"'
                 elif str == 'check if it is used':
-                    str_opertion = f'check {args[3]} in {args[2]} of {args[1]}'
+                    str_opertion = f'check "{args[2]}" in "{args[0]}" of "{args[1]}"'
                 elif str == 'update data' or str == 'update all data' or str == 'delete data':
                     str_opertion = str
                     func(self,*args)
                 else:
                     str_opertion = str
 
-                # dict_rd = {'time':id_result['time'],'operation':str,'log_output':result}
                 list_rd = [id_result['time'],f'<JSON>{str_opertion}',result_replay]
-                replay_data = consts.glo_replay_data()
-                replay_data.append(list_rd)
-                consts.set_glo_replay_data(replay_data)
-
-                if id_result['db_id']:
-                    s.change_pointer(id_result['db_id'])
+                Replay.replay_data.append(list_rd)
             return result
         return wrapper
     return decorate
@@ -155,21 +143,6 @@ class JsonOperation(object):
             if target in data[member]:
                 return True
         return False
-
-
-    # @s.deco_json_operation('get all map:')
-    # def get_map_by_group(self,type,group):
-    #     """
-    #     通过hg/dg取到使用这个hg的所有map
-    #     :param type: "HostGroup"/"DiskGroup"
-    #     :param group: str, hg/dg
-    #     :return:
-    #     """
-    #     list_map = []
-    #     for map,map_member in self.json_data['Map'].items():
-    #         if group in map_member[type]:
-    #             list_map.append(map)
-    #     return list_map
 
 
     # 更新Host、HostGroup、DiskGroup、Map的某一个成员的数据

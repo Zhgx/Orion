@@ -53,7 +53,6 @@ class VtelCLI(object):
     def __init__(self):
         self.parser = MyArgumentParser(prog="vtel")
 
-        consts.init()
         self.logger = log.Log()
         self._node_commands = NodeCommands()
         self._resource_commands = ResourceCommands()

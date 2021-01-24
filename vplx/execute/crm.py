@@ -433,7 +433,8 @@ class IPaddr2():
 
     @RollBack
     def create(self,name,ip,netmask):
-        cmd = f'crm cof primitive {name} IPaddr2 params ip={ip} cidr_netmask={netmask}'
+        cmd = f'crm cof primitive {name} IPaddr2 params ' \
+              f'ip={ip} cidr_netmask={netmask}'
         cmd_result = execute_crm_cmd(cmd)
         if not cmd_result['sts']:
             # 创建失败，输出原命令报错信息
@@ -487,7 +488,9 @@ class PortBlockGroup():
         if not action in ['block','unblock']:
             raise TypeError('Parameters "action" must be selected：block/unblock')
 
-        cmd = f'crm cof primitive {name} portblock params ip={ip} portno={port} protocol=tcp action={action} op monitor timeout=20 interval=20'
+        cmd = f'crm cof primitive {name} portblock ' \
+              f'params ip={ip} portno={port} protocol=tcp action={action} ' \
+              f'op monitor timeout=20 interval=20'
         cmd_result = execute_crm_cmd(cmd)
         if not cmd_result['sts']:
             # 创建失败，输出原命令报错信息

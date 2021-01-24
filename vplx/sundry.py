@@ -12,6 +12,7 @@ import json
 
 import consts
 import log
+from replay import Replay,LogDB
 
 
 
@@ -55,26 +56,22 @@ def deco_comfirm_del(type):
 
 def get_answer():
     logger = log.Log()
-    rpl = consts.glo_rpl()
-    logdb = consts.glo_db()
-    transaction_id = consts.glo_tsc_id()
+    replay_mode = Replay.switch
 
-    if rpl == 'no':
-        answer = input()
-        # answer = 'y'
-        logger.write_to_log('DATA', 'INPUT', 'confirm_input', 'confirm deletion', answer)
-    else:
-        time,answer = logdb.get_anwser(transaction_id)
+    if replay_mode:
+        logdb = LogDB()
+        time,answer = logdb.get_anwser()
         if not time:
             time = ''
-
         list_rd = [time, '<input> user', answer]
-        replay_data = consts.glo_replay_data()
-        replay_data.append(list_rd)
-        consts.set_glo_replay_data(replay_data)
+        Replay.replay_data.append(list_rd)
+    else:
+        answer = input()
+        logger.write_to_log('DATA', 'INPUT', 'confirm_input', 'confirm deletion', answer)
 
-        # print(f'RE:{time:<20} <input> user input: {answer}\n')
     return answer
+
+
 
 
 
@@ -153,8 +150,6 @@ def make_table(list_header,list_data):
     return table
 
 
-def change_pointer(new_id):
-    consts.set_glo_log_id(new_id)
 
 def deco_cmd(type):
     """
@@ -167,10 +162,10 @@ def deco_cmd(type):
     def decorate(func):
         @wraps(func)
         def wrapper(cmd):
-            RPL = consts.glo_rpl()
+            RPL = Replay.switch
             oprt_id = log.create_oprt_id()
             func_name = traceback.extract_stack()[-2][2]  # 装饰器获取被调用函数的函数名
-            if RPL == 'no':
+            if not RPL:
                 logger = log.Log()
                 logger.write_to_log('DATA', 'STR', func_name, '', oprt_id)
                 logger.write_to_log('OPRT', 'CMD', type, oprt_id, cmd)
@@ -178,29 +173,35 @@ def deco_cmd(type):
                 logger.write_to_log('DATA', 'CMD', type, oprt_id, result_cmd)
                 return result_cmd
             else:
-                logdb = consts.glo_db()
-                id_result = logdb.get_id(consts.glo_tsc_id(), func_name)
-                if id_result['oprt_id']:
-                    cmd_result = logdb.get_oprt_result(id_result['oprt_id'])
-                else:
-                    cmd_result = {'time':'','result':''}
+                logdb = LogDB()
+                id_result = logdb.get_id(func_name)
+                cmd_result = logdb.get_oprt_result()
+
                 if type != 'sys' and cmd_result['result']:
                     result = eval(cmd_result['result'])
-                    result_output = result['rst']
+                    result_replay = result['rst']
                 else:
                     result = cmd_result['result']
-                    result_output = cmd_result['result']
+                    result_replay = cmd_result['result']
 
 
-                list_rd = [id_result['time'],'<command>cmd',result_output.replace('\t','')]
-                replay_data = consts.glo_replay_data()
-                replay_data.append(list_rd)
-                consts.set_glo_replay_data(replay_data)
 
-                # print(f"RE:{id_result['time']:<20} <command>cmd：\n{cmd}")
-                # print(f"RE:{cmd_result['time']:<20} <command>result：\n{result_output}")
-                if id_result['db_id']:
-                    change_pointer(id_result['db_id'])
+
+                if cmd == 'crm configure show | cat':
+                    if Replay.mode == 'LITE':
+                        Replay.specific_data.update({Replay.num: result_replay})
+                        result_replay = f'...({Replay.num})'
+                        Replay.num += 1
+
+
+                list_rd1 = [id_result['time'],'<cmd>cmd',cmd]
+                if not result_replay:
+                    list_rd2 = [cmd_result['time'], '<cmd>result', result]
+                else:
+                    list_rd2 = [cmd_result['time'], '<cmd>result', result_replay.replace('\t', '')]
+
+                Replay.replay_data.append(list_rd1)
+                Replay.replay_data.append(list_rd2)
 
             return result
         return wrapper
@@ -232,24 +233,21 @@ def prt(str_, warning_level=0):
         warning_str = '*' * warning_level
     else:
         warning_str = ''
-    rpl = consts.glo_rpl()
 
-    if rpl == 'no':
+    RPL = Replay.switch
+
+    if not RPL:
         print(str(str_))
     else:
-        db = consts.glo_db()
-        data = db.get_cmd_output(consts.glo_tsc_id())
+        db = LogDB()
+        data = db.get_cmd_output()
         if not data["time"]:
             data["time"] = ''
 
-        list_rd = [data['time'], '<output>', data["output"]]
-        replay_data = consts.glo_replay_data()
-        replay_data.append(list_rd)
-        consts.set_glo_replay_data(replay_data)
-
-        # print(f'RE:{data["time"]:<20} <output>log output：{warning_str:<4}\n{data["output"]}')
-        # print(f'RE:{"":<20} <output>this time output：{warning_str:<4}\n{str_}\n')
-        change_pointer(int(data["db_id"]))
+        list_rd1 = [data['time'], '<Log Output>', data["output"]]
+        list_rd2 = ['/','<This output>',str_]
+        Replay.replay_data.append(list_rd1)
+        Replay.replay_data.append(list_rd2)
 
 def prt_log(str_, warning_level):
     """
@@ -258,11 +256,8 @@ def prt_log(str_, warning_level):
     :param print_str: Strings to be printed and recorded
     """
     logger = log.Log()
-    RPL = consts.glo_rpl()
-    if RPL == 'yes':
-        prt(str_, warning_level)
-    elif RPL == 'no':
-        prt(str_, warning_level)
+    RPL = Replay.switch
+    prt(str_, warning_level)
 
     if warning_level == 0:
         logger.write_to_log('INFO', 'INFO', 'finish', 'output', str_)
@@ -270,7 +265,7 @@ def prt_log(str_, warning_level):
         logger.write_to_log('INFO', 'WARNING', 'fail', 'output', str_)
     elif warning_level == 2:
         logger.write_to_log('INFO', 'ERROR', 'exit', 'output', str_)
-        if RPL == 'no':
+        if not RPL:
             sys.exit()
         else:
             raise consts.ReplayExit
@@ -344,8 +339,8 @@ def deco_color(func):
 def deco_db_insert(func):
     @wraps(func)
     def wrapper(self, sql, data, tablename):
-        RPL = consts.glo_rpl()
-        if RPL == 'no':
+        RPL = Replay.switch
+        if not RPL:
             logger = log.Log()
             oprt_id = log.create_oprt_id()
             logger.write_to_log('DATA', 'STR', func.__name__, '', oprt_id)
@@ -353,30 +348,21 @@ def deco_db_insert(func):
             func(self,sql, data, tablename)
             logger.write_to_log('DATA', 'SQL', func.__name__, oprt_id, data)
         else:
-            logdb = consts.glo_db()
-            id_result = logdb.get_id(consts.glo_tsc_id(), func.__name__)
+            logdb = LogDB()
+            id_result = logdb.get_id(func.__name__)
             func(self, sql, data, tablename)
-
+            replay_data = json.dumps(data,indent=2)
             list_rd1 = [id_result['time'],'<sql>insert table',tablename]
-            list_rd2 = [id_result['time'],'<sql>insert table',data]
-            replay_data = consts.glo_replay_data()
-            replay_data.append(list_rd1)
-            replay_data.append(list_rd2)
-            consts.set_glo_replay_data(replay_data)
+            list_rd2 = [id_result['time'],'<sql>insert data',replay_data]
+            Replay.replay_data.append(list_rd1)
+            Replay.replay_data.append(list_rd2)
 
-            # print(f"RE:{id_result['time']} <sql>insert table: {tablename}")
-            # print(f"RE:{id_result['time']} <sql>insert data:")
-            # for i in data:
-            #     print(i)
-            # print()# 格式上的换行
-            if id_result['db_id']:
-                change_pointer(id_result['db_id'])
     return wrapper
 
 
 def handle_exception():
-    rpl = consts.glo_rpl()
-    if rpl == 'yes':
+    RPL = Replay.switch
+    if RPL:
         print('The Data cannot be obtained in the log, and the program cannot continue to execute normally')
         raise consts.ReplayExit
     else:
