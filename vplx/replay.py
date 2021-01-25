@@ -6,7 +6,6 @@ import prettytable
 import traceback
 
 import consts
-from iscsi_json import JsonOperation
 
 # LOG_PATH = '/var/log/vtel/'
 LOG_PATH = "../vplx/"
@@ -290,6 +289,7 @@ class Replay():
                 print('\n')
                 if self.mode == 'LITE':
                     self.replay_lite()
+                from iscsi_json import JsonOperation
                 JsonOperation().json_data = None
         else:
             print(f"Command error: {dict_cmd['cmd']} , and cannot be executed")

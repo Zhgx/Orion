@@ -107,41 +107,6 @@ def re_search(re_string, tgt_stirng,output_type='group'):
     return re_result
 
 
-# def show_iscsi_data(list_header, dict_data):
-#     table = prettytable.PrettyTable()
-#     table.field_names = list_header
-#     if dict_data:
-#         for i,j in dict_data.items():
-#             data_one = [i,(' '.join(j) if isinstance(j,list) == True else j)]
-#             table.add_row(data_one)
-#     else:
-#         pass
-#     return table
-
-
-# def show_spe_map_data(list_header, list_data):
-#     table = prettytable.PrettyTable()
-#     table.field_names = list_header
-#     if list_data:
-#         for i in list_data:
-#             table.add_row(i)
-#     else:
-#         pass
-#     return table
-
-
-# def show_map_data(list_header, dict_data):
-#     table = prettytable.PrettyTable()
-#     table.field_names = list_header
-#     if dict_data:
-#         # {map1:{"HostGroup":[hg1,hg2],"DiskGroup":[dg1,dg2]} => [map1,"hg1 hg2","dg1 dg2"]}
-#         for i, j in dict_data.items():
-#             data_list = [i,
-#                          (' '.join(j["HostGroup"]) if isinstance(j["HostGroup"], list) == True else j["HostGroup"]),
-#                          (' '.join(j["DiskGroup"]) if isinstance(j["DiskGroup"], list) == True else j["DiskGroup"])]
-#             table.add_row(data_list)
-#     return table
-
 
 def make_table(list_header,list_data):
     table = prettytable.PrettyTable()
@@ -379,17 +344,21 @@ def handle_exception():
 
 
 
-class ProcessBar(object):
+class ProgressBar(object):
     """一个打印进度条的类"""
+    total = 100
 
-    def __init__(self, total):  # 初始化传入总数
+    def __init__(self):
         self.shape = ['▏', '▎', '▍', '▋', '▊', '▉']
         self.shape_num = len(self.shape)
         self.row_num = 30
         self.now = 0
-        self.total = total
 
     def print_next(self, schedule, type, now=-1):  # 默认+1
+        RPL = Replay.switch
+        if RPL:
+            return
+
         if now == -1:
             if type == 'add':
                 self.now += schedule
@@ -416,7 +385,7 @@ class ProcessBar(object):
 
 
 if __name__ == '__main__':
-    pb = ProcessBar(100)
+    pb = ProgressBar()
     pb.print_next(1,type='add')
     time.sleep(1)
     pb.print_next(11,type='add')

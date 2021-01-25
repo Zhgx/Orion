@@ -57,6 +57,7 @@ class RollBack():
     dict_rollback = {'IPaddr2':{}, 'PortBlockGroup':{} , 'ISCSITarget':{}}
     def __init__(self, func):
         self.func = func
+        # self.progressbar = s.ProgressBar()
 
     def __call__(self, *args, **kwargs):
         self.type,self.oprt = self.func.__qualname__.split('.')
@@ -100,8 +101,9 @@ class RollBack():
 
 
     @classmethod
-    def rollback(cls,ip,port,netmask):
+    def rollback(cls,progressbar,ip,port,netmask):
         # 目前只用于Portal的回滚，之后Target的回滚可以根据需要增加一个判断类型的参数
+        cls.progressbar = progressbar
         print("Execution error, resource rollback")
         cls.rb_ipaddr2(cls,ip,port,netmask)
         cls.rb_block(cls,ip,port,netmask)
@@ -117,10 +119,13 @@ class RollBack():
             for name, oprt in self.dict_rollback['IPaddr2'].items():
                 if oprt == 'create':
                     obj_ipaddr2.delete(name)
+                    self.progressbar.print_next(10,'less')
                 elif oprt == 'delete':
                     obj_ipaddr2.create(name,ip,netmask)
+                    self.progressbar.print_next(10, 'less')
                 elif oprt == 'modify':
                     obj_ipaddr2.modify(name,ip,netmask)
+                    self.progressbar.print_next(10, 'less')
 
 
     def rb_block(self,ip,port,netmask):
