@@ -1,59 +1,7 @@
 import json
 import threading
-from functools import wraps
-
-import consts
 import sundry as s
-import log
-from replay import Replay,LogDB
 
-def deco_json(str):
-    """
-    Decorator providing confirmation of deletion function.
-    :param func: Function to delete linstor resource
-    """
-    def decorate(func):
-        @wraps(func)
-        def wrapper(self, *args):
-            RPL = Replay.switch
-            if not RPL:
-                logger = log.Log()
-                oprt_id = log.create_oprt_id()
-                logger.write_to_log('DATA', 'STR', func.__name__, '', oprt_id)
-                logger.write_to_log('OPRT', 'JSON', func.__name__, oprt_id, args)
-                result = func(self,*args)
-                logger.write_to_log('DATA', 'JSON', func.__name__, oprt_id,result)
-            else:
-                logdb = LogDB()
-                id_result = logdb.get_id(func.__name__)
-                json_result = logdb.get_oprt_result()
-                if json_result['result']:
-                    result = eval(json_result['result'])
-                else:
-                    result = ''
-                result_replay = json.dumps(result, indent=2)
-
-                if str == 'read json' or str == 'commit data':
-                    str_opertion = str
-                    if Replay.mode == 'LITE':
-                        Replay.specific_data.update({Replay.num:result_replay})
-                        result_replay = f'...({Replay.num})'
-                        Replay.num += 1
-                elif str == 'check key' or str == 'check value':
-                    str_opertion = f'check "{args[1]}" in "{args[0]}"'
-                elif str == 'check if it is used':
-                    str_opertion = f'check "{args[2]}" in "{args[0]}" of "{args[1]}"'
-                elif str == 'update data' or str == 'update all data' or str == 'delete data':
-                    str_opertion = str
-                    func(self,*args)
-                else:
-                    str_opertion = str
-
-                list_rd = [id_result['time'],f'<JSON>{str_opertion}',result_replay]
-                Replay.replay_data.append(list_rd)
-            return result
-        return wrapper
-    return decorate
 
 
 
@@ -62,8 +10,8 @@ class JsonOperation(object):
     json_data = None
 
     def __init__(self):
-        if self.json_data is None:
-            self.json_data = self.read_json()
+        if JsonOperation.json_data is None:
+            JsonOperation.json_data = self.read_json()
 
 
     def __new__(cls, *args, **kwargs):
@@ -75,7 +23,7 @@ class JsonOperation(object):
 
 
     # 读取json文档
-    @deco_json('read json')
+    @s.deco_json('read json')
     def read_json(self):
         try:
             json_data = open("../vplx/map_config.json", encoding='utf-8')
@@ -98,7 +46,7 @@ class JsonOperation(object):
         except json.decoder.JSONDecodeError:
             s.prt_log('Failed to read configuration file.',2)
 
-    @deco_json('commit data')
+    @s.deco_json('commit data')
     def commit_data(self):
         with open('../vplx/map_config.json', "w") as fw:
             json.dump(self.json_data, fw, indent=4, separators=(',', ': '))
@@ -106,7 +54,7 @@ class JsonOperation(object):
 
 
     # 检查key值是否存在
-    @deco_json('check key')
+    @s.deco_json('check key')
     def check_key(self, key, target):
         """
         检查某个类型的目标是不是在存在
@@ -118,7 +66,7 @@ class JsonOperation(object):
 
 
     # 检查value值是否存在
-    @deco_json('check value')
+    @s.deco_json('check value')
     def check_value(self, key, target):
         """
         检查目标是不是作为某种资源的使用
@@ -129,7 +77,7 @@ class JsonOperation(object):
         return False
 
 
-    @deco_json('check if it is used')
+    @s.deco_json('check if it is used')
     def check_in_res(self,res,member,target):
         """
         check 3 in 2 of 1
@@ -146,21 +94,21 @@ class JsonOperation(object):
 
 
     # 更新Host、HostGroup、DiskGroup、Map的某一个成员的数据
-    @deco_json('update data')
+    @s.deco_json('update data')
     def update_data(self, first_key, data_key, data_value):
         self.json_data[first_key].update({data_key: data_value})
         return self.json_data[first_key]
 
 
     # 更新该资源的全部数据
-    @deco_json('update all data')
+    @s.deco_json('update all data')
     def cover_data(self, first_key, data):
         self.json_data[first_key] = data
         return self.json_data[first_key]
     
     
     # 删除Host、HostGroup、DiskGroup、Map
-    @deco_json('delete data')
+    @s.deco_json('delete data')
     def delete_data(self, first_key, data_key):
         self.json_data[first_key].pop(data_key)
         return self.json_data[first_key]

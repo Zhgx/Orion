@@ -6,7 +6,7 @@ import prettytable
 import traceback
 
 import consts
-
+from iscsi_json import JsonOperation
 
 # LOG_PATH = '/var/log/vtel/'
 LOG_PATH = "../vplx/"
@@ -257,12 +257,12 @@ class Replay():
     def replay_lite(self):
         answer = ''
         while answer != 'exit':
-            print('Enter numbers to show specific data, enter "exit" to exit the LITE mode：')
+            print('<LITE MODE>Enter numbers to show specific data, enter "exit" to exit the LITE mode：')
             answer = input()
             if answer.isdecimal():
                 answer = int(answer)
-                if answer <= self.num:
-                    print(self.specific_data[answer])
+                if answer < Replay.num:
+                    print(Replay.specific_data[answer])
                 else:
                     print('Please enter the correct serial number')
             else:
@@ -287,8 +287,10 @@ class Replay():
                 title = f"transaction: {dict_cmd['tid']}  command: {dict_cmd['cmd']}"
                 table = self.make_table(title,self.replay_data)
                 print(table)
+                print('\n')
                 if self.mode == 'LITE':
                     self.replay_lite()
+                JsonOperation().json_data = None
         else:
             print(f"Command error: {dict_cmd['cmd']} , and cannot be executed")
 
@@ -306,21 +308,29 @@ class Replay():
         else:
             cmds = logdb.get_all_cmd()
 
-        print(f'transaction num : {len(cmds)}')
-
         number_list = [str(i) for i in list(range(1, len(cmds) + 1))]
-        for i in range(len(cmds)):
-            print(f"{i + 1:<3} Transaction ID: {cmds[i]['tid']:<12} CMD: {cmds[i]['cmd']}")
 
         answer = ''
         while answer != 'exit':
-            print('Please enter the number to execute replay, or "all", enter "exit" to exit：')
+            print(f'transaction num : {len(cmds)}')
+            for i in range(len(cmds)):
+                print(f"{i + 1:<3} Transaction ID: {cmds[i]['tid']:<12} CMD: {cmds[i]['cmd']}")
+            print(f'<{Replay.mode} MODE>Please enter the number to execute replay, or "all", enter "exit" to exit：')
             answer = input()
             if answer in number_list:
                 cmd = cmds[int(answer) - 1]
                 self.replay_single(parser,cmd)
                 LogDB.reset_id()
                 self.reset_data()
+
+            elif answer == '-l' or answer == 'lite':
+                Replay.mode = 'LITE'
+                print('Switched to LITE mode, please continue')
+                continue
+            elif answer == '-n'or answer == 'normal':
+                Replay.mode = 'NORMAL'
+                print('Switched to NORMAL mode, please continue')
+                continue
             elif answer == 'all':
                 # 全部进行replay时，直接把所有数据展示出来，不然会在交互上停顿
                 Replay.mode = 'NORMAL'
@@ -331,6 +341,7 @@ class Replay():
                     self.reset_data()
             elif answer != 'exit':
                 print('Number error')
+
 
 
     def collapse_data(self):

@@ -269,6 +269,8 @@ class CRMData():
 
         crm_portal = self.get_portal_data(vip,portblock,target)
         json_portal = copy.deepcopy(js.json_data['Portal']) # 防止对json对象的数据修改，进行深拷贝，之后修改数据结构再修改
+        print(json_portal)
+
 
         # 处理列表的顺序问题
         for portal_name,portal_data in crm_portal.items():
