@@ -145,7 +145,7 @@ class LogDB():
 
 
     def get_cmd_via_tid(self):
-        sql = f"SELECT data FROM logtable WHERE describe1 = 'cmd_input' and transaction_id = '{self.transaction_id}'"
+        sql = f"SELECT data FROM logtable WHERE describe1 = 'cmd_input' and transaction_id = '{LogDB.transaction_id}'"
         result = self.sql_fetch_one(sql)
         if result:
             result = eval(result)
@@ -177,19 +177,19 @@ class LogDB():
 
 
     def get_id(self, string):
-        sql = f"SELECT time,id,data FROM logtable WHERE describe1 = '{string}' and type2 = 'STR' and id > {self.id_pointer} and transaction_id = '{self.transaction_id}'"
+        sql = f"SELECT time,id,data FROM logtable WHERE describe1 = '{string}' and type2 = 'STR' and id > {LogDB.id_pointer} and transaction_id = '{LogDB.transaction_id}'"
         result = self.sql_fetch_one(sql)
         if result:
             time,db_id,oprt_id = result
-            self.id_pointer = db_id
-            self.oprt_id = oprt_id
+            LogDB.id_pointer = db_id
+            LogDB.oprt_id = oprt_id
             return {'time':time,'db_id':db_id,'oprt_id':oprt_id}
         else:
             return {'time':'','db_id':'','oprt_id':''}
 
 
     def get_oprt_result(self):
-        sql = f"SELECT time,data FROM logtable WHERE type1 = 'DATA' and describe2 = '{self.oprt_id}'"
+        sql = f"SELECT time,data FROM logtable WHERE type1 = 'DATA' and describe2 = '{LogDB.oprt_id}'"
         # sql = f"SELECT time,data FROM logtable WHERE type1 = 'DATA' and type2 = 'cmd' and describe2 = '{oprt_id}'"
         if self.oprt_id:
             result = self.sql_fetch_one(sql)
@@ -223,11 +223,11 @@ class LogDB():
     def reset_id():
         LogDB.transaction_id = ''
         LogDB.oprt_id = ''
-        LogDB.id_pointer = ''
+        LogDB.id_pointer = 0
 
 
 
-#
+
 class Replay():
     """
     目前的replay模式，与argparser模块耦合，需要调用到argparser的解析器进行绑定函数的执行
@@ -306,7 +306,6 @@ class Replay():
         else:
             cmds = logdb.get_all_cmd()
 
-        # print('* MODE : REPLAY *')
         print(f'transaction num : {len(cmds)}')
 
         number_list = [str(i) for i in list(range(1, len(cmds) + 1))]
@@ -315,7 +314,6 @@ class Replay():
 
         answer = ''
         while answer != 'exit':
-            # 重置id
             print('Please enter the number to execute replay, or "all", enter "exit" to exit：')
             answer = input()
             if answer in number_list:
@@ -327,6 +325,7 @@ class Replay():
                 # 全部进行replay时，直接把所有数据展示出来，不然会在交互上停顿
                 Replay.mode = 'NORMAL'
                 for cmd in cmds:
+                    print('\nNext Transaction：')
                     self.replay_single(parser,cmd)
                     LogDB.reset_id()
                     self.reset_data()

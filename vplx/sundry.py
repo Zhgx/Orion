@@ -9,6 +9,7 @@ import subprocess
 from functools import wraps
 import colorama as ca
 import json
+import readline
 
 import consts
 import log
@@ -185,9 +186,10 @@ def deco_cmd(type):
                     result_replay = cmd_result['result']
 
 
-
-
-                if cmd == 'crm configure show | cat':
+                if cmd == 'crm configure show | cat' or \
+                   cmd == 'linstor --no-color --no-utf8 n l' or \
+                   cmd == 'linstor --no-color --no-utf8 r lv' or \
+                   cmd == 'linstor --no-color --no-utf8 sp l':
                     if Replay.mode == 'LITE':
                         Replay.specific_data.update({Replay.num: result_replay})
                         result_replay = f'...({Replay.num})'
@@ -245,7 +247,7 @@ def prt(str_, warning_level=0):
             data["time"] = ''
 
         list_rd1 = [data['time'], '<Log Output>', data["output"]]
-        list_rd2 = ['/','<This output>',str_]
+        list_rd2 = ['/','<This Output>',str_]
         Replay.replay_data.append(list_rd1)
         Replay.replay_data.append(list_rd2)
 
@@ -290,50 +292,6 @@ def deco_color(func):
     return wrapper
 
 
-
-
-# def deco_json_operation(str):
-#     """
-#     Decorator providing confirmation of deletion function.
-#     :param func: Function to delete linstor resource
-#     """
-#     def decorate(func):
-#         @wraps(func)
-#         def wrapper(self, *args):
-#             RPL = consts.glo_rpl()
-#             # print(traceback.extract_stack()[-2])
-#             # print(traceback.extract_stack()[-3])
-#             if RPL == 'no':
-#                 logger = log.Log()
-#                 oprt_id = log.create_oprt_id()
-#                 logger.write_to_log('DATA', 'STR', func.__name__, '', oprt_id)
-#                 logger.write_to_log('OPRT', 'JSON', func.__name__, oprt_id, args)
-#                 result = func(self,*args)
-#                 logger.write_to_log('DATA', 'JSON', func.__name__, oprt_id,result)
-#             else:
-#                 logdb = consts.glo_db()
-#                 id_result = logdb.get_id(consts.glo_tsc_id(), func.__name__)
-#                 json_result = logdb.get_oprt_result(id_result['oprt_id'])
-#                 if json_result['result']:
-#                     result = eval(json_result['result'])
-#                 else:
-#                     result = ''
-#
-#                 result_replay = json.dumps(result,indent=2)
-#
-#                 list_rd = [id_result['time'],str,result_replay]
-#                 replay_data = consts.glo_replay_data()
-#                 replay_data.append(list_rd)
-#                 consts.set_glo_replay_data(replay_data)
-#
-#                 # print(f"RE:{id_result['time']} {str}:")
-#                 # pprint.pprint(result)
-#                 # print()
-#                 if id_result['db_id']:
-#                     change_pointer(id_result['db_id'])
-#             return result
-#         return wrapper
-#     return decorate
 
 
 def deco_db_insert(func):
