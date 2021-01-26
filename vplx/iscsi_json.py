@@ -48,7 +48,7 @@ def deco_oprt_json(str):
 
 
 class JsonOperation(object):
-    _instance_lock = threading.Lock()
+#     _instance_lock = threading.Lock()
     json_data = None
 
     def __init__(self):
@@ -60,9 +60,10 @@ class JsonOperation(object):
 
     def __new__(cls, *args, **kwargs):
         if not hasattr(cls, '_instance'):
-            with JsonOperation._instance_lock:
-                if not hasattr(cls, '_instance'):
-                    JsonOperation._instance = super().__new__(cls)
+#             with JsonOperation._instance_lock:
+#                 if not hasattr(cls, '_instance'):
+#                     JsonOperation._instance = super().__new__(cls)
+            JsonOperation._instance = super().__new__(cls)
         return JsonOperation._instance
 
 

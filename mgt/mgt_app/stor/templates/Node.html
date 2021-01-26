@@ -26,56 +26,44 @@ body {
 			style="margin-top: 20px; margin-left: 20px; width: 50%;">
 			<legend>资源创建</legend>
 			<form class="layui-form" action="" lay-filter="example">
-	<div class="layui-form-item">
-								<label class="layui-form-label">R_N</label>
-								<div class="layui-input-inline">
-									<input type="text" placeholder="请输入正确值" name="R_Name"
-										autocomplete="off" class="layui-input">
-								</div>
-								<!-- 				<div class="layui-form-mid layui-word-aux">请填写6到12位密码</div>
+				<div class="layui-form-item">
+					<label class="layui-form-label">Node Name</label>
+					<div class="layui-input-inline">
+						<input type="text" placeholder="请输入正确值" name="Node_Name"
+							autocomplete="off" class="layui-input">
+					</div>
+				</div>
+				<div class="layui-form-item">
+					<label class="layui-form-label">IP</label>
+					<div class="layui-input-inline">
+						<input type="text" placeholder="请输入正确值" name="IP"
+							autocomplete="off" class="layui-input">
+					</div>
+					 				<div class="layui-form-mid layui-word-aux">请填写具体ip地址</div>
+				</div>
+				<div class="layui-form-item">
+					<div class="layui-inline">
+						<label class="layui-form-label">Node Type</label>
+						<div class="layui-input-inline">
+							<select name="Node_Type">
+								<option value="">请选择正确值</option>
+								<option value="Satellite">Satellite</option>
+								<option value="Auxiliary">Auxiliary</option>
+								<option value="Combined">Combined</option>
+								<option value="Controller">Controller</option>
+							</select>
+						</div>
+					</div>
+					<!-- 				<div class="layui-form-mid layui-word-aux">请填写6到12位密码</div>
  -->
-							</div>
-							<div class="layui-form-item">
-								<label class="layui-form-label">size</label>
-								<div class="layui-input-inline" style="width: 110px;">
-									<input type="text" placeholder="请输入正确值" name="size"
-										class="layui-input">
-								</div>
-								<div class="layui-input-inline" style="width: 70px;">
-									<select name="size_big">
-										<option value="GB" selected="">GB</option>
-										<option value="TB">TB</option>
-										<option value="MB">MB</option>
-										<option value="KB">KB</option>
-									</select>
-								</div>
-							</div>
-							<div class="layui-form-item">
-								<div class="layui-inline">
-									<label class="layui-form-label">SP</label>
-									<div class="layui-input-inline">
-										<select name="quiz">
-											<option value="">请选择正确值</option>
-											<optgroup label="城市记忆">
-												<option value="你工作的第一个城市">你工作的第一个城市</option>
-											</optgroup>
-											<optgroup label="学生时代">
-												<option value="你的工号">你的工号</option>
-												<option value="你最喜欢的老师">你最喜欢的老师</option>
-											</optgroup>
-										</select>
-									</div>
-								</div>
-								<!-- 				<div class="layui-form-mid layui-word-aux">请填写6到12位密码</div>
- -->
-							</div>
-							<div class="layui-form-item">
-								<div class="layui-input-block">
-									<button type="reset" class="layui-btn layui-btn-primary">重置</button>
-									<button type="submit" class="layui-btn" lay-submit=""
-										lay-filter="demo1">Create</button>
-								</div>
-							</div>
+				</div>
+				<div class="layui-form-item">
+					<div class="layui-input-block">
+						<button type="reset" class="layui-btn layui-btn-primary">重置</button>
+						<button type="submit" class="layui-btn" lay-submit=""
+							lay-filter="demo1">Create</button>
+					</div>
+				</div>
 			</form>
 		</fieldset>
 	</div>

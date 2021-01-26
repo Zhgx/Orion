@@ -18,6 +18,7 @@ def cors_data(datadict):
     return response
 
  
+ 
 def get_request_data():
     if request.method == 'GET':
         str_data = request.args.items()
@@ -34,8 +35,8 @@ RESOURCEDICT = None
 
 def get_all_resource():
     global RESOURCEDICT
-    pc = process.Process_data()
-    RESOURCEDICT = pc.process_data_resource()
+#     pc = process.Process_data()
+#     RESOURCEDICT = pc.process_data_resource()
     return True
 
 
@@ -55,6 +56,7 @@ class OprtResource(views.MethodView):
 
  # 'count': 10,输入值为list数量值
 # aa  = len(RESOURCEDICT_test['data'])
+RESOURCEDICT_test= None
 RESOURCEDICT_test = {'code': 0,
 'count':8,
  'data': [{'device_name': u'/dev/drbd1000',
@@ -159,13 +161,13 @@ RESOURCEDICT_test = {'code': 0,
 class ResourceResult(views.MethodView):  
 
     def get(self):
-        # get_request_data()
-        # logger = log.Log()
-        # logger.write_to_log('DATA', 'ROUTE', '/resource/show/data', dict_data['ip'], '')
-        if not RESOURCEDICT:
-            get_all_resource()
-        # logger.write_to_log('DATA', 'RETURN', 'ResourceResult', 'result', RESOURCEDICT)
-#         return cors_data(RESOURCEDICT)
+#         # get_request_data()
+#         # logger = log.Log()
+#         # logger.write_to_log('DATA', 'ROUTE', '/resource/show/data', dict_data['ip'], '')
+#         if not RESOURCEDICT:
+#             get_all_resource()
+#         # logger.write_to_log('DATA', 'RETURN', 'ResourceResult', 'result', RESOURCEDICT)
+# #         return cors_data(RESOURCEDICT)
         return cors_data(RESOURCEDICT_test)
 
 
@@ -287,14 +289,14 @@ def get_all_node():
 class OprtNode(views.MethodView):  
 
     def get(self):
-        dict_data = get_request_data()
-        logger = consts.glo_log()
-        logger.write_to_log('OPRT', 'ROUTE', '/resource/show/oprt', dict_data['ip'], '')
+#         dict_data = get_request_data()
+#         logger = consts.glo_log()
+#         logger.write_to_log('OPRT', 'ROUTE', '/resource/show/oprt', dict_data['ip'], '')
         if get_all_node():
-            logger.write_to_log('DATA', 'RETURN', 'OprtResource', 'result', '0')
+#             logger.write_to_log('DATA', 'RETURN', 'OprtResource', 'result', '0')
             return cors_data("0")
         else:
-            logger.write_to_log('DATA', 'RETURN', 'OprtResource', 'result', '1')
+#             logger.write_to_log('DATA', 'RETURN', 'OprtResource', 'result', '1')
             return cors_data("1")
 
 
@@ -499,7 +501,7 @@ class LINSTORCreate(views.MethodView):
     def get(self):
         data = get_request_data()
         print(data)
-        return
+        return cors_data(data)
 
 '''
 @note: 交互

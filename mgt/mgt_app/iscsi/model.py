@@ -107,3 +107,8 @@ class IscsiDiskGroup(views.MethodView):
     def get(self):
         return render_template("iscsi_diskgroup.html")
     
+class IscsiDisk(views.MethodView):
+
+    def get(self):
+        return render_template("iscsi_disk.html")
+    

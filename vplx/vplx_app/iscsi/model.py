@@ -339,6 +339,7 @@ class CheckHostModify(views.MethodView):
         host_name = dict_data['host_name']
         host_iqn = dict_data['host_iqn']
         js = iscsi_json.JsonOperation()
+        js.json_data = js.read_json()
         json_data_before = copy.deepcopy(js.json_data)
         js.update_data('Host', host_name, host_iqn)
         obj_iscsi = iscsi.IscsiConfig(json_data_before, js.json_data)
@@ -379,6 +380,7 @@ class CheckHgModify(views.MethodView):
         list_host = dict_data['host'].split(',') if dict_data['host'] else []
 
         js = iscsi_json.JsonOperation()
+        js.json_data = js.read_json()
         json_data_before = copy.deepcopy(js.json_data)
         js.update_data('HostGroup', hg, list_host)
         obj_iscsi = iscsi.IscsiConfig(json_data_before, js.json_data)
@@ -422,6 +424,7 @@ class CheckDgModify(views.MethodView):
         dg = dict_data['dg_name']
         list_disk = dict_data['disk'].split(',') if dict_data['disk'] else []
         js = iscsi_json.JsonOperation()
+        js.json_data = js.read_json()
         json_data_before = copy.deepcopy(js.json_data)
         js.update_data('DiskGroup', dg, list_disk)
         obj_iscsi = iscsi.IscsiConfig(json_data_before, js.json_data)
@@ -530,6 +533,7 @@ class CheckAllDelete(views.MethodView):
         print(iscsi_type, iscsi_name)
 
         js = iscsi_json.JsonOperation()
+        js.json_data = js.read_json()
         json_data_before = copy.deepcopy(js.json_data)
         js.delete_data(iscsi_type,iscsi_name)
         if iscsi_type != 'Map':

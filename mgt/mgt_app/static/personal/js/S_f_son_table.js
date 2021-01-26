@@ -290,8 +290,8 @@ function storagepool_oprt() {
 									      layer.msg('查看操作');
 								    } else if(obj.event === 'del'){
 								    	  data_dict = obj.data
-									      resource_data =  data_dict.resource
-								      layer.confirm('真的删除'+ resource_data+'的数据么' , function(index){
+								    	  stp_name =  data_dict.stp_name
+								      layer.confirm('真的删除'+ stp_name+'的数据么' , function(index){
 								        obj.del(); // 删除对应行（tr）的DOM结构
 								        layer.close(index);
 								        // 这里一般是发送修改的Ajax请求
@@ -427,43 +427,45 @@ layui.use(['form', 'layedit', 'laydate','element'], function(){
 			  
 		  });
 		  
-		  form.on('switch(switchTest)', function (data) {
-              var contexts;
-              var x = data.elem.checked;//判断开关状态
-              if (x==true) {
-            	  $("#classifyId").empty();
-                  $.ajax({
-                      url: vplxIp + '/LINSTOR/Create/lvm',
-                      success:function(lvm_data){
-                      	console.log(lvm_data);
-                          if(lvm_data.lvm){
-                              for(var i =0;i<lvm_data.lvm.length;i++){
-                                  $("#classifyId").append("<option value=\""+lvm_data.lvm[i].node_key+"\">"+lvm_data.lvm[i].node_key+"</option>");
-                              }
-                              //重新渲染
-                              layui.form.render("select");
-                          }
-                      }
-                  });
-              } else {
-            	  $("#classifyId").empty();
-            	  $.ajax({
-            	        url: vplxIp + '/LINSTOR/Create/lvm',
-            	        success:function(lvm_data){
-            	        	console.log(lvm_data);
-            	            if(lvm_data.thin_lvm){
-            	                for(var i =0;i<lvm_data.thin_lvm.length;i++){
-            	                    $("#classifyId").append("<option value=\""+lvm_data.thin_lvm[i].node_key+"\">"+lvm_data.thin_lvm[i].node_key+"</option>");
-            	                }
-            	                //重新渲染
-            	                layui.form.render("select");
-            	            }
-            	        }
-            	    });
+		  
+		  form.on('radio(radio_f)', function (data) {
+			  $("#classifyId").empty();
+			    alert(data.value);//判断单选框的选中值
+			    var abc=data.value;
+			    if(abc=="lvm"){
+			    	   $.ajax({
+	                      url: vplxIp + '/LINSTOR/Create/lvm',
+	                      success:function(lvm_data){
+	                      	console.log(lvm_data);
+	                          if(lvm_data.lvm){
+	                              for(var i =0;i<lvm_data.lvm.length;i++){
+	                                  $("#classifyId").append("<option value=\""+lvm_data.lvm[i].node_key+"\">"+lvm_data.lvm[i].node_key+"</option>");
+	                              }
+	                              //重新渲染
+	                              layui.form.render("select");
+	                          }
+	                      }
+	                  });
+			    }else{
+			    	   $.ajax({
+	                      url: vplxIp + '/LINSTOR/Create/lvm',
+	                      success:function(lvm_data){
+	                      	console.log(lvm_data);
+	                          if(lvm_data.lvm){
+	                              for(var i =0;i<lvm_data.thin_lvm.length;i++){
+	                                  $("#classifyId").append("<option value=\""+lvm_data.thin_lvm[i].node_key+"\">"+lvm_data.thin_lvm[i].node_key+"</option>");
+	                              }
+	                              //重新渲染
+	                              layui.form.render("select");
+	                          }
+	                      }
+	                  });
+			    }
 
-              }
-             
-          });
+			});   
+		  
+		  
+		  
 });
 
 

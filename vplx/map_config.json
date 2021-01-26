@@ -34,20 +34,8 @@
         ]
     },
     "DiskGroup": {
-        "dg1": [
-            "res_a",
-            "res_b"
-        ],
-        "dg2": [
-            "res_b",
-            "res_d"
-        ],
         "dg3": [
-            "res_c",
-            "res_d"
-        ],
-        "dg4": [
-            "res_e"
+            "res_c"
         ]
     },
     "Map": {},

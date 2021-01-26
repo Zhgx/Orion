@@ -39,36 +39,39 @@ body {
 					<div class="layui-inline">
 						<label class="layui-form-label">Node</label>
 						<div class="layui-input-inline">
-							<select name="grouping" id="grouping" lay-verify="required" lay-search="">
+							<select name="grouping" id="grouping" lay-verify="required"
+								lay-search="">
 							</select>
 						</div>
 					</div>
 					<!-- 				<div class="layui-form-mid layui-word-aux">请填写6到12位密码</div>
  -->
 				</div>
+
 				<div class="layui-form-item">
-					<div class="layui-inline" >
-						<label class="layui-form-label" style="width: 80px;">lvm/thin_lvm</label>
-						<div class="layui-input-block" style="width: 75px;">
-							<input type="checkbox" checked="" name="open" lay-skin="switch"
-								lay-filter="switchTest" lay-text="lvm|thin_lvm">
-						</div>
-					</div>
-						<div class="layui-inline" style="width: 100px;">
-							<select name="classifyId" id="classifyId" lay-verify="required" lay-search="">
-								<option value="">直接选择或搜索选择</option>
-							</select>
+					<div class="layui-inline">
+						<label class="layui-form-label">lvm/thin_lvm</label>
+						<div class="layui-input-block">
+							<input type="radio" name="sex" value="lvm" title="lvm" checked="" lay-filter="radio_f">
+							<input type="radio" name="sex" value="thin_lvm" title="thin_lvm"  lay-filter="radio_f"> 
 						</div>
 				</div>
-				<div class="layui-form-item">
-					<div class="layui-input-block">
-						<button type="reset" class="layui-btn layui-btn-primary">重置</button>
-						<button type="submit" class="layui-btn" lay-submit=""
-							lay-filter="demo1">Create</button>
-					</div>
+				<div class="layui-inline" style="width: 100px;">
+					<select name="classifyId" id="classifyId" lay-verify="required"
+						lay-search="">
+						<option value="">直接选择或搜索选择</option>
+					</select>
 				</div>
-			</form>
-		</fieldset>
+	</div>
+	<div class="layui-form-item">
+		<div class="layui-input-block">
+			<button type="reset" class="layui-btn layui-btn-primary">重置</button>
+			<button type="submit" class="layui-btn" lay-submit=""
+				lay-filter="demo1">Create</button>
+		</div>
+	</div>
+	</form>
+	</fieldset>
 	</div>
 
 	<div class="layui-row"

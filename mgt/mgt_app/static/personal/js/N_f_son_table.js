@@ -274,20 +274,21 @@ function node_oprt() {
 									      layer.msg('查看操作');
 									    } else if(obj.event === 'del'){
 									    	  data_dict = obj.data
-										      resource_data =  data_dict.resource
-									      layer.confirm('真的删除'+ resource_data+'的数据么' , function(index){
+									    	  console.log(data_dict);
+										      node_data =  data_dict.node
+									      layer.confirm('真的删除'+ node_data+'的数据么' , function(index){
 									        obj.del(); // 删除对应行（tr）的DOM结构
 									        layer.close(index);
 									        // 这里一般是发送修改的Ajax请求
 								            // 同步更新表格和缓存对应的值
 									        // 向服务端发送删除指令
 									    	$.ajax({
-									    		url :  vplxIp +'/resource/show/delete',
+									    		url :  vplxIp +'/node/show/delete',
 									    		type : "get",
 									    		dataType : "json",
 									    		data : {
 									    			tid : tid,
-									    			resource_data : resource_data
+									    			node_data : node_data
 									    		},
 									    		async : false,
 									    		success : function(delete_result) {
@@ -413,17 +414,18 @@ function node_oprt() {
 								 
 								 // 监听提交
 								  form.on('submit(demo1)', function(data){
-									  resource_data = JSON.stringify(data.field);
+									  Node_data = JSON.stringify(data.field);
 										$.ajax({
 								    		url :  vplxIp +'/LINSTOR/Create',
 								    		type : "get",
 								    		dataType : "json",
 								    		data : {
 								    			tid : tid,
-								    			resource_data : resource_data
+								    			Node_data : Node_data
 								    		},
 								    		async : false,
-								    		success : function(delete_result) {
+								    		success : function(craete_result) {
+								    			alert(craete_result)
 								    		}
 								    	});
 									  
