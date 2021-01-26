@@ -265,7 +265,8 @@ class Replay():
                 else:
                     print('Please enter the correct serial number')
             else:
-                pass
+                if answer != 'exit':
+                    print('Please enter the correct serial number')
 
 
     def replay_single(self,parser,dict_cmd):
@@ -310,11 +311,12 @@ class Replay():
 
         number_list = [str(i) for i in list(range(1, len(cmds) + 1))]
 
+        print(f'transaction num : {len(cmds)}')
+        for i in range(len(cmds)):
+            print(f"{i + 1:<3} Transaction ID: {cmds[i]['tid']:<12} CMD: {cmds[i]['cmd']}")
+
         answer = ''
         while answer != 'exit':
-            print(f'transaction num : {len(cmds)}')
-            for i in range(len(cmds)):
-                print(f"{i + 1:<3} Transaction ID: {cmds[i]['tid']:<12} CMD: {cmds[i]['cmd']}")
             print(f'<{Replay.mode} MODE>Please enter the number to execute replay, or "all", enter "exit" to exit：')
             answer = input()
             if answer in number_list:
@@ -322,7 +324,11 @@ class Replay():
                 self.replay_single(parser,cmd)
                 LogDB.reset_id()
                 self.reset_data()
-
+            elif answer == 'ls':
+                print(f'transaction num : {len(cmds)}')
+                for i in range(len(cmds)):
+                    print(f"{i + 1:<3} Transaction ID: {cmds[i]['tid']:<12} CMD: {cmds[i]['cmd']}")
+                continue
             elif answer == '-l' or answer == 'lite':
                 Replay.mode = 'LITE'
                 print('Switched to LITE mode, please continue')

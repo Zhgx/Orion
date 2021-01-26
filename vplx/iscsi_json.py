@@ -10,8 +10,8 @@ class JsonOperation(object):
     json_data = None
 
     def __init__(self):
-        if JsonOperation.json_data is None:
-            JsonOperation.json_data = self.read_json()
+        if self.json_data is None:
+            self.json_data = self.read_json()
 
 
     def __new__(cls, *args, **kwargs):

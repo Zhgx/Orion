@@ -375,7 +375,6 @@ class ProgressBar(object):
             info += self.shape[tail - 1]
         full_info = '[%s%s] [%.2f%%]' % (info, (self.row_num - len(info)) * ' ', 100 * self.now / self.total)
 
-        # print("\r", end='', flush=True)
         print(f"\r{full_info}", end='', flush=True)
 
         if self.now == self.total:
