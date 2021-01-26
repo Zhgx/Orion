@@ -556,7 +556,12 @@ class AllDelete(views.MethodView):
         js = iscsi_json.JsonOperation()
         js.json_data = js.read_json()
         json_data_before = copy.deepcopy(js.json_data)
-        js.delete_data(iscsi_type, iscsi_name)
+        try:
+            js.delete_data(iscsi_type, iscsi_name)
+        except KeyError:
+            message = '配置文件已被修改，请重新操作'
+            return cors_data(message)
+        
         if iscsi_type != 'Map':
             js.arrange_data(iscsi_type, iscsi_name)
         obj_iscsi = iscsi.IscsiConfig(json_data_before, js.json_data)
