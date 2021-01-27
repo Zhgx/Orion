@@ -73,19 +73,21 @@ class IscsiConfig():
         return diff, recover
 
     def show_info(self):
-        if self.create:
-            print('create：')
-            for disk, iqn in self.create.items():
-                print(f'{disk}，its allowed initiators will be set to "{",".join(iqn)}"')
-        if self.delete:
-            print('delete：')
-            print(f'{",".join(self.delete)}')
-        if self.modify:
-            print('modify：')
-            for disk, iqn in self.modify.items():
-                print(f'{disk}，its allowed initiators will be set to "{",".join(iqn)}"')
+        nl = '\n'
+        info = []
         if not any([self.create,self.delete,self.modify]):
-            print('Will not have any effect')
+            return ['Will not have any effect']
+        if self.create:
+            info_create = f'''create:\n{''.join([f"{disk}'s iqn ==> {','.join(iqn)}{nl}" for disk,iqn in self.create.items()])}'''
+            info.append(info_create)
+        if self.delete:
+            info_delete = f'delete:\n{",".join(self.delete)}'
+            info.append(info_delete)
+        if self.modify:
+            info_modify = f'''modify:\n{''.join([f"{disk}'s iqn ==> {','.join(iqn)}{nl}" for disk,iqn in self.modify.items()])}'''
+            info.append(info_modify)
+        return info
+
 
     def create_iscsilogicalunit(self):
         for disk, iqn in self.create.items():
@@ -113,7 +115,7 @@ class IscsiConfig():
         print("Mapping relationship rollback ends")
 
     def comfirm_modify(self):
-        self.show_info()
+        print('\n'.join(self.show_info()))
         print(f'Are you sure? y/n')
         answer = s.get_answer()
         if not answer in ['y', 'yes', 'Y', 'YES']:

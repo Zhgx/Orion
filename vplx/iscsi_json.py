@@ -10,6 +10,8 @@ class JsonOperation(object):
     json_data = None
 
     def __init__(self):
+        consts.init()
+        
         if self.json_data is None:
             self.json_data = self.read_json()
 
@@ -199,5 +201,7 @@ class JsonOperation(object):
                         self.delete_data('Map', map)
         else:
             raise TypeError('type must be "host/hg/dg"')
+
+
 
 
