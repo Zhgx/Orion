@@ -16,7 +16,6 @@ def cors_data(datadict):
     response.headers['Access-Control-Allow-Methods'] = 'OPTIONS,HEAD,GET,POST'
     response.headers['Access-Control-Allow-Headers'] = 'x-requested-with'
     return response
-
  
  
 def get_request_data():
@@ -35,8 +34,8 @@ RESOURCEDICT = None
 
 def get_all_resource():
     global RESOURCEDICT
-#     pc = process.Process_data()
-#     RESOURCEDICT = pc.process_data_resource()
+    pc = process.Process_data()
+    RESOURCEDICT = pc.process_data_resource()
     return True
 
 
@@ -44,19 +43,19 @@ class OprtResource(views.MethodView):
 
     def get(self):
         dict_data = get_request_data()
-        logger = log.Log()
-        logger.write_to_log('OPRT', 'ROUTE', '/resource/show/oprt', dict_data['ip'], '')
+#         logger = log.Log()
+#         logger.write_to_log('OPRT', 'ROUTE', '/resource/show/oprt', dict_data['ip'], '')
         if get_all_resource():
-            logger.write_to_log('DATA', 'RETURN', 'OprtResource', 'result', '0')
+#             logger.write_to_log('DATA', 'RETURN', 'OprtResource', 'result', '0')
             return cors_data("0")
         else:
-            logger.write_to_log('DATA', 'RETURN', 'OprtResource', 'result', '1')
+#             logger.write_to_log('DATA', 'RETURN', 'OprtResource', 'result', '1')
             return cors_data("1")
 
 
  # 'count': 10,输入值为list数量值
 # aa  = len(RESOURCEDICT_test['data'])
-RESOURCEDICT_test= None
+RESOURCEDICT_test = None
 RESOURCEDICT_test = {'code': 0,
 'count':8,
  'data': [{'device_name': u'/dev/drbd1000',
@@ -161,14 +160,14 @@ RESOURCEDICT_test = {'code': 0,
 class ResourceResult(views.MethodView):  
 
     def get(self):
-#         # get_request_data()
-#         # logger = log.Log()
-#         # logger.write_to_log('DATA', 'ROUTE', '/resource/show/data', dict_data['ip'], '')
-#         if not RESOURCEDICT:
-#             get_all_resource()
-#         # logger.write_to_log('DATA', 'RETURN', 'ResourceResult', 'result', RESOURCEDICT)
-# #         return cors_data(RESOURCEDICT)
-        return cors_data(RESOURCEDICT_test)
+        # get_request_data()
+        # logger = log.Log()
+        # logger.write_to_log('DATA', 'ROUTE', '/resource/show/data', dict_data['ip'], '')
+        if not RESOURCEDICT:
+            get_all_resource()
+        # logger.write_to_log('DATA', 'RETURN', 'ResourceResult', 'result', RESOURCEDICT)
+        return cors_data(RESOURCEDICT)
+#         return cors_data(RESOURCEDICT_test)
 
 
 NODEDICT = None
@@ -531,6 +530,8 @@ class LINSTORView(views.MethodView):
 LVM = {'lvm':[{"node_key":"Node1"}, {"node_key":"Node2"}, {"node_key":"Node3"}, {"node_key":"Node4"}],
       'thin_lvm': [{"node_key":"Node1"}, {"node_key":"Node2"}, {"node_key":"Node3"}, {"node_key":"Node5"}]     
              }
+
+
 class lvmView(views.MethodView):  
 
     def get(self):
