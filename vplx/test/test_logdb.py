@@ -2,10 +2,6 @@ import logdb
 import consts
 
 
-def test_prepare_db():
-    logdb.prepare_db()
-    assert consts.glo_db() != None
-
 
 # 检查文件是否存在，存在返回True，否则返回False
 def test_isFileExists():
