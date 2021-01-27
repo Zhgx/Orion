@@ -733,8 +733,6 @@ class Portal():
     def __init__(self):
         self.logger = log.Log()
         self.js = iscsi_json.JsonOperation()
-        self.progressbar = s.ProgressBar()
-        s.ProgressBar.total = 60
 
     def create(self, name, ip, port=3260, netmask=24):
         if not self._check_name(name):
@@ -759,24 +757,17 @@ class Portal():
         try:
             obj_ipadrr = IPaddr2()
             obj_ipadrr.create(name, ip, netmask)
-            self.progressbar.print_next(10,'add')
 
             obj_portblock = PortBlockGroup()
             obj_portblock.create(f'{name}_prtblk_on', ip, port, action='block')
-            self.progressbar.print_next(10, 'add')
             obj_portblock.create(f'{name}_prtblk_off', ip, port, action='unblock')
-            self.progressbar.print_next(10, 'add')
 
             Colocation.create(f'col_{name}_prtblk_on', f'{name}_prtblk_on', name)
-            self.progressbar.print_next(10, 'add')
             Colocation.create(f'col_{name}_prtblk_off', f'{name}_prtblk_off', name)
-            self.progressbar.print_next(10, 'add')
             Order.create(f'or_{name}_prtblk_on', name, f'{name}_prtblk_on')
-            self.progressbar.print_next(10, 'add')
-
         except Exception as ex:
             self.logger.write_to_log('DATA', 'DEBUG', 'exception', 'Rollback', str(traceback.format_exc()))
-            RollBack.rollback(self.progressbar,ip,port,netmask)
+            RollBack.rollback(ip,port,netmask)
             return
 
         # 验证

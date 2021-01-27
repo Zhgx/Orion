@@ -342,63 +342,12 @@ def handle_exception():
         print('The command result cannot be obtained, please check')
         raise consts.CmdError
 
-
-
-class ProgressBar(object):
-    """一个打印进度条的类"""
-    total = 100
-
-    def __init__(self):
-        self.shape = ['▏', '▎', '▍', '▋', '▊', '▉']
-        self.shape_num = len(self.shape)
-        self.row_num = 30
-        self.now = 0
-
-    def print_next(self, schedule, type, now=-1):  # 默认+1
-        RPL = Replay.switch
-        if RPL:
-            return
-
-        if now == -1:
-            if type == 'add':
-                self.now += schedule
-            else:
-                self.now -= schedule
-        else:
-            self.now = now
-
-        rate = math.ceil((self.now / self.total) * (self.row_num * self.shape_num))
-        head = rate // self.shape_num
-        tail = rate % self.shape_num
-        info = self.shape[-1] * head
-        if tail != 0:
-            info += self.shape[tail - 1]
-        full_info = '[%s%s] [%.2f%%]' % (info, (self.row_num - len(info)) * ' ', 100 * self.now / self.total)
-
-        print(f"\r{full_info}", end='', flush=True)
-
-        if self.now == self.total:
-            print('\n创建成功')
-        if self.now == 0:
-            print('\n回退成功')
-
-
-if __name__ == '__main__':
-    pb = ProgressBar()
-    pb.print_next(1,type='add')
-    time.sleep(1)
-    pb.print_next(11,type='add')
-    time.sleep(1)
-    pb.print_next(19,type='add')
-    time.sleep(1)
-    pb.print_next(21,type='add')
-    time.sleep(1)
-    pb.print_next(19,type='add')
-    time.sleep(1)
-    pb.print_next(28,type='add')
-    time.sleep(1)
-    pb.print_next(50,type='less')
-    time.sleep(1)
-    pb.print_next(49,type='less')
-    time.sleep(1)
-
+# if __name__ == '__main__':
+#     # pass
+#     from execute import CRMData
+#     crm = CRMData()
+#
+#     a = crm.get_order()
+#     print(a)
+#     b = crm.get_colocation()
+#     print(b )
