@@ -13,9 +13,9 @@ import readline
 import math
 
 import consts
+# from public import log
 import log
 from replay import Replay,LogDB
-
 
 
 def deco_record_exception(func):
@@ -341,13 +341,3 @@ def handle_exception():
     else:
         print('The command result cannot be obtained, please check')
         raise consts.CmdError
-
-# if __name__ == '__main__':
-#     # pass
-#     from execute import CRMData
-#     crm = CRMData()
-#
-#     a = crm.get_order()
-#     print(a)
-#     b = crm.get_colocation()
-#     print(b )
