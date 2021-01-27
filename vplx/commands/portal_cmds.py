@@ -13,7 +13,7 @@ class Usage():
     portal delete(d) PORTAL'''
 
     portal_modify = '''
-    portal modify(m) PORTAL -ip IP -port PORT'''
+    portal modify(m) PORTAL -ip IP -port PORT -netmask [NETMASK]'''
 
     portal_show = '''
     portal show(s)'''
@@ -98,15 +98,15 @@ class PortalCommands():
         Delete PORTAL
         """
         # add arguments of portal delete
-        P_delete_portal = portal_subp.add_parser(
+        p_delete_portal = portal_subp.add_parser(
             'delete', aliases='d', help='Delete the PORTAL',usage=Usage.portal_delete)
 
-        P_delete_portal.add_argument(
+        p_delete_portal.add_argument(
             'portal',
             action='store',
             help='portal name')
 
-        P_delete_portal.set_defaults(func=self.delete)
+        p_delete_portal.set_defaults(func=self.delete)
 
         portal_parser.set_defaults(func=self.print_portal_help)
 
@@ -129,7 +129,6 @@ class PortalCommands():
         p_modify_portal.add_argument(
             '-ip',
             dest='ip',
-            required=True,
             action='store',
             help='IP',
             metavar='IP')
@@ -138,13 +137,20 @@ class PortalCommands():
             '-p',
             '-port',
             '--port',
-            required=True,
             type=int,
             dest='port',
             action='store',
             help='port',
             metavar='PORT')
 
+        p_modify_portal.add_argument(
+            '-n',
+            '-netmask',
+            '--netmask',
+            type=int,
+            dest='netmask',
+            action='store',
+            help='Netmask：1-32.It default is 24.')
 
         p_modify_portal.set_defaults(func=self.modify)
 
@@ -181,8 +187,11 @@ class PortalCommands():
         crm = ex.CRMData()
         crm.check()
 
-        portal = ex.Portal()
-        portal.modify(args.portal,args.ip,args.port)
+        if any([args.ip,args.port,args.netmask]):
+            portal = ex.Portal()
+            portal.modify(args.portal,args.ip,args.port,args.netmask)
+        else:
+            s.prt_log('Please specify at least one data to be modified',1)
 
 
     def print_portal_help(self, *args):
