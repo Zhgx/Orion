@@ -931,10 +931,13 @@ class Portal():
         用表格展示所有portal数据
         :return: all portal
         """
-        list_header = ["Portal", "IP", "Port", "Netmask", "iSCSITarget"]
+        list_header = ["Portal", "IP", "Port", "Netmask", "iSCSI Target"]
         list_data = []
         for portal, data in self.js.json_data['Portal'].items():
-            list_data.append([portal, data['ip'], data['port'], data['netmask'], ",".join(data['target'])])
+            if not data['target']:
+                list_data.append([portal, data['ip'], data['port'], data['netmask'], '--'])
+            else:
+                list_data.append([portal, data['ip'], data['port'], data['netmask'], ",".join(data['target'])])
         table = s.make_table(list_header, list_data)
         s.prt_log(table, 0)
         return list_data
