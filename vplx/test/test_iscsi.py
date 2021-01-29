@@ -2,10 +2,10 @@
 # import sys
 import time
 from unittest.mock import patch
-
 import pytest
 
 # import iscsi_json
+import execute
 import iscsi_json
 from execute import iscsi
 import subprocess
@@ -30,45 +30,26 @@ class TestDisk:
         self.disk.show('all')
 
     # 根据 linstor 资源更新 disk，无传入参数，返回 disks 字典(可能为空)
-    def test_update_disk(self):
+    def test_update_disk(self, mocker):
         """该方法根据 linstor 资源更新 disk，测试用例包括：获取非空字典/空字典"""
-        # 初始字典长度
-        length = len(self.disk.update_disk())
         assert len(self.disk.update_disk()) >= 2
         # 清空 disk
-        subprocess.run('python3 vtel.py stor r d res_test1 -y', shell=True)
-        subprocess.run('python3 vtel.py stor r d res_test2 -y', shell=True)
-        subprocess.run('python3 vtel.py stor r s', shell=True)
-        assert len(self.disk.update_disk()) == length - 2
+        # subprocess.run('python3 vtel.py stor r d res_test1 -y', shell=True)
+        # subprocess.run('python3 vtel.py stor r d res_test2 -y', shell=True)
+        # subprocess.run('python3 vtel.py stor r s', shell=True)
+        # mocker.patch.object(iscsi.Disk.update_disk, 'linstor_res', [])
+        mocker.patch.object(iscsi.Disk, 'update_disk', return_value=[])
+        assert self.disk.update_disk() == []
 
     def test_show(self):
         """展示disk，测试用例包括：'all'/'res_name'/不存在资源"""
-        subprocess.run('python3 vtel.py stor r c res_test1 -s 10m -a -num 1', shell=True)
-        subprocess.run('python3 vtel.py stor r c res_test2 -s 10m -a -num 1', shell=True)
-        subprocess.run('python3 vtel.py iscsi d s', shell=True)
+        # subprocess.run('python3 vtel.py stor r c res_test1 -s 10m -a -num 1', shell=True)
+        # subprocess.run('python3 vtel.py stor r c res_test2 -s 10m -a -num 1', shell=True)
+        # subprocess.run('python3 vtel.py iscsi d s', shell=True)
         assert len(self.disk.show('all')) >= 2
         assert self.disk.show('res_test1')[0][0] == 'res_test1'
         # 不存在
         assert self.disk.show('res_test3') == []
-
-    # Disk 类变动下列方法已修改为 show
-    # # 获取 linstor res
-    # def test_get_all_disk(self):
-    #     assert 'res_test1' in self.disk.get_all_disk()
-    #     assert 'res_test2' in self.disk.get_all_disk()
-    #
-    # # 这个函数应该明确获得指定disk,如果没有获得指定disk则return None
-    # def test_get_spe_disk(self):
-    #     assert self.disk.get_spe_disk('res_test1')
-    #     assert self.disk.get_spe_disk('res_test') is None
-    #
-    # # 该函数没有返回值，调用了本模块get_all_disk()和sundry的show_iscsi_data()
-    # def test_show_all_disk(self):
-    #     assert self.disk.show_all_disk() is None
-    #
-    # # 该函数没有返回值，调用了本模块get_spe_disk()和sundry的show_iscsi_data()
-    # def test_show_spe_disk(self):
-    #     assert self.disk.show_spe_disk('res_test') is None
 
 
 class TestHost:
