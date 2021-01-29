@@ -23,6 +23,7 @@ def test_get_value():
 #     assert consts._GLOBAL_DICT['LOG'] == 'test_log'
 
 
+<<<<<<< HEAD
 def test_set_glo_db():
     """测试 consts 设置 log 数据库方法"""
     consts.set_glo_db('test_db')
@@ -33,6 +34,11 @@ def test_set_glo_rpl():
     """测试 consts 设置是否为 replay 模式方法"""
     consts.set_glo_rpl('test_rpl')
     assert consts._GLOBAL_DICT['RPL'] == 'test_rpl'
+=======
+
+
+
+>>>>>>> b78e6cb5f618d5ddec071cdb27972707d55b5a74
 
 
 def test_set_glo_tsc_id():
@@ -59,18 +65,24 @@ def test_set_glo_gui_tid():
     assert consts._GLOBAL_DICT['GUI_TID'] == 'test_tid'
 
 
+<<<<<<< HEAD
 def test_glo_gui_tid():
     """测试 consts 获取 GUI tid 方法"""
     assert consts.glo_gui_tid() == 'test_tid'
+=======
+>>>>>>> b78e6cb5f618d5ddec071cdb27972707d55b5a74
 
 
 # def test_glo_log():
 #     assert consts.glo_log() == 'test_log'
 
 
+<<<<<<< HEAD
 def test_glo_db():
     """测试 consts 获取 LOG 数据库方法"""
     assert consts.glo_db() == 'test_db'
+=======
+>>>>>>> b78e6cb5f618d5ddec071cdb27972707d55b5a74
 
 
 def test_glo_rpl():

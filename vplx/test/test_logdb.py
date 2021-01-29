@@ -2,11 +2,14 @@ import logdb
 import consts
 
 
+<<<<<<< HEAD
 def test_prepare_db():
     """初始化 logdb"""
     logdb.prepare_db()
     assert consts.glo_db() != None
 
+=======
+>>>>>>> b78e6cb5f618d5ddec071cdb27972707d55b5a74
 
 # 检查文件是否存在，存在返回True，否则返回False
 def test_isFileExists():
