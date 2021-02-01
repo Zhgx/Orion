@@ -12,7 +12,7 @@ LOG_PATH = "../vplx/"
 LOG_FILE_NAME = 'cli.log'
 
 
-def isFileExists(strfile):
+def _is_file_exist(strfile):
     # 检查文件是否存在
     return os.path.isfile(strfile)
 
@@ -29,7 +29,7 @@ def _get_log_files(base_log_file):
 
 def _read_log_files():
     all_data = ''
-    if not isFileExists(LOG_PATH+LOG_FILE_NAME):
+    if not _is_file_exist(LOG_PATH+LOG_FILE_NAME):
         print('no log file')
         return
     for file in _get_log_files(LOG_FILE_NAME):
@@ -307,6 +307,10 @@ class Replay():
             cmds = logdb.get_cmd_via_time(start_time, end_time)
         else:
             cmds = logdb.get_all_cmd()
+
+        if not cmds:
+            print('There is no command to replay')
+            return
 
         number_list = [str(i) for i in list(range(1, len(cmds) + 1))]
 
