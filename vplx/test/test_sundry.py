@@ -2,7 +2,7 @@ from unittest.mock import patch
 
 import pytest
 
-import logdb
+# import logdb
 import sundry
 import consts
 
@@ -72,10 +72,10 @@ def test_re_search():
 #     assert sundry.show_linstor_data(head, data)._rows == [['ubuntu', 'COMBINED', 6, 3, '10.203.1.76:3366', 'pytest']]
 
 
-def test_change_pointer():
-    """设置 consts 的 log id"""
-    sundry.change_pointer(12345)
-    assert consts.glo_log_id() == 12345
+# def test_change_pointer():
+#     """设置 consts 的 log id"""
+#     sundry.change_pointer(12345)
+#     assert consts.glo_log_id() == 12345
 
 
 def test_execute_cmd():

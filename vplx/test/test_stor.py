@@ -47,7 +47,7 @@ class TestNode:
         self.node_name = 'ubuntu'
         self.node_ip = '10.203.1.76'
 
-    def test_delete_node(self):
+    def test_delete_node(self, mocker):
         """删除 node 资源，测试用例包括：删除成功/删除不存在节点"""
         sys.stdout = io.StringIO()
         # 成功
@@ -58,8 +58,16 @@ class TestNode:
             self.node.delete_node('window')
         terminal_print.assert_called_with(
             '''FAIL\nDescription:\n    Deletion of node 'window' had no effect.\nCause:\n    Node 'window' does not exist.\nDetails:\n    Node: window\n''')
+        # 数据隔离，模拟 execute_linstor_cmd 函数返回值
+        mocker.patch.object(stor, 'execute_linstor_cmd', return_value={'sts': 1, 'rst': 'xxxx'})
+        self.node.delete_node(self.node_name)
+        assert 'SUCCESS' in sys.stdout.getvalue()
+        with pytest.raises(SystemExit) as exsinfo:
+            mocker.patch.object(stor, 'execute_linstor_cmd', return_value={'sts': 3, 'rst': 'xxxx'})
+            self.node.delete_node(self.node_name)
+        assert exsinfo.type == SystemExit
 
-    def test_create_node(self):
+    def test_create_node(self, mocker):
         """创建 node 资源，测试用例包括：创建成功/创建节点类型非 Combined/Controller/Auxiliary/Satellite/创建节点已存在"""
         # 成功
         sys.stdout = io.StringIO()
@@ -74,6 +82,13 @@ class TestNode:
         with pytest.raises(SystemExit) as exsinfo:
             self.node.create_node(self.node_name, self.node_ip, 'Combined')
         assert exsinfo.type == SystemExit
+        # 数据隔离，模拟 execute_linstor_cmd 函数返回值
+        mocker.patch.object(stor, 'execute_linstor_cmd', return_value={'sts': 1, 'rst': 'xxxx'})
+        self.node.create_node(self.node_name, self.node_ip, 'Combined')
+        assert 'SUCCESS' in sys.stdout.getvalue()
+        mocker.patch.object(stor, 'execute_linstor_cmd', return_value={'sts': 2, 'rst': 'xxxx'})
+        self.node.create_node(self.node_name, self.node_ip, 'Combined')
+        assert 'FAIL' in sys.stdout.getvalue()
 
     def test_show_one_node(self):
         """展示单一节点，测试用例包括：该节点存在/该节点不存在"""
@@ -103,7 +118,7 @@ class TestStoragePool:
         self.sp = stor.StoragePool()
         self.node_name = 'ubuntu'
 
-    def test_create_storagepool_lvm(self):
+    def test_create_storagepool_lvm(self, mocker):
         """创建storagepool_lvm资源，测试用例包括：创建成功/创建失败：使用不存在的node创建/使用不存在的vg创建"""
         sys.stdout = io.StringIO()
         # 成功
@@ -116,8 +131,15 @@ class TestStoragePool:
         with patch('builtins.print') as terminal_print:
             self.sp.create_storagepool_lvm(self.node_name, 'sp_pytest_lvm', 'drbdpool0')
             terminal_print.assert_called_with('Volume group:"drbdpool0" does not exist')
+        # 数据隔离，模拟 execute_linstor_cmd 函数返回值
+        mocker.patch.object(stor, 'execute_linstor_cmd', return_value={'sts': 1, 'rst': 'xxxx'})
+        self.sp.create_storagepool_lvm(self.node_name, 'sp_pytest_lvm', 'drbdpool')
+        assert 'SUCCESS' in sys.stdout.getvalue()
+        mocker.patch.object(stor, 'execute_linstor_cmd', return_value={'sts': 2, 'rst': 'xxxx'})
+        self.sp.create_storagepool_lvm(self.node_name, 'sp_pytest_lvm', 'drbdpool')
+        assert 'FAIL' in sys.stdout.getvalue()
 
-    def test_create_storagepool_thinlv(self):
+    def test_create_storagepool_thinlv(self, mocker):
         """创建storagepool_thinlv资源，测试用例包括：创建成功/创建失败：使用不存在的node创建/使用不存在的vg创建"""
         sys.stdout = io.StringIO()
         self.sp.create_storagepool_thinlv(self.node_name, 'sp_pytest_thinlv', 'drbdpool/thinlv_test')
@@ -129,6 +151,13 @@ class TestStoragePool:
         with patch('builtins.print') as terminal_print:
             self.sp.create_storagepool_thinlv(self.node_name, 'sp_pytest_thinlv', 'drbdpool/thinlv_test0')
             terminal_print.assert_called_with('Thin logical volume:"drbdpool/thinlv_test0" does not exist')
+        # 数据隔离，模拟 execute_linstor_cmd 函数返回值
+        mocker.patch.object(stor, 'execute_linstor_cmd', return_value={'sts': 1, 'rst': 'xxxx'})
+        self.sp.create_storagepool_thinlv(self.node_name, 'sp_pytest_lvm', 'drbdpool')
+        assert 'SUCCESS' in sys.stdout.getvalue()
+        mocker.patch.object(stor, 'execute_linstor_cmd', return_value={'sts': 2, 'rst': 'xxxx'})
+        self.sp.create_storagepool_thinlv(self.node_name, 'sp_pytest_lvm', 'drbdpool')
+        assert 'FAIL' in sys.stdout.getvalue()
 
     def test_show_all_sp(self):
         """展示全部 storagepool 资源"""
@@ -152,7 +181,7 @@ class TestStoragePool:
             self.sp.show_one_sp('sp_pytest_lvm0')
             terminal_print.assert_called_with('The storagepool does not exist')
 
-    def test_delete_storagepool(self):
+    def test_delete_storagepool(self, mocker):
         """删除 storagepool 资源，测试用例包括：删除成功/删除不存在storagepool"""
         sys.stdout = io.StringIO()
         # 成功
@@ -167,6 +196,13 @@ class TestStoragePool:
         with pytest.raises(SystemExit) as exsinfo:
             self.sp.delete_storagepool('window', 'sp_pytest_lvm')
         assert exsinfo.type == SystemExit
+        # 数据隔离，模拟 execute_linstor_cmd 函数返回值
+        mocker.patch.object(stor, 'execute_linstor_cmd', return_value={'sts': 1, 'rst': 'xxxx'})
+        self.sp.delete_storagepool(self.node_name, 'sp_pytest_lvm')
+        assert 'SUCCESS' in sys.stdout.getvalue()
+        mocker.patch.object(stor, 'execute_linstor_cmd', return_value={'sts': 2, 'rst': 'xxxx'})
+        self.sp.delete_storagepool(self.node_name, 'sp_pytest_lvm')
+        assert 'FAIL' in sys.stdout.getvalue()
 
 
 class TestResource:
@@ -197,27 +233,48 @@ class TestResource:
             'ubuntu': 'pytest_sp1', 'window': 'pytest_sp2'}
 
     # 成功返回 True 有可能返回None 失败返回 result
-    def test_linstor_create_rd(self):
+    def test_linstor_create_rd(self, mocker):
         """创建 rd 资源，测试用例包括：创建rd成功/重复创建失败"""
+        sys.stdout = io.StringIO()
         # 成功
         assert self.res.linstor_create_rd('pytest_res') is True
         # 重复创建，失败
         with pytest.raises(SystemExit) as exsinfo:
             self.res.linstor_create_rd('pytest_res')
         assert exsinfo.type == SystemExit
+        # 数据隔离
+        mocker.patch.object(stor, 'execute_linstor_cmd', return_value={'sts': 2, 'rst': 'xxxx'})
+        self.res.linstor_create_rd('pytest_res0')
+        assert 'FAIL' in sys.stdout.getvalue()
 
     # 成功返回 True 有可能返回None 失败返回 result
-    def test_linstor_create_vd(self):
+    def test_linstor_create_vd(self, mocker):
         """创建 vd 资源(可以重复创建同名资源）"""
+        sys.stdout = io.StringIO()
         assert self.res.linstor_create_vd('pytest_res', '10m') is True
+        # 数据隔离
+        mocker.patch.object(stor, 'execute_linstor_cmd', return_value={'sts': 2, 'rst': 'xxxx'})
+        self.res.linstor_create_vd('pytest_res0', '10m')
+        assert 'FAIL' in sys.stdout.getvalue()
+        with pytest.raises(SystemExit) as exsinfo:
+            mocker.patch.object(stor, 'execute_linstor_cmd', return_value={'sts': 3, 'rst': 'xxxx'})
+            self.res.linstor_create_vd('pytest_res0', '10m')
+        assert exsinfo.type == SystemExit
         # vd 可以重名创建，创建失败时删除同名的rd,同时也会把该vd删掉
         # assert self.res.linstor_create_vd('pytest_res', '10m') == 3
 
     # 成功返回空字典，失败返回 {节点：错误原因}
-    def test_execute_create_res(self):
+    def test_execute_create_res(self, mocker):
         """在指定节点和存储池上创建resource"""
         assert self.res.execute_create_res('pytest_res', self.node_name, 'pytest_sp1') == {}
         # 超时会抛异常SystemExit
+        # 数据模拟 ①
+        mocker.patch.object(stor, 'execute_linstor_cmd', return_value={'sts': 2, 'rst': 'xxxx'})
+        mocker.patch.object(stor, 'get_war_mes', return_value='')
+        assert self.res.execute_create_res('pytest_res', self.node_name, 'pytest_sp1') is None
+        # 数据模拟 ②
+        mocker.patch.object(stor, 'execute_linstor_cmd', return_value={'sts': 1, 'rst': 'xxxx'})
+        assert self.res.execute_create_res('pytest_res', self.node_name, 'pytest_sp1') == {}
 
     # 无返回值 主要采用 execute_linstor_cmd
     def test_show_all_res(self):
@@ -242,7 +299,7 @@ class TestResource:
             terminal_print.assert_called_with('The resource does not exist')
 
     # 无返回值 主要采用 execute_linstor_cmd
-    def test_delete_resource_des(self):
+    def test_delete_resource_des(self,mocker):
         """删除某个节点的 res 资源，测试用例包括删除成功/删除参数中的节点不存在/删除参数中 res 不存在"""
         sys.stdout = io.StringIO()
         self.res.delete_resource_des(self.node_name, 'pytest_res')
@@ -256,9 +313,17 @@ class TestResource:
         with pytest.raises(SystemExit) as exsinfo:
             self.res.delete_resource_des('window', 'pytest_res')
         assert exsinfo.type == SystemExit
+        # 数据隔离
+        mocker.patch.object(stor, 'execute_linstor_cmd', return_value={'sts': 1, 'rst': 'xxxx'})
+        self.res.delete_resource_des(self.node_name, 'pytest_res0')
+        assert 'SUCCESS' in sys.stdout.getvalue()
+        with pytest.raises(SystemExit) as exsinfo:
+            mocker.patch.object(stor, 'execute_linstor_cmd', return_value={'sts': 3, 'rst': 'xxxx'})
+            self.res.delete_resource_des(self.node_name, 'pytest_res0')
+        assert exsinfo.type == SystemExit
 
     # 无返回值 主要采用 execute_linstor_cmd
-    def test_delete_resource_all(self):
+    def test_delete_resource_all(self, mocker):
         """删除全部 res 资源，测试用例包括：该 res 存在/该 res 不存在"""
         self.res.execute_create_res('pytest_res', self.node_name, 'pool_a')
         sys.stdout = io.StringIO()
@@ -267,15 +332,35 @@ class TestResource:
         # 不存在 (抛warning）
         self.res.delete_resource_all('pytest_res0')
         assert 'FAIL' in sys.stdout.getvalue()
+        # 数据隔离
+        mocker.patch.object(stor, 'execute_linstor_cmd', return_value={'sts': 1, 'rst': 'xxxx'})
+        self.res.delete_resource_all('pytest_res0')
+        assert 'SUCCESS' in sys.stdout.getvalue()
+        with pytest.raises(SystemExit) as exsinfo:
+            mocker.patch.object(stor, 'execute_linstor_cmd', return_value={'sts': 3, 'rst': 'xxxx'})
+            self.res.delete_resource_all('pytest_res0')
+        assert exsinfo.type == SystemExit
 
     # 成功返回 True 失败返回 result / return ('The resource already exists')
-    def test_create_res_auto(self):
+    def test_create_res_auto(self, mocker):
         """自动创建 res资源，测试用例包括：创建成功/该 res 已存在创建失败"""
+        sys.stdout = io.StringIO()
         assert self.res.create_res_auto('pytest_res', '10m', 1) is True
         # 重复创建，失败测试用例
         with pytest.raises(SystemExit) as exsinfo:
             self.res.create_res_auto('pytest_res', '10m', 1)
         assert exsinfo.type == SystemExit
+        # 数据隔离（注意第一个if条件）
+        # mocker.patch.object(stor, 'execute_linstor_cmd', return_value={'sts': 1, 'rst': 'xxxx'})
+        # self.res.create_res_auto('pytest_res', '10m', 1)
+        # assert 'SUCCESS' in sys.stdout.getvalue()
+        # mocker.patch.object(stor, 'execute_linstor_cmd', return_value={'sts': 2, 'rst': 'xxxx'})
+        # self.res.create_res_auto('pytest_res0', '10m', 1)
+        # assert 'FAIL' in sys.stdout.getvalue()
+        # with pytest.raises(SystemExit) as exsinfo:
+        #     mocker.patch.object(stor, 'execute_linstor_cmd', return_value={'sts': 3, 'rst': 'xxxx'})
+        #     self.res.create_res_auto('pytest_res0', '10m', 1)
+        # assert exsinfo.type == SystemExit
 
     # 无返回值
     def test_linstor_delete_rd(self):
@@ -294,8 +379,9 @@ class TestResource:
         self.res.linstor_delete_rd('pytest_res')
 
     # 无返回值
-    def test_create_res_diskless(self):
+    def test_create_res_diskless(self, mocker):
         """创建 diskless 资源，测试用例包括：创建成功/该 res 已存在创建失败"""
+        sys.stdout = io.StringIO()
         self.res.linstor_create_rd('pytest_res')
         self.res.linstor_create_vd('pytest_res', '10m')
         assert self.res.create_res_diskless([self.node_name], 'pytest_res') is None
@@ -304,6 +390,13 @@ class TestResource:
             self.res.create_res_diskless([self.node_name], 'pytest_res')
         assert exsinfo.type == SystemExit
         self.res.linstor_delete_rd('pytest_res')
+        # 数据隔离
+        mocker.patch.object(stor, 'execute_linstor_cmd', return_value={'sts': 0, 'rst': 'xxxx'})
+        self.res.create_res_diskless([self.node_name], 'pytest_res')
+        assert 'SUCCESS' in sys.stdout.getvalue()
+        mocker.patch.object(stor, 'execute_linstor_cmd', return_value={'sts': 2, 'rst': 'xxxx'})
+        self.res.create_res_diskless([self.node_name], 'pytest_res')
+        assert 'FAIL' in sys.stdout.getvalue()
 
     def test_add_mirror_auto(self):
         """自动创建镜像，测试用例包括：创建失败（由于创建镜像需要两个以上node)"""

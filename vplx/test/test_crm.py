@@ -1,4 +1,5 @@
 import sys
+import time
 from collections import Counter
 from unittest.mock import patch
 
@@ -10,29 +11,28 @@ import log
 import sundry
 from execute import crm, iscsi
 import subprocess
-import time
 
 from execute.crm import execute_crm_cmd
 
 
-def test_module():
-    """模块初始化函数，初始化 consts 类跨模块变量"""
-    # print('test_module')
-    sys.path.append('../')
-    consts.init()
-
-    # transaction_id = s.create_transaction_id()
-    # logger = log.Log('test',transaction_id)
-    # consts.set_glo_log(logger)
-    # consts.set_glo_tsc_id(transaction_id)
-    # # consts.set_glo_id(99)
-    # # consts.set_glo_str('test')
-    # consts.set_glo_rpl('no')
-    # transaction_id = sundry.create_transaction_id()
-    # logger = log.Log('test', transaction_id)
-    logger = log.Log()
-    # consts.set_glo_log(logger)
-    consts.set_glo_rpl('no')
+# def test_module():
+#     """模块初始化函数，初始化 consts 类跨模块变量"""
+#     # print('test_module')
+#     sys.path.append('../')
+#     consts.init()
+#
+#     # transaction_id = s.create_transaction_id()
+#     # logger = log.Log('test',transaction_id)
+#     # consts.set_glo_log(logger)
+#     # consts.set_glo_tsc_id(transaction_id)
+#     # # consts.set_glo_id(99)
+#     # # consts.set_glo_str('test')
+#     # consts.set_glo_rpl('no')
+#     # transaction_id = sundry.create_transaction_id()
+#     # logger = log.Log('test', transaction_id)
+#     logger = log.Log()
+#     # consts.set_glo_log(logger)
+#     consts.set_glo_rpl('no')
 
 
 def test_execute_crm_cmd():
@@ -91,8 +91,19 @@ class TestCRMData:
                                             self.crmdata.get_target()) is not None
 
     @pytest.mark.portal
+    def test_get_order(self):
+        """获取 crm 全部 order 信息"""
+        assert self.crmdata.get_order() is not None
+
+    @pytest.mark.portal
+    def test_get_colocation(self):
+        """获取 crm 全部 colocation 信息"""
+        assert self.crmdata.get_colocation() is not None
+
+    @pytest.mark.portal
     def test_check_portal_component(self):
-        """对目前环境的portal组件(ipaddr,portblock）的检查，测试用例包括：已存在的ipaddr没有对应的portblock抛出异常/存在单独的portblock抛出异常/不存在异常情况检查通过"""
+        """对目前环境的portal组件(ipaddr,portblock）的检查，测试用例包括：已存在的ipaddr没有对应的portblock抛出异常/存在单独的portblock抛出异常/portal没有order和colcation/portal没有order/portal只有一个colocation/不存在异常情况检查通过"""
+        # 共六个用例
         # 1.不存在单独的 portblock
         # 2.已存在的ipaddr，必须有对应的portblock组（block，unblock）
         # 尝试单独创建 ipaddr
@@ -101,23 +112,110 @@ class TestCRMData:
         # 需要重新实例化，不然单独创建 IPaddr2 没法在初始化的对象中读取
         crmdata = crm.CRMData()
         with pytest.raises(SystemExit) as exsinfo:
-            crmdata.check_portal_component(crmdata.get_vip(), crmdata.get_portblock())
+            crmdata.check_portal_component(crmdata.get_vip(), crmdata.get_portblock(), crmdata.get_order(), crmdata.get_colocation())
         assert exsinfo.type == SystemExit
         subprocess.run('crm res stop vip_pytest03', shell=True)
         subprocess.run('crm conf del vip_pytest03', shell=True)
         # 重新初始化对象
+        # 尝试单独创建 portblock
         subprocess.run(
             'crm cof primitive vip_pytest03_prtblk_on portblock params ip=10.203.1.202 portno=24 protocol=tcp action=block op monitor timeout=20 interval=20 -y',
             shell=True)
         crmdata = crm.CRMData()
         with pytest.raises(SystemExit) as exsinfo:
-            crmdata.check_portal_component(crmdata.get_vip(), crmdata.get_portblock())
+            crmdata.check_portal_component(crmdata.get_vip(), crmdata.get_portblock(),crmdata.get_order(),crmdata.get_colocation())
         assert exsinfo.type == SystemExit
         subprocess.run('crm res stop vip_pytest03_prtblk_on', shell=True)
         subprocess.run('crm conf del vip_pytest03_prtblk_on', shell=True)
         # 重新初始化对象
+        # 创建没有coloation 和 order
+        subprocess.run('crm cof primitive vip_pytest03 IPaddr2 params ip=10.203.1.202 cidr_netmask=24', shell=True)
+        subprocess.run('crm cof primitive vip_pytest03_prtblk_on portblock params ip=10.203.1.202 portno=3260 protocol=tcp action=block op monitor timeout=20 interval=20', shell=True)
+        subprocess.run('crm cof primitive vip_pytest03_prtblk_off portblock params ip=10.203.1.202 portno=3260 protocol=tcp action=block op monitor timeout=20 interval=20', shell=True)
         crmdata = crm.CRMData()
-        assert crmdata.check_portal_component(crmdata.get_vip(), crmdata.get_portblock()) is None
+        with pytest.raises(SystemExit) as exsinfo:
+            crmdata.check_portal_component(crmdata.get_vip(), crmdata.get_portblock(), crmdata.get_order(), crmdata.get_colocation())
+        assert exsinfo.type == SystemExit
+        subprocess.run('crm res stop vip_pytest03', shell=True)
+        subprocess.run('crm conf del vip_pytest03', shell=True)
+        subprocess.run('crm res stop vip_pytest03_prtblk_on', shell=True)
+        if subprocess.run('crm conf del vip_pytest03_prtblk_on', shell=True).returncode:
+            subprocess.run('crm res ref', shell=True)
+            subprocess.run('crm conf del vip_pytest03_prtblk_on', shell=True)
+        else:
+            pass
+        subprocess.run('crm res stop vip_pytest03_prtblk_off', shell=True)
+        if subprocess.run('crm conf del vip_pytest03_prtblk_off', shell=True).returncode:
+            subprocess.run('crm res ref', shell=True)
+            subprocess.run('crm conf del vip_pytest03_prtblk_off', shell=True)
+        else:
+            pass
+        # 重新初始化对象
+        # 创建没有 order
+        subprocess.run('crm cof primitive vip_pytest03 IPaddr2 params ip=10.203.1.202 cidr_netmask=24', shell=True)
+        subprocess.run(
+            'crm cof primitive vip_pytest03_prtblk_on portblock params ip=10.203.1.202 portno=3260 protocol=tcp action=block op monitor timeout=20 interval=20',
+            shell=True)
+        subprocess.run(
+            'crm cof primitive vip_pytest03_prtblk_off portblock params ip=10.203.1.202 portno=3260 protocol=tcp action=block op monitor timeout=20 interval=20',
+            shell=True)
+        subprocess.run('crm cof colocation col_vip_pytest03_prtblk_on inf: vip_pytest03_prtblk_on vip_pytest03', shell=True)
+        subprocess.run('crm cof colocation col_vip_pytest03_prtblk_off inf: vip_pytest03_prtblk_off vip_pytest03', shell=True)
+        crmdata = crm.CRMData()
+        with pytest.raises(SystemExit) as exsinfo:
+            crmdata.check_portal_component(crmdata.get_vip(), crmdata.get_portblock(), crmdata.get_order(),
+                                           crmdata.get_colocation())
+        assert exsinfo.type == SystemExit
+        time.sleep(0.5)
+        subprocess.run('crm res stop vip_pytest03', shell=True)
+        subprocess.run('crm conf del vip_pytest03', shell=True)
+        subprocess.run('crm res stop vip_pytest03_prtblk_on', shell=True)
+        if subprocess.run('crm conf del vip_pytest03_prtblk_on', shell=True).returncode:
+            subprocess.run('crm res ref', shell=True)
+            subprocess.run('crm conf del vip_pytest03_prtblk_on', shell=True)
+        else:
+            pass
+        subprocess.run('crm res stop vip_pytest03_prtblk_off', shell=True)
+        if subprocess.run('crm conf del vip_pytest03_prtblk_off', shell=True).returncode:
+            subprocess.run('crm res ref', shell=True)
+            subprocess.run('crm conf del vip_pytest03_prtblk_off', shell=True)
+        else:
+            pass
+        # ps： col 和 order 会自已删除不需要手动删除
+        # 没有其中一个col
+        subprocess.run('crm cof primitive vip_pytest03 IPaddr2 params ip=10.203.1.202 cidr_netmask=24', shell=True)
+        subprocess.run(
+            'crm cof primitive vip_pytest03_prtblk_on portblock params ip=10.203.1.202 portno=3260 protocol=tcp action=block op monitor timeout=20 interval=20',
+            shell=True)
+        subprocess.run(
+            'crm cof primitive vip_pytest03_prtblk_off portblock params ip=10.203.1.202 portno=3260 protocol=tcp action=block op monitor timeout=20 interval=20',
+            shell=True)
+        subprocess.run('crm cof colocation col_vip_pytest03_prtblk_on inf: vip_pytest03_prtblk_on vip_pytest03',
+                       shell=True)
+        subprocess.run('crm cof order or_vip_pytest03_prtblk_on vip_pytest03_prtblk_on vip_pytest03', shell=True)
+        crmdata = crm.CRMData()
+        with pytest.raises(SystemExit) as exsinfo:
+            crmdata.check_portal_component(crmdata.get_vip(), crmdata.get_portblock(), crmdata.get_order(),
+                                           crmdata.get_colocation())
+        assert exsinfo.type == SystemExit
+        time.sleep(0.5)
+        subprocess.run('crm res stop vip_pytest03', shell=True)
+        subprocess.run('crm conf del vip_pytest03', shell=True)
+        subprocess.run('crm res stop vip_pytest03_prtblk_on', shell=True)
+        if subprocess.run('crm conf del vip_pytest03_prtblk_on', shell=True).returncode:
+            subprocess.run('crm res ref', shell=True)
+            subprocess.run('crm conf del vip_pytest03_prtblk_on', shell=True)
+        else:
+            pass
+        subprocess.run('crm res stop vip_pytest03_prtblk_off', shell=True)
+        if subprocess.run('crm conf del vip_pytest03_prtblk_off', shell=True).returncode:
+            subprocess.run('crm res ref', shell=True)
+            subprocess.run('crm conf del vip_pytest03_prtblk_off', shell=True)
+        else:
+            pass
+        # 重新初始化对象
+        crmdata = crm.CRMData()
+        assert crmdata.check_portal_component(crmdata.get_vip(), crmdata.get_portblock(), crmdata.get_order(), crmdata.get_colocation()) is None
 
     # check 函数调用 check_portal_component 和 check_env_sync 函数不作用例分析
     @pytest.mark.portal
@@ -356,8 +454,9 @@ class TestCRMConfig:
 
     @pytest.mark.portal
     def test_get_crm_res_status(self):
-        """获取crm res的状态，测试用例包括：获取状态成功/资源类型输入错误/资源名字与类型不对应"""
-        assert self.crmconfig.get_crm_res_status('vip', 'IPaddr2')
+        """获取crm res的状态，测试用例包括：获取状态成功/资源类型输入错误/资源名字与类型不对应/资源名字不存在"""
+        assert self.crmconfig.get_crm_res_status('vip_pytest', 'IPaddr2')
+        assert self.crmconfig.get_crm_res_status('vip_pytest', 'portblock') is None
         assert self.crmconfig.get_crm_res_status('p_iscsi_portblock_off', 'IPaddr2') is None
         with pytest.raises(ValueError) as exsinfo:
             self.crmconfig.get_crm_res_status('vip', 'IPaddr1')
@@ -393,7 +492,7 @@ class TestIPaddr2:
         # 端口 与ip 前面函数已校验
         with patch('builtins.print') as terminal_print:
             self.ipaddr2.create('vip_pytest03', '10.203.1.202', '24')
-            terminal_print.assert_called_with('Create vip_pytest03 successfully')
+            terminal_print.assert_called_with('Create vip:vip_pytest03 successfully')
         # with pytest.raises(consts.CmdError) as exsinfo:
         #     self.ipaddr2.create.__wrapped__(self, 'vip_pytest04', '10.203.1....202', '24')
         # assert exsinfo.type == consts.CmdError
@@ -407,21 +506,21 @@ class TestIPaddr2:
     def test_modify(self):
         """修改IPaddr2，测试用例包括：修改IPaddr2成功/IPaddr2不存在修改失败"""
         with patch('builtins.print') as terminal_print:
-            self.ipaddr2.modify('vip_pytest03', '10.203.1.203')
-            terminal_print.assert_called_with('vip_pytest03\'s ip and port have been modified successfully')
+            self.ipaddr2.modify('vip_pytest03', '10.203.1.203','40')
+            terminal_print.assert_called_with('Modify vip:vip_pytest03 (IP and Netmask) successfully')
         # ip格式问题前面函数已校验
         # with pytest.raises(consts.CmdError) as exsinfo:
         #     self.ipaddr2.modify.__wrapped__(self, 'vip_pytest03', '10.203.1.202....')
         # assert exsinfo.type == consts.CmdError
         with pytest.raises(consts.CmdError) as exsinfo:
-            self.ipaddr2.modify('vip_pytest05', '10.203.1.202')
+            self.ipaddr2.modify('vip_pytest0', '10.203.1.202', '40')
         assert exsinfo.type == consts.CmdError
 
     def test_delete(self):
         """删除IPaddr2，测试用例包括：删除IPaddr2成功/IPaddr2不存在删除失败"""
         with patch('builtins.print') as terminal_print:
             self.ipaddr2.delete('vip_pytest03')
-            terminal_print.assert_called_with('Delete vip_pytest03 successfully')
+            terminal_print.assert_called_with('Delete vip:vip_pytest03 successfully')
         with pytest.raises(consts.CmdError) as exsinfo:
             self.ipaddr2.delete('vip_pytest05')
         assert exsinfo.type == consts.CmdError
@@ -440,11 +539,11 @@ class TestPortBlockGroup:
         assert exsinfo.type == TypeError
         with patch('builtins.print') as terminal_print:
             self.pbg.create('vip_pytest03_prtblk_on', '10.203.1.202', '24', 'block')
-            terminal_print.assert_called_with('Create vip_pytest03_prtblk_on successfully')
+            terminal_print.assert_called_with('Create portblock:vip_pytest03_prtblk_on successfully')
 
         with patch('builtins.print') as terminal_print:
             self.pbg.create('vip_pytest03_prtblk_off', '10.203.1.202', '24', 'unblock')
-            terminal_print.assert_called_with('Create vip_pytest03_prtblk_off successfully')
+            terminal_print.assert_called_with('Create portblock:vip_pytest03_prtblk_off successfully')
 
         with pytest.raises(consts.CmdError) as exsinfo:
             self.pbg.create('vip_pytest03_prtblk_off', '10.203.1.202', '24', 'unblock')
@@ -454,11 +553,11 @@ class TestPortBlockGroup:
         """修改PortBlockGroup，测试用例包括：修改成功/不存在修改失败"""
         with patch('builtins.print') as terminal_print:
             self.pbg.modify('vip_pytest03_prtblk_on', '10.203.1.203', '24')
-            terminal_print.assert_called_with('Modify vip_pytest03_prtblk_on (IP and Port) successfully')
+            terminal_print.assert_called_with('Modify portblock:vip_pytest03_prtblk_on (IP and Port) successfully')
 
         with patch('builtins.print') as terminal_print:
             self.pbg.modify('vip_pytest03_prtblk_off', '10.203.1.203', '24')
-            terminal_print.assert_called_with('Modify vip_pytest03_prtblk_off (IP and Port) successfully')
+            terminal_print.assert_called_with('Modify portblock:vip_pytest03_prtblk_off (IP and Port) successfully')
         with pytest.raises(consts.CmdError) as exsinfo:
             self.pbg.modify('vip_pytest0000_prtblk_off', '10.203.1.203', '24')
         assert exsinfo.type == consts.CmdError
@@ -467,11 +566,11 @@ class TestPortBlockGroup:
         """删除PortBlockGroup，测试用例包括：删除成功/不存在删除失败"""
         with patch('builtins.print') as terminal_print:
             self.pbg.delete('vip_pytest03_prtblk_on')
-            terminal_print.assert_called_with('Delete vip_pytest03_prtblk_on successfully')
+            terminal_print.assert_called_with('Delete portblock:vip_pytest03_prtblk_on successfully')
 
         with patch('builtins.print') as terminal_print:
             self.pbg.delete('vip_pytest03_prtblk_off')
-            terminal_print.assert_called_with('Delete vip_pytest03_prtblk_off successfully')
+            terminal_print.assert_called_with('Delete portblock:vip_pytest03_prtblk_off successfully')
 
         with pytest.raises(consts.CmdError) as exsinfo:
             self.pbg.delete('vip_pytest0000_prtblk_off')

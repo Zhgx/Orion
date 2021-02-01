@@ -22,8 +22,8 @@ class TestJsonOperation:
             "HostGroup": {},
             "DiskGroup": {},
             "Map": {},
-            "Portal": {}}
-
+            "Portal": {},
+            "Target": {}}
     @staticmethod
     def teardown_class():
         with open('../vplx/map_config.json', "w") as fw:
@@ -33,7 +33,8 @@ class TestJsonOperation:
                 "HostGroup": {},
                 "DiskGroup": {},
                 "Map": {},
-                "Portal": {}}
+                "Portal": {},
+                "Target": {}}
             json.dump(json_dict, fw, indent=4, separators=(',', ': '))
         # 同步下资源
         subprocess.run('python3 vtel.py iscsi sync', shell=True)
@@ -105,12 +106,12 @@ class TestJsonOperation:
     # ------------------   add  ----------------   2020.12.28
 
     # 具体函数没调用
-    def test_get_map_by_group(self):
-        """JsonOperation 类根据 hg/dg 读取到使用这个 hg 的所有 map 测试函数"""
-        assert self.js.get_map_by_group('HostGroup', 'pytest_hg') == ['pytest_map']
-        assert not self.js.get_map_by_group('HostGroup', 'pytest_hg1')
-        assert self.js.get_map_by_group('DiskGroup', 'pytest_dg') == ['pytest_map']
-        assert not self.js.get_map_by_group('DiskGroup', 'pytest_dg1')
+    # def test_get_map_by_group(self):
+    #     """JsonOperation 类根据 hg/dg 读取到使用这个 hg 的所有 map 测试函数"""
+    #     assert self.js.get_map_by_group('HostGroup', 'pytest_hg') == ['pytest_map']
+    #     assert not self.js.get_map_by_group('HostGroup', 'pytest_hg1')
+    #     assert self.js.get_map_by_group('DiskGroup', 'pytest_dg') == ['pytest_map']
+    #     assert not self.js.get_map_by_group('DiskGroup', 'pytest_dg1')
 
     def test_cover_data(self):
         """JsonOperation 类更新该资源的全部数据的测试函数"""
