@@ -35,12 +35,14 @@ stor_blueprint.add_url_rule('/LINSTOR/modify', view_func=model.LINSTORModify.as_
 '''
 @note: 创建资源api
 '''
-stor_blueprint.add_url_rule('/LINSTOR/Create', view_func=model.LINSTORCreate.as_view('linstor_create'))
+stor_blueprint.add_url_rule('/LINSTOR/SP/Create', view_func=model.SpCreate.as_view('sp_create'))
+stor_blueprint.add_url_rule('/LINSTOR/Node/Create', view_func=model.NodeCreate.as_view('node_create'))
+stor_blueprint.add_url_rule('/LINSTOR/Resource/Create', view_func=model.ResourceCreate.as_view('resource_create'))
 
 '''
 @note:交互
 '''
-stor_blueprint.add_url_rule('/socket', view_func=model.LINSTORView.as_view('LINSTORview'))
+stor_blueprint.add_url_rule('/LINSTOR', view_func=model.LINSTORView.as_view('LINSTORview'))
 stor_blueprint.add_url_rule('/LINSTOR/Create/lvm', view_func=model.lvmView.as_view('lvmview'))
 stor_blueprint.add_url_rule('/LINSTOR/Create/sp', view_func=model.spView.as_view('spview'))
 stor_blueprint.add_url_rule('/LINSTOR/Create/node_create', view_func=model.nodecreateView.as_view('nodecreateview'))

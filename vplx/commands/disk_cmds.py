@@ -1,6 +1,7 @@
 import execute as ex
 import sundry as sd
 
+
 class Usage():
     # host部分使用手册
     disk = '''
@@ -8,7 +9,6 @@ class Usage():
 
     disk_show = '''
     disk(d) show(s) [DISK]'''
-
 
 
 class DiskCommands():
@@ -20,7 +20,7 @@ class DiskCommands():
         Add commands for the disk management:create,delete,show
         """
         disk_parser = parser.add_parser(
-            'disk', aliases='d', help='disk operation',usage=Usage.disk)
+            'disk', aliases='d', help='disk operation', usage=Usage.disk)
         disk_parser.set_defaults(func=self.print_disk_help)
 
         disk_subp = disk_parser.add_subparsers(dest='subargs_disk')
@@ -30,7 +30,7 @@ class DiskCommands():
         """
 
         p_show_disk = disk_subp.add_parser(
-            'show', aliases='s', help='disk show',usage=Usage.disk_show)
+            'show', aliases='s', help='disk show', usage=Usage.disk_show)
 
         p_show_disk.add_argument(
             'disk',

@@ -8,6 +8,7 @@ Created on 2020/3/2
 from flask import Flask, jsonify, render_template, request, make_response, views
 import process
 from public import log
+from execute import stor 
 
 
 def cors_data(datadict):
@@ -30,8 +31,6 @@ def get_request_data():
 
 
 RESOURCEDICT = None
-
-
 def get_all_resource():
     global RESOURCEDICT
     pc = process.Process_data()
@@ -43,394 +42,68 @@ class OprtResource(views.MethodView):
 
     def get(self):
         dict_data = get_request_data()
-#         logger = log.Log()
-#         logger.write_to_log('OPRT', 'ROUTE', '/resource/show/oprt', dict_data['ip'], '')
+        logger = log.Log()
+        logger.write_to_log('OPRT', 'ROUTE', '/resource/show/oprt', dict_data['ip'], '')
         if get_all_resource():
-#             logger.write_to_log('DATA', 'RETURN', 'OprtResource', 'result', '0')
+            logger.write_to_log('DATA', 'RETURN', 'OprtResource', 'result', '0')
             return cors_data("0")
         else:
-#             logger.write_to_log('DATA', 'RETURN', 'OprtResource', 'result', '1')
+            logger.write_to_log('DATA', 'RETURN', 'OprtResource', 'result', '1')
             return cors_data("1")
-
-
- # 'count': 10,输入值为list数量值
-# aa  = len(RESOURCEDICT_test['data'])
-RESOURCEDICT_test = None
-RESOURCEDICT_test = {'code': 0,
-'count':8,
- 'data': [{'device_name': u'/dev/drbd1000',
-           'mirror_way': 1,
-           'mirror_way_son': [{'drbd_role': u'primary',
-                               'node_name': u'klay1',
-                               'status': u'UpToDate',
-                               'stp_name': u'pool_hdd'}],
-           'resource': u'apple',
-           'size': u'12MiB',
-           'used': u'InUse'},
-          {'device_name': u'/dev/drbd1001',
-           'mirror_way': 2,
-           'mirror_way_son': [{'drbd_role': u'primary',
-                               'node_name': u'klay1',
-                               'status': u'UpToDate',
-                               'stp_name': u'pool_hdd'},
-                              {'drbd_role': u'secondary',
-                               'node_name': u'klay2',
-                               'status': u'UpToDate',
-                               'stp_name': u'pool_hdd'}],
-           'resource': u'banana',
-           'size': u'12MiB',
-           'used': u'InUse'},
-          {'device_name': u'/dev/drbd1005',
-           'mirror_way': 2,
-           'mirror_way_son': [{'drbd_role': u'primary',
-                               'node_name': u'klay1',
-                               'status': u'UpToDate',
-                               'stp_name': u'pool_hdd'},
-                              {'drbd_role': u'secondary',
-                               'node_name': u'klay2',
-                               'status': u'UpToDate',
-                               'stp_name': u'pool_hdd'}],
-           'resource': u'ben',
-           'size': u'12MiB',
-           'used': u'InUse'},
-          {'device_name': u'/dev/drbd1003',
-           'mirror_way': 2,
-           'mirror_way_son': [{'drbd_role': u'primary',
-                               'node_name': u'klay1',
-                               'status': u'UpToDate',
-                               'stp_name': u'pool_hdd'},
-                              {'drbd_role': u'secondary',
-                               'node_name': u'klay2',
-                               'status': u'UpToDate',
-                               'stp_name': u'pool_hdd'}],
-           'resource': u'fred',
-           'size': u'12MiB',
-           'used': u'InUse'},
-          {'device_name': u'/dev/drbd1002',
-           'mirror_way': 2,
-           'mirror_way_son': [{'drbd_role': u'primary',
-                               'node_name': u'klay1',
-                               'status': u'UpToDate',
-                               'stp_name': u'pool_hdd'},
-                              {'drbd_role': u'secondary',
-                               'node_name': u'klay2',
-                               'status': u'UpToDate',
-                               'stp_name': u'pool_hdd'}],
-           'resource': u'linstordb',
-           'size': u'252MiB',
-           'used': u'InUse'},
-          {'device_name': u'/dev/drbd1006',
-           'mirror_way': 2,
-           'mirror_way_son': [{'drbd_role': u'primary',
-                               'node_name': u'klay1',
-                               'status': u'UpToDate',
-                               'stp_name': u'pool_hdd'},
-                              {'drbd_role': u'secondary',
-                               'node_name': u'klay2',
-                               'status': u'UpToDate',
-                               'stp_name': u'pool_hdd'}],
-           'resource': u'seven',
-           'size': u'12MiB',
-           'used': u'InUse'},
-          {'device_name': u'/dev/drbd1009',
-           'mirror_way': 1,
-           'mirror_way_son': [{'drbd_role': u'secondary',
-                               'node_name': u'klay1',
-                               'status': u'UpToDate',
-                               'stp_name': u'pool_hdd'}],
-           'resource': u'ssss',
-           'size': u'12MiB',
-           'used': u'Unused'},
-          {'device_name': u'/dev/drbd1004',
-           'mirror_way': 2,
-           'mirror_way_son': [{'drbd_role': u'primary',
-                               'node_name': u'klay1',
-                               'status': u'UpToDate',
-                               'stp_name': u'pool_hdd'},
-                              {'drbd_role': u'secondary',
-                               'node_name': u'klay2',
-                               'status': u'UpToDate',
-                               'stp_name': u'pool_hdd'}],
-           'resource': u'test',
-           'size': u'10.00GiB',
-           'used': u'InUse'}],
- 'msg': ''}
 
 
 class ResourceResult(views.MethodView):  
 
     def get(self):
-        # get_request_data()
-        # logger = log.Log()
-        # logger.write_to_log('DATA', 'ROUTE', '/resource/show/data', dict_data['ip'], '')
+#         get_request_data()
+#         logger = log.Log()
+#         logger.write_to_log('DATA', 'ROUTE', '/resource/show/data', dict_data['ip'], '')
         if not RESOURCEDICT:
             get_all_resource()
-        # logger.write_to_log('DATA', 'RETURN', 'ResourceResult', 'result', RESOURCEDICT)
+#         logger.write_to_log('DATA', 'RETURN', 'ResourceResult', 'result', RESOURCEDICT)
         return cors_data(RESOURCEDICT)
-#         return cors_data(RESOURCEDICT_test)
 
 
 NODEDICT = None
-NODEDICT_test = {'code': 0,
-'count': 1000,
-'data': [{'addr': u'10.203.2.89:3366(PLAIN)',
-          'node': u'klay1',
-          'node_type': u'COMBINED',
-          'res_num': '8',
-          'res_num_son': [{'device_name': u'/dev/drbd1000',
-                           'res_name': u'apple',
-                           'size': u'12MiB',
-                           'status': u'UpToDate',
-                           'stp_name': u'pool_hdd',
-                           'used': u'InUse'},
-                          {'device_name': u'/dev/drbd1001',
-                           'res_name': u'banana',
-                           'size': u'12MiB',
-                           'status': u'UpToDate',
-                           'stp_name': u'pool_hdd',
-                           'used': u'InUse'},
-                          {'device_name': u'/dev/drbd1005',
-                           'res_name': u'ben',
-                           'size': u'12MiB',
-                           'status': u'UpToDate',
-                           'stp_name': u'pool_hdd',
-                           'used': u'InUse'},
-                          {'device_name': u'/dev/drbd1003',
-                           'res_name': u'fred',
-                           'size': u'12MiB',
-                           'status': u'UpToDate',
-                           'stp_name': u'pool_hdd',
-                           'used': u'InUse'},
-                          {'device_name': u'/dev/drbd1002',
-                           'res_name': u'linstordb',
-                           'size': u'252MiB',
-                           'status': u'UpToDate',
-                           'stp_name': u'pool_hdd',
-                           'used': u'InUse'},
-                          {'device_name': u'/dev/drbd1006',
-                           'res_name': u'seven',
-                           'size': u'12MiB',
-                           'status': u'UpToDate',
-                           'stp_name': u'pool_hdd',
-                           'used': u'InUse'},
-                          {'device_name': u'/dev/drbd1009',
-                           'res_name': u'ssss',
-                           'size': u'12MiB',
-                           'status': u'UpToDate',
-                           'stp_name': u'pool_hdd',
-                           'used': u'Unused'},
-                          {'device_name': u'/dev/drbd1004',
-                           'res_name': u'test',
-                           'size': u'10.00GiB',
-                           'status': u'UpToDate',
-                           'stp_name': u'pool_hdd',
-                           'used': u'InUse'}],
-          'status': u'UpToDate',
-          'stp_num': '3'},
-         {'addr': u'10.203.2.90:3366(PLAIN)',
-          'node': u'klay2',
-          'node_type': u'COMBINED',
-          'res_num': '7',
-          'res_num_son': [{'device_name': u'/dev/drbd1001',
-                           'res_name': u'banana',
-                           'size': u'12MiB',
-                           'status': u'UpToDate',
-                           'stp_name': u'pool_hdd',
-                           'used': u'Unused'},
-                          {'device_name': u'/dev/drbd1005',
-                           'res_name': u'ben',
-                           'size': u'12MiB',
-                           'status': u'UpToDate',
-                           'stp_name': u'pool_hdd',
-                           'used': u'Unused'},
-                          {'device_name': u'/dev/drbd1008',
-                           'res_name': u'ddfl',
-                           'size': u'',
-                           'status': u'Diskless',
-                           'stp_name': u'DfltDisklessStorPool',
-                           'used': u'Unused'},
-                          {'device_name': u'/dev/drbd1003',
-                           'res_name': u'fred',
-                           'size': u'12MiB',
-                           'status': u'UpToDate',
-                           'stp_name': u'pool_hdd',
-                           'used': u'Unused'},
-                          {'device_name': u'/dev/drbd1002',
-                           'res_name': u'linstordb',
-                           'size': u'252MiB',
-                           'status': u'UpToDate',
-                           'stp_name': u'pool_hdd',
-                           'used': u'Unused'},
-                          {'device_name': u'/dev/drbd1006',
-                           'res_name': u'seven',
-                           'size': u'12MiB',
-                           'status': u'UpToDate',
-                           'stp_name': u'pool_hdd',
-                           'used': u'Unused'},
-                          {'device_name': u'/dev/drbd1004',
-                           'res_name': u'test',
-                           'size': u'10.00GiB',
-                           'status': u'UpToDate',
-                           'stp_name': u'pool_hdd',
-                           'used': u'Unused'}],
-          'status': u'UpToDate',
-          'stp_num': '1'}],
-'msg': ''}
-
-
 def get_all_node():
     global NODEDICT
-#     pc = process.Process_data()
-#     NODEDICT = pc.process_data_node()
+    pc = process.Process_data()
+    NODEDICT = pc.process_data_node()
     return True
 
 
 class OprtNode(views.MethodView):  
 
     def get(self):
-#         dict_data = get_request_data()
-#         logger = consts.glo_log()
-#         logger.write_to_log('OPRT', 'ROUTE', '/resource/show/oprt', dict_data['ip'], '')
+        dict_data = get_request_data()
+        logger = log.Log()
+        logger.write_to_log('OPRT', 'ROUTE', '/resource/show/oprt', dict_data['ip'], '')
         if get_all_node():
-#             logger.write_to_log('DATA', 'RETURN', 'OprtResource', 'result', '0')
+            logger.write_to_log('DATA', 'RETURN', 'OprtResource', 'result', '0')
             return cors_data("0")
         else:
-#             logger.write_to_log('DATA', 'RETURN', 'OprtResource', 'result', '1')
+            logger.write_to_log('DATA', 'RETURN', 'OprtResource', 'result', '1')
             return cors_data("1")
 
 
 class NodeResult(views.MethodView):  
 
     def get(self):
-        # get_request_data()
-        # logger = consts.glo_log()
-        # logger.write_to_log('DATA', 'ROUTE', '/resource/show/data', dict_data['ip'], '')
+#         get_request_data()
+#         logger = consts.glo_log()
+#         logger.write_to_log('DATA', 'ROUTE', '/resource/show/data', dict_data['ip'], '')
         if not NODEDICT:
             get_all_node()
-        # logger.write_to_log('DATA', 'RETURN', 'ResourceResult', 'result', RESOURCEDICT)
-#         return cors_data(RESOURCEDICT)
-        return cors_data(NODEDICT_test)
+#         logger.write_to_log('DATA', 'RETURN', 'ResourceResult', 'result', RESOURCEDICT)
+        return cors_data(NODEDICT)
     
  
 STORAGEPOOL = None
 
-STORAGEPOOL_test = {'code': 0,
- 'count': 1000,
- 'data': [{'driver': u'LVM',
-           'free_size': u'19.68GiB',
-           'node_name': u'klay1',
-           'pool_name': u'linstor1',
-           'res_name_son': [{'device_name': u'/dev/drbd1000',
-                             'res_name': u'apple',
-                             'size': u'12MiB',
-                             'status': u'UpToDate',
-                             'used': u'InUse'},
-                            {'device_name': u'/dev/drbd1001',
-                             'res_name': u'banana',
-                             'size': u'12MiB',
-                             'status': u'UpToDate',
-                             'used': u'InUse'},
-                            {'device_name': u'/dev/drbd1005',
-                             'res_name': u'ben',
-                             'size': u'12MiB',
-                             'status': u'UpToDate',
-                             'used': u'InUse'},
-                            {'device_name': u'/dev/drbd1003',
-                             'res_name': u'fred',
-                             'size': u'12MiB',
-                             'status': u'UpToDate',
-                             'used': u'InUse'},
-                            {'device_name': u'/dev/drbd1002',
-                             'res_name': u'linstordb',
-                             'size': u'252MiB',
-                             'status': u'UpToDate',
-                             'used': u'InUse'},
-                            {'device_name': u'/dev/drbd1006',
-                             'res_name': u'seven',
-                             'size': u'12MiB',
-                             'status': u'UpToDate',
-                             'used': u'InUse'},
-                            {'device_name': u'/dev/drbd1009',
-                             'res_name': u'ssss',
-                             'size': u'12MiB',
-                             'status': u'UpToDate',
-                             'used': u'Unused'},
-                            {'device_name': u'/dev/drbd1004',
-                             'res_name': u'test',
-                             'size': u'10.00GiB',
-                             'status': u'UpToDate',
-                             'used': u'InUse'}],
-           'res_num': '8',
-           'snapshots': u'False',
-           'status': u'UpToDate',
-           'stp_name': u'pool_hdd',
-           'total_size': u'29.99GiB'},
-          {'driver': u'LVM',
-           'free_size': u'9.70GiB',
-           'node_name': u'klay2',
-           'pool_name': u'linstor2',
-           'res_name_son': [{'device_name': u'/dev/drbd1001',
-                             'res_name': u'banana',
-                             'size': u'12MiB',
-                             'status': u'UpToDate',
-                             'used': u'Unused'},
-                            {'device_name': u'/dev/drbd1005',
-                             'res_name': u'ben',
-                             'size': u'12MiB',
-                             'status': u'UpToDate',
-                             'used': u'Unused'},
-                            {'device_name': u'/dev/drbd1003',
-                             'res_name': u'fred',
-                             'size': u'12MiB',
-                             'status': u'UpToDate',
-                             'used': u'Unused'},
-                            {'device_name': u'/dev/drbd1002',
-                             'res_name': u'linstordb',
-                             'size': u'252MiB',
-                             'status': u'UpToDate',
-                             'used': u'Unused'},
-                            {'device_name': u'/dev/drbd1006',
-                             'res_name': u'seven',
-                             'size': u'12MiB',
-                             'status': u'UpToDate',
-                             'used': u'Unused'},
-                            {'device_name': u'/dev/drbd1004',
-                             'res_name': u'test',
-                             'size': u'10.00GiB',
-                             'status': u'UpToDate',
-                             'used': u'Unused'}],
-           'res_num': '6',
-           'snapshots': u'False',
-           'status': u'UpToDate',
-           'stp_name': u'pool_hdd',
-           'total_size': u'20.00GiB'},
-          {'driver': u'LVM_THIN',
-           'free_size': u'2.49GiB',
-           'node_name': u'klay1',
-           'pool_name': u'vg1/lvol1',
-           'res_name_son': [],
-           'res_num': '0',
-           'snapshots': u'True',
-           'status': u'Ok',
-           'stp_name': u'poollvt',
-           'total_size': u'2.49GiB'},
-          {'driver': u'LVM',
-           'free_size': u'2.25GiB',
-           'node_name': u'klay1',
-           'pool_name': u'vg1',
-           'res_name_son': [],
-           'res_num': '0',
-           'snapshots': u'False',
-           'status': u'Ok',
-           'stp_name': u'poolvg1',
-           'total_size': u'5.00GiB'}],
- 'msg': ''}
-   
-    
 def get_all_storagepool():
     global STORAGEPOOL
-#     pc = process.Process_data()
-#     STORAGEPOOL = pc.process_data_storagepool()
+    pc = process.Process_data()
+    STORAGEPOOL = pc.process_data_stp()
     return True
 
 
@@ -451,14 +124,13 @@ class OprtStoragepool(views.MethodView):
 class StoragepoolResult(views.MethodView):  
 
     def get(self):
-        # get_request_data()
-        # logger = consts.glo_log()
-        # logger.write_to_log('DATA', 'ROUTE', '/resource/show/data', dict_data['ip'], '')
+#         get_request_data()
+#         logger = consts.glo_log()
+#         logger.write_to_log('DATA', 'ROUTE', '/resource/show/data', dict_data['ip'], '')
         if not STORAGEPOOL:
             get_all_storagepool()
-        # logger.write_to_log('DATA', 'RETURN', 'ResourceResult', 'result', RESOURCEDICT)
-#         return cors_data(RESOURCEDICT)
-        return cors_data(STORAGEPOOL_test)
+#         logger.write_to_log('DATA', 'RETURN', 'ResourceResult', 'result', RESOURCEDICT)
+        return cors_data(STORAGEPOOL)
 
 '''
 @note: 删除model
@@ -495,66 +167,132 @@ class StoragepoolD(views.MethodView):
 '''
 
 
-class LINSTORCreate(views.MethodView):
+class SpCreate(views.MethodView):
+
+    def get(self):
+        data = get_request_data()
+        """
+        {'tid': '1611900199', 'storagepool': '{"sp_name":"123123","node_name":"ubuntu","type":"lvm","volume":"drbdpool"}'}
+        """
+        sp_result = {}
+        tid = data['tid']
+        sp = eval(data['storagepool'])
+        obj_sp = stor.StoragePool()
+        if sp['type'] == 'lvm':
+            print("22")
+            sp_result = obj_sp.create_storagepool_lvm(sp['node_name'],sp['sp_name'],sp['volume'])
+        elif sp['type'] == 'tlv':
+            print("111")
+            sp_result = obj_sp.create_storagepool_thinlv(sp['node_name'],sp['sp_name'],sp['volume'])
+        return cors_data(sp_result)
+
+class NodeCreate(views.MethodView):
 
     def get(self):
         data = get_request_data()
         print(data)
+        """
+        {'tid': '1611898472', 'node': '{"node_name":"node1","ip":"111111.11","node_type":"Combined"}'}
+        """
+        tid = data['tid']
+        node = eval(data['node'])
+        obj_node = stor.Node()
+        result = obj_node.create_node(node['node_name'],node['ip'],node['type'])
+        return cors_data(result)
+    
+    
+class ResourceCreate(views.MethodView):
+
+    def get(self):
+        data = get_request_data()
+        print(data)
+        """
+        {'tid': '1611898472', 'node': '{"node_name":"node1","ip":"111111.11","node_type":"Combined"}'}
+        """
+        tid = data['tid']
+        node = eval(data['node'])
+        obj_res = stor.Resource()
+        if data['type'] == 'normal':
+            obj_res.create_res_manual()
+        elif data['type'] == 'auto':
+            obj_res.create_res_auto()
+        elif data['type'] == 'add_mirror':
+            obj_res.add_mirror_manual()
+        elif data['type'] == 'diskless':
+            obj_res.create_res_diskless()
+        
+#         obj_node.create_node()
         return cors_data(data)
+
 
 '''
 @note: 交互
 '''
-        
 lvm = None
 sp = None
 node_create = None
 node_num = None
 
-
 class LINSTORView(views.MethodView):
-    global lvm
-    global sp
-    global node_create
-    global node_num
+    
 
     def get(self):
-        pc = Process.Process_data()
+        global lvm
+        global sp
+        global node_create
+        global node_num
+        pc = process.Process_data()
         lvm = pc.get_option_lvm()
         sp = pc.get_option_sp()
         node_create = pc.get_option_node()
         node_num = pc.get_option_nodenum()
-        return 'Test'
+        return cors_data("success")
 
 
-LVM = {'lvm':[{"node_key":"Node1"}, {"node_key":"Node2"}, {"node_key":"Node3"}, {"node_key":"Node4"}],
-      'thin_lvm': [{"node_key":"Node1"}, {"node_key":"Node2"}, {"node_key":"Node3"}, {"node_key":"Node5"}]     
-             }
 
-
-class lvmView(views.MethodView):  
-
+class lvmView(views.MethodView):
     def get(self):
-        return cors_data(LVM)
+        return cors_data(lvm)
 
- 
-class spView(views.MethodView):  
 
-    def get(self):
-        sp = [{'NodeName': 'Node1',
-                    'Spool': [{'device_name': 'Paul'},
-                             {'device_name': 'Mark'},
-                             {'device_name': 'Ethan'},
-                             {'device_name': 'Vince'}]
+test = {
+        "code": 0,
+        "msg": "success",
+        "data":  [{'name': 'Node1',
+                    'children': [{'name': '21', "value": 1},
+                             {'name': '21', "value": 2},
+                             {'name': '3',"value": 3},
+                             {'name': '4', "value": 4}]
                   },
-                  {'NodeName': 'Node2',
-                  'Spool': [{'device_name': 'Paul_Test'},
-                            { 'device_name': 'Mark_Test'},
-                             {'device_name': 'Ethan_Test'},
-                             {'device_name': 'Vince_Test'}]
+                  {'name': 'Node2',
+                  'children': [{'name': '5', "value": 32},
+                            { 'name': '66', "value": 44},
+                             {'name': '7', "value": 7},
+                             {'name': '8', "value": 8}]
                 }]
-        return cors_data(sp)
+        }
 
+#  [{'NodeName': 'Node1',
+#                     'Spool': [{'device_name': '1'},
+#                              {'device_name': '2'},
+#                              {'device_name': '3'},
+#                              {'device_name': '4'}]
+#                   },
+#                   {'NodeName': 'Node2',
+#                   'Spool': [{'device_name': '5'},
+#                             { 'device_name': '6'},
+#                              {'device_name': '7'},
+#                              {'device_name': '8'}]
+#                 }]
+
+
+
+
+class spView(views.MethodView):  
+    def get(self):
+        return cors_data(test)
+
+    
     
 class nodecreateView(views.MethodView):  
 

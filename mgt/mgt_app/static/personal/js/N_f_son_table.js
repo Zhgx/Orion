@@ -39,6 +39,10 @@ function node_show_data_log() {
 	$.ajax({
 		type : "get",
 		url:vplxIp+ "/node/show/data",
+		data : {
+			tid : tid,
+			ip : mgtIp
+		},
 		async:false,
 		success : function(resource_data) {
 			write_to_log(tid,'DATA','ROUTE',vplxIp,'/node/show/data',JSON.stringify(resource_data.data));
@@ -373,65 +377,6 @@ function node_oprt() {
 							     }
 
 							 });
-					 
-					 
-						layui.use(['form', 'layedit', 'laydate','element'], function(){
-							  var form = layui.form
-							  ,layer = layui.layer
-							  ,layedit = layui.layedit
-							  ,laydate = layui.laydate;
-							  var $ = layui.jquery
-							  ,element = layui.element;
-
-								 
-								 // 监听提交
-								  form.on('submit(demo1)', function(data){
-									  resource_data = JSON.stringify(data.field);
-										$.ajax({
-								    		url :  vplxIp +'/LINSTOR/Create',
-								    		type : "get",
-								    		dataType : "json",
-								    		data : {
-								    			tid : tid,
-								    			resource_data : resource_data
-								    		},
-								    		async : false,
-								    		success : function(delete_result) {
-								    		}
-								    	});
-									  
-								  });
-						});
-						
-						layui.use(['form', 'layedit', 'laydate','element'], function(){
-							  var form = layui.form
-							  ,layer = layui.layer
-							  ,layedit = layui.layedit
-							  ,laydate = layui.laydate;
-							  var $ = layui.jquery
-							  ,element = layui.element;
-
-								 
-								 // 监听提交
-								  form.on('submit(demo1)', function(data){
-									  Node_data = JSON.stringify(data.field);
-										$.ajax({
-								    		url :  vplxIp +'/LINSTOR/Create',
-								    		type : "get",
-								    		dataType : "json",
-								    		data : {
-								    			tid : tid,
-								    			Node_data : Node_data
-								    		},
-								    		async : false,
-								    		success : function(craete_result) {
-								    			alert(craete_result)
-								    		}
-								    	});
-									  
-								  });
-						});
-					 
 
 				},
 				error:function () {
@@ -443,5 +388,62 @@ function node_oprt() {
 };
 node_oprt();
 
+
+
+layui.use(['form', 'layedit', 'laydate','element'], function(){
+	  var form = layui.form
+	  ,layer = layui.layer
+	  ,layedit = layui.layedit
+	  ,laydate = layui.laydate;
+	  var $ = layui.jquery
+	  ,element = layui.element;
+
+		 
+		 // 监听提交
+		  form.on('submit(demo1)', function(data){
+			  resource_data = JSON.stringify(data.field);
+				$.ajax({
+		    		url :  vplxIp +'/LINSTOR/Create',
+		    		type : "get",
+		    		dataType : "json",
+		    		data : {
+		    			tid : tid,
+		    			resource_data : resource_data
+		    		},
+		    		async : false,
+		    		success : function(delete_result) {
+		    		}
+		    	});
+			  
+		  });
+});
+
+layui.use(['form', 'layedit', 'laydate','element'], function(){
+	  var form = layui.form
+	  ,layer = layui.layer
+	  ,layedit = layui.layedit
+	  ,laydate = layui.laydate;
+	  var $ = layui.jquery
+	  ,element = layui.element;
+
+		 
+		 // 监听提交
+		  form.on('submit(demo1)', function(data){
+			  Node_data = JSON.stringify(data.field);
+				$.ajax({
+		    		url :  vplxIp +'/LINSTOR/Node/Create',
+		    		type : "get",
+		    		dataType : "json",
+		    		data : {
+		    			tid : tid,
+		    			node : Node_data
+		    		},
+		    		async : false,
+		    		success : function(craete_result) {
+		    		}
+		    	});
+			  
+		  });
+});
 
 

@@ -14,7 +14,7 @@ class Process_data():
     def __init__(self):
         db = linstordb.LinstorDB()
         # 生成数据库
-        db.build_table()
+        db.build_table('all')
         self.cur = db.cur
 
     # 获取表单行数据的通用方法

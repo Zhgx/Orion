@@ -92,12 +92,16 @@ class Node():
             result = execute_linstor_cmd(cmd)
             if result['sts'] == 0:
                 s.prt_log('SUCCESS', 0)
+                return {'result':'SUCCESS','info':''}   
             elif result['sts'] == 1:
                 s.prt_log(f"SUCCESS\n{result['rst']}", 1)
+                return {'result':'SUCCESS','info':result['rst']}
             elif result['sts'] == 2:
                 s.prt_log(f"FAIL\n{result['rst']}", 1)
+                return {'result':'FAIL','info':result['rst']}
             else:
-                s.prt_log(f"FAIL\n{result['rst']}", 2)
+                s.prt_log(f"FAIL\n{result['rst']}", 1)
+                return {'result':'FAIL','info':result['rst']}
 
     # 删除node
     def delete_node(self, node):
@@ -105,12 +109,16 @@ class Node():
         result = execute_linstor_cmd(cmd)
         if result['sts'] == 0:
             s.prt_log('SUCCESS', 0)
+            return {'result':'SUCCESS','info':''}   
         elif result['sts'] == 1:
             s.prt_log(f"SUCCESS\n{result['rst']}", 1)
+            return {'result':'SUCCESS','info':result['rst']}
         elif result['sts'] == 2:
             s.prt_log(f"FAIL\n{result['rst']}", 1)
+            return {'result':'FAIL','info':result['rst']}
         else:
-            s.prt_log(f"FAIL\n{result['rst']}", 2)
+            s.prt_log(f"FAIL\n{result['rst']}", 1)
+            return {'result':'FAIL','info':result['rst']}
 
     def show_all_node(self, no_color='no'):
         collecter = linstordb.CollectData()
@@ -161,12 +169,16 @@ class StoragePool():
         result = execute_linstor_cmd(cmd)
         if result['sts'] == 0:
             s.prt_log('SUCCESS', 0)
+            return {'result':'SUCCESS','info':''}   
         elif result['sts'] == 1:
             s.prt_log(f"SUCCESS\n{result['rst']}", 1)
+            return {'result':'SUCCESS','info':result['rst']}
         elif result['sts'] == 2:
             s.prt_log(f"FAIL\n{result['rst']}", 1)
+            return {'result':'FAIL','info':result['rst']}
         else:
-            s.prt_log(f"FAIL\n{result['rst']}", 2)
+            s.prt_log(f"FAIL\n{result['rst']}", 1)
+            return {'result':'FAIL','info':result['rst']}
 
     def create_storagepool_thinlv(self, node, stp, tlv):
         obj_lvm = LVM()
@@ -177,12 +189,16 @@ class StoragePool():
         result = execute_linstor_cmd(cmd)
         if result['sts'] == 0:
             s.prt_log('SUCCESS', 0)
+            return {'result':'SUCCESS','info':''}   
         elif result['sts'] == 1:
             s.prt_log(f"SUCCESS\n{result['rst']}", 1)
+            return {'result':'SUCCESS','info':result['rst']}
         elif result['sts'] == 2:
             s.prt_log(f"FAIL\n{result['rst']}", 1)
+            return {'result':'FAIL','info':result['rst']}
         else:
-            s.prt_log(f"FAIL\n{result['rst']}", 2)
+            s.prt_log(f"FAIL\n{result['rst']}", 1)
+            return {'result':'FAIL','info':result['rst']}
 
     # 删除storagepool -- ok
     def delete_storagepool(self, node, stp):
@@ -190,12 +206,16 @@ class StoragePool():
         result = execute_linstor_cmd(cmd)
         if result['sts'] == 0:
             s.prt_log('SUCCESS', 0)
+            return {'result':'SUCCESS','info':''}   
         elif result['sts'] == 1:
             s.prt_log(f"SUCCESS\n{result['rst']}", 1)
+            return {'result':'SUCCESS','info':result['rst']}
         elif result['sts'] == 2:
             s.prt_log(f"FAIL\n{result['rst']}", 1)
+            return {'result':'FAIL','info':result['rst']}
         else:
-            s.prt_log(f"FAIL\n{result['rst']}", 2)
+            s.prt_log(f"FAIL\n{result['rst']}", 1)
+            return {'result':'FAIL','info':result['rst']}
 
 
     def show_all_sp(self,no_color='no'):
