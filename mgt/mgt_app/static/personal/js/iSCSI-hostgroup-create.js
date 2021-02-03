@@ -258,13 +258,13 @@ $("#host_group_create").mousedown(function(){
 							var text = "创建成功!";
 							$('#P_text_success').text(text);
 							div_success();
+							$("#HostGroup_Table tr:not(:first)").html("");
+							host_table();
 						}else {
 							var text = "创建失败!";
 							$('#P_text_failed').text(text);
 							 div_failed();
 						}
-						
-					
 						write_to_log(tid, 'OPRT', 'ROUTE', vplxIp,
 								'/hg/create', operation_feedback_prompt);
 						$("#host_group_name").val("");
@@ -394,6 +394,282 @@ $("[rel=drevil]").popover({
     }, );
 });　
 
+hg_table();
+function hg_table() {
+	$
+			.ajax({
+				url : vplxIp + "/hg/show/oprt",
+				type : "get",
+				dataType : "json",
+				data : {
+					tid : tid,
+					ip : mgtIp
+				},
+				async : false,
+				success : function(status) {
+					write_to_log(tid, 'OPRT', 'ROUTE', vplxIp, '/hg/show/oprt',
+							status);
+					$.ajax({
+						url : vplxIp + "/hg/show/data",
+						type : "get",
+						dataType : "json",
+						data : {
+							tid : tid,
+							ip : mgtIp
+						},
+						async : false,
+						success : function(host_group_result) {
+							console.log(host_group_result);
+							$("#Host_Group_Table_Show tr:not(:first)").html("");
+							
+							write_to_log(tid, 'DATA', 'ROUTE', vplxIp,
+									'/hg/show/data', JSON
+											.stringify(host_group_result));
+							for (i in host_group_result) {
+								tr = '<td >' + i + '</td>'+
+								'<td>' + host_group_result[i] + '</td>'+'<td>'+
+								'<button  onClick="host_compile(this);">编辑</button>'+'<button  onClick="btn_show_delete(this);">删除</button>'
+								+ '</td>';
+								$("#Host_Group_Table_Show").append(
+										'<tr>'
+												+ tr + '</tr>')
+							}
+						},
+						error : function() {
+							write_to_log(tid, 'DATA', 'ROUTE', vplxIp,
+									'/hg/show/data', 'error');
+						}
+
+					});
+
+				},
+				error : function() {
+					write_to_log(tid, 'OPRT', 'ROUTE', vplxIp, '/hg/show/oprt',
+							'error');
+				}
+			});
+};
+
+function host_compile(obj) {
+	// 弹出框
+	$('tr').each(function() {
+		$(this).on("click", function() {
+			$("#hg_model").modal("toggle");
+		})
+	});
+	// 获取点击表格的td值
+	var e = e || window.event;
+	var target = e.target || e.srcElement;
+	if (target.parentNode.tagName.toLowerCase() == "td") {
+	tr = target.parentNode.parentNode;
+	td = tr.cells;
+	 for(var i = 0; i<td.length; i++ ){
+	var td_hg_name = td[0].innerHTML
+	 var td_host = td[1].innerHTML
+	 }
+	}
+	td_host = td_host.split(",");
+	$("#host_key_hid").val(td_hg_name);
+	$("#hg_name_text").text(td_hg_name);
+	// 获取hostgroup的值
+	$.ajax({
+		url : vplxIp + "/host/show/oprt",
+		type : "get",
+		dataType : "json",
+		data : {
+			tid : tid,
+			ip : mgtIp
+		},
+		async : false,
+		success : function(host_group_result) {
+			$.ajax({
+				url : vplxIp + "/host/show/data",
+				type : "get",
+				dataType : "json",
+				data : {
+					tid : tid,
+					ip : mgtIp
+				},
+				async : false,
+				success : function(host_result) {
+					// 对象取键然后转列表
+					var list_host = []
+					for ( var i in host_result) {
+						list_host.push(i);
+					}
+					// 表格清空刷新
+					$("#HTable_second_all tr:not(:first)").html("");
+					$("#HTable_second tr:not(:first)").html("");
+					for ( var j in td_host) {
+						// 已选择
+						tr = '<td >'
+						+ td_host[j] + '</td>';
+						$("#HTable_second_T").append(
+						'<tr onClick="host_select(this)">'
+								+ tr + '</tr>')
+					}
+					// 列表对比去重
+					let new_list = list_host.filter(items => {
+						  if (!td_host.includes(items)) return items;
+						})
+						// 放入表格
+					for (var i = 0; i < new_list.length; i++) {
+						tr =  '<td >'
+							+ new_list[i] + '</td>';
+					$("#HTable_second_all_show").append(
+							'<tr onClick="host_select_second(this)">'
+									+ tr + '</tr>')
+					}
+				},
+			});
+		},
+
+	});
+}
 
 
+// 返回按钮进行刷新当前页面
+function host_select(obj) {
+	if (event.srcElement.tagName == "TD") {
+		curRow = event.srcElement.parentElement;
+		tr = curRow.innerHTML;
+		$("#HTable_second_all_show").append(
+				'<tr onClick="host_select_second(this)">' + tr + '</tr>');
+		curRow.remove();// 删除
+	}
+}
 
+
+function host_select_second(obj) {
+	if (event.srcElement.tagName == "TD") {
+		curRow = event.srcElement.parentElement;
+		tr = curRow.innerHTML;
+		$("#HTable_second_T").append(
+				'<tr onClick="host_select(this)">' + tr + '</tr>');
+		curRow.remove();// 删除
+	}
+}
+
+function myrefresh(obj) {
+	window.location.reload();
+}
+
+function myrefresh_second(obj) {
+	window.location.reload();
+}
+function myrefresh_delete(obj) {
+	window.location.reload();
+}
+
+function affirm_modifiy(obj){
+	// 打开二次确认弹窗
+	$('#hg_info_model').modal("show");
+	
+	var obj_host = [];
+	var str = "";
+	for (var i = 1; i < HTable_second.rows.length; i++) {
+		obj_host.push(HTable_second.rows[i].cells[0].innerHTML)
+	}
+	obj_host_str = obj_host.toString();
+	var hg_name = $("#host_key_hid").val()
+	
+	$("#hg_name_hidden").val(hg_name);
+	$("#host_hidden").val(obj_host_str);
+	
+// var dict_data = JSON.stringify({
+// "hg_name" : hg_name,
+// "host" : obj_host_str
+// });
+	$.ajax({
+		url : vplxIp + "/hg/modify/check",
+		type : "get",
+		dataType : "json",
+		data : {
+			tid : tid,
+			hg_name: hg_name,
+			host: obj_host_str
+		},
+		async : false,
+		success : function(hg_result) {
+			$("#hg_info_result").text(hg_result['info']);
+		},
+	});
+// window.location.reload();
+}
+
+function affirm_modifiy_second(obj){
+	hg_name = $("#hg_name_hidden").val();
+	obj_host_str = $("#host_hidden").val();
+	$.ajax({
+		url : vplxIp + "/hg/modify",
+		type : "get",
+		dataType : "json",
+		data : {
+			tid : tid,
+			ip : mgtIp,
+			hg_name: hg_name,
+			host: obj_host_str
+		},
+		async : false,
+		success : function(hg_result) {
+			alert(hg_result);
+			window.location.reload();
+		},
+	});
+}
+
+
+function btn_show_delete(obj) {
+	
+	$('tr').each(function() {
+		$(this).on("click", function() {
+			$("#hg_delete_model").modal("toggle");
+		})
+	});
+	// 获取点击表格的td值
+	var e = e || window.event;
+	var target = e.target || e.srcElement;
+	if (target.parentNode.tagName.toLowerCase() == "td") {
+	tr = target.parentNode.parentNode;
+	td = tr.cells;
+	 for(var i = 0; i<td.length; i++ ){
+	var td_hg_name = td[0].innerHTML
+	 }
+	};
+	$("#hg_delete_data").val(td_hg_name);
+	$.ajax({
+		url : vplxIp + "/all/delete/check",
+		type : "get",
+		dataType : "json",
+		data : {
+			tid : tid,
+			ip : mgtIp,
+			iscsi_type:'HostGroup',
+			iscsi_name: td_hg_name
+		},
+		async : false,
+		success : function(hg_result) {
+			$("#hg_delete_info").text(hg_result['info']);
+		},
+	});
+}
+
+function affirm_delete(obj) {
+	hg_delete_name = $("#hg_delete_data").val();
+	$.ajax({
+		url : vplxIp + "/all/delete",
+		type : "get",
+		dataType : "json",
+		data : {
+			tid : tid,
+			ip : mgtIp,
+			iscsi_type:'HostGroup',
+			iscsi_name: hg_delete_name
+		},
+		async : false,
+		success : function(hg_result) {
+			alert(hg_result);
+			window.location.reload();
+		},
+	});
+}

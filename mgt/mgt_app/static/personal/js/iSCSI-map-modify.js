@@ -83,7 +83,7 @@ function map_table() {
 					console.log(map_group_result);
 					for ( var i in map_group_result) {
 						tr = '<td  >' + i + '</td>'
-								+ '<td   onClick="change_hostgroup(this)">'
+								+ '<td onClick="change_hostgroup(this)">'
 								+ map_group_result[i]["HostGroup"] + '</td>'
 								+ '<td  onClick="change_diskgroup(this)">'
 								+ map_group_result[i]["DiskGroup"] + '</td>';

@@ -3,7 +3,7 @@ import re
 import traceback
 import sundry as sd
 import execute as ex
-import consts
+import log
 
 
 class usage():
@@ -39,7 +39,7 @@ class InvalidSizeError(Exception):
 
 class ResourceCommands():
     def __init__(self):
-        self.logger = consts.glo_log()
+        self.logger = log.Log()
 
     def setup_commands(self, parser):
         """

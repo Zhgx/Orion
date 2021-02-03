@@ -1,6 +1,5 @@
 import execute as ex
 import sundry as sd
-import consts
 
 class Usage():
     # host部分使用手册
@@ -23,7 +22,7 @@ class Usage():
 class DiskGroupCommands():
 
     def __init__(self):
-        self.logger = consts.glo_log()
+        pass
 
     def setup_commands(self, parser):
         """
@@ -149,7 +148,6 @@ class DiskGroupCommands():
         diskgroup.show(args.diskgroup)
 
     @sd.deco_record_exception
-    @sd.deco_comfirm_del('diskgroup')
     def delete(self, args):
         diskgroup = ex.DiskGroup()
         diskgroup.delete(args.diskgroup)

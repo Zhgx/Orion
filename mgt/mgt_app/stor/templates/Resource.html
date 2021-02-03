@@ -5,46 +5,201 @@
 <meta name="viewport"
 	content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
 <title>Resource</title>
-	<link href="{{url_for('static',filename='bootstrap-3.3.7/dist/css/bootstrap.min.css')}}" rel="stylesheet" type="text/css" />
-    <link href="{{url_for('static',filename='layui/css/layui.css')}}" rel="stylesheet" type="text/css" />
-<style>
-body {
-	margin: 10px;
-}
-
-.demo-carousel {
-	height: 200px;
-	line-height: 200px;
-	text-align: center;
-}
-</style>
-
+<link href="{{url_for('static',filename='layui/css/layui.css')}}"
+	rel="stylesheet" type="text/css" />
 </head>
 <body>
-	<div class="page-header">
-		<h1>
-			<small>Show</small>
-		</h1>
+	<div class="layui-row">
+		<fieldset class="layui-elem-field site-demo-button"
+			style="margin-top: 20px; margin-left: 20px; width: 50%;">
+			<legend>资源创建</legend>
+			<form class="layui-form" action="" lay-filter="example">
+				<div class="layui-tab layui-tab-brief" lay-filter="docDemoTabBrief">
+					<ul class="layui-tab-title">
+						<li class="layui-this">Resource</li>
+						<li>Resource(auto)</li>
+						<li>Diskless Resource</li>
+					</ul>
+					<div class="layui-tab-content">
+						<div class="layui-tab-item layui-show">
+							<div class="layui-form-item">
+								<label class="layui-form-label">R_N</label>
+								<div class="layui-input-inline">
+									<input type="text" placeholder="请输入正确值" name="R_Name"
+										autocomplete="off" class="layui-input">
+								</div>
+								<!-- 				<div class="layui-form-mid layui-word-aux">请填写6到12位密码</div>
+ -->
+							</div>
+							<div class="layui-form-item">
+								<label class="layui-form-label">size</label>
+								<div class="layui-input-inline" style="width: 110px;">
+									<input type="text" placeholder="请输入正确值" name="size"
+										class="layui-input">
+								</div>
+								<div class="layui-input-inline" style="width: 70px;">
+									<select name="size_big">
+										<option value="GB" selected="">GB</option>
+										<option value="TB">TB</option>
+										<option value="MB">MB</option>
+										<option value="KB">KB</option>
+									</select>
+								</div>
+							</div>
+							<div class="layui-form-item">
+								<div class="layui-inline">
+									<label class="layui-form-label">SP</label>
+									<div class="layui-input-inline">
+										<select name="classifyId" id="classifyId"
+											lay-verify="required" lay-search="">
+											<option value="">直接选择或搜索选择</option>
+										</select> <select name="quiz">
+											<option value="">请选择正确值</option>
+											<optgroup label="城市记忆">
+												<option value="你工作的第一个城市">你工作的第一个城市</option>
+											</optgroup>
+											<optgroup label="学生时代">
+												<option value="你的工号">你的工号</option>
+												<option value="你最喜欢的老师">你最喜欢的老师</option>
+											</optgroup>
+										</select>
+									</div>
+								</div>
+								<!-- 				<div class="layui-form-mid layui-word-aux">请填写6到12位密码</div>
+ -->
+							</div>
+							<div class="layui-form-item">
+								<div class="layui-input-block">
+									<button type="reset" class="layui-btn layui-btn-primary">重置</button>
+									<button type="submit" class="layui-btn" lay-submit=""
+										lay-filter="demo1">Create</button>
+									<button type="submit" class="layui-btn" lay-submit=""
+										lay-filter="add_mirror">Add Mirror</button>
+								</div>
+							</div>
+						</div>
+						<div class="layui-tab-item">
+							<div class="layui-form-item">
+								<label class="layui-form-label">R_N</label>
+								<div class="layui-input-inline">
+									<input type="text" placeholder="请输入正确值" name="R_Name"
+										autocomplete="off" class="layui-input">
+								</div>
+								<!-- 				<div class="layui-form-mid layui-word-aux">请填写6到12位密码</div>
+ -->
+							</div>
+							<div class="layui-form-item">
+								<label class="layui-form-label">size</label>
+								<div class="layui-input-inline" style="width: 110px;">
+									<input type="text" placeholder="请输入正确值" name="size"
+										class="layui-input">
+								</div>
+								<div class="layui-input-inline" style="width: 70px;">
+									<select name="size_big">
+										<option value="GB" selected="">GB</option>
+										<option value="TB">TB</option>
+										<option value="MB">MB</option>
+										<option value="KB">KB</option>
+									</select>
+								</div>
+							</div>
+							<div class="layui-form-item">
+								<div class="layui-inline">
+									<label class="layui-form-label">Node Num</label>
+									<div class="layui-input-inline">
+										<select name="node_num" lay-verify="required" lay-search="">
+											<option value="">直接选择或搜索选择</option>
+											<option value="1">layer</option>
+											<option value="2">form</option>
+											<option value="3">layim</option>
+											<option value="4">element</option>
+										</select>
+									</div>
+								</div>
+								<!-- 				<div class="layui-form-mid layui-word-aux">请填写6到12位密码</div>
+ -->
+							</div>
+							<div class="layui-form-item">
+								<div class="layui-input-block">
+									<button type="reset" class="layui-btn layui-btn-primary">重置</button>
+									<button type="submit" class="layui-btn" lay-submit=""
+										lay-filter="demo1">Create</button>
+								</div>
+							</div>
+						</div>
+						<div class="layui-tab-item">
+							<div class="layui-form-item">
+								<label class="layui-form-label">R_N</label>
+								<div class="layui-input-inline">
+									<input type="text" placeholder="请输入正确值" name="R_Name"
+										autocomplete="off" class="layui-input">
+								</div>
+								<!-- 				<div class="layui-form-mid layui-word-aux">请填写6到12位密码</div>
+ -->
+							</div>
+							<div class="layui-form-item">
+								<div class="layui-inline">
+									<label class="layui-form-label">Node</label>
+									<div class="layui-input-inline">
+										<select name="node_num" lay-verify="required" lay-search="">
+											<option value="">直接选择或搜索选择</option>
+											<option value="1">layer</option>
+											<option value="2">form</option>
+											<option value="3">layim</option>
+											<option value="4">element</option>
+										</select>
+									</div>
+								</div>
+								<!-- 				<div class="layui-form-mid layui-word-aux">请填写6到12位密码</div>
+ -->
+							</div>
+							<div class="layui-form-item">
+								<div class="layui-input-block">
+									<button type="reset" class="layui-btn layui-btn-primary">重置</button>
+									<button type="submit" class="layui-btn" lay-submit=""
+										lay-filter="demo1">Create</button>
+								</div>
+							</div>
+
+
+						</div>
+					</div>
+				</div>
+			</form>
+		</fieldset>
 	</div>
-
-	<table class="layui-hide" id="demo" lay-filter="test"></table>
-	<script type="text/html" id="barDemo">
-  <a class="layui-btn layui-btn-primary layui-btn-xs" lay-event="detail">查看</a>
-</script>
-
-	<script type="text/html" id="barDemo1">
-
-  <a class="layui-btn layui-btn-primary layui-btn-xs" lay-event="detail">查看</a>
-</script>
-
-	<script type="text/javascript"
-		src="{{url_for('static',filename='personal/js/JQuery.js')}}"></script>
-	<script src="{{ url_for('static',filename='layui/layui.js') }}"></script>
-	<script type="text/javascript"
-		src="{{url_for('static',filename='personal/js/R_f_son_table.js')}}"></script>
-	<script>
-
-</script>
+	<div class="layui-row"
+		style="margin-top: 20px; margin-left: 20px; margin-right: 20px;">
+		<div class="layui-col-xs12">
+			<div class="grid-demo grid-demo-bg1">
+				<table class="layui-hide" id="resource_test" lay-filter="test"></table>
+			</div>
+		</div>
+	</div>
 </body>
+<script type="text/html" id="toolbarDemo">
+  <div class="layui-btn-container">
+    <button class="layui-btn layui-btn-sm" lay-event="getCheckData">获取选中数据</button>
+ <button class="layui-btn layui-btn-sm" lay-event="getCheckLength">获取选中数目</button>
+    <button class="layui-btn layui-btn-sm" lay-event="isAll">验证是否全选</button> 
+  </div>
+</script>
+<script type="text/html" id="barDemo">
+  <a class="layui-btn  layui-btn-xs" lay-event="detail">查看</a>
+  <a class="layui-btn layui-btn-normal layui-btn-xs" lay-event="edit">编辑</a>
+  <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+</script>
+
+<script type="text/html" id="barDemo1">
+ <a class="layui-btn  layui-btn-xs" lay-event="detail">查看</a>
+  <a class="layui-btn layui-btn-normal layui-btn-xs" lay-event="edit">编辑</a>
+  <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+	</script>
+
+<script type="text/javascript"
+	src="{{url_for('static',filename='personal/js/JQuery.js')}}"></script>
+<script src="{{ url_for('static',filename='layui/layui.all.js') }}"></script>
+<script type="text/javascript"
+	src="{{url_for('static',filename='personal/js/R_f_son_table.js')}}"></script>
 </body>
 </html>

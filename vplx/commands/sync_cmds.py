@@ -7,7 +7,7 @@ import iscsi_json
 
 class SyncCommands():
     def __init__(self):
-        self.logger = consts.glo_log()
+        pass
 
     def setup_commands(self, parser):
         """
@@ -27,17 +27,19 @@ class SyncCommands():
         # 获取数据
         vip = obj_crm.get_vip()
         portblock = obj_crm.get_portblock()
+        order = obj_crm.get_order()
+        colocation = obj_crm.get_colocation()
         target = obj_crm.get_target()
 
         # 检查
-        obj_crm.check_portal_component(vip, portblock)
+        obj_crm.check_portal_component(vip, portblock, order, colocation)
 
         portal = obj_crm.get_portal_data(vip,portblock,target)
         js.cover_data('Portal',portal)
         js.cover_data('Target',target)
         # js.cover_data({'Portal': portal})
         # js.json_data.update({'Target': target})
-        js.commit_json()
+        js.commit_data()
         sd.prt_log('Configuration file data update completed', 1)
 
 
