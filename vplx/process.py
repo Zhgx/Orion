@@ -5,7 +5,7 @@ import sqlite3
 import linstordb
 import consts
 import sundry
-from public import log
+# from public import log
 import sys
 
 
@@ -62,15 +62,18 @@ class Process_data():
 
         list_node = get_online_node()
         list_result = []
+        index = 1
         for node in list_node:
             list_sp = get_ok_sp(node)
             list_result_sp = []
             for sp in list_sp:
-                dict_sp = {'key_sp':sp}
+                dict_sp = {'name':sp[0],'node_name':node[0],'value':index}
+                index += 1
                 list_result_sp.append(dict_sp)
-            dict_one = {'NodeName':node, 'Spool':list_result_sp}
+            dict_one = {'name':node[0], 'children':list_result_sp}
             list_result.append(dict_one)
-        return list_result
+            dict = {"code": 0, "msg": "", "count": 1000,"data":list_result}
+        return dict
 
     # 选项lvm/thinlv数据
     def get_option_lvm(self):

@@ -306,8 +306,9 @@ class Resource():
             return True
         elif result['sts'] == 2:
             s.prt_log(f"FAIL\n{result['rst']}", 1)
+            return result
         else:
-            s.prt_log(f"FAIL\n{result['rst']}", 2)
+            s.prt_log(f"FAIL\n{result['rst']}", 1)
             return result
 
 
@@ -321,7 +322,7 @@ class Resource():
             s.prt_log(f"FAIL\n{result['rst']}", 1)
             self.linstor_delete_rd(res)
         else:
-            s.prt_log(f"FAIL\n{result['rst']}", 2)
+            s.prt_log(f"FAIL\n{result['rst']}", 1)
             self.linstor_delete_rd(res)
             return result
 
@@ -343,7 +344,7 @@ class Resource():
                 return result
             else:
                 self.linstor_delete_rd(res)
-                s.prt_log(f"FAIL\n{result['rst']}", 2)
+                s.prt_log(f"FAIL\n{result['rst']}", 1)
                 return result
 
         else:

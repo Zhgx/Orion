@@ -511,6 +511,17 @@ layui
 
 					// 监听提交
 					form.on('submit(Resource)', function(data) {
+						var selectArr = demo1.getValue();
+						var node = [];
+						var sp = [];
+						for (var i = 0; i < selectArr.length; i++) {
+							F = selectArr[i]['node_name']
+							S = selectArr[i]['name']
+							node.push(F);
+							sp.push(S);
+						}
+						node = JSON.stringify(node);
+						sp = JSON.stringify(sp);
 						Resource = JSON.stringify(data.field);
 						$.ajax({
 							url : vplxIp + '/LINSTOR/Resource/Create',
@@ -519,7 +530,9 @@ layui
 							data : {
 								tid : tid,
 								resource : Resource,
-								type : "normal"
+								node:node,
+								sp:sp,
+								type : "normal_create"
 							},
 							async : false,
 							success : function(delete_result) {
@@ -536,7 +549,7 @@ layui
 							data : {
 								tid : tid,
 								resource : resource_data,
-								type : "add_mirror"
+								type : "normal_add_mirror"
 							},
 							async : false,
 							success : function(delete_result) {
@@ -553,10 +566,11 @@ layui
 							data : {
 								tid : tid,
 								resource : resource_data,
-								type : "auto"
+								type : "auto_create"
 							},
 							async : false,
-							success : function(delete_result) {
+							success : function(result) {
+								alert(result)
 							}
 						});
 					});
@@ -570,7 +584,7 @@ layui
 							data : {
 								tid : tid,
 								resource : resource_data,
-								type : "add_mirror_auto"
+								type : "auto_add_mirror"
 							},
 							async : false,
 							success : function(delete_result) {
@@ -594,46 +608,38 @@ layui
 							}
 						});
 					});
-					
+
 					var xmSelect = layui.xmSelect;
 					var demo1 = xmSelect.render({
-						el: '#demo', 
-						language: 'en',
-						direction: 'down',
-						autoRow: true,
-						toolbar: {show: true},
-						filterable: true,
-						filterMethod: function(val, item, index, prop){
-							if(val == item.value){//把value相同的搜索出来
-								return true;
-							}
-							if(item.name.indexOf(val) != -1){//名称中包含的搜索出来
-								return true;
-							}
-							return false;//不知道的就不管了
+						el : '#demo',
+						language : 'en',
+						direction : 'down',
+						autoRow : true,
+						toolbar : {
+							show : true
 						},
-						on: function (data) { 
+						on : function(data) {
 							console.log(data);
-							
-				            // arr:  当前多选已选中的数据
-				            var arr = data.arr;
-				            // change, 此次选择变化的数据,数组
-				            var change = data.change;
-				        },
-						data: [
-						]
+
+							// arr:  当前多选已选中的数据
+							var arr = data.arr;
+							// change, 此次选择变化的数据,数组
+							var change = data.change;
+						},
+						data : []
 					})
-					
-					 $.ajax({
-					        dataType: "json",
-					        type: 'get',
-					        url: vplxIp + '/LINSTOR/Create/sp',
-					        success: function (res) {
-					        	demo1.update({
-					                data: res.data
-					            })
-					        }
-					   });
+
+					$.ajax({
+						dataType : "json",
+						type : 'get',
+						url : vplxIp + '/LINSTOR/Create/sp',
+						success : function(res) {
+							console.log(res.data);
+							demo1.update({
+								data : res.data
+							})
+						}
+					});
 
 				});
 
@@ -642,33 +648,33 @@ function get_select_data() {
 		url : vplxIp + '/LINSTOR',
 		success : function(LINSTOR_result) {
 			// sp
-//			$.ajax({
-//				url : vplxIp + '/LINSTOR/Create/sp',
-//				async : false,
-//				success : function(sp_data) {
-//					$('#Sp').html(" "); 
-//					if (sp_data) {
-//						var html = "";
-//						for (var i in sp_data) {
-//							
-//							var NName = sp_data[i].NodeName
-//							var sp = sp_data[i].Spool
-//							
-//							html += '<optgroup label='+ NName +'>'
-//							
-//							for (var j in  sp) {
-//								html += '<option value='+ NName + '>'
-//										+ sp[j].device_name + '</option>'
-//							}
-//							html += '</optgroup>'
-//						}
-//						console.log(html);
-//						$('#Sp').append(html);
-//						layui.form.render('select','group');
-//						// 重新渲染
-//					}
-//				}
-//			});
+			//			$.ajax({
+			//				url : vplxIp + '/LINSTOR/Create/sp',
+			//				async : false,
+			//				success : function(sp_data) {
+			//					$('#Sp').html(" "); 
+			//					if (sp_data) {
+			//						var html = "";
+			//						for (var i in sp_data) {
+			//							
+			//							var NName = sp_data[i].NodeName
+			//							var sp = sp_data[i].Spool
+			//							
+			//							html += '<optgroup label='+ NName +'>'
+			//							
+			//							for (var j in  sp) {
+			//								html += '<option value='+ NName + '>'
+			//										+ sp[j].device_name + '</option>'
+			//							}
+			//							html += '</optgroup>'
+			//						}
+			//						console.log(html);
+			//						$('#Sp').append(html);
+			//						layui.form.render('select','group');
+			//						// 重新渲染
+			//					}
+			//				}
+			//			});
 			// //node_num
 			$.ajax({
 				url : vplxIp + '/LINSTOR/Create/node_num',
@@ -691,10 +697,11 @@ function get_select_data() {
 				url : vplxIp + '/LINSTOR/Create/sp',
 				success : function(sp_data) {
 					if (sp_data) {
-						for (var i = 0; i < sp_data.length; i++) {
+						sp = sp_data.data
+						for (var i = 0; i < sp.length; i++) {
 							$("#Node").append(
-									"<option value=\"" + sp_data[i].NodeName
-											+ "\">" + sp_data[i].NodeName
+									"<option value=\"" + sp[i].name
+											+ "\">" + sp[i].name
 											+ "</option>");
 						}
 						// 重新渲染

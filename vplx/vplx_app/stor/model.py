@@ -171,9 +171,6 @@ class SpCreate(views.MethodView):
 
     def get(self):
         data = get_request_data()
-        """
-        {'tid': '1611900199', 'storagepool': '{"sp_name":"123123","node_name":"ubuntu","type":"lvm","volume":"drbdpool"}'}
-        """
         sp_result = {}
         tid = data['tid']
         sp = eval(data['storagepool'])
@@ -186,14 +183,12 @@ class SpCreate(views.MethodView):
             sp_result = obj_sp.create_storagepool_thinlv(sp['node_name'],sp['sp_name'],sp['volume'])
         return cors_data(sp_result)
 
+
 class NodeCreate(views.MethodView):
 
     def get(self):
         data = get_request_data()
         print(data)
-        """
-        {'tid': '1611898472', 'node': '{"node_name":"node1","ip":"111111.11","node_type":"Combined"}'}
-        """
         tid = data['tid']
         node = eval(data['node'])
         obj_node = stor.Node()
@@ -204,25 +199,39 @@ class NodeCreate(views.MethodView):
 class ResourceCreate(views.MethodView):
 
     def get(self):
+        print("----------------------")
         data = get_request_data()
+        res_data = eval(data['resource'])
         print(data)
-        """
-        {'tid': '1611898472', 'node': '{"node_name":"node1","ip":"111111.11","node_type":"Combined"}'}
-        """
-        tid = data['tid']
-        node = eval(data['node'])
+        type = data['type']
+        res = res_data['res_name']
+
+        # tid = data['tid']
         obj_res = stor.Resource()
-        if data['type'] == 'normal':
-            obj_res.create_res_manual()
-        elif data['type'] == 'auto':
-            obj_res.create_res_auto()
-        elif data['type'] == 'add_mirror':
-            obj_res.add_mirror_manual()
-        elif data['type'] == 'diskless':
-            obj_res.create_res_diskless()
-        
+        if type == 'normal_create':
+            # size = data['22'] + data['size_unit']
+            # 待完善
+            #obj_res.create_res_manual()
+            result = 'nihao'
+        elif type == 'auto_create':
+            print('auto_crete')
+            size = res_data['size'] + res_data['size_unit']
+            num = res_data['node_num']
+            result = obj_res.create_res_auto(res,size,num)
+        elif type == 'normal_add_mirror':
+            pass
+            result = '1'
+        elif type == 'auto_add_mirror':
+            # res, node, sp)
+            num = res_data['node_num']
+            result = obj_res.add_mirror_auto(res,num)
+        elif type == 'diskless':
+            result = obj_res.create_res_diskless()
+
+        else:
+            result = ''
 #         obj_node.create_node()
-        return cors_data(data)
+        return cors_data(result)
 
 
 '''
@@ -254,43 +263,43 @@ class lvmView(views.MethodView):
     def get(self):
         return cors_data(lvm)
 
-
-test = {
-        "code": 0,
-        "msg": "success",
-        "data":  [{'name': 'Node1',
-                    'children': [{'name': '21', "value": 1},
-                             {'name': '21', "value": 2},
-                             {'name': '3',"value": 3},
-                             {'name': '4', "value": 4}]
-                  },
-                  {'name': 'Node2',
-                  'children': [{'name': '5', "value": 32},
-                            { 'name': '66', "value": 44},
-                             {'name': '7', "value": 7},
-                             {'name': '8', "value": 8}]
-                }]
-        }
-
-#  [{'NodeName': 'Node1',
-#                     'Spool': [{'device_name': '1'},
-#                              {'device_name': '2'},
-#                              {'device_name': '3'},
-#                              {'device_name': '4'}]
+# 
+# test = {
+#         "code": 0,
+#         "msg": "success",
+#         "data":  [{'name': 'Node1',
+#                     'children': [{'name': '1', 'value': '1','F':'Node1'},
+#                              {'name': '2', 'value': '2','F':'Node2'},
+#                              {'name': '3','value': '3','F':'Node3'},
+#                              {'name': '4', 'value': '4','F':'Node4'}]
 #                   },
-#                   {'NodeName': 'Node2',
-#                   'Spool': [{'device_name': '5'},
-#                             { 'device_name': '6'},
-#                              {'device_name': '7'},
-#                              {'device_name': '8'}]
+#                   {'name': 'Node2',
+#                   'children': [{'name': '5', 'value': '5','F':'Node5'},
+#                             { 'name': '6','value': '6','F':'Node6'},
+#                              {'name': '7', 'value': '7','F':'Node7'},
+#                              {'name': '8', 'value': '8','F':'Node8'}]
 #                 }]
+#         }
+# # 
+# #  [{'NodeName': 'Node1',
+# #                     'Spool': [{'device_name': '1'},
+# #                              {'device_name': '2'},
+# #                              {'device_name': '3'},
+# #                              {'device_name': '4'}]
+# #                   },
+# #                   {'NodeName': 'Node2',
+# #                   'Spool': [{'device_name': '5'},
+# #                             { 'device_name': '6'},
+# #                              {'device_name': '7'},
+# #                              {'device_name': '8'}]
+# #                 }]
 
 
 
 
 class spView(views.MethodView):  
     def get(self):
-        return cors_data(test)
+        return cors_data(sp)
 
     
     

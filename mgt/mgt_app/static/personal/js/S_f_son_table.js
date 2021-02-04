@@ -662,13 +662,14 @@ function node() {
 				async : false,
 				success : function(sp_data) {
 					if (sp_data) {
-						for (var i = 0; i < sp_data.length; i++) {
+						sp = sp_data.data
+						for (var i = 0; i < sp.length; i++) {
 							$("#Node").append(
-									"<option value=\"" + sp_data[i].NodeName
-											+ "\">" + sp_data[i].NodeName
+									"<option value=\"" + sp[i].name
+											+ "\">" + sp[i].name
 											+ "</option>");
 						}
-						//重新渲染
+						// 重新渲染
 						layui.form.render("select");
 					}
 				}
