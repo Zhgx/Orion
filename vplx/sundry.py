@@ -341,3 +341,5 @@ def handle_exception():
     else:
         print('The command result cannot be obtained, please check')
         raise consts.CmdError
+
+

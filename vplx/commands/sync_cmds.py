@@ -36,6 +36,9 @@ class SyncCommands():
 
         portal = obj_crm.get_portal_data(vip,portblock,target)
         js.cover_data('Portal',portal)
+
+
+        target = {'target_iqn':target[1],'ip':target[2],'port':target[3]}
         js.cover_data('Target',target)
         # js.cover_data({'Portal': portal})
         # js.json_data.update({'Target': target})

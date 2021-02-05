@@ -323,7 +323,7 @@ class TestCRMConfig:
             terminal_print.assert_called_with('Delete res_test0 fail')
 
     def test_checkout_status(self):
-        assert self.crmconfig.checkout_status('', 'iSCSILogicalUnit', 'STARTED') is None
+        assert self.crmconfig.checkout_status('', 'iSCSILogicalUnit', 'Started') is None
 
     def test_execute_delete(self):
         # 删除不存在资源

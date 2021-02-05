@@ -289,16 +289,13 @@ class Replay():
             try:
                 replay_args.func(replay_args)
             except consts.ReplayExit:
-                # self.cache_file.write('The transaction replay ends')
                 self.print_('The transaction replay ends')
             except Exception:
-                # self.cache_file.write(str(traceback.format_exc()))
                 self.print_(str(traceback.format_exc()))
             finally:
                 title = f"transaction: {dict_cmd['tid']}  command: {dict_cmd['cmd']}"
                 table = self.make_table(title,self.replay_data)
                 self.print_(str(table))
-                # self.cache_file.write(str(table))
                 if self.mode == 'LITE':
                     self.replay_lite()
                 from iscsi_json import JsonOperation
@@ -355,14 +352,12 @@ class Replay():
             elif answer == 'all':
                 self.tempfile = NamedTemporaryFile(mode="w+", dir=r"../vplx/")
                 Replay.replay_all = True
-                # 全部进行replay时，直接把所有数据展示出来，不然会在交互上停顿
                 Replay.mode = 'NORMAL'
                 for cmd in cmds:
                     self.print_('\nNext Transaction：')
                     self.replay_single(parser,cmd)
                     LogDB.reset_id()
                     self.reset_data()
-                print(self.tempfile.name)
                 self.tempfile.seek(0)
                 os.system(f'less -im {self.tempfile.name}')
             elif answer != 'exit':
@@ -381,3 +376,7 @@ class Replay():
         Replay.replay_data = []
         Replay.num = 1
         Replay.specific_data = {}
+
+
+
+

@@ -42,7 +42,7 @@ class JsonOperation(object):
                     "Portal":{},
                     "Target":{}}
                 json.dump(json_dict, fw, indent=4, separators=(',', ': '))
-            s.prt_log('The configuration file has been created, you can enter "vtel iscsi sync" to synchronize data later',2)
+            s.prt_log('The configuration file has been created.Please continue after synchronizing data.',2)
         except json.decoder.JSONDecodeError:
             s.prt_log('Failed to read configuration file.',2)
 

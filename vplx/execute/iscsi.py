@@ -766,10 +766,10 @@ class Portal():
 
             Colocation.create(f'col_{name}_prtblk_on', f'{name}_prtblk_on', name)
             Colocation.create(f'col_{name}_prtblk_off', f'{name}_prtblk_off', name)
-            Order.create(f'or_{name}_prtblk_on', name, f'{name}_prtblk_on')
+            Order.create(f'or_{name}_prtblk_on', f'{name}_prtblk_on', name)
         except Exception as ex:
             self.logger.write_to_log('DATA', 'DEBUG', 'exception', 'Rollback', str(traceback.format_exc()))
-            RollBack.rollback(ip,port,netmask)
+            RollBack.rollback('portal', ip,port,netmask)
             return
 
         # 验证
@@ -783,6 +783,7 @@ class Portal():
             obj_portblock.delete(f'{name}_prtblk_on')
             obj_portblock.delete(f'{name}_prtblk_off')
             s.prt_log('The portal cannot be created normally due to the wrong IP address network segment or other network problems, please reconfigure', 1)
+
 
     def delete(self, name):
         if not self.js.check_key('Portal', name):
@@ -804,12 +805,12 @@ class Portal():
         except Exception as ex:
             self.logger.write_to_log('DATA', 'DEBUG', 'exception', 'Rollback', str(traceback.format_exc()))
             portal = self.js.json_data['Portal'][name]
-            RollBack.rollback(portal['ip'], portal['port'], portal['netmask'])
+            RollBack.rollback('portal', portal['ip'], portal['port'], portal['netmask'])
             # 恢复colocation和order
             if RollBack.dict_rollback['IPaddr2']:
                 Colocation.create(f'col_{name}_prtblk_on', f'{name}_prtblk_on', name)
                 Colocation.create(f'col_{name}_prtblk_off', f'{name}_prtblk_off', name)
-                Order.create(f'or_{name}_prtblk_on', name, f'{name}_prtblk_on')
+                Order.create(f'or_{name}_prtblk_on', f'{name}_prtblk_on', name)
             return
 
         # 验证
@@ -872,7 +873,7 @@ class Portal():
                 obj_portblock.modify(f'{name}_prtblk_off', ip, port)
             except Exception as ex:
                 self.logger.write_to_log('DATA', 'DEBUG', 'exception', 'Rollback', str(traceback.format_exc()))
-                RollBack.rollback(portal['ip'],portal['port'],portal['netmask'])
+                RollBack.rollback('portal', portal['ip'],portal['port'],portal['netmask'])
                 return
 
         else:
@@ -893,10 +894,10 @@ class Portal():
 
                     obj_target = ISCSITarget()
                     for target in portal['target']:
-                        obj_target.modify(target, ip, port)
+                        obj_target.modify_portal(target, ip, port)
                 except Exception as ex:
                     self.logger.write_to_log('DATA', 'DEBUG', 'exception', 'Rollback', str(traceback.format_exc()))
-                    RollBack.rollback(portal['ip'], portal['port'], portal['netmask'])
+                    RollBack.rollback('portal', portal['ip'], portal['port'], portal['netmask'])
                     return
 
             else:
@@ -910,7 +911,7 @@ class Portal():
                     obj_portblock.modify(f'{name}_prtblk_off', ip, port)
                 except Exception as ex:
                     self.logger.write_to_log('DATA', 'DEBUG', 'exception', 'Rollback', str(traceback.format_exc()))
-                    RollBack.rollback(portal['ip'], portal['port'], portal['netmask'])
+                    RollBack.rollback('portal', portal['ip'], portal['port'], portal['netmask'])
                     return
 
         # 暂不验证（见需求）
@@ -945,13 +946,11 @@ class Portal():
 
     def _check_name(self, name):
         result = s.re_search(r'^[a-zA-Z][a-zA-Z0-9_]*$', name)
-        # 添加从JSON中验证这个Name有没有被portal使用
         return True if result else False
 
     def _check_IP(self, ip):
         result = s.re_search(
             r'^((2([0-4]\d|5[0-5]))|[1-9]?\d|1\d{2})(\.((2([0-4]\d|5[0-5]))|[1-9]?\d|1\d{2})){3}$', ip)
-        # 添加从JSON中验证这个IP有没有被portal使用
         return True if result else False
 
     def _check_port(self, port):
@@ -973,10 +972,10 @@ class Portal():
         time.sleep(1)
         obj_crm = CRMConfig()
         status = obj_crm.get_crm_res_status(name, type='IPaddr2')
-        if status == 'STARTED':
+        if status == 'Started':
             s.prt_log(f'Create {name} successfully', 1)
             return 'OK'
-        elif status == 'NOT_STARTED':
+        elif 'Stopped' in status:
             failed_actions = obj_crm.get_failed_actions(name)
             if failed_actions == 0:
                 return 'NETWORK_ERROR'
@@ -989,3 +988,272 @@ class Portal():
         else:
             s.prt_log(f'Failed to create {name}, please check', 1)
             return 'FAIL'
+
+
+class Target():
+    def __init__(self):
+        self.logger = log.Log()
+        self.js = iscsi_json.JsonOperation()
+
+
+    def create(self,name, portal, iqn):
+        # 前置判断
+        if not self._check_name(name):
+            s.prt_log(f'Wrong name:{name}. It must start with a letter and consist of letters, numbers, and "_" ', 1)
+            return
+        if not self._check_iqn(iqn):
+            s.prt_log(f'Wrong iqn：{iqn}. Please enter the correct iqn.', 1)
+            return
+        if self.js.check_key('Target', name):
+            s.prt_log(f'{name} already exists, please use another name', 1)
+            return
+        if not self.js.check_key('Portal',portal):
+            s.prt_log(f'{name} does not exist, please use the existing portal', 1)
+            return
+
+        # 检查iqn是否被使用
+        pass
+
+
+        # 执行
+        dict_portal = self.js.json_data['Portal'][portal]
+        ip = dict_portal['ip']
+        port = dict_portal['port']
+
+        try:
+            ISCSITarget().create(name,iqn,ip,port)
+            Order.create(f'or_{name}_{portal}',portal, name)
+            Colocation.create(f'col_{name}_{portal}', name, portal)
+        except Exception as ex:
+            self.logger.write_to_log('DATA', 'DEBUG', 'exception', 'Rollback', str(traceback.format_exc()))
+            RollBack.rollback('target',ip, port, iqn)
+            return
+        else:
+            # 开启
+            CRMConfig().start_res(name)
+
+        # 验证
+        status = self._check_status(name)
+        if status == 'OK':
+            self.js.update_data('Target', name, {'target_iqn': iqn, 'portal':portal,'lun':[]})
+            self.js.commit_data()
+
+
+    def modify(self, name, iqn, portal):
+        if not self.js.check_key('Target',name):
+            s.prt_log(f"Fail！Can't find {name}", 1)
+            return
+
+        if portal:
+            if not self.js.check_key('Portal',portal):
+                s.prt_log(f"Fail！Can't find {portal}", 1)
+                return
+        if iqn:
+            if not self._check_iqn(iqn):
+                s.prt_log(f'Wrong iqn：{iqn}. Please enter the correct iqn.', 1)
+                return
+            # iqn的验证，同创建一样
+
+        dict_target = self.js.json_data['Target'][name]
+        dict_portal = self.js.json_data['Portal'][portal]
+
+        if portal == dict_target['portal'] and iqn == dict_target['target_iqn']:
+            s.prt_log(f'The parameters are the same, no need to modify',1)
+            return
+
+        if dict_target['lun']:
+            print(f'luns：{",".join(dict_target["lun"])}using this target.These luns will be suspended , whether to continue?y/n')
+            answer = s.get_answer()
+            if not answer in ['y', 'yes', 'Y', 'YES']:
+                s.prt_log('Modify canceled', 2)
+
+        try:
+            obj_target = ISCSITarget()
+            if iqn and iqn != dict_target['target_iqn']:
+                obj_target.modify_iqn(name, iqn)
+            if portal and portal != dict_target['portal']:
+                obj_target.modify_portal(name, dict_portal['ip'], dict_portal['port'])
+                Order.delete(f'or_{name}_{dict_target["portal"]}')
+                Colocation.delete(f'col_{name}_{dict_target["portal"]}')
+                Order.create(f'or_{name}_{portal}', portal, name)
+                Colocation.create(f'col_{name}_{portal}', name, portal)
+        except Exception as ex:
+            self.logger.write_to_log('DATA', 'DEBUG', 'exception', 'Rollback', str(traceback.format_exc()))
+            RollBack.rollback('target', dict_portal['ip'], dict_portal['port'], iqn)
+            Order.delete(f'or_{name}_{portal}')
+            Colocation.delete(f'col_{name}_{portal}')
+            return
+
+        # 验证
+        crm_data = CRMData()
+        target_now = crm_data.get_target()
+        if iqn == target_now['target_iqn']\
+            and dict_portal['ip'] == target_now['ip'] \
+            and dict_portal['port'] == target_now['port']:
+            lun = dict_portal['lun']
+            self.js.update_data('Target', name, {'target_iqn': iqn, 'portal': portal, 'lun':lun})
+            self.js.commit_data()
+            s.prt_log(f'Modify {name} successfully', 0)
+
+
+    def delete(self, name):
+        if not self.js.check_key('Target', name):
+            s.prt_log(f"Fail！Can't find {name}", 1)
+            return
+
+
+        dict_target = self.js.json_data['Target'][name]
+        lun = dict_target['lun']
+        if lun:
+            s.prt_log(f'In use：{",".join(lun)}. Can not delete', 1)
+            return
+
+        # 执行
+        try:
+            ISCSITarget().delete(name)
+        except Exception as ex:
+            self.logger.write_to_log('DATA', 'DEBUG', 'exception', 'Rollback', str(traceback.format_exc()))
+            RollBack.rollback('target', dict_target['ip'], dict_target['port'], dict_target['iqn'])
+            # 恢复colocation和order
+            if RollBack.dict_rollback['ISCSITarget']:
+                Order.create(f'or_{name}_{dict_target["portal"]}', dict_target["portal"], name)
+                Colocation.create(f'col_{name}_{dict_target["portal"]}', name, dict_target["portal"])
+            return
+
+        # 验证
+        if not CRMConfig().get_crm_res_status(name,'iSCSITarget'):
+            self.js.delete_data('Target', name)
+            self.js.commit_data()
+            print(f'Delete {name} successfully')
+        else:
+            print(f'Failed to delete {name}, please check')
+
+
+    def show(self):
+        """
+        用表格展示所有target数据
+        :return: all portal
+        """
+        list_header = ["Target", "IQN", "Portal", "Status", "LUN(s)"]
+        list_data = []
+
+        dict_target = self.js.json_data['Target']
+        dict_portal = self.js.json_data['Portal']
+        for target, data in dict_target.items():
+            status = CRMConfig().get_crm_res_status(target,'iSCSITarget')
+            # 这里再决定好配置文件是否需要修改之后再进行具体的开发
+            list_data.append([target, data['target_iqn'], data['portal'], status, ",".join(data['lun'])])
+
+        table = s.make_table(list_header, list_data)
+        s.prt_log(table, 0)
+        return list_data
+
+
+    def start(self,name):
+        # 前置判断
+        if not self.js.check_key('Target', name):
+            s.prt_log(f'{name} does not exist', 1)
+            return
+
+        crm_config = CRMConfig()
+        status = crm_config.get_crm_res_status(name, 'iSCSITarget')
+        if status == 'Started':
+            s.prt_log(f'{name} is in STARTED state', 1)
+            return
+        elif status == 'FAIL':
+            s.prt_log(f'{name} A is in FAILED state', 1)
+            return
+
+
+        # 执行
+        crm_config.start_res(name)
+
+
+        # 验证
+        dict_portal = self.js.json_data['Portal']
+        target = self.js.json_data['Target'][name]
+        portal = [portal for portal, portal_data in dict_portal.items() if portal_data['ip'] == target['ip']][0]
+
+        try:
+            # 这里没有按照需求说的，使用次数的方式去进行状态的检查，而是时间，而且时间的设置也还没有考虑luns
+            crm_config.monitor_status_by_time(name,'iSCSITarget','Started',20)
+            crm_config.monitor_status_by_time(f'{portal}_prtblk_off','portblock','Started',60)
+        except TimeoutError as msg:
+            s.prt_log(msg, 1)
+        else:
+            s.prt_log(f'{name} has been started', 0)
+
+
+
+
+
+    def stop(self, name):
+        # 前置判断
+        if not self.js.check_key('Target', name):
+            s.prt_log(f'{name} does not exist', 1)
+            return
+
+        crm_config = CRMConfig()
+        status = crm_config.get_crm_res_status(name, 'iSCSITarget')
+        if status == 'Stopped':
+            s.prt_log(f'{name} has been stopped', 1)
+            return
+        elif status == 'FAIL':
+            s.prt_log(f'{name} A is in FAILED state', 1)
+            return
+        elif status == 'Stopped (disabled)':
+            s.prt_log(f'{name} has been stopped for other reasons, but you can continue to stop it.(y/n)', 1)
+            answer = s.get_answer()
+            if not answer in ['y', 'yes', 'Y', 'YES']:
+                s.prt_log('already cancelled', 2)
+
+        # 执行
+        crm_config.stop_res(name)
+
+        #验证
+        try:
+            crm_config.monitor_status_by_time(name,'iSCSITarget','Stopped (disabled)',timeout=60)
+        except TimeoutError as msg:
+            s.prt_log(msg,1)
+        else:
+            s.prt_log(f'{name} has been stopped', 0)
+
+
+
+    def _check_name(self, name):
+        result = s.re_search(r'^[a-zA-Z][a-zA-Z0-9_]*$', name)
+        return True if result else False
+
+    def _check_iqn(self, iqn):
+        result = s.re_findall(
+            r'^iqn\.\d{4}-\d{2}\.[a-zA-Z0-9][-a-zA-Z0-9]{0,62}(\.[a-zA-Z0-9][-a-zA-Z0-9]{0,62})+(:[a-zA-Z0-9.:-]+)?$',
+            iqn)
+        return True if result else False
+
+
+    def _check_status(self, name):
+        """
+        验证target的状态
+        :param name: portal name
+        :return:
+        """
+        time.sleep(1)
+        obj_crm = CRMConfig()
+        status = obj_crm.get_crm_res_status(name, type='iSCSITarget')
+        if status == 'Started':
+            s.prt_log(f'Create {name} successfully', 1)
+            return 'OK'
+        elif 'Stopped' in status:
+            failed_actions = obj_crm.get_failed_actions(name)
+            if failed_actions:
+                s.prt_log(failed_actions, 1)
+                return 'OTHER_ERROR'
+            else:
+                s.prt_log('Unknown error, please check', 1)
+                return 'UNKNOWN_ERROR'
+        else:
+            s.prt_log(f'Failed to create {name}, please check', 1)
+            return 'FAIL'
+
+
+

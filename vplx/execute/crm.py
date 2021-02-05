@@ -1,9 +1,7 @@
 # coding=utf-8
 import re
 import time
-import types
 import traceback
-from functools import wraps
 import copy
 
 import iscsi_json
@@ -100,13 +98,19 @@ class RollBack():
 
 
     @classmethod
-    def rollback(cls,ip,port,netmask):
+    def rollback(cls,type,*args):
         # 目前只用于Portal的回滚，之后Target的回滚可以根据需要增加一个判断类型的参数
         print("Execution error, resource rollback")
-        cls.rb_ipaddr2(cls,ip,port,netmask)
-        cls.rb_block(cls,ip,port,netmask)
-        cls.rb_target(cls,ip,port,netmask)
+        if type == 'portal':
+            ip, port, netmask = args
+            cls.rb_ipaddr2(cls, ip, port, netmask)
+            cls.rb_block(cls, ip, port, netmask)
+            cls.rb_target(cls, ip, port, 'iqn')
+        elif type == 'target':
+            ip, port, iqn = args
+            cls.rb_target(cls,ip,port,iqn)
         print("resource rollback ends")
+
 
     # 回滚完之后考虑做一个对crm配置的检查？跟name相关的资源如果还存在，进行提示？
 
@@ -138,12 +142,19 @@ class RollBack():
                     obj_block.modify(name,ip,port)
 
 
-    def rb_target(self,ip,port,netmask):
+    def rb_target(self,ip,port,iqn):
         if self.dict_rollback['ISCSITarget']:
             obj_target = ISCSITarget()
             for name,oprt in self.dict_rollback['ISCSITarget'].items():
-                if oprt == 'modify':
-                    obj_target.modify(name,ip,port)
+                if oprt == 'create':
+                    obj_target.delete(name)
+                elif oprt == 'modify_iqn':
+                    obj_target.modify_iqn(name,iqn)
+                elif oprt == 'modify_portal':
+                    obj_target.modify_portal(name,ip,port)
+                elif oprt == 'delete':
+                    obj_target.create(name,iqn,ip,port)
+
 
 
 
@@ -240,6 +251,32 @@ class CRMData():
 
         return dict_portal
 
+
+    def get_target_conf(self,vip_all,target_all,iscsilun_all):
+        """
+        获取现在CRM环境下的所有Target数据，组成与配置文件同样的结构返回
+        :return:
+        """
+        dict_target = {}
+        """
+        "Target": {
+        "target_name": {
+            "target_iqn": "iqn.2020-04.feixitek.com:versaplx00",
+            "portal": "vip",
+            "lun": []
+        }
+        """
+        # target_name，target_iqn 通过传进来的target获取，
+        # portal，通过传进来的target的ip，进行目前vip的匹配，获取到
+        # lun，通过target_iqn，进行iscsi logical unit对应的lun的匹配
+        for target in target_all:
+            dict_target.update({target: {'target_iqn': target_all[target]['target_iqn'], 'portal':'','lun':[]}})
+            for vip in vip_all:
+                # 对target添加portal
+                pass
+
+
+
     def check_portal_component(self,vip,portblock,order,colocation):
         """
         对目前环境的portal组件(ipaddr,portblock）的检查，需满足：
@@ -284,6 +321,8 @@ class CRMData():
                 list_portal.append(portal_name)
         if list_portal:
             s.prt_log(f'Portal:{",".join(list_portal)} can not be used normally,  please proceed',2)
+        # 收集了不符合规范的portal对应的所有组件，但是目前还没有进行提示
+
 
     def check_env_sync(self,vip,portblock,target):
         """
@@ -338,24 +377,6 @@ class CRMConfig():
         pass
 
 
-    def create_crm_res(self, res, target_iqn, lunid, path, initiator):
-        cmd = f'crm conf primitive {res} iSCSILogicalUnit params ' \
-            f'target_iqn="{target_iqn}" ' \
-            f'implementation=lio-t ' \
-            f'lun={lunid} ' \
-            f'path={path} ' \
-            f'allowed_initiators="{initiator}" ' \
-            f'op start timeout=40 interval=0 ' \
-            f'op stop timeout=40 interval=0 ' \
-            f'op monitor timeout=40 interval=15 ' \
-            f'meta target-role=Stopped'
-        result = execute_crm_cmd(cmd)
-        if result['sts']:
-            s.prt_log("create iSCSILogicalUnit success",0)
-            return True
-
-
-
     def get_failed_actions(self, res):
         # 检查crm整体状态，但是目前好像只是用于提取vip的错误信息
         exitreason = None
@@ -370,7 +391,6 @@ class CRMConfig():
                 exitreason = result
         return exitreason
 
-
     def get_crm_res_status(self, res, type):
         """
         获取crm res的状态
@@ -379,18 +399,15 @@ class CRMConfig():
         :return: string
         """
         if not type in ['IPaddr2','iSCSITarget','portblock','iSCSILogicalUnit']:
-            raise ValueError('\'type\' must one of [IPaddr2,iSCSITarget,portblock,iSCSILogicalUnit]')
+            raise ValueError('"type" must one of [IPaddr2,iSCSITarget,portblock,iSCSILogicalUnit]')
 
         cmd_result = execute_crm_cmd(f'crm res list | grep {res}')
-        re_status = f'{res}\s*\(ocf::heartbeat:{type}\):\s*(\w*)'
+        re_status = f'{res}\s*\(ocf::heartbeat:{type}\):\s*([\w\s()]*?)\n'
         status = s.re_search(re_status,cmd_result['rst'],output_type='groups')
         if status:
-            if status[0] == 'Started':
-                return 'STARTED'
-            else:
-                return 'NOT_STARTED'
+            return status[0]
 
-    def checkout_status(self, res, type, expect_status, times=5):
+    def monitor_status(self, res, type, expect_status, times=5):
         """
         检查crm res的状态
         :param res: 需要检查的资源
@@ -402,13 +419,35 @@ class CRMConfig():
         n = 0
         while n < times:
             n += 1
-            if self.get_crm_res_status(res,type) == expect_status:
+            if expect_status in self.get_crm_res_status(res,type):
                 s.prt_log(f'The status of {res} is {expect_status} now.',0)
                 return True
             else:
                 time.sleep(1)
         else:
             s.prt_log("Does not meet expectations, please try again.", 1)
+
+
+    def monitor_status_by_time(self,res, type, expect_status, timeout=20):
+        """
+        检查crm res的状态
+        :param res: 需要检查的资源
+        :param type_res: 需要检查的资源类型
+        :param timeout: 监控时间限制
+        :param expect_status: 预期状态
+        :return: 返回True则说明是预期效果
+        """
+        t_beginning = time.time()
+        while True:
+            if expect_status in self.get_crm_res_status(res, type):
+                s.prt_log(f'The status of {res} is {expect_status} now.', 0)
+                return True
+            else:
+                time.sleep(1)
+
+            seconds_passed = time.time() - t_beginning
+            if timeout and seconds_passed > timeout:
+                raise TimeoutError(res)
 
 
     def stop_res(self, res):
@@ -419,7 +458,6 @@ class CRMConfig():
             return True
         else:
             s.prt_log(f"Stop {res} fail",1)
-
 
     def execute_delete(self, res):
         # 执行删除res
@@ -441,7 +479,7 @@ class CRMConfig():
     def delete_res(self, res, type):
         # 删除一个crm res，完整的流程
         if self.stop_res(res):
-            if self.checkout_status(res,type,'NOT_STARTED'):
+            if self.monitor_status(res,type,'Stopped'):
                 if self.execute_delete(res):
                     return True
         s.prt_log(f"Delete {res} fail",1)
@@ -579,6 +617,10 @@ class Colocation():
             s.prt_log(f'Create colocation:{name} successfully',0)
             return True
 
+    @classmethod
+    def delete(cls,name):
+        cmd = f'crm conf del {name}'
+        result = execute_crm_cmd(cmd)
 
 
 class Order():
@@ -597,6 +639,11 @@ class Order():
             s.prt_log(f'Create order:{name} successfully',0)
             return True
 
+    @classmethod
+    def delete(cls,name):
+        cmd = f'crm conf del {name}'
+        result = execute_crm_cmd(cmd)
+
 
 
 class ISCSITarget():
@@ -604,15 +651,74 @@ class ISCSITarget():
         pass
 
     @RollBack
-    def modify(self,name,ip,port):
-        cmd = f'crm cof set {name}.portals {ip}:{port}'
+    def create(self,name,iqn,ip,port):
+        cmd = f'crm cof primitive {name} iSCSITarget params iqn="{iqn}" implementation=lio-t portals="{ip}:{port}" op start timeout=50 stop timeout=40 op monitor interval=15 timeout=40 meta target-role=Stopped'
         cmd_result = execute_crm_cmd(cmd)
         if not cmd_result['sts']:
+            # 创建失败，输出原命令报错信息
             s.prt_log(cmd_result['rst'],1)
             raise consts.CmdError
         else:
-            s.prt_log(f'Modify {name} successfully',0)
+            # s.prt_log(f'Create iscsitarget:{name} successfully',0)
             return True
+
+
+    @RollBack
+    def modify(self,name,iqn,ip,port):
+        cmd_iqn = f'crm conf set {name}.iqn {iqn}'
+        cmd_portal = f'crm cof set {name}.portals {ip}:{port}'
+        cmd_result_iqn = execute_crm_cmd(cmd_iqn)
+        cmd_result_portal = execute_crm_cmd(cmd_portal)
+        if not cmd_result_iqn['sts'] or not cmd_result_portal['sts']:
+            s.prt_log(cmd_result_iqn['rst'],1)
+            s.prt_log(cmd_result_portal['rst'], 1)
+            raise consts.CmdError
+        else:
+            s.prt_log(f"Modify target:{name} (portal and iqn) successfully",0)
+            return True
+
+    @RollBack
+    def modify_iqn(self,name,iqn):
+        cmd = f'crm conf set {name}.iqn {iqn}'
+        cmd_result = execute_crm_cmd(cmd)
+        if not cmd_result['sts'] :
+            s.prt_log(cmd_result['rst'],1)
+            raise consts.CmdError
+        else:
+            s.prt_log(f"Modify target:{name} (iqn) successfully",0)
+            return True
+
+
+    @RollBack
+    def modify_portal(self,name,ip,port):
+        cmd = f'crm cof set {name}.portals {ip}:{port}'
+        cmd_result = execute_crm_cmd(cmd)
+        if not cmd_result['sts'] :
+            s.prt_log(cmd_result['rst'],1)
+            raise consts.CmdError
+        else:
+            s.prt_log(f"Modify target:{name} (portal) successfully",0)
+            return True
+
+
+    @RollBack
+    def delete(self,name):
+        obj_crm = CRMConfig()
+        result = obj_crm.delete_res(name,type='iSCSITarget')
+        if not result:
+            raise consts.CmdError
+        else:
+            s.prt_log(f'Delete iscsitarget:{name} successfully',0)
+            return True
+
+
+    def start(self, name):
+        pass
+
+    def stop(self, name):
+        pass
+
+
 
 
 
@@ -627,7 +733,7 @@ class ISCSILogicalUnit():
         try:
             target_all = self.js.json_data['Target']
         except KeyError:
-            s.prt_log('please execute commands: vtel iscsi sync',2)
+            s.prt_log('Data is abnormal, unable to continue ',2)
 
         if target_all:
             # 目前的设计只有一个target（现在可能target有多个），所以直接取一个
@@ -709,10 +815,11 @@ class ISCSILogicalUnit():
             #启动资源,成功与否不影响创建
             obj_crm = CRMConfig()
             obj_crm.start_res(name)
-            obj_crm.checkout_status(name, 'iSCSILogicalUnit', 'STARTED')
+            obj_crm.monitor_status(name, 'iSCSILogicalUnit', 'Started')
 
         # 验证？
         return True
+
 
 
 
