@@ -205,29 +205,32 @@ class ResourceCreate(views.MethodView):
         print(data)
         type = data['type']
         res = res_data['res_name']
-
         # tid = data['tid']
         obj_res = stor.Resource()
         if type == 'normal_create':
-            # size = data['22'] + data['size_unit']
-            # 待完善
-            #obj_res.create_res_manual()
-            result = 'nihao'
+            node = eval(data['node'])
+            sp = eval(data['sp'])
+            size = res_data['size'] + res_data['size_unit']
+            result = obj_res.create_res_manual(res,size,node,sp)
         elif type == 'auto_create':
             print('auto_crete')
             size = res_data['size'] + res_data['size_unit']
             num = res_data['node_num']
             result = obj_res.create_res_auto(res,size,num)
         elif type == 'normal_add_mirror':
-            pass
-            result = '1'
+            node = eval(data['node'])
+            sp = eval(data['sp'])
+            
+            print(node)
+            print(sp)
+            result = obj_res.add_mirror_manual(res,node,sp)
         elif type == 'auto_add_mirror':
             # res, node, sp)
             num = res_data['node_num']
             result = obj_res.add_mirror_auto(res,num)
         elif type == 'diskless':
-            result = obj_res.create_res_diskless()
-
+            node = res_data['node']
+            result = obj_res.create_res_diskless(node,res)
         else:
             result = ''
 #         obj_node.create_node()
@@ -263,7 +266,7 @@ class lvmView(views.MethodView):
     def get(self):
         return cors_data(lvm)
 
-# 
+ 
 # test = {
 #         "code": 0,
 #         "msg": "success",
@@ -299,6 +302,7 @@ class lvmView(views.MethodView):
 
 class spView(views.MethodView):  
     def get(self):
+#         return cors_data(sp)
         return cors_data(sp)
 
     

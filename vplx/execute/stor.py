@@ -405,7 +405,7 @@ class Resource():
             for node, cause in dict_all_fail.items():
                 fail_cause = f"{node}:{cause}\n"
                 fail_info = fail_info + fail_cause
-            s.prt_log(fail_info,2)
+            s.prt_log(fail_info,1)
             return dict_all_fail
         else:
             return True

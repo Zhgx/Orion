@@ -300,7 +300,7 @@ function change_diskgroup(obj) {
 				'<tr onClick="change_diskgroup_second(this)">' + tr + '</tr>');
 		curRow.remove();// 删除
 			$.ajax({
-				url : vplxIp + "/disk/show/oprt",
+				url : vplxIp + "/dg/show/data",
 				type : "get",
 				dataType : "json",
 				data : {
@@ -308,9 +308,9 @@ function change_diskgroup(obj) {
 					ip : mgtIp
 				},
 				async : false,
-				success : function(disk_result) {
+				success : function(disk_group_result) {
 					$.ajax({
-						url : vplxIp + "/disk/show/data",
+						url : vplxIp + "/resource/show/data",
 						type : "get",
 						dataType : "json",
 						data : {

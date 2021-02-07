@@ -536,11 +536,23 @@ layui
 							},
 							async : false,
 							success : function(delete_result) {
+								alert(delete_result);
 							}
 						});
 					});
 
 					form.on('submit(add_mirror)', function(data) {
+						var selectArr = demo1.getValue();
+						var node = [];
+						var sp = [];
+						for (var i = 0; i < selectArr.length; i++) {
+							F = selectArr[i]['node_name']
+							S = selectArr[i]['name']
+							node.push(F);
+							sp.push(S);
+						}
+						node = JSON.stringify(node);
+						sp = JSON.stringify(sp);
 						resource_data = JSON.stringify(data.field);
 						$.ajax({
 							url : vplxIp + '/LINSTOR/Resource/Create',
@@ -548,11 +560,14 @@ layui
 							dataType : "json",
 							data : {
 								tid : tid,
+								node:node,
+								sp:sp,
 								resource : resource_data,
 								type : "normal_add_mirror"
 							},
 							async : false,
 							success : function(delete_result) {
+								alert(delete_result);
 							}
 						});
 					});
@@ -570,7 +585,7 @@ layui
 							},
 							async : false,
 							success : function(result) {
-								alert(result)
+								alert(result);
 							}
 						});
 					});
@@ -588,6 +603,7 @@ layui
 							},
 							async : false,
 							success : function(delete_result) {
+								alert(delete_result);
 							}
 						});
 					});
@@ -605,6 +621,7 @@ layui
 							},
 							async : false,
 							success : function(delete_result) {
+								alert(delete_result);
 							}
 						});
 					});
@@ -615,9 +632,6 @@ layui
 						language : 'en',
 						direction : 'down',
 						autoRow : true,
-						toolbar : {
-							show : true
-						},
 						on : function(data) {
 							console.log(data);
 
@@ -634,10 +648,12 @@ layui
 						type : 'get',
 						url : vplxIp + '/LINSTOR/Create/sp',
 						success : function(res) {
-							console.log(res.data);
-							demo1.update({
-								data : res.data
-							})
+							if(res){
+								demo1.update({
+									data : res.data
+								})
+							}
+							
 						}
 					});
 

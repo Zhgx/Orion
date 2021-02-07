@@ -585,7 +585,7 @@ layui
 														async : false,
 														success : function(
 																lvm_data) {
-															if (lvm_data.lvm) {
+															if (lvm_data) {
 																for (var i = 0; i < lvm_data.lvm.length; i++) {
 																	$("#volume")
 																			.append(
@@ -609,7 +609,7 @@ layui
 														async : false,
 														success : function(
 																lvm_data) {
-															if (lvm_data.lvm) {
+															if (lvm_data) {
 																for (var i = 0; i < lvm_data.thin_lvm.length; i++) {
 																	$("#volume")
 																			.append(
@@ -637,7 +637,7 @@ function getClassify() {
 		url : vplxIp + '/LINSTOR/Create/lvm',
 		async : false,
 		success : function(lvm_data) {
-			if (lvm_data.lvm) {
+			if (lvm_data) {
 				for (var i = 0; i < lvm_data.lvm.length; i++) {
 					$("#volume").append(
 							"<option value=\"" + lvm_data.lvm[i].cityName
