@@ -567,7 +567,7 @@ layui
 							},
 							async : false,
 							success : function(delete_result) {
-								alert(delete_result);
+							 alert(delete_result['ubuntu']);
 							}
 						});
 					});

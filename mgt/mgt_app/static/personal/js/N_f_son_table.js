@@ -440,6 +440,8 @@ layui.use(['form', 'layedit', 'laydate','element'], function(){
 		    		},
 		    		async : false,
 		    		success : function(craete_result) {
+		    			console.log(craete_result);
+		    			alert(craete_result["result"]);
 		    		}
 		    	});
 			  

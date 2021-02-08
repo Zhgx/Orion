@@ -333,17 +333,27 @@ xxModify为实际修改路由，触发实际修改动作，返回修改结果到
 
 
 class CheckHostModify(views.MethodView):
-
     def get(self):
+        print("0000000")
         dict_data = get_request_data()
+        print("1111111")
         host_name = dict_data['host_name']
+        print("0022200")
         host_iqn = dict_data['host_iqn']
+        print("111111")
         js = iscsi_json.JsonOperation()
+        print("2222")
         js.json_data = js.read_json()
+        print("13333331")
         json_data_before = copy.deepcopy(js.json_data)
+        print("13444444331")
         js.update_data('Host', host_name, host_iqn)
+        print("6555555533331")
         obj_iscsi = iscsi.IscsiConfig(json_data_before, js.json_data)
+        print("65566666663331")
         message = '\n'.join(obj_iscsi.show_info())
+        print("--------------")
+        print("message",message)
         dict = {'iscsi_data':True, 'info':message}
         return cors_data(dict)
 
@@ -467,8 +477,9 @@ class CheckMapModify(views.MethodView):
     def get(self):
         dict_data = get_request_data()
         map = dict_data['map_name']
-        list_hg = dict_data['hg'].split(',') if dict_data['disk'] else []
-        list_dg = dict_data['dg'].split(',') if dict_data['disk'] else []
+        print(dict_data)
+        list_hg = dict_data['hg'].split(',') if dict_data['hg'] else []
+        list_dg = dict_data['dg'].split(',') if dict_data['dg'] else []
         js = iscsi_json.JsonOperation()
         json_data_before = copy.deepcopy(js.json_data)
         if not list_hg or not list_dg:
@@ -487,8 +498,8 @@ class MapModify(views.MethodView):
 
         dict_data = get_request_data()
         map = dict_data['map_name']
-        list_hg = dict_data['hg'].split(',') if dict_data['disk'] else []
-        list_dg = dict_data['dg'].split(',') if dict_data['disk'] else []
+        list_hg = dict_data['hg'].split(',') if dict_data['hg'] else []
+        list_dg = dict_data['dg'].split(',') if dict_data['dg'] else []
         js = iscsi_json.JsonOperation()
         js.json_data = js.read_json()
         json_data_before = copy.deepcopy(js.json_data)

@@ -1,7 +1,7 @@
 {
     "Host": {
-        "h1": "iqn.2020-11.com.example:pytest01",
-        "h2": "iqn.2020-11.com.example:pytest02",
+        "h1": "iqn.2020-11.com.example:pytest022",
+        "h2": "iqn.2020-11.com.example:pytest0211",
         "h3": "iqn.2020-11.com.example:pytest03",
         "h4": "iqn.2020-11.com.example:pytest04",
         "h5": "iqn.2020-11.com.example:pytest05",
@@ -27,17 +27,38 @@
             "h7"
         ],
         "h1": [
-            "h3",
-            "h4"
+            "h3"
         ]
     },
     "DiskGroup": {
         "Dg2": [
             "Resource1",
             "Resource11"
+        ],
+        "DG1": [
+            "Resource_12",
+            "Resource11"
         ]
     },
-    "Map": {},
+    "Map": {
+        "map2": {
+            "HostGroup": [
+                "h1"
+            ],
+            "DiskGroup": [
+                "Dg2"
+            ]
+        },
+        "map1": {
+            "HostGroup": [
+                "hg6",
+                "hg7"
+            ],
+            "DiskGroup": [
+                "DG1"
+            ]
+        }
+    },
     "Portal": {
         "portal_test_4": {
             "ip": "10.203.1.201",

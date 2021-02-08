@@ -220,9 +220,6 @@ class ResourceCreate(views.MethodView):
         elif type == 'normal_add_mirror':
             node = eval(data['node'])
             sp = eval(data['sp'])
-            
-            print(node)
-            print(sp)
             result = obj_res.add_mirror_manual(res,node,sp)
         elif type == 'auto_add_mirror':
             # res, node, sp)
