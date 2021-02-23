@@ -102,7 +102,7 @@ class IscsiConfig():
     def modify_iscsilogicalunit(self):
         for disk, iqn in self.modify.items():
             self.recovery_list['modify'].update({disk: self.recover['modify'][disk]})
-            self.obj_iscsiLU.modify(disk, iqn)
+            self.obj_iscsiLU.modify_initiators(disk, iqn)
 
     def rollback(self):
         print("Mapping relationship rollback")
@@ -111,7 +111,7 @@ class IscsiConfig():
         for disk in self.recovery_list['delete']:
             self.obj_iscsiLU.delete(disk)
         for disk, iqn in self.recovery_list['modify'].items():
-            self.obj_iscsiLU.modify(disk, iqn)
+            self.obj_iscsiLU.modify_initiators(disk, iqn)
         print("Mapping relationship rollback ends")
 
     def comfirm_modify(self):
@@ -262,6 +262,7 @@ class Host():
             s.prt_log('The configuration file has been modified, please try again', 2)
 
         self.js.commit_data()
+        s.prt_log(f"Modify {host} successfully", 0)
 
 
 class DiskGroup():
@@ -996,7 +997,7 @@ class Target():
         self.js = iscsi_json.JsonOperation()
 
 
-    def create(self,name, portal, iqn):
+    def create(self,name, iqn, portal):
         # 前置判断
         if not self._check_name(name):
             s.prt_log(f'Wrong name:{name}. It must start with a letter and consist of letters, numbers, and "_" ', 1)
@@ -1026,7 +1027,7 @@ class Target():
             Colocation.create(f'col_{name}_{portal}', name, portal)
         except Exception as ex:
             self.logger.write_to_log('DATA', 'DEBUG', 'exception', 'Rollback', str(traceback.format_exc()))
-            RollBack.rollback('target',ip, port, iqn)
+            RollBack.rollback('target', ip, port, iqn)
             return
         else:
             # 开启
@@ -1036,6 +1037,7 @@ class Target():
         status = self._check_status(name)
         if status == 'OK':
             self.js.update_data('Target', name, {'target_iqn': iqn, 'portal':portal,'lun':[]})
+            self.js.json_data['Portal'][portal]['target'].append(name)
             self.js.commit_data()
 
 
@@ -1084,13 +1086,26 @@ class Target():
             Colocation.delete(f'col_{name}_{portal}')
             return
 
+
+        for lun in dict_target['lun']:
+            # 修改这些lun的target_iqn
+            try:
+                ISCSILogicalUnit().modify_target_iqn(lun,iqn)
+            except Exception as ex:
+                self.logger.write_to_log('DATA', 'DEBUG', 'exception', 'Rollback', str(traceback.format_exc()))
+                # 回滚待设置
+                return
+
+
         # 验证
         crm_data = CRMData()
-        target_now = crm_data.get_target()
+        target_now = crm_data.get_target()[name]
         if iqn == target_now['target_iqn']\
             and dict_portal['ip'] == target_now['ip'] \
             and dict_portal['port'] == target_now['port']:
             lun = dict_portal['lun']
+            portal = self.js.json_data['Target'][name]['portal']
+            self.js.json_data['Portal'][portal]['target'].remove(name)
             self.js.update_data('Target', name, {'target_iqn': iqn, 'portal': portal, 'lun':lun})
             self.js.commit_data()
             s.prt_log(f'Modify {name} successfully', 0)
@@ -1122,6 +1137,8 @@ class Target():
 
         # 验证
         if not CRMConfig().get_crm_res_status(name,'iSCSITarget'):
+            portal = self.js.json_data['Target'][name]['portal']
+            self.js.json_data['Portal'][portal]['target'].remove(name)
             self.js.delete_data('Target', name)
             self.js.commit_data()
             print(f'Delete {name} successfully')
@@ -1168,16 +1185,12 @@ class Target():
         # 执行
         crm_config.start_res(name)
 
-
         # 验证
-        dict_portal = self.js.json_data['Portal']
         target = self.js.json_data['Target'][name]
-        portal = [portal for portal, portal_data in dict_portal.items() if portal_data['ip'] == target['ip']][0]
-
         try:
-            # 这里没有按照需求说的，使用次数的方式去进行状态的检查，而是时间，而且时间的设置也还没有考虑luns
+            # 这里没有按照需求说的，使用次数的方式去进行状态的检查，而是时间，并且设置也还没有考虑luns
             crm_config.monitor_status_by_time(name,'iSCSITarget','Started',20)
-            crm_config.monitor_status_by_time(f'{portal}_prtblk_off','portblock','Started',60)
+            crm_config.monitor_status_by_time(f'{target["portal"]}_prtblk_off','portblock','Started',60)
         except TimeoutError as msg:
             s.prt_log(msg, 1)
         else:
@@ -1207,6 +1220,7 @@ class Target():
             if not answer in ['y', 'yes', 'Y', 'YES']:
                 s.prt_log('already cancelled', 2)
 
+        s.prt_log('Trying to stop',0)
         # 执行
         crm_config.stop_res(name)
 

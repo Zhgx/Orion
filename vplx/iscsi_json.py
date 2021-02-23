@@ -80,7 +80,6 @@ class JsonOperation(object):
     @s.deco_json('check if it is used')
     def check_in_res(self,res,member,target):
         """
-        check 3 in 2 of 1
         检查目标资源在不在某个res的成员里面，res：Map，Target，Portal
         :param res:
         :param member: 比如HostGroup/DiskGroup
@@ -112,6 +111,7 @@ class JsonOperation(object):
     def delete_data(self, first_key, data_key):
         self.json_data[first_key].pop(data_key)
         return self.json_data[first_key]
+
 
 
     def append_member(self,iscsi_type,target,member,type=None):

@@ -7,13 +7,13 @@ class Usage():
     target {create(c)/modify(m)/delete(d)/show(s)/start/stop}'''
 
     target_create = '''
-    target create(c) TARGET -iqn IQN -target [PORTAL]'''
+    target create(c) TARGET -iqn IQN -portal [PORTAL]'''
 
     target_delete = '''
     target delete(d) TARGET'''
 
     target_modify = '''
-    target modify(m) TARGET -iqn [IQN] -target [PORTAL]'''
+    target modify(m) TARGET -iqn [IQN] -portal [PORTAL]'''
 
     target_show = '''
     target show(s)'''
@@ -182,9 +182,8 @@ class TargetCommands():
 
     @s.deco_record_exception
     def show(self, args):
-        # crm = ex.CRMData()
-        # crm.check()
-
+        crm = ex.CRMData()
+        crm.check()
         target = ex.Target()
         target.show()
 
@@ -193,17 +192,15 @@ class TargetCommands():
     def delete(self, args):
         crm = ex.CRMData()
         crm.check()
-
-        # target = ex.Target()
-        # target.delete(args.target)
-
-        print(args)
-
+        target = ex.Target()
+        target.delete(args.target)
 
     @s.deco_record_exception
     def modify(self, args):
         crm = ex.CRMData()
         crm.check()
+        target = ex.Target()
+        target.modify(args.target,args.iqn,args.portal)
 
         # if any([args.iqn,args.portal]):
         #     # target = ex.Target()
@@ -211,17 +208,20 @@ class TargetCommands():
         # else:
         #     s.prt_log('Please specify at least one data to be modified',1)
 
-        print(args)
 
 
     def start(self,args):
-        pass
-        print(args.target)
+        crm = ex.CRMData()
+        crm.check()
+        target = ex.Target()
+        target.start(args.target)
 
 
     def stop(self,args):
-        pass
-        print(args.target)
+        crm = ex.CRMData()
+        crm.check()
+        target = ex.Target()
+        target.stop(args.target)
 
 
     def print_target_help(self, *args):

@@ -98,7 +98,7 @@ class RollBack():
 
 
     @classmethod
-    def rollback(cls,type,*args):
+    def rollback(cls,type, *args):
         # 目前只用于Portal的回滚，之后Target的回滚可以根据需要增加一个判断类型的参数
         print("Execution error, resource rollback")
         if type == 'portal':
@@ -205,6 +205,18 @@ class CRMData():
         self.target = dict_target
         return dict_target
 
+    def get_iscsi_logical_unit(self):
+        # ilu : iscsi logical unit
+        re_ilu = re.compile(
+            r'primitive\s(\S+)\siSCSILogicalUnit.*\s*params\starget_iqn="(\S+)"\s.*allowed_initiators="(.*?)"')
+        result = s.re_findall(re_ilu, self.crm_conf_data)
+        dict_ilu = {}
+        for ilu in result:
+            dict_ilu.update({ilu[0]:{'target_iqn':ilu[1],'initiators':ilu[2].split(' ')}})
+        self.ilu = dict_ilu
+        return dict_ilu
+
+
     def get_order(self):
         """
         colocation col_pt1_prtblk_off inf: pt1_prtblk_off pt1
@@ -227,7 +239,7 @@ class CRMData():
             dict_colocation.update({colocation[0]:{colocation[1],colocation[2]}})
         return dict_colocation
 
-    def get_portal_data(self,vip_all,portblock_all,target_all):
+    def get_conf_portal(self,vip_all,portblock_all,target_all):
         """
         获取现在CRM的环境下所有Portal的数据，
         :param vip_all: 目前CRM环境的所有vip数据
@@ -252,28 +264,23 @@ class CRMData():
         return dict_portal
 
 
-    def get_target_conf(self,vip_all,target_all,iscsilun_all):
+    def get_conf_target(self,vip_all,target_all,iscsilogicalunit_all):
         """
         获取现在CRM环境下的所有Target数据，组成与配置文件同样的结构返回
-        :return:
         """
         dict_target = {}
-        """
-        "Target": {
-        "target_name": {
-            "target_iqn": "iqn.2020-04.feixitek.com:versaplx00",
-            "portal": "vip",
-            "lun": []
-        }
-        """
-        # target_name，target_iqn 通过传进来的target获取，
-        # portal，通过传进来的target的ip，进行目前vip的匹配，获取到
-        # lun，通过target_iqn，进行iscsi logical unit对应的lun的匹配
         for target in target_all:
             dict_target.update({target: {'target_iqn': target_all[target]['target_iqn'], 'portal':'','lun':[]}})
             for vip in vip_all:
                 # 对target添加portal
-                pass
+                if target_all[target]['ip'] == vip_all[vip]['ip']:
+                    dict_target[target]['portal'] = vip
+            for lun in iscsilogicalunit_all:
+                # 对target添加lun
+                if target_all[target]['target_iqn'] == iscsilogicalunit_all[lun]['target_iqn']:
+                    dict_target[target]['lun'].append(lun)
+        return dict_target
+
 
 
 
@@ -299,7 +306,7 @@ class CRMData():
                 if 'block' and 'unblock' in dict_portal[vip_name].values():
                     dict_portal[vip_name] = {pb_type:pb for pb,pb_type in dict_portal[vip_name].items()}
                     for ord_name,ord_data in list(order.items()):
-                        if [vip_name,dict_portal[vip_name]['block']] == ord_data:
+                        if [dict_portal[vip_name]['block'],vip_name] == ord_data:
                             # 这里没考虑符合条件的多个order的这种情况
                             dict_portal[vip_name].update({'order':ord_name})
 
@@ -324,7 +331,7 @@ class CRMData():
         # 收集了不符合规范的portal对应的所有组件，但是目前还没有进行提示
 
 
-    def check_env_sync(self,vip,portblock,target):
+    def check_env_sync(self,vip,portblock,target,iscsilogicalunit):
         """
         检查CRM环境与JSON配置文件所记录的Portal、Target的数据是否一致，不一致提示后退出
         :param vip_all:目前CRM环境的vip数据
@@ -340,8 +347,11 @@ class CRMData():
             s.prt_log('"Target" do not exist in the JSON configuration file',2)
             return
 
-        crm_portal = self.get_portal_data(vip,portblock,target)
+        crm_portal = self.get_conf_portal(vip,portblock,target)
         json_portal = copy.deepcopy(js.json_data['Portal']) # 防止对json对象的数据修改，进行深拷贝，之后修改数据结构再修改
+
+        crm_target = self.get_conf_target(vip,target,iscsilogicalunit)
+        json_target = copy.deepcopy(js.json_data['Target'])
 
 
         # 处理列表的顺序问题
@@ -351,10 +361,16 @@ class CRMData():
         for portal_name,portal_data in json_portal.items():
             portal_data['target'] = set(portal_data['target'])
 
+        for target_name,target_data in crm_target.items():
+            target_data['lun'] = set(target_data['lun'])
+
+        for target_name,target_data in json_target.items():
+            target_data['lun'] = set(target_data['lun'])
+
         if not crm_portal == json_portal:
             s.prt_log('The data Portal of the JSON configuration file is inconsistent, please check and try again',2)
             return
-        if not target == js.json_data['Target']:
+        if not crm_target == json_target:
             s.prt_log('The data Target of the JSON configuration file is inconsistent, please check and try again',2)
             return
 
@@ -366,10 +382,11 @@ class CRMData():
         vip = self.get_vip()
         portblock = self.get_portblock()
         target = self.get_target()
+        iscsilogicalunit = self.get_iscsi_logical_unit()
         order = self.get_order()
         colocation = self.get_colocation()
         self.check_portal_component(vip,portblock,order,colocation)
-        self.check_env_sync(vip,portblock,target)
+        self.check_env_sync(vip,portblock,target,iscsilogicalunit)
 
 
 class CRMConfig():
@@ -776,12 +793,24 @@ class ISCSILogicalUnit():
 
 
     # @RollBack
-    def modify(self,name,list_iqns):
+    def modify_initiators(self,name,list_iqns):
         iqns = ' '.join(list_iqns)
         cmd = f"crm config set {name}.allowed_initiators \"{iqns}\""
         result = execute_crm_cmd(cmd)
         if result['sts']:
             s.prt_log(f"Modify the allowed initiators of {name} successfully",0)
+            return True
+        else:
+            s.prt_log(result['rts'],1)
+            raise consts.CmdError
+
+
+    def modify_target_iqn(self,name,target_iqn):
+        # 适用于target_iqn只有一个的情况（一个target只使用一个portal）
+        cmd = f"crm config set {name}.target_iqn \"{target_iqn}\""
+        result = execute_crm_cmd(cmd)
+        if result['sts']:
+            s.prt_log(f"Modify the target iqn of {name} successfully",0)
             return True
         else:
             s.prt_log(result['rts'],1)

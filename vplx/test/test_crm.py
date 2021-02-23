@@ -602,7 +602,7 @@ class TestISCSILogicalUnit:
 
     def test_modify(self):
         """修改ISCSILogicalUnit映射iqn"""
-        assert self.iscsilu.modify('res_test',
+        assert self.iscsilu.modify_initiators('res_test',
                                    ['iqn.2020-04.feixitek.com:pytest01', 'iqn.2020-04.feixitek.com:pytest002'])
 
     def test_delete(self):
