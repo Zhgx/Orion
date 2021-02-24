@@ -92,8 +92,6 @@ function node_oprt() {
 							         url: vplxIp+ "/node/show/data", //数据接口
 							         title: '用户表'
 							         ,toolbar: '#toolbarDemo',
-							         page: true, //开启分页,
-							         //,
 							         cols: [[ //表头
 							         {
 							             type: 'checkbox',
@@ -107,13 +105,11 @@ function node_oprt() {
 							         {
 							             field: 'node_type',
 							             title: 'node_type',
-							             sort: true,
-							             width: 130
+							             sort: true
 							         },
 							         {
 							             field: 'res_num',
 							             title: 'res_num',
-							             width: 100,
 							             event: 'collapse',
 							             templet: function(d) {
 							                 return '<div style="position: relative;\n' + '    padding: 0 10px 0 20px;">' + d.res_num + '<i style="left: 0px;" lay-tips="展开" class="layui-icon layui-colla-icon layui-icon-right"></i></div>'
@@ -122,26 +118,19 @@ function node_oprt() {
 							         {
 							             field: 'stp_num',
 							             title: 'stp_num',
-							             width: 120,
 							             sort: true
 							         },
 							         {
 							             field: 'addr',
 							             title: 'addr',
-							             width: 120,
 							             sort: true
 							         },
 							         {
 							             field: 'status',
 							             title: 'status',
-							             width: 120,
 							             sort: true
 							         },
-							         {
-							             align: 'center',
-							             width: 200,
-							             toolbar: '#barDemo'
-							         }]]
+							        ]]
 							     });
 
 									
@@ -264,11 +253,7 @@ function node_oprt() {
 							                             field: 'status',
 							                             title: 'status'
 							                         },
-							                         {
-							                             fixed: 'right',
-							                             align: 'center',
-							                             toolbar: '#barDemo1'
-							                         }]]
+							                        ]]
 							                     });
 
 							                 }

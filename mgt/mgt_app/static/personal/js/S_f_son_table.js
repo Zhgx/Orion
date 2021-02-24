@@ -99,7 +99,6 @@ function storagepool_oprt() {
 															+ "/storagepool/show/data", // 数据接口
 													title : '用户表',
 													toolbar : '#toolbarDemo',
-													page : true,
 													cols : [ [ // 表头
 															{
 																type : 'checkbox'
@@ -168,12 +167,7 @@ function storagepool_oprt() {
 																width : 120,
 																sort : true
 															},
-
-															{
-																align : 'center',
-																toolbar : '#barDemo',
-																width : 200
-															} ] ]
+ ] ]
 												});
 
 										table
@@ -332,12 +326,7 @@ function storagepool_oprt() {
 																								field : 'used',
 																								title : 'used'
 																							},
-																							{
-																								fixed : 'right',
-																								width : 80,
-																								align : 'center',
-																								toolbar : '#barDemo1'
-																							} ] ]
+																							] ]
 																				});
 
 																	}

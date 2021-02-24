@@ -28,6 +28,10 @@
         ],
         "h1": [
             "h3"
+        ],
+        "hg1": [
+            "h1",
+            "h2"
         ]
     },
     "DiskGroup": {
@@ -52,7 +56,7 @@
         "map1": {
             "HostGroup": [
                 "hg6",
-                "hg7"
+                "hg1"
             ],
             "DiskGroup": [
                 "DG1"

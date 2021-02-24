@@ -106,8 +106,10 @@ class Process_data():
         num_node = int(get_node_num()) + 1
         list_result = []
         for i in range(1, num_node):
+            print(i)
             dict_one = {'key_nodenum':i}
             list_result.append(dict_one)
+        print(list_result)
         return list_result
 
     # resourece表格格式

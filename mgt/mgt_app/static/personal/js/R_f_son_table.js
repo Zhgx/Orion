@@ -98,7 +98,6 @@ function resource_oprt() {
 															+ "/resource/show/data", // 数据接口
 													title : '用户表',
 													toolbar : '#toolbarDemo',
-													page : true,
 													cols : [ [ // 表头
 															{
 																type : 'checkbox'
@@ -140,11 +139,7 @@ function resource_oprt() {
 																width : 100,
 																sort : true
 															},
-															{
-																align : 'center',
-																width : 200,
-																toolbar : '#barDemo'
-															} ] ]
+															 ] ]
 												});
 
 										table
@@ -298,11 +293,7 @@ function resource_oprt() {
 																								title : 'status',
 																								sort : true
 																							},
-																							{
-																								fixed : 'right',
-																								align : 'center',
-																								toolbar : '#barDemo1'
-																							} ] ]
+																							 ] ]
 																				});
 
 																	}
@@ -632,13 +623,16 @@ layui
 						language : 'en',
 						direction : 'down',
 						autoRow : true,
+//						radio: true,
 						on : function(data) {
-							console.log(data);
-
-							// arr:  当前多选已选中的数据
 							var arr = data.arr;
-							// change, 此次选择变化的数据,数组
 							var change = data.change;
+							for(let i in arr){
+								if (change[0].parentId==arr[i].parentId) { //循环判断这次选择变化的和当前多选已选中是不是同一组数据
+									arr.splice(i,1,change[0]);//如果是同一组则替换掉
+								}
+							}
+							return Array.from(new Set(arr));//去重并返回
 						},
 						data : []
 					})

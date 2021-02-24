@@ -54,7 +54,6 @@
 							</div>
 							<div class="layui-form-item">
 								<div class="layui-input-block">
-									<button type="reset" class="layui-btn layui-btn-primary">重置</button>
 									<button type="submit" class="layui-btn" lay-submit=""
 										lay-filter="Resource">Create</button>
 									<button type="submit" class="layui-btn" lay-submit=""
@@ -103,7 +102,6 @@
 							</div>
 							<div class="layui-form-item">
 								<div class="layui-input-block">
-									<button type="reset" class="layui-btn layui-btn-primary">重置</button>
 									<button type="submit" class="layui-btn" lay-submit=""
 										lay-filter="Resource_auto">Create</button>
 									<button type="submit" class="layui-btn" lay-submit=""
@@ -127,7 +125,7 @@
 								<div class="layui-inline">
 									<label class="layui-form-label">Node</label>
 									<div class="layui-input-inline">
-										<select name="node" id="Node" lay-verify="required"
+										<select name="node" id="Node" multiple=""  lay-verify="required"
 											lay-search="">
 										</select>
 									</div>
@@ -137,7 +135,6 @@
 							</div>
 							<div class="layui-form-item">
 								<div class="layui-input-block">
-									<button type="reset" class="layui-btn layui-btn-primary">重置</button>
 									<button type="submit" class="layui-btn" lay-submit=""
 										lay-filter="Resource_dis">Create</button>
 								</div>
@@ -157,6 +154,7 @@
 		</div>
 	</div>
 </body>
+<!--  
 <script type="text/html" id="toolbarDemo">
   <div class="layui-btn-container">
     <button class="layui-btn layui-btn-sm" lay-event="getCheckData">获取选中数据</button>
@@ -175,7 +173,7 @@
   <a class="layui-btn layui-btn-normal layui-btn-xs" lay-event="edit">编辑</a>
   <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
 	</script>
-
+-->
 
 <script type="text/javascript"
 	src="{{url_for('static',filename='personal/js/JQuery.js')}}"></script>

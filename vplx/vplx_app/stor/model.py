@@ -254,6 +254,8 @@ class LINSTORView(views.MethodView):
         lvm = pc.get_option_lvm()
         sp = pc.get_option_sp()
         node_create = pc.get_option_node()
+        
+        print(node_create)
         node_num = pc.get_option_nodenum()
         return cors_data("success")
 
@@ -263,44 +265,17 @@ class lvmView(views.MethodView):
     def get(self):
         return cors_data(lvm)
 
- 
-# test = {
-#         "code": 0,
-#         "msg": "success",
-#         "data":  [{'name': 'Node1',
-#                     'children': [{'name': '1', 'value': '1','F':'Node1'},
-#                              {'name': '2', 'value': '2','F':'Node2'},
-#                              {'name': '3','value': '3','F':'Node3'},
-#                              {'name': '4', 'value': '4','F':'Node4'}]
-#                   },
-#                   {'name': 'Node2',
-#                   'children': [{'name': '5', 'value': '5','F':'Node5'},
-#                             { 'name': '6','value': '6','F':'Node6'},
-#                              {'name': '7', 'value': '7','F':'Node7'},
-#                              {'name': '8', 'value': '8','F':'Node8'}]
-#                 }]
-#         }
-# # 
-# #  [{'NodeName': 'Node1',
-# #                     'Spool': [{'device_name': '1'},
-# #                              {'device_name': '2'},
-# #                              {'device_name': '3'},
-# #                              {'device_name': '4'}]
-# #                   },
-# #                   {'NodeName': 'Node2',
-# #                   'Spool': [{'device_name': '5'},
-# #                             { 'device_name': '6'},
-# #                              {'device_name': '7'},
-# #                              {'device_name': '8'}]
-# #                 }]
-
-
-
+sp2 = {'code': 0, 'msg': '', 'count': 1000, 
+'data':
+ [{'name': 'ubuntu', 'children': [{'name': 'DfltDisklessStorPool', 'node_name': 'ubuntu', 'value': 1,'parentId':1},
+                                   {'name': 'pytest_sp1', 'node_name': 'ubuntu', 'value': 2,'parentId':1}]},
+{'name': '1111', 'children': [{'name': 'DfltDisklessStorPool22', 'node_name': '1111', 'value': 3,'parentId':2},
+                                   {'name': 'pytest_sp1222', 'node_name': '1111', 'value': 4,'parentId':2}]}]}
 
 class spView(views.MethodView):  
     def get(self):
 #         return cors_data(sp)
-        return cors_data(sp)
+        return cors_data(sp2)
 
     
     
