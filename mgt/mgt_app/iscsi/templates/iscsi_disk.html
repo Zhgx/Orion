@@ -1,0 +1,159 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Disk</title>
+<meta charset="utf-8" />
+<meta name="viewport"
+	content="width=device-width, initial-scale=1, user-scalable=no" />
+<link
+	href="{{url_for('static',filename='bootstrap-3.3.7/dist/css/bootstrap.min.css')}}"
+	rel="stylesheet" type="text/css" />
+<style type="text/css">
+body {
+	padding: 10px;
+}
+
+.red {
+	color: #FF0000;
+}
+
+table tbody {
+	display: block;
+	height: 150px;
+	overflow-y: scroll;
+}
+
+table thead, tbody tr {
+	display: table;
+	width: 100%;
+	table-layout: fixed;
+}
+
+table thead {
+	width: calc(100%)
+}
+
+table thead th {
+	background: #ccc;
+	text-align: center;
+}
+
+table tr td {
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	-o-text-overflow: ellipsis;
+	-moz-text-overflow: ellipsis;
+	-webkit-text-overflow: ellipsis;
+}
+
+table td:hover { /* 鼠标滑过  显示隐藏的内容  伴有横向的滚动条 */
+	overflow: auto;
+	text-overflow: clip;
+}
+</style>
+
+<style type="text/css">
+.black_overlay {
+	display: none;
+	position: absolute;
+	top: 0%;
+	left: 0%;
+	width: 100%;
+	height: 100%;
+	background-color: black;
+	z-index: 1001;
+	-moz-opacity: 0.8;
+	opacity: .80;
+	filter: alpha(opacity = 80);
+}
+
+.white_content {
+	display: none;
+	position: absolute;
+	top: 50%;
+	left: 36%;
+	width: 27%;
+	height: 70px;
+	padding: 12px;
+	/* border: 3px solid orange; */
+	background-color: #66CC00;
+	z-index: 1002;
+	overflow: hidden;
+}
+
+.failed_content {
+	display: none;
+	position: absolute;
+	top: 50%;
+	left: 36%;
+	width: 27%;
+	height: 70px;
+	padding: 12px;
+	/* border: 3px solid orange; */
+	background-color: #993333;
+	z-index: 1002;
+	overflow: hidden;
+	width: 27%;
+	height: 70px;
+	padding: 12px;
+}
+</style>
+</head>
+<body >
+	<div class="container">
+		<div class="row clearfix">
+			<div class="page-header">
+				<h1>
+					<small>Show</small>
+				</h1>
+			</div>
+			<div class="row">
+				<div class="col-xs-8 ">
+					<table id="Disk_Table" class="table table-hover table-bordered"
+						border="1">
+						<thead>
+							<tr>
+								<th style="width: 100px;">Disk</th>
+								<th>Path</th>
+							</tr>
+						</thead>
+						<tbody id="Disk_Table_Show">
+						</tbody>
+					</table>
+
+				</div>
+				<div class="col-xs-4 "></div>
+			</div>
+		</div>
+	</div>
+	<div id="light_success" class="white_content">
+		<p id="P_text_success"
+			style="text-align: center; font-size: 30px; color: gray;"></p>
+	</div>
+	<div id="light_failed" class="failed_content">
+		<p id="P_text_failed"
+			style="text-align: center; font-size: 30px; color: oldlace;"></p>
+	</div>
+	<div id="fade" class="black_overlay"></div>
+
+
+	<!-- Scripts -->
+	<script type="text/javascript"
+		src="{{url_for('static',filename='assets/js/jquery.min.js')}}"></script>
+	<script type="text/javascript"
+		src="{{url_for('static',filename='bootstrap-3.3.7/dist/js/bootstrap.js')}}"></script>
+	<script type="text/javascript"
+		src="{{url_for('static',filename='bootstrap-select-1.12.4/dist/js/bootstrap-select.js')}}"></script>
+	<script type="text/javascript"
+		src="{{url_for('static',filename='personal/js/iSCSI-disk-create.js')}}"></script>
+	<script type="text/javascript"
+		src="{{url_for('static',filename='layui/layui.all.js')}}"></script>
+
+	<script type="text/javascript">
+
+
+
+</script>
+</body>
+</html>

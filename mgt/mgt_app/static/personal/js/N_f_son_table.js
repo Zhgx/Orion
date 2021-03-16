@@ -39,6 +39,10 @@ function node_show_data_log() {
 	$.ajax({
 		type : "get",
 		url:vplxIp+ "/node/show/data",
+		data : {
+			tid : tid,
+			ip : mgtIp
+		},
 		async:false,
 		success : function(resource_data) {
 			write_to_log(tid,'DATA','ROUTE',vplxIp,'/node/show/data',JSON.stringify(resource_data.data));
@@ -88,8 +92,6 @@ function node_oprt() {
 							         url: vplxIp+ "/node/show/data", //数据接口
 							         title: '用户表'
 							         ,toolbar: '#toolbarDemo',
-							         page: true, //开启分页,
-							         //,
 							         cols: [[ //表头
 							         {
 							             type: 'checkbox',
@@ -103,13 +105,11 @@ function node_oprt() {
 							         {
 							             field: 'node_type',
 							             title: 'node_type',
-							             sort: true,
-							             width: 130
+							             sort: true
 							         },
 							         {
 							             field: 'res_num',
 							             title: 'res_num',
-							             width: 100,
 							             event: 'collapse',
 							             templet: function(d) {
 							                 return '<div style="position: relative;\n' + '    padding: 0 10px 0 20px;">' + d.res_num + '<i style="left: 0px;" lay-tips="展开" class="layui-icon layui-colla-icon layui-icon-right"></i></div>'
@@ -118,26 +118,19 @@ function node_oprt() {
 							         {
 							             field: 'stp_num',
 							             title: 'stp_num',
-							             width: 120,
 							             sort: true
 							         },
 							         {
 							             field: 'addr',
 							             title: 'addr',
-							             width: 120,
 							             sort: true
 							         },
 							         {
 							             field: 'status',
 							             title: 'status',
-							             width: 120,
 							             sort: true
 							         },
-							         {
-							             align: 'center',
-							             width: 200,
-							             toolbar: '#barDemo'
-							         }]]
+							        ]]
 							     });
 
 									
@@ -260,11 +253,7 @@ function node_oprt() {
 							                             field: 'status',
 							                             title: 'status'
 							                         },
-							                         {
-							                             fixed: 'right',
-							                             align: 'center',
-							                             toolbar: '#barDemo1'
-							                         }]]
+							                        ]]
 							                     });
 
 							                 }
@@ -274,20 +263,21 @@ function node_oprt() {
 									      layer.msg('查看操作');
 									    } else if(obj.event === 'del'){
 									    	  data_dict = obj.data
-										      resource_data =  data_dict.resource
-									      layer.confirm('真的删除'+ resource_data+'的数据么' , function(index){
+									    	  console.log(data_dict);
+										      node_data =  data_dict.node
+									      layer.confirm('真的删除'+ node_data+'的数据么' , function(index){
 									        obj.del(); // 删除对应行（tr）的DOM结构
 									        layer.close(index);
 									        // 这里一般是发送修改的Ajax请求
 								            // 同步更新表格和缓存对应的值
 									        // 向服务端发送删除指令
 									    	$.ajax({
-									    		url :  vplxIp +'/resource/show/delete',
+									    		url :  vplxIp +'/node/show/delete',
 									    		type : "get",
 									    		dataType : "json",
 									    		data : {
 									    			tid : tid,
-									    			resource_data : resource_data
+									    			node_data : node_data
 									    		},
 									    		async : false,
 									    		success : function(delete_result) {
@@ -372,64 +362,6 @@ function node_oprt() {
 							     }
 
 							 });
-					 
-					 
-						layui.use(['form', 'layedit', 'laydate','element'], function(){
-							  var form = layui.form
-							  ,layer = layui.layer
-							  ,layedit = layui.layedit
-							  ,laydate = layui.laydate;
-							  var $ = layui.jquery
-							  ,element = layui.element;
-
-								 
-								 // 监听提交
-								  form.on('submit(demo1)', function(data){
-									  resource_data = JSON.stringify(data.field);
-										$.ajax({
-								    		url :  vplxIp +'/LINSTOR/Create',
-								    		type : "get",
-								    		dataType : "json",
-								    		data : {
-								    			tid : tid,
-								    			resource_data : resource_data
-								    		},
-								    		async : false,
-								    		success : function(delete_result) {
-								    		}
-								    	});
-									  
-								  });
-						});
-						
-						layui.use(['form', 'layedit', 'laydate','element'], function(){
-							  var form = layui.form
-							  ,layer = layui.layer
-							  ,layedit = layui.layedit
-							  ,laydate = layui.laydate;
-							  var $ = layui.jquery
-							  ,element = layui.element;
-
-								 
-								 // 监听提交
-								  form.on('submit(demo1)', function(data){
-									  resource_data = JSON.stringify(data.field);
-										$.ajax({
-								    		url :  vplxIp +'/LINSTOR/Create',
-								    		type : "get",
-								    		dataType : "json",
-								    		data : {
-								    			tid : tid,
-								    			resource_data : resource_data
-								    		},
-								    		async : false,
-								    		success : function(delete_result) {
-								    		}
-								    	});
-									  
-								  });
-						});
-					 
 
 				},
 				error:function () {
@@ -441,5 +373,64 @@ function node_oprt() {
 };
 node_oprt();
 
+
+
+layui.use(['form', 'layedit', 'laydate','element'], function(){
+	  var form = layui.form
+	  ,layer = layui.layer
+	  ,layedit = layui.layedit
+	  ,laydate = layui.laydate;
+	  var $ = layui.jquery
+	  ,element = layui.element;
+
+		 
+		 // 监听提交
+		  form.on('submit(demo1)', function(data){
+			  resource_data = JSON.stringify(data.field);
+				$.ajax({
+		    		url :  vplxIp +'/LINSTOR/Create',
+		    		type : "get",
+		    		dataType : "json",
+		    		data : {
+		    			tid : tid,
+		    			resource_data : resource_data
+		    		},
+		    		async : false,
+		    		success : function(delete_result) {
+		    		}
+		    	});
+			  
+		  });
+});
+
+layui.use(['form', 'layedit', 'laydate','element'], function(){
+	  var form = layui.form
+	  ,layer = layui.layer
+	  ,layedit = layui.layedit
+	  ,laydate = layui.laydate;
+	  var $ = layui.jquery
+	  ,element = layui.element;
+
+		 
+		 // 监听提交
+		  form.on('submit(demo1)', function(data){
+			  Node_data = JSON.stringify(data.field);
+				$.ajax({
+		    		url :  vplxIp +'/LINSTOR/Node/Create',
+		    		type : "get",
+		    		dataType : "json",
+		    		data : {
+		    			tid : tid,
+		    			node : Node_data
+		    		},
+		    		async : false,
+		    		success : function(craete_result) {
+		    			console.log(craete_result);
+		    			alert(craete_result["result"]);
+		    		}
+		    	});
+			  
+		  });
+});
 
 
