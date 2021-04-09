@@ -5,7 +5,7 @@ import traceback
 
 import iscsi_json
 import sundry as s
-from execute.linstor import Linstor
+from execute.linstor_operation import Linstor
 from execute.crm import RollBack,CRMData, CRMConfig,IPaddr2,PortBlockGroup,Colocation,Order,ISCSITarget,ISCSILogicalUnit
 import log
 import consts
@@ -183,7 +183,18 @@ class Host():
     def __init__(self):
         self.js = iscsi_json.JsonOperation()
 
-    def _check_iqn(self, iqn):
+
+
+    def _get_all_targetIqn(self):
+        data = self.js.json_data['Target']
+        return [x['target_iqn'] for x in data.values()]
+
+    def _check_iqn_availability(self,iqn):
+        data = self.js.json_data['Host']
+        if not iqn in [x for x in data.values()]:
+            return True
+
+    def _check_iqn_format(self, iqn):
         """
         判断iqn是否符合格式
         """
@@ -196,9 +207,14 @@ class Host():
         if self.js.check_key('Host', host):
             s.prt_log(f"Fail! The Host {host} already existed.", 1)
             return
-        if not self._check_iqn(iqn):
+        if not self._check_iqn_format(iqn):
             s.prt_log(f"The format of IQN is wrong. Please confirm and fill in again.", 1)
             return
+
+        if not self._check_iqn_availability(iqn):
+            s.prt_log(f"The iqn has been used",1)
+            return
+
         self.js.update_data("Host", host, iqn)
         self.js.commit_data()
         s.prt_log("Create success!", 0)
@@ -245,9 +261,14 @@ class Host():
         if not self.js.check_key('Host', host):
             s.prt_log(f"Fail! Can't find {host}", 1)
             return
-        if not self._check_iqn(iqn):
+        if not self._check_iqn_format(iqn):
             s.prt_log(f"The format of IQN is wrong. Please confirm and fill in again.", 1)
             return
+
+        if not self._check_iqn_availability(iqn):
+            s.prt_log(f"The iqn has been used",1)
+            return
+
 
         json_data_before = copy.deepcopy(self.js.json_data)
         self.js.update_data('Host', host, iqn)
@@ -997,6 +1018,11 @@ class Target():
         self.js = iscsi_json.JsonOperation()
 
 
+    def _get_all_targetIqn(self):
+        data = self.js.json_data['Target']
+        return [x['target_iqn'] for x in data.values()]
+
+
     def create(self,name, iqn, portal):
         # 前置判断
         if not self._check_name(name):
@@ -1012,9 +1038,10 @@ class Target():
             s.prt_log(f'{name} does not exist, please use the existing portal', 1)
             return
 
-        # 检查iqn是否被使用
-        pass
-
+        # 检查iqn是否被使用(不进行集群其他节点的检查)
+        if iqn in self._get_all_targetIqn():
+            s.prt_log(f'The iqn:"{iqn}" has been used', 1)
+            return
 
         # 执行
         dict_portal = self.js.json_data['Portal'][portal]
@@ -1055,6 +1082,9 @@ class Target():
                 s.prt_log(f'Wrong iqn：{iqn}. Please enter the correct iqn.', 1)
                 return
             # iqn的验证，同创建一样
+            if iqn in self._get_all_targetIqn():
+                s.prt_log(f'The iqn:"{iqn}" has been used', 1)
+                return
 
         dict_target = self.js.json_data['Target'][name]
         dict_portal = self.js.json_data['Portal'][portal]

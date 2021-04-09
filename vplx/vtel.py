@@ -53,7 +53,6 @@ class VtelCLI(object):
     """
     def __init__(self):
         self.parser = MyArgumentParser(prog="vtel")
-
         self.logger = log.Log()
         self._node_commands = NodeCommands()
         self._resource_commands = ResourceCommands()
@@ -78,11 +77,23 @@ class VtelCLI(object):
         subp = self.parser.add_subparsers(metavar='',
                                      dest='subargs_vtel')
 
+
         self.parser.add_argument('-v',
                             '--version',
                             dest='version',
                             help='Show current version',
                             action='store_true')
+
+
+        parser_apply = subp.add_parser(
+            'apply',
+            help='Apply a configuration file',
+        )
+        parser_apply.add_argument(
+            'file',
+            help='Enter the name of the configuration file to be applied(yaml file)')
+
+
 
         parser_stor = subp.add_parser(
             'stor',
