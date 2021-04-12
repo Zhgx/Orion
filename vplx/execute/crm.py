@@ -197,7 +197,7 @@ class CRMData():
 
     def get_target(self):
         re_target = re.compile(
-            r'primitive\s(\S+)\siSCSITarget.*\s*params\siqn="(\S+)"\s.*portals="([0-9.]+):(\d+)"')
+            r'primitive\s(\S+)\siSCSITarget.*\s*params\siqn="?(\S+?)"?\s.*portals="([0-9.]+):(\d+)"')
         result = s.re_findall(re_target, self.crm_conf_data)
         dict_target = {}
         for target in result:
@@ -218,12 +218,6 @@ class CRMData():
 
 
     def get_order(self):
-        """
-        colocation col_pt1_prtblk_off inf: pt1_prtblk_off pt1
-        colocation col_pt1_prtblk_on inf: pt1_prtblk_on pt1
-        order or_pt1_prtblk_on pt1 pt1_prtblk_on
-        :return:
-        """
         re_order = re.compile(r'^order\s(.*?)\s(.*?)\s(.*?)$',re.MULTILINE)
         result = s.re_findall(re_order,self.crm_conf_data)
         dict_order = {}

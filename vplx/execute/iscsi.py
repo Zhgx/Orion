@@ -5,7 +5,7 @@ import traceback
 
 import iscsi_json
 import sundry as s
-from execute.linstor_operation import Linstor
+from execute.linstor_api import LinstorAPI
 from execute.crm import RollBack,CRMData, CRMConfig,IPaddr2,PortBlockGroup,Colocation,Order,ISCSITarget,ISCSILogicalUnit
 import log
 import consts
@@ -147,12 +147,12 @@ class Disk():
 
     def update_disk(self):
         # 更新disk数据并返回
-        linstor = Linstor()
-        linstor_res = linstor.get_linstor_data(
-            'linstor --no-color --no-utf8 r lv')
+        linstor = LinstorAPI()
+        resource_all = linstor.get_resource()
         disks = {}
-        for d in linstor_res:
-            disks.update({d[1]: d[5]})
+        for res in resource_all:
+            # Resource,DeviceName
+            disks.update({res['Resource']: res['DeviceName']})
         self.js.cover_data('Disk', disks)
         self.js.commit_data()
         return disks
@@ -1031,11 +1031,16 @@ class Target():
         if not self._check_iqn(iqn):
             s.prt_log(f'Wrong iqn：{iqn}. Please enter the correct iqn.', 1)
             return
-        if self.js.check_key('Target', name):
-            s.prt_log(f'{name} already exists, please use another name', 1)
+
+        if name in self.js.get_all_primitive_name():
+            s.prt_log(f'This name is already in use, please use another name',1)
             return
+
+        # if self.js.check_key('Target', name):
+        #     s.prt_log(f'{name} already exists, please use another name', 1)
+        #     return
         if not self.js.check_key('Portal',portal):
-            s.prt_log(f'{name} does not exist, please use the existing portal', 1)
+            s.prt_log(f'{portal} does not exist, please use the existing portal', 1)
             return
 
         # 检查iqn是否被使用(不进行集群其他节点的检查)
@@ -1052,6 +1057,7 @@ class Target():
             ISCSITarget().create(name,iqn,ip,port)
             Order.create(f'or_{name}_{portal}',portal, name)
             Colocation.create(f'col_{name}_{portal}', name, portal)
+            # raise TypeError
         except Exception as ex:
             self.logger.write_to_log('DATA', 'DEBUG', 'exception', 'Rollback', str(traceback.format_exc()))
             RollBack.rollback('target', ip, port, iqn)
@@ -1072,11 +1078,6 @@ class Target():
         if not self.js.check_key('Target',name):
             s.prt_log(f"Fail！Can't find {name}", 1)
             return
-
-        if portal:
-            if not self.js.check_key('Portal',portal):
-                s.prt_log(f"Fail！Can't find {portal}", 1)
-                return
         if iqn:
             if not self._check_iqn(iqn):
                 s.prt_log(f'Wrong iqn：{iqn}. Please enter the correct iqn.', 1)
@@ -1086,8 +1087,17 @@ class Target():
                 s.prt_log(f'The iqn:"{iqn}" has been used', 1)
                 return
 
+
+        if portal:
+            if portal == self.js.json_data['Target'][name]['portal']:
+                s.prt_log(f'The portal:"{portal}" has been used', 1)
+                return
+            if not self.js.check_key('Portal',portal):
+                s.prt_log(f"Fail！Can't find {portal}", 1)
+                return
+
         dict_target = self.js.json_data['Target'][name]
-        dict_portal = self.js.json_data['Portal'][portal]
+
 
         if portal == dict_target['portal'] and iqn == dict_target['target_iqn']:
             s.prt_log(f'The parameters are the same, no need to modify',1)
@@ -1099,24 +1109,33 @@ class Target():
             if not answer in ['y', 'yes', 'Y', 'YES']:
                 s.prt_log('Modify canceled', 2)
 
-        try:
-            obj_target = ISCSITarget()
-            if iqn and iqn != dict_target['target_iqn']:
+
+        obj_target = ISCSITarget()
+        if iqn and iqn != dict_target['target_iqn']:
+            try:
                 obj_target.modify_iqn(name, iqn)
-            if portal and portal != dict_target['portal']:
+            except Exception as ex:
+                self.logger.write_to_log('DATA', 'DEBUG', 'exception', 'Rollback', str(traceback.format_exc()))
+                RollBack.rollback('target','','',iqn)
+                return
+        if portal and portal != dict_target['portal']:
+            dict_portal = self.js.json_data['Portal'][portal]
+            try:
                 obj_target.modify_portal(name, dict_portal['ip'], dict_portal['port'])
                 Order.delete(f'or_{name}_{dict_target["portal"]}')
                 Colocation.delete(f'col_{name}_{dict_target["portal"]}')
                 Order.create(f'or_{name}_{portal}', portal, name)
                 Colocation.create(f'col_{name}_{portal}', name, portal)
-        except Exception as ex:
-            self.logger.write_to_log('DATA', 'DEBUG', 'exception', 'Rollback', str(traceback.format_exc()))
-            RollBack.rollback('target', dict_portal['ip'], dict_portal['port'], iqn)
-            Order.delete(f'or_{name}_{portal}')
-            Colocation.delete(f'col_{name}_{portal}')
-            return
+            except Exception as ex:
+                self.logger.write_to_log('DATA', 'DEBUG', 'exception', 'Rollback', str(traceback.format_exc()))
+                RollBack.rollback('target',dict_portal['ip'],dict_portal['port'],'')
+                Order.delete(f'or_{name}_{portal}')
+                Colocation.delete(f'col_{name}_{portal}')
+                Order.create(f'or_{name}_{dict_target["portal"]}', dict_target['portal'], name)
+                Colocation.create(f'col_{name}_{dict_target["portal"]}', name, dict_target['portal'])
+                return
 
-
+        # 对有影响的lun做修改
         for lun in dict_target['lun']:
             # 修改这些lun的target_iqn
             try:
@@ -1126,19 +1145,27 @@ class Target():
                 # 回滚待设置
                 return
 
-
-        # 验证
+        # 验证及数据更新
         crm_data = CRMData()
         target_now = crm_data.get_target()[name]
-        if iqn == target_now['target_iqn']\
-            and dict_portal['ip'] == target_now['ip'] \
-            and dict_portal['port'] == target_now['port']:
-            lun = dict_portal['lun']
-            portal = self.js.json_data['Target'][name]['portal']
-            self.js.json_data['Portal'][portal]['target'].remove(name)
-            self.js.update_data('Target', name, {'target_iqn': iqn, 'portal': portal, 'lun':lun})
-            self.js.commit_data()
-            s.prt_log(f'Modify {name} successfully', 0)
+        json_data_target = self.js.json_data['Target'][name]
+        json_data_portal = self.js.json_data['Portal']
+        if iqn:
+            if iqn == target_now['target_iqn']:
+                json_data_target['target_iqn'] = iqn
+        if portal:
+            if dict_portal['ip'] == target_now['ip'] and dict_portal['port'] == target_now['port']:
+                # lun = dict_portal['lun']
+                # portal = self.js.json_data['Target'][name]['portal']
+                json_data_portal[portal]['target'].append(name)
+                json_data_portal[json_data_target['portal']]['target'].remove(name)
+                json_data_target['portal'] = portal
+
+        self.js.cover_data('Portal',json_data_portal)
+        self.js.update_data('Target', name, json_data_target)
+        self.js.commit_data()
+        s.prt_log(f'Modify {name} successfully', 0)
+
 
 
     def delete(self, name):
@@ -1270,7 +1297,7 @@ class Target():
 
     def _check_iqn(self, iqn):
         result = s.re_findall(
-            r'^iqn\.\d{4}-\d{2}\.[a-zA-Z0-9][-a-zA-Z0-9]{0,62}(\.[a-zA-Z0-9][-a-zA-Z0-9]{0,62})+(:[a-zA-Z0-9.:-]+)?$',
+            r'^iqn\.\d{4}-(0[0-9]|1[0-9]|20)\.[a-z0-9][-a-z0-9]{0,62}(\.[a-z0-9][-a-z0-9]{0,62})+(:[a-z0-9.:-]+)?$',
             iqn)
         return True if result else False
 
@@ -1281,7 +1308,7 @@ class Target():
         :param name: portal name
         :return:
         """
-        time.sleep(1)
+        time.sleep(2)
         obj_crm = CRMConfig()
         status = obj_crm.get_crm_res_status(name, type='iSCSITarget')
         if status == 'Started':

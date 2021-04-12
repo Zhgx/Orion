@@ -202,4 +202,14 @@ class JsonOperation(object):
 
 
 
+    def get_all_primitive_name(self):
+        """
+        获取所有crm中的primitive资源名（对应配置文件中的portal,target,logicalunit）
+        :return:
+        """
+        lst = list(self.json_data['Portal'].keys())
+        lst.extend(list(self.json_data['Target'].keys()))
+        #self.json_data['LogicalUnit']
+
+        return lst
 

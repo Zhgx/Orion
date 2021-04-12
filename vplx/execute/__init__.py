@@ -1,7 +1,6 @@
 from .crm import CRMData
 from .crm import CRMConfig
 from .crm import IPaddr2,PortBlockGroup,Order,Colocation,ISCSITarget
-from .linstor_operation import Linstor
 from .linstor_api import LinstorAPI
 from .lvm import LVM
 from .stor import Node,Resource,StoragePool

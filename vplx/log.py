@@ -13,7 +13,6 @@ LOG_PATH = '../vplx/'
 CLI_LOG_NAME = 'cli.log'
 WEB_LOG_NAME = 'web.log'
 
-logging.basicConfig(level=logging.DEBUG,filename=f'{LOG_PATH}{CLI_LOG_NAME}')
 
 def get_username():
     return getpass.getuser()

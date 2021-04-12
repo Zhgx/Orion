@@ -7,7 +7,7 @@ class Usage():
     target {create(c)/modify(m)/delete(d)/show(s)/start/stop}'''
 
     target_create = '''
-    target create(c) TARGET -iqn IQN -portal [PORTAL]'''
+    target create(c) TARGET -iqn [IQN] -portal [PORTAL]'''
 
     target_delete = '''
     target delete(d) TARGET'''
