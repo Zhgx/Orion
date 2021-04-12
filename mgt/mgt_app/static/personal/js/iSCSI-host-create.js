@@ -293,6 +293,8 @@ function btn_show(obj) {
 	 var td_iqn = td[1].innerHTML
 	 }
 	}
+	
+	console.log("11111");
 	console.log(td_host);
 	console.log(td_iqn);
 	$("#host_name_hidden").val(td_host);
@@ -300,6 +302,8 @@ function btn_show(obj) {
 }
 
 function affirm_modifiy(obj){
+	host_name = $("#host_name_hidden").val();
+	host_iqn = $("#host_iqn_hidden").val();
 	//打开二次确认弹窗
 	$('#host_info_model').modal("show");
 	$.ajax({
@@ -312,8 +316,8 @@ function affirm_modifiy(obj){
 			host_iqn: host_iqn
 		},
 		async : false,
-		success : function(hg_result) {
-			$("#host_info_result").text(hg_result['info']);
+		success : function(host_result) {
+			$("#host_info_result").text(host_result['info']);
 		},
 	});
 // window.location.reload();

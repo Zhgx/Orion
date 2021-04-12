@@ -318,8 +318,9 @@ function change_diskgroup(obj) {
 							ip : mgtIp
 						},
 						async : false,
-						success : function(resource_result) {
-							var resource_data = resource_result.data
+						success : function(disk_data) {
+							console.log(disk_data);
+							var resource_data = disk_data.data
 							var obj_list = [];
 							var obj_disk_list = [];
 							for (i=1; i < window.DGTable_Show.rows.length; i++) {

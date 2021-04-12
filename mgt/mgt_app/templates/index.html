@@ -126,6 +126,9 @@
 								<dd>
 									<a onclick="selectItem(this)" id="HostGroup">HostGroup</a>
 								</dd>
+									<dd>
+									<a onclick="selectItem(this)" id="Disk">Disk</a>
+								</dd>
 								<dd>
 									<a onclick="selectItem(this)" id="DiskGroup">DiskGroup</a>
 								</dd>
@@ -175,6 +178,9 @@
             $('#mainpage iframe').css({ "margin-left": "15%","max-width":"1700px"}); 
         }else if(obj.id=='HostGroup'){
                 $('#mainpage iframe').attr('src',"/iscsi/hostgroup");
+                $('#mainpage iframe').css({ "margin-left": "15%","max-width":"1700px"});
+        }else if(obj.id=='Disk'){
+                $('#mainpage iframe').attr('src',"/iscsi/disk");
                 $('#mainpage iframe').css({ "margin-left": "15%","max-width":"1700px"});
         }else if(obj.id=='DiskGroup'){
                 $('#mainpage iframe').attr('src',"/iscsi/diskgroup");

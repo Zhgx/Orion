@@ -269,7 +269,7 @@ class Replay():
             answer = input()
             if answer.isdecimal():
                 answer = int(answer)
-                if answer < Replay.num:
+                if answer < Replay.num and answer != 0:
                     print(Replay.specific_data[answer])
                 else:
                     print('Please enter the correct serial number')
