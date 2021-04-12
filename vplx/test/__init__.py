@@ -10,3 +10,4 @@ from replay import Replay
 # transaction_id = log.create_transaction_id()
 logger = log.Log()
 logger.user = 'test'
+

@@ -333,16 +333,27 @@ xxModify为实际修改路由，触发实际修改动作，返回修改结果到
 
 
 class CheckHostModify(views.MethodView):
-
     def get(self):
+        print("0000000")
         dict_data = get_request_data()
+        print("1111111")
         host_name = dict_data['host_name']
+        print("0022200")
         host_iqn = dict_data['host_iqn']
+        print("111111")
         js = iscsi_json.JsonOperation()
+        print("2222")
+        js.json_data = js.read_json()
+        print("13333331")
         json_data_before = copy.deepcopy(js.json_data)
+        print("13444444331")
         js.update_data('Host', host_name, host_iqn)
+        print("6555555533331")
         obj_iscsi = iscsi.IscsiConfig(json_data_before, js.json_data)
+        print("65566666663331")
         message = '\n'.join(obj_iscsi.show_info())
+        print("--------------")
+        print("message",message)
         dict = {'iscsi_data':True, 'info':message}
         return cors_data(dict)
 
@@ -379,6 +390,7 @@ class CheckHgModify(views.MethodView):
         list_host = dict_data['host'].split(',') if dict_data['host'] else []
 
         js = iscsi_json.JsonOperation()
+        js.json_data = js.read_json()
         json_data_before = copy.deepcopy(js.json_data)
         js.update_data('HostGroup', hg, list_host)
         obj_iscsi = iscsi.IscsiConfig(json_data_before, js.json_data)
@@ -422,6 +434,7 @@ class CheckDgModify(views.MethodView):
         dg = dict_data['dg_name']
         list_disk = dict_data['disk'].split(',') if dict_data['disk'] else []
         js = iscsi_json.JsonOperation()
+        js.json_data = js.read_json()
         json_data_before = copy.deepcopy(js.json_data)
         js.update_data('DiskGroup', dg, list_disk)
         obj_iscsi = iscsi.IscsiConfig(json_data_before, js.json_data)
@@ -464,8 +477,9 @@ class CheckMapModify(views.MethodView):
     def get(self):
         dict_data = get_request_data()
         map = dict_data['map_name']
-        list_hg = dict_data['hg'].split(',') if dict_data['disk'] else []
-        list_dg = dict_data['dg'].split(',') if dict_data['disk'] else []
+        print(dict_data)
+        list_hg = dict_data['hg'].split(',') if dict_data['hg'] else []
+        list_dg = dict_data['dg'].split(',') if dict_data['dg'] else []
         js = iscsi_json.JsonOperation()
         json_data_before = copy.deepcopy(js.json_data)
         if not list_hg or not list_dg:
@@ -484,8 +498,8 @@ class MapModify(views.MethodView):
 
         dict_data = get_request_data()
         map = dict_data['map_name']
-        list_hg = dict_data['hg'].split(',') if dict_data['disk'] else []
-        list_dg = dict_data['dg'].split(',') if dict_data['disk'] else []
+        list_hg = dict_data['hg'].split(',') if dict_data['hg'] else []
+        list_dg = dict_data['dg'].split(',') if dict_data['dg'] else []
         js = iscsi_json.JsonOperation()
         js.json_data = js.read_json()
         json_data_before = copy.deepcopy(js.json_data)
@@ -530,6 +544,7 @@ class CheckAllDelete(views.MethodView):
         print(iscsi_type, iscsi_name)
 
         js = iscsi_json.JsonOperation()
+        js.json_data = js.read_json()
         json_data_before = copy.deepcopy(js.json_data)
         js.delete_data(iscsi_type,iscsi_name)
         if iscsi_type != 'Map':
@@ -552,7 +567,12 @@ class AllDelete(views.MethodView):
         js = iscsi_json.JsonOperation()
         js.json_data = js.read_json()
         json_data_before = copy.deepcopy(js.json_data)
-        js.delete_data(iscsi_type, iscsi_name)
+        try:
+            js.delete_data(iscsi_type, iscsi_name)
+        except KeyError:
+            message = '配置文件已被修改，请重新操作'
+            return cors_data(message)
+        
         if iscsi_type != 'Map':
             js.arrange_data(iscsi_type, iscsi_name)
         obj_iscsi = iscsi.IscsiConfig(json_data_before, js.json_data)
