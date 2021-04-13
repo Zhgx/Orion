@@ -412,6 +412,9 @@ class TestCRMConfig:
             self.crmconfig.delete_res('res_test0', 'iSCSILogicalUnit')
             terminal_print.assert_called_with('Delete res_test0 fail')
 
+    def test_checkout_status(self):
+        assert self.crmconfig.checkout_status('', 'iSCSILogicalUnit', 'Started') is None
+
     def test_execute_delete(self):
         """测试执行删除 res"""
         # 删除不存在资源
@@ -692,7 +695,7 @@ class TestISCSILogicalUnit:
 
     def test_modify(self):
         """修改ISCSILogicalUnit映射iqn"""
-        assert self.iscsilu.modify('res_test',
+        assert self.iscsilu.modify_initiators('res_test',
                                    ['iqn.2020-04.feixitek.com:pytest01', 'iqn.2020-04.feixitek.com:pytest002'])
 
     def test_delete(self):
