@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>HostGroup</title>
+
+<link
+	href="{{url_for('static',filename='bootstrap-3.3.7/dist/css/bootstrap.min.css')}}"
+	rel="stylesheet" type="text/css" />
+<style type="text/css">
+.red {
+	color: #FF0000;
+}
+
+body {
+	padding: 10px;
+}
+
+.col-xs-5 {
+	width: 32.66666667%;
+}
+
+.col-xs-1 {
+	width: 15.66666667%;
+}
+
+.col-sm-2 {
+	right: 25%;
+}
+
+.col-sm-8 {
+	right: 30px;
+}
+
+table tbody {
+	display: block;
+	height: 195px;
+	overflow-y: scroll;
+}
+
+table thead, tbody tr {
+	display: table;
+	width: 100%;
+	table-layout: fixed;
+}
+
+table thead {
+	width: calc(100%)
+}
+
+table thead th {
+	background: #ccc;
+	text-align: center;
+}
+</style>
+<style type="text/css">
+.black_overlay {
+	display: none;
+	position: absolute;
+	top: 0%;
+	left: 0%;
+	width: 100%;
+	height: 100%;
+	background-color: black;
+	z-index: 1001;
+	-moz-opacity: 0.8;
+	opacity: .80;
+	filter: alpha(opacity = 80);
+}
+
+.white_content {
+	display: none;
+	position: absolute;
+	top: 50%;
+	left: 36%;
+	width: 27%;
+	height: 70px;
+	padding: 12px;
+	/* border: 3px solid orange; */
+	background-color: #66CC00;
+	z-index: 1002;
+	overflow: hidden;
+}
+
+.failed_content {
+	display: none;
+	position: absolute;
+	top: 50%;
+	left: 36%;
+	width: 27%;
+	height: 70px;
+	padding: 12px;
+	/* border: 3px solid orange; */
+	background-color: #993333;
+	z-index: 1002;
+	overflow: hidden;
+	width: 27%;
+	height: 70px;
+	padding: 12px;
+	height: 70px;
+	padding: 12px;
+}
+</style>
+</head>
+
+<body>
+	<div class="container">
+		<div class="row clearfix">
+			<div class="page-header">
+				<h1>
+					<small>Create</small>
+				</h1>
+			</div>
+			<div class="row">
+
+				<div class="col-xs-5 ">
+					<span class="text-success" style="margin-left: 35%;">可选主机列表</span>
+					<span class="glyphicon glyphicon-question-sign" rel="drevil"
+						data-container="body" data-toggle="popover"
+						data-placement="bottom" data-content="通过单击项目将其添加到已选列表"></span>
+					<table id="HTable" class="table  table-hover table-bordered "
+						border="1">
+						<thead>
+							<tr>
+								<th>Host</th>
+							</tr>
+						</thead>
+						<tbody id="H_T">
+						</tbody>
+					</table>
+				</div>
+				<div class="col-xs-5 ">
+					<span class="text-success" style="margin-left: 32%;">已选主机列表</span>
+					<span class="glyphicon glyphicon-question-sign" rel="drevil"
+						data-container="body" data-toggle="popover"
+						data-placement="bottom" data-content="通过单击项目将其移出已选列表(同时放回可选列表)"></span>
+					<table id="HTable_Show" class="table table-hover table-bordered"
+						border="1">
+						<thead>
+							<tr>
+								<th>Selected Host</th>
+							</tr>
+						</thead>
+						<tbody id="H_T_Show">
+						</tbody>
+					</table>
+				</div>
+				<div class="col-xs-5 ">
+					<span class="text-success" style="margin-left: 30%;">已选主机对应的IQN</span>
+					<table id="H_IQN_Table_Show"
+						class="table table-hover table-bordered" border="1">
+						<thead>
+							<tr>
+								<th>Selected IQN</th>
+							</tr>
+						</thead>
+						<tbody id="H_IQN_T_Show">
+						</tbody>
+					</table>
+				</div>
+			</div>
+			<div class="col-xs-6 ">
+				<div class="col-sm-8">
+					<input type="text" class="form-control" id="host_group_name"
+						placeholder="请输入HostGroup名称" style="width: 200px;" value=""
+						onblur="hg_name_myfunction()"> <input id="hg_name_hid"
+						hidden="hidden" value="0"> <input
+						id="hg_name_verify_status" hidden="hidden" value="0"> <span
+						class="red"> <span id="hg_name_examine" class="hidden">HostGroup
+							Name已存在！</span> <span id="hg_name_format" class="hidden">格式验证失败:仅支持字母数字以及下划线，且以字母开头</span>
+					</span>
+				</div>
+				<div class="col-sm-2">
+					<button type="button" class="btn btn-default"
+						name="host_group_create" id="host_group_create">Create</button>
+				</div>
+			</div>
+			<div class="col-xs-5 "></div>
+		</div>
+		<div class="row clearfix">
+			<div class="page-header">
+				<h1>
+					<small>Show</small>
+				</h1>
+			</div>
+			<div class="row">
+				<div class="col-xs-8 ">
+					<table id="HostGroup_Table"
+						class="table table-hover table-bordered" border="1">
+						<thead>
+							<tr>
+								<th>HostGroup</th>
+								<th>Host</th>
+								<th>操作</th>
+							</tr>
+						</thead>
+						<tbody id="Host_Group_Table_Show">
+						</tbody>
+					</table>
+				</div>
+				<div class="col-xs-4 "></div>
+			</div>
+		</div>
+	</div>
+	<div id="light_success" class="white_content">
+		<p id="P_text_success"
+			style="text-align: center; font-size: 30px; color: gray;"></p>
+	</div>
+	<div id="light_failed" class="failed_content">
+		<p id="P_text_failed"
+			style="text-align: center; font-size: 30px; color: oldlace;"></p>
+	</div>
+	<div id="fade" class="black_overlay"></div>
+	<!-- 模态框 1-->
+	<div class="modal fade" id="hg_model" data-backdrop="static"
+		role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<p id="hg_name_text" ></p>
+					<h4 class="modal-title" align="center">修改</h4>
+				</div>
+				<div class="modal-body">
+					<div class="row">
+						<div class="col-xs-6 ">
+							<span class="text-success" style="margin-left: 32%;">所有主机列表</span>
+							<span class="glyphicon glyphicon-question-sign" rel="drevil"
+								data-container="body" data-toggle="popover"
+								data-placement="bottom" data-content="通过单击项目将其移出已选列表(同时放回可选列表)"></span>
+							<table id="HTable_second_all"
+								class="table table-hover table-bordered" border="1">
+								<thead>
+									<tr>
+										<th>Selected Host</th>
+									</tr>
+								</thead>
+								<tbody id="HTable_second_all_show">
+								</tbody>
+							</table>
+						</div>
+						<div class="col-xs-6 ">
+							<span class="text-success" style="margin-left: 35%;">已选主机列表</span>
+							<span class="glyphicon glyphicon-question-sign" rel="drevil"
+								data-container="body" data-toggle="popover"
+								data-placement="bottom" data-content="通过单击项目将其添加到已选列表"></span> <input
+								id="host_key_hid" hidden="hidden">
+							<table id="HTable_second"
+								class="table  table-hover table-bordered " border="1">
+								<thead>
+									<tr>
+										<th>Host</th>
+									</tr>
+								</thead>
+								<tbody id="HTable_second_T">
+								</tbody>
+							</table>
+						</div>
+					
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" data-dismiss="modal"
+						onclick="myrefresh(this);">关闭</button>
+					<button type="button" class="btn btn-default"
+						onclick="affirm_modifiy(this);">修改</button>
+					<!-- 					<button type="button" class="btn btn-default" id="affirm_modifiy" onclick="affirm_modifiy(this);">确认修改</button> -->
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- 模态框2 -->
+	<div class="modal fade" id="hg_info_model" data-backdrop="static"
+		role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h4 class="modal-title" align="center">修改详情</h4>
+				</div>
+				<div class="modal-body">
+					<div class="row">
+						<div class="col-xs-2 ">
+							<input id="hg_name_hidden" hidden="hidden">
+							<input id="host_hidden" hidden="hidden">
+						</div>
+						<div class="col-xs-8 ">
+						<p id="hg_info_result"></p>
+						</div>
+						<div class="col-xs-2 "></div>
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" data-dismiss="modal"
+						onclick="myrefresh_second(this);">关闭</button>
+					<button type="button" class="btn btn-default"
+						onclick="affirm_modifiy_second(this);">确认修改</button>
+					<!-- 					<button type="button" class="btn btn-default" id="affirm_modifiy" onclick="affirm_modifiy(this);">确认修改</button> -->
+				</div>
+			</div>
+		</div>
+	</div>
+
+<!-- 模态框3 -->
+	<div class="modal fade" id="hg_delete_model" data-backdrop="static"
+		role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h4 class="modal-title" align="center">删除详情</h4>
+				</div>
+				<div class="modal-body">
+					<div class="row">
+						<div class="col-xs-2 ">
+							<input id="hg_delete_data" hidden="hidden">
+						</div>
+						<div class="col-xs-8 ">
+						<p id="hg_delete_info"></p>
+						</div>
+						<div class="col-xs-2 "></div>
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" data-dismiss="modal"
+						onclick="myrefresh_delete(this);">关闭</button>
+					<button type="button" class="btn btn-default"
+						onclick="affirm_delete(this);">确认修改</button>
+					<!-- 					<button type="button" class="btn btn-default" id="affirm_modifiy" onclick="affirm_modifiy(this);">确认修改</button> -->
+				</div>
+			</div>
+		</div>
+	</div>
+
+
+
+
+
+</body>
+<script type="text/javascript"
+	src="{{url_for('static',filename='personal/js/JQuery.js')}}"></script>
+<script type="text/javascript"
+	src="{{url_for('static',filename='bootstrap-3.3.7/dist/js/bootstrap.min.js')}}"></script>
+<script type="text/javascript"
+	src="{{url_for('static',filename='personal/js/iSCSI-hostgroup-create.js')}}"></script>
+<script type="text/javascript">
+
+	</script>
+</html>
