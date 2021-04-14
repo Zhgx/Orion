@@ -153,6 +153,7 @@ class Disk():
         for res in resource_all:
             # Resource,DeviceName
             disks.update({res['Resource']: res['DeviceName']})
+
         self.js.cover_data('Disk', disks)
         self.js.commit_data()
         return disks
@@ -1090,7 +1091,7 @@ class Target():
 
         if portal:
             if portal == self.js.json_data['Target'][name]['portal']:
-                s.prt_log(f'The portal:"{portal}" has been used', 1)
+                s.prt_log(f'Same as the portal used, please specify another one', 1)
                 return
             if not self.js.check_key('Portal',portal):
                 s.prt_log(f"Fail！Can't find {portal}", 1)
@@ -1135,15 +1136,16 @@ class Target():
                 Colocation.create(f'col_{name}_{dict_target["portal"]}', name, dict_target['portal'])
                 return
 
-        # 对有影响的lun做修改
-        for lun in dict_target['lun']:
-            # 修改这些lun的target_iqn
-            try:
-                ISCSILogicalUnit().modify_target_iqn(lun,iqn)
-            except Exception as ex:
-                self.logger.write_to_log('DATA', 'DEBUG', 'exception', 'Rollback', str(traceback.format_exc()))
-                # 回滚待设置
-                return
+        # 对有影响的lun做修改，有修改iqn的时候才影响
+        if iqn:
+            for lun in dict_target['lun']:
+                # 修改这些lun的target_iqn
+                try:
+                    ISCSILogicalUnit().modify_target_iqn(lun,iqn)
+                except Exception as ex:
+                    self.logger.write_to_log('DATA', 'DEBUG', 'exception', 'Rollback', str(traceback.format_exc()))
+                    # 回滚待设置
+                    return
 
         # 验证及数据更新
         crm_data = CRMData()
@@ -1165,7 +1167,6 @@ class Target():
         self.js.update_data('Target', name, json_data_target)
         self.js.commit_data()
         s.prt_log(f'Modify {name} successfully', 0)
-
 
 
     def delete(self, name):
@@ -1254,9 +1255,6 @@ class Target():
             s.prt_log(f'{name} has been started', 0)
 
 
-
-
-
     def stop(self, name):
         # 前置判断
         if not self.js.check_key('Target', name):
@@ -1265,13 +1263,13 @@ class Target():
 
         crm_config = CRMConfig()
         status = crm_config.get_crm_res_status(name, 'iSCSITarget')
-        if status == 'Stopped':
+        if status == 'Stopped (disabled)':
             s.prt_log(f'{name} has been stopped', 1)
             return
         elif status == 'FAIL':
             s.prt_log(f'{name} A is in FAILED state', 1)
             return
-        elif status == 'Stopped (disabled)':
+        elif status == 'Stopped':
             s.prt_log(f'{name} has been stopped for other reasons, but you can continue to stop it.(y/n)', 1)
             answer = s.get_answer()
             if not answer in ['y', 'yes', 'Y', 'YES']:
@@ -1281,14 +1279,13 @@ class Target():
         # 执行
         crm_config.stop_res(name)
 
-        #验证
+        #验证,验证的时间跟这个target被多少资源使用有关系，越多资源使用，需要的时间越多，暂时没有做特殊处理（比如通过判断被多少资源使用，动态赋予timeout的数值）
         try:
             crm_config.monitor_status_by_time(name,'iSCSITarget','Stopped (disabled)',timeout=60)
         except TimeoutError as msg:
             s.prt_log(msg,1)
         else:
             s.prt_log(f'{name} has been stopped', 0)
-
 
 
     def _check_name(self, name):
