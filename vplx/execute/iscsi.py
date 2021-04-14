@@ -154,7 +154,6 @@ class Disk():
             # Resource,DeviceName
             disks.update({res['Resource']: res['DeviceName']})
 
-        print(disks)
         self.js.cover_data('Disk', disks)
         self.js.commit_data()
         return disks
@@ -1170,7 +1169,6 @@ class Target():
         s.prt_log(f'Modify {name} successfully', 0)
 
 
-
     def delete(self, name):
         if not self.js.check_key('Target', name):
             s.prt_log(f"Fail！Can't find {name}", 1)
@@ -1257,9 +1255,6 @@ class Target():
             s.prt_log(f'{name} has been started', 0)
 
 
-
-
-
     def stop(self, name):
         # 前置判断
         if not self.js.check_key('Target', name):
@@ -1291,7 +1286,6 @@ class Target():
             s.prt_log(msg,1)
         else:
             s.prt_log(f'{name} has been stopped', 0)
-
 
 
     def _check_name(self, name):
