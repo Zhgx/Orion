@@ -349,24 +349,27 @@ class CRMData():
 
 
         # 处理列表的顺序问题
-        for portal_name,portal_data in crm_portal.items():
-            portal_data['target'] = set(portal_data['target'])
+        try:
+            for portal_name,portal_data in crm_portal.items():
+                portal_data['target'] = set(portal_data['target'])
 
-        for portal_name,portal_data in json_portal.items():
-            portal_data['target'] = set(portal_data['target'])
+            for portal_name,portal_data in json_portal.items():
+                portal_data['target'] = set(portal_data['target'])
 
-        for target_name,target_data in crm_target.items():
-            target_data['lun'] = set(target_data['lun'])
+            for target_name,target_data in crm_target.items():
+                target_data['lun'] = set(target_data['lun'])
 
-        for target_name,target_data in json_target.items():
-            target_data['lun'] = set(target_data['lun'])
+            for target_name,target_data in json_target.items():
+                target_data['lun'] = set(target_data['lun'])
 
-        if not crm_portal == json_portal:
-            s.prt_log('The data Portal of the JSON configuration file is inconsistent, please check and try again',2)
-            return
-        if not crm_target == json_target:
-            s.prt_log('The data Target of the JSON configuration file is inconsistent, please check and try again',2)
-            return
+            if not crm_portal == json_portal:
+                s.prt_log('The data Portal of the JSON configuration file is inconsistent, please check and try again',2)
+                return
+            if not crm_target == json_target:
+                s.prt_log('The data Target of the JSON configuration file is inconsistent, please check and try again',2)
+                return
+        except KeyError as key:
+            s.prt_log(f'The configuration file is missing a key: {key}',2)
 
     def check(self):
         """
