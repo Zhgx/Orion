@@ -660,34 +660,91 @@ class TestOrder:
 @pytest.mark.target
 class TestISCSITarget:
     def setup_class(self):
-        # subprocess.run('python3 vtel.py iscsi portal c pytest_portal_target_1 -ip 10.203.1.98', shell=True)
-        # subprocess.run('python3 vtel.py iscsi portal c pytest_portal_target_2 -ip 10.203.1.88', shell=True)
-        self.target = iscsi.ISCSITarget()
-        subprocess.run('crm cof primitive pytm_target_1 iSCSITarget params iqn="iqn.2020-02.com.example:pymtest1" implementation=lio-t portals="10.203.1.98:3260" op start timeout=50 stop timeout=40 op monitor interval=15 timeout=40 meta target-role=Stopped', shell=True)
+        # subprocess.run('crm cof primitive pytest_it_portal_1 IPaddr2 params ip=10.203.1.98 cidr_netmask=24', shell=True)
+        # subprocess.run('crm cof primitive pytest_it_portal_2 IPaddr2 params ip=10.203.1.88 cidr_netmask=24', shell=True)
+        # subprocess.run('crm cof primitive pytm_it_target_1 iSCSITarget params iqn="iqn.2020-02.com.example:pymtest1" implementation=lio-t portals="10.203.1.98:3260" op start timeout=50 stop timeout=40 op monitor interval=15 timeout=40 meta target-role=Stopped', shell=True)
+
+        subprocess.run('python3 vtel.py iscsi portal c pytest_it_portal_1 -ip 10.203.1.88', shell=True)
+        time.sleep(5)
+        subprocess.run('python3 vtel.py iscsi portal c pytest_it_portal_2 -ip 10.203.1.98', shell=True)
+        time.sleep(5)
+        subprocess.run(
+            'crm cof primitive pytm_it_target_1 iSCSITarget params iqn="iqn.2020-02.com.example:pymtest1" implementation=lio-t portals="10.203.1.88:3260" op start timeout=50 stop timeout=40 op monitor interval=15 timeout=40 meta target-role=Stopped',
+            shell=True)
+        subprocess.run('crm cof colocation col_pytm_it_target_1_pytest_it_portal_1 inf: pytm_it_target_1 pytest_it_portal_1',
+                       shell=True)
+        subprocess.run('crm cof order or_pytm_it_target_1_pytest_it_portal_1 pytest_it_portal_1 pytm_it_target_1', shell=True)
+        subprocess.run('crm res start pytm_it_target_1', shell=True)
+        subprocess.run(
+            'crm cof primitive pytm_it_target_2 iSCSITarget params iqn="iqn.2020-02.com.example:pymtest2" implementation=lio-t portals="10.203.1.98:3260" op start timeout=50 stop timeout=40 op monitor interval=15 timeout=40 meta target-role=Stopped',
+            shell=True)
+        subprocess.run('crm cof colocation col_pytm_it_target_2_pytest_it_portal_1 inf: pytm_it_target_2 pytest_it_portal_1',
+                       shell=True)
+        subprocess.run('crm cof order or_pytm_it_target_2_pytest_it_portal_1 pytm_it_portal_1 pytm_it_target_2', shell=True)
+        subprocess.run('crm res start pytm_it_target_1', shell=True)
+        time.sleep(5)
+        subprocess.run('python3 vtel.py iscsi sync', shell=True)
+
+        self.target = crm.ISCSITarget()
 
 
     def teardown_class(self):
         # subprocess.run('python3 vtel.py iscsi portal d pytest_portal_target_1', shell=True)
         # subprocess.run('python3 vtel.py iscsi portal d pytest_portal_target_2', shell=True)
-        subprocess.run('crm res stop pytm_target_1', shell=True)
-        subprocess.run('crm conf del pytm_target_1', shell=True)
+        subprocess.run('crm res stop pytest_it_portal_1', shell=True)
+        time.sleep(2)
+        subprocess.run('crm conf del pytest_it_portal_1', shell=True)
+        # subprocess.run('crm res ref', shell=True)
+        time.sleep(2)
+        subprocess.run('crm res stop pytest_it_portal_2', shell=True)
+        time.sleep(2)
+        subprocess.run('crm conf del pytest_it_portal_2', shell=True)
+        time.sleep(2)
+        subprocess.run('crm res stop pytm_it_target_1', shell=True)
+        time.sleep(2)
+        subprocess.run('crm conf del pytm_it_target_1', shell=True)
+        # subprocess.run('python3 vtel.py iscsi sync', shell=True)
+
+        subprocess.run('crm res stop pytm_it_target_1', shell=True)
+        time.sleep(1)
+        subprocess.run('crm res ref', shell=True)
+        time.sleep(3)
+        subprocess.run('crm conf del pytm_it_target_1', shell=True)
+        time.sleep(3)
+        subprocess.run('crm res stop pytm_it_target_2', shell=True)
+        time.sleep(1)
+        subprocess.run('crm res ref', shell=True)
+        time.sleep(3)
+        subprocess.run('crm conf del pytm_it_target_2', shell=True)
+        subprocess.run('python3 vtel.py iscsi sync', shell=True)
+        subprocess.run('crm res stop pytm_it_portal_1', shell=True)
+        time.sleep(1)
+        subprocess.run('crm res ref', shell=True)
+        time.sleep(3)
+        subprocess.run('python3 vtel.py iscsi portal d pytm_it_portal_1', shell=True)
+        time.sleep(2)
+        subprocess.run('crm res stop pytm_it_portal_2', shell=True)
+        subprocess.run('crm res ref', shell=True)
+        time.sleep(3)
+        subprocess.run('python3 vtel.py iscsi portal d pytm_it_portal_2', shell=True)
 
     def test_create(self):
-        assert self.target.create.func(self.target, 'pytc_target_1', 'iqn.2020-02.com.example:pytarget1' ,'10.203.1.88', '3260') is True
+        assert self.target.create.func(self.target, 'pytc_it_target_1', 'iqn.2020-02.com.example:pytarget1' ,'10.203.1.88', '3260') is True
         with pytest.raises(consts.CmdError) as exsinfo:
-            assert self.target.create('pytc_target_1', 'iqn.2020-02.com.example:pytarget1', '10.203.1.99', '3260')
+            assert self.target.create('pytc_it_target_1', 'iqn.2020-02.com.example:pytarget1', '10.203.1.99', '3260')
         assert exsinfo.type == consts.CmdError
-        subprocess.run('crm res stop pytc_target_1', shell=True)
-        subprocess.run('crm conf del pytc_target_1', shell=True)
+        subprocess.run('crm res stop pytc_it_target_1', shell=True)
+        time.sleep(2)
+        subprocess.run('crm conf del pytc_it_target_1', shell=True)
 
     def test_modify(self):
-        assert self.target.modify.func(self.target, 'pytm_target_1', 'iqn.2020-02.com.example:pymtarget2' ,'10.203.1.88', '3260') is True
+        assert self.target.modify.func(self.target, 'pytm_it_target_1', 'iqn.2020-02.com.example:pymtarget2' ,'10.203.1.88', '3260') is True
         with pytest.raises(consts.CmdError) as exsinfo:
             assert self.target.modify('t_test0', 'iqn.2020-02.com.example:pytarget_1', '10.203.1.88', '3260')
         assert exsinfo.type == consts.CmdError
 
     def test_modify_iqn(self):
-        assert self.target.modify_iqn.func(self.target, 'pytm_target_1', 'iqn.2020-02.com.example:pymtarget3') is True
+        assert self.target.modify_iqn.func(self.target, 'pytm_it_target_1', 'iqn.2020-02.com.example:pymtarget3') is True
         with pytest.raises(consts.CmdError) as exsinfo:
             assert self.target.modify_iqn('t_test0', 'iqn.2020-02.com.example:pytarget_2')
         assert exsinfo.type == consts.CmdError
@@ -695,19 +752,18 @@ class TestISCSITarget:
     def test_modify_portal(self):
         """修改ISCSITarget，当修改已配置target的portal信息时，对应的target也会修改,测试用例包括：修改target成功/target不存在修改失败"""
         with patch('builtins.print') as terminal_print:
-            self.target.modify_portal('pytm_target_1', '10.203.1.88', '3260')
-            terminal_print.assert_called_with('Modify target:pytm_target_1 (portal) successfully')
+            self.target.modify_portal('pytm_it_target_1', '10.203.1.88', '3260')
+            terminal_print.assert_called_with('Modify target:pytm_it_target_1 (portal) successfully')
         with pytest.raises(consts.CmdError) as exsinfo:
             assert self.target.modify_portal('t_test0', '10.203.1.99', '3260')
         assert exsinfo.type == consts.CmdError
 
     def test_delete(self):
-        subprocess.run('crm cof primitive pytd_target_1 iSCSITarget params iqn="iqn.2020-02.com.example:pydtest1" implementation=lio-t portals="10.203.1.98:3260" op start timeout=50 stop timeout=40 op monitor interval=15 timeout=40 meta target-role=Stopped', shell=True)
-        assert self.target.delete.func(self.target, 'pytd_target_1')
+        subprocess.run('crm cof primitive pytd_it_target_1 iSCSITarget params iqn="iqn.2020-02.com.example:pydtest1" implementation=lio-t portals="10.203.1.98:3260" op start timeout=50 stop timeout=40 op monitor interval=15 timeout=40 meta target-role=Stopped', shell=True)
+        assert self.target.delete.func(self.target, 'pytd_it_target_1')
         with pytest.raises(consts.CmdError) as exsinfo:
-            assert self.target.delete('pytd_target_1')
+            assert self.target.delete('pytd_it_target_1')
         assert exsinfo.type == consts.CmdError
-
 
 
 @pytest.mark.portal
