@@ -681,30 +681,13 @@ class TestISCSITarget:
         subprocess.run('crm cof colocation col_pytm_it_target_2_pytest_it_portal_1 inf: pytm_it_target_2 pytest_it_portal_1',
                        shell=True)
         subprocess.run('crm cof order or_pytm_it_target_2_pytest_it_portal_1 pytm_it_portal_1 pytm_it_target_2', shell=True)
-        subprocess.run('crm res start pytm_it_target_1', shell=True)
+        subprocess.run('crm res start pytm_it_target_2', shell=True)
         time.sleep(5)
         subprocess.run('python3 vtel.py iscsi sync', shell=True)
 
         self.target = crm.ISCSITarget()
 
-
     def teardown_class(self):
-        # subprocess.run('python3 vtel.py iscsi portal d pytest_portal_target_1', shell=True)
-        # subprocess.run('python3 vtel.py iscsi portal d pytest_portal_target_2', shell=True)
-        subprocess.run('crm res stop pytest_it_portal_1', shell=True)
-        time.sleep(2)
-        subprocess.run('crm conf del pytest_it_portal_1', shell=True)
-        # subprocess.run('crm res ref', shell=True)
-        time.sleep(2)
-        subprocess.run('crm res stop pytest_it_portal_2', shell=True)
-        time.sleep(2)
-        subprocess.run('crm conf del pytest_it_portal_2', shell=True)
-        time.sleep(2)
-        subprocess.run('crm res stop pytm_it_target_1', shell=True)
-        time.sleep(2)
-        subprocess.run('crm conf del pytm_it_target_1', shell=True)
-        # subprocess.run('python3 vtel.py iscsi sync', shell=True)
-
         subprocess.run('crm res stop pytm_it_target_1', shell=True)
         time.sleep(1)
         subprocess.run('crm res ref', shell=True)

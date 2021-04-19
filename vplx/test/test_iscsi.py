@@ -925,7 +925,7 @@ class TestTarget:
         subprocess.run('crm cof colocation col_pytm_target_2_pytest_portal_1 inf: pytm_target_2 pytest_portal_1',
                        shell=True)
         subprocess.run('crm cof order or_pytm_target_2_pytest_portal_1 pytest_portal_1 pytm_target_2', shell=True)
-        subprocess.run('crm res start pytm_target_1', shell=True)
+        subprocess.run('crm res start pytm_target_2', shell=True)
         time.sleep(5)
         subprocess.run('python3 vtel.py iscsi sync', shell=True)
         time.sleep(3)
