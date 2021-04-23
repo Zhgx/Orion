@@ -930,44 +930,53 @@ class TestTarget:
         subprocess.run('python3 vtel.py iscsi sync', shell=True)
         time.sleep(3)
         #环境中要先有一个pytest_res的DRBD资源(Disk)
-        self.ilu = crm.ISCSILogicalUnit()
-        self.ilu.target_name = "pytm_target_2"
-        self.ilu.target_iqn = "iqn.2020-02.com.example:pymtest2"
-        self.ilu.create_mapping("pytest_res",['iqn.2020-02.com.example:host1'])
-        # js = iscsi_json.JsonOperation()
-        # js.json_data["Target"]["pytm_target_2"]["lun"]=['pytest_res']
-        # js.commit_data()
         self.target = iscsi.Target()
-        self.target.js.json_data["Target"]["pytm_target_2"]["lun"] = ['pytest_res']
-        self.target.js.commit_data()
+        path = self.target.js.json_data['Disk']['pytest_res']
+        lunid = int(path[-4:]) - 1000
+        create_ilu_cmd = f'crm conf primitive pytest_res iSCSILogicalUnit params ' \
+              f'target_iqn="iqn.2020-02.com.example:pymtest2" ' \
+              f'implementation=lio-t ' \
+              f'lun={lunid} ' \
+              f'path={path} ' \
+              f'allowed_initiators="iqn.2020-02.com.example:host1" ' \
+              f'op start timeout=40 interval=0 ' \
+              f'op stop timeout=40 interval=0 ' \
+              f'op monitor timeout=40 interval=15 ' \
+              f'meta target-role=Stopped'
+        subprocess.run(create_ilu_cmd, shell=True)
+        subprocess.run('crm cof colocation col_pytest_res inf: pytest_res pytm_target_2', shell=True)
+        subprocess.run('crm cof order or_pytest_res pytm_target_2 pytest_res', shell=True)
+        time.sleep(3)
+        subprocess.run('python3 vtel.py iscsi sync', shell=True)
+        time.sleep(3)
+        self.target.js.json_data = self.target.js.read_json()
 
     def teardown_class(self):
-        # subprocess.run('crm res stop pytest_portal_1', shell=True)
-        # subprocess.run('crm conf del pytest_portal_1', shell=True)
-        # subprocess.run('crm res stop pytest_portal_2', shell=True)
-        # subprocess.run('crm conf del pytest_portal_2', shell=True)
-
-        self.ilu.delete("pytest_res")
+        subprocess.run('crm res stop pytest_res', shell=True)
+        time.sleep(3)
+        subprocess.run('crm conf del pytest_res', shell=True)
+        time.sleep(3)
         subprocess.run('crm res stop pytm_target_1', shell=True)
-        time.sleep(1)
-        subprocess.run('crm res ref', shell=True)
+        # time.sleep(1)
+        # subprocess.run('crm res ref', shell=True)
         time.sleep(3)
         subprocess.run('crm conf del pytm_target_1', shell=True)
         time.sleep(3)
         subprocess.run('crm res stop pytm_target_2', shell=True)
-        time.sleep(1)
-        subprocess.run('crm res ref', shell=True)
+        # time.sleep(1)
+        # subprocess.run('crm res ref', shell=True)
         time.sleep(3)
         subprocess.run('crm conf del pytm_target_2', shell=True)
         subprocess.run('python3 vtel.py iscsi sync', shell=True)
+        time.sleep(3)
         subprocess.run('crm res stop pytest_portal_1', shell=True)
-        time.sleep(1)
-        subprocess.run('crm res ref', shell=True)
+        # time.sleep(1)
+        # subprocess.run('crm res ref', shell=True)
         time.sleep(3)
         subprocess.run('python3 vtel.py iscsi portal d pytest_portal_1', shell=True)
         time.sleep(2)
         subprocess.run('crm res stop pytest_portal_2', shell=True)
-        subprocess.run('crm res ref', shell=True)
+        # subprocess.run('crm res ref', shell=True)
         time.sleep(3)
         subprocess.run('python3 vtel.py iscsi portal d pytest_portal_2', shell=True)
 
@@ -1001,16 +1010,15 @@ class TestTarget:
             terminal_print.assert_called_with('Create pytc_target_1 successfully')
         subprocess.run('crm res stop pytc_target_1', shell=True)
         time.sleep(3)
-        subprocess.run('crm res ref', shell=True)
-        time.sleep(3)
+        # subprocess.run('crm res ref', shell=True)
+        # time.sleep(3)
         subprocess.run('crm conf del pytc_target_1', shell=True)
         time.sleep(3)
         subprocess.run('python3 vtel.py iscsi sync', shell=True)
+        time.sleep(3)
+        self.target.js.json_data = self.target.js.read_json()
 
     def test_modify(self, mocker):
-        js = iscsi_json.JsonOperation()
-        js.json_data["Target"]["pytm_target_2"]["lun"] = ['pytest_res']
-        js.commit_data()
         with patch('builtins.print') as terminal_print:
             self.target.modify('pytarget_233', 'iqn.2020-02.com.example:pytarget2', 'pytest_portal_2')
             terminal_print.assert_called_with("Fail！Can't find pytarget_233")
@@ -1060,14 +1068,13 @@ class TestTarget:
             terminal_print.assert_called_with("Fail！Can't find pytd_target1")
         with patch('builtins.print') as terminal_print:
             self.target.delete('pytd_target')
-            terminal_print.assert_called_with('Delete pytd_target successfully')
+            terminal_print.assert_called_with('Delete target:pytd_target successfully')
         with patch('builtins.print') as terminal_print:
             self.target.delete('pytm_target_2')
             terminal_print.assert_called_with('In use：pytest_res. Can not delete')
         subprocess.run('python3 vtel.py iscsi sync', shell=True)
+        time.sleep(3)
         self.target.js.json_data = self.target.js.read_json()
-        self.target.js.json_data["Target"]["pytm_target_2"]["lun"] = ['pytest_res']
-        self.target.js.commit_data()
 
     def test_show(self):
         assert ['pytm_target_1', 'iqn.2020-02.com.example:pymtest1', 'pytest_portal_1', 'Started', ''] in self.target.show()
@@ -1097,8 +1104,6 @@ class TestTarget:
         with patch('builtins.print') as terminal_print:
             self.target.stop('pytm_target_1')
             terminal_print.assert_called_with('pytm_target_1 has been stopped')
-        # subprocess.run('crm res stop pytm_target_1', shell=True)
-        #Stopped(disabled)
         mocker.patch.object(crm.CRMConfig, 'get_crm_res_status', return_value="Stopped")
         mocker.patch.object(sundry, 'get_answer', return_value="no")
         with pytest.raises(SystemExit) as exsinfo:
