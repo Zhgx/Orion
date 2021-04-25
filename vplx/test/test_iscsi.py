@@ -1152,3 +1152,186 @@ class TestTarget:
         assert self.target._check_status("xx") is "UNKNOWN_ERROR"
         mocker.patch.object(crm.CRMConfig, 'get_crm_res_status', return_value="FAILED")
         assert self.target._check_status("xx") is "FAIL"
+
+@pytest.mark.ilu2
+class TestLogicalUnit:
+    def setup_class(self):
+        subprocess.run('python3 vtel.py stor r c res_pylun -s 4m -a -num 1', shell=True)
+        subprocess.run('python3 vtel.py stor r c res_pylun1 -s 4m -a -num 1', shell=True)
+        subprocess.run('python3 vtel.py stor r c res_pylun2 -s 4m -a -num 1', shell=True)
+        subprocess.run('python3 vtel.py stor r c res_pylun3 -s 4m -a -num 1', shell=True)
+        time.sleep(2)
+        subprocess.run('python3 vtel.py iscsi d s', shell=True)
+        time.sleep(1)
+        subprocess.run('python3 vtel.py iscsi h c pylun_host1 iqn.2020-04.feixitek.com:pyilu01', shell=True)
+        subprocess.run('python3 vtel.py iscsi h c pylun_host2 iqn.2020-04.feixitek.com:pyilu02', shell=True)
+        subprocess.run('python3 vtel.py iscsi pt c pylun_portal_1 -ip 10.203.1.184', shell=True)
+        time.sleep(3)
+        subprocess.run('python3 vtel.py iscsi tg c pylun_target_1 -iqn iqn.2020-02.com.example:pyilu1 -portal pylun_portal_1', shell=True)
+        self.ilu = iscsi.LogicalUnit()
+        path = self.ilu.js.json_data['Disk']['res_pylun1']
+        lunid = int(path[-4:]) - 1000
+        create_ilu_cmd = f'crm conf primitive res_pylun1 iSCSILogicalUnit params ' \
+              f'target_iqn="iqn.2020-02.com.example:pyilu1" ' \
+              f'implementation=lio-t ' \
+              f'lun={lunid} ' \
+              f'path={path} ' \
+              f'allowed_initiators="iqn.2020-04.feixitek.com:pyilu01" ' \
+              f'op start timeout=40 interval=0 ' \
+              f'op stop timeout=40 interval=0 ' \
+              f'op monitor timeout=40 interval=15 ' \
+              f'meta target-role=Stopped'
+        subprocess.run(create_ilu_cmd, shell=True)
+        subprocess.run('crm cof colocation col_res_pylun1 inf: res_pylun1 pylun_target_1', shell=True)
+        subprocess.run('crm cof order or_res_pylun1 pylun_target_1 res_pylun1', shell=True)
+        time.sleep(1)
+        subprocess.run('python3 vtel.py iscsi sync', shell=True)
+
+    def teardown_class(self):
+        # subprocess.run('python3 vtel.py iscsi sync', shell=True)
+        # subprocess.run('python3 vtel.py iscsi h d pylun_host1 -y', shell=True)
+        # subprocess.run('python3 vtel.py iscsi h d pylun_host2 -y', shell=True)
+        # subprocess.run('crm res stop res_pylun1', shell=True)
+        # subprocess.run('crm conf del res_pylun1', shell=True)
+        # time.sleep(2)
+        # subprocess.run('python3 vtel.py iscsi sync', shell=True)
+        # time.sleep(1)
+        # subprocess.run('python3 vtel.py stor r d res_pylun -y', shell=True)
+        # time.sleep(1)
+        # subprocess.run('python3 vtel.py stor r d res_pylun1 -y', shell=True)
+        # time.sleep(1)
+        # subprocess.run('python3 vtel.py stor r d res_pylun2 -y', shell=True)
+        # time.sleep(1)
+        # subprocess.run('python3 vtel.py stor r d res_pylun3 -y', shell=True)
+        # time.sleep(2)
+        # subprocess.run('python3 vtel.py iscsi d s', shell=True)
+        # time.sleep(1)
+        # subprocess.run('python3 vtel.py iscsi tg d pylun_target_1', shell=True)
+        # time.sleep(2)
+        # subprocess.run('python3 vtel.py iscsi pt d pylun_portal_1', shell=True)
+        pass
+
+    def test__get_all_drbd_inuse(self):
+        assert self.ilu._get_all_drbdInuse()
+
+    def test_create(self):
+        with patch('builtins.print') as terminal_print:
+            self.ilu.create('pylun_target_1', 'disk_12kk', [])
+            terminal_print.assert_called_with("Fail！Can't find disk_12kk")
+        with patch('builtins.print') as terminal_print:
+            self.ilu.create('pylun_target_1', 'disk_12kk', [])
+            terminal_print.assert_called_with('The disk "{disk}" has been used')
+        with patch('builtins.print') as terminal_print:
+            self.ilu.create('pylun_target_1', 'disk_12kk', [])
+            terminal_print.assert_called_with("Fail！Can't find {target}")
+        with patch('builtins.print') as terminal_print:
+            self.ilu.create('pylun_target_1', 'disk_12kk', [])
+            terminal_print.assert_called_with("Fail! Can't find {host}.Please give the true name.")
+        with patch('builtins.print') as terminal_print:
+            self.ilu.create('pylun_target_1', 'disk_12kk', [])
+            terminal_print.assert_called_with("Create {name} successfully")
+
+    def test_modify(self):
+        assert self.ilu.modify() is None
+
+    def test_delete(self):
+        self.ilu.create('pylun_target_1', 'disk_12kk', [])
+        with patch('builtins.print') as terminal_print:
+            self.ilu.delete('')
+            terminal_print.assert_called_with("Delete {name} successfully")
+        with patch('builtins.print') as terminal_print:
+            self.ilu.delete('')
+            terminal_print.assert_called_with("Delete canceled")
+        with patch('builtins.print') as terminal_print:
+            self.ilu.delete('')
+            terminal_print.assert_called_with("Fail！Can't find {name}")
+        assert self.ilu.delete("")
+
+    def test_show(self):
+        assert [] in self.ilu.show()
+
+    def test_add(self):
+        with patch('builtins.print') as terminal_print:
+            self.ilu.add("", [])
+            terminal_print.assert_called_with("Fail！Can't find {logicalunit}")
+        with patch('builtins.print') as terminal_print:
+            self.ilu.add("", [])
+            terminal_print.assert_called_with('{host} is already on the "allowed initiators"')
+        with patch('builtins.print') as terminal_print:
+            self.ilu.add("", [])
+            terminal_print.assert_called_with("Fail！Can't find {host}")
+        with patch('builtins.print') as terminal_print:
+            self.ilu.add("", [])
+            terminal_print.assert_called_with("Modify the allowed initiators of {name} successfully")
+
+    def test_remove(self):
+        with patch('builtins.print') as terminal_print:
+            self.ilu.remove("", [])
+            terminal_print.assert_called_with("Fail！Can't find {logicalunit}")
+        with patch('builtins.print') as terminal_print:
+            self.ilu.remove("", [])
+            terminal_print.assert_called_with('{host} is not in the "allowed initiators"')
+        with patch('builtins.print') as terminal_print:
+            self.ilu.remove("", [])
+            terminal_print.assert_called_with("Please keep at least one initiators")
+        with patch('builtins.print') as terminal_print:
+            self.ilu.remove("", [])
+            terminal_print.assert_called_with("Modify the allowed initiators of {name} successfully")
+
+    def test_start(self):
+        with patch('builtins.print') as terminal_print:
+            self.ilu.start("")
+            terminal_print.assert_called_with("{name} does not exist")
+        with patch('builtins.print') as terminal_print:
+            self.ilu.start("")
+            terminal_print.assert_called_with("{name} is in STARTED state")
+        with patch('builtins.print') as terminal_print:
+            self.ilu.start("")
+            terminal_print.assert_called_with("{name} A is in FAILED state")
+        with patch('builtins.print') as terminal_print:
+            self.ilu.start("")
+            terminal_print.assert_called_with("{name} has been started")
+
+    def test_stop(self):
+        with patch('builtins.print') as terminal_print:
+            assert self.ilu.stop("")
+            terminal_print.assert_called_with("{name} does not exist")
+        with patch('builtins.print') as terminal_print:
+            assert self.ilu.stop("")
+            terminal_print.assert_called_with("{name} has been stopped")
+        with patch('builtins.print') as terminal_print:
+            assert self.ilu.stop("")
+            terminal_print.assert_called_with("{name} A is in FAILED state")
+        with patch('builtins.print') as terminal_print:
+            assert self.ilu.stop("")
+            terminal_print.assert_called_with("already cancelled")
+        with patch('builtins.print') as terminal_print:
+            assert self.ilu.stop("")
+            terminal_print.assert_called_with("{name} has been stopped")
+
+    def test__get_iqn(self):
+        assert [] in self.ilu._get_iqn([])
+
+    def test__get_path(self):
+        assert self.ilu._get_path("") is ''
+
+    def test__get_target_iqn(self):
+        assert self.ilu._get_target_iqn("") is ''
+
+    def test__get_initiator_iqns(self):
+        assert '' in self.ilu._get_initiator_iqns([''])
+
+    def test__get_host_data_for_show(self):
+        assert  self.ilu._get_host_data_for_show([]) is ['{iqn}({k})']
+
+    def test__check_status(self, mocker):
+        # 模拟返回的资源状态（实际环境比较难获取到各种不同状态）
+        mocker.patch.object(crm.CRMConfig, 'get_crm_res_status', return_value="Started")
+        assert self.ilu._check_status("xx") is "OK"
+        mocker.patch.object(crm.CRMConfig, 'get_crm_res_status', return_value="Stopped")
+        mocker.patch.object(crm.CRMConfig, 'get_failed_actions', return_value=True)
+        assert self.ilu._check_status("xx") is "OTHER_ERROR"
+        mocker.patch.object(crm.CRMConfig, 'get_failed_actions', return_value=False)
+        assert self.ilu._check_status("xx") is "UNKNOWN_ERROR"
+        mocker.patch.object(crm.CRMConfig, 'get_crm_res_status', return_value="FAILED")
+        assert self.ilu._check_status("xx") is "FAIL"

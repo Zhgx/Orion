@@ -741,67 +741,111 @@ class TestISCSITarget:
         assert exsinfo.type == consts.CmdError
 
 
-@pytest.mark.portal
+@pytest.mark.ilu
 class TestISCSILogicalUnit:
 
     def setup_class(self):
-        subprocess.run('python3 vtel.py stor r c res_test -s 10m -a -num 1', shell=True)
+        subprocess.run('python3 vtel.py stor r c res_pyilu -s 4m -a -num 1', shell=True)
+        subprocess.run('python3 vtel.py stor r c res_pyilu1 -s 4m -a -num 1', shell=True)
+        subprocess.run('python3 vtel.py stor r c res_pyilu2 -s 4m -a -num 1', shell=True)
+        subprocess.run('python3 vtel.py stor r c res_pyilu3 -s 4m -a -num 1', shell=True)
+        time.sleep(2)
         subprocess.run('python3 vtel.py iscsi d s', shell=True)
-        subprocess.run('python3 vtel.py iscsi h c test_host1 iqn.2020-04.feixitek.com:pytest01', shell=True)
-        subprocess.run('python3 vtel.py iscsi h c test_host2 iqn.2020-04.feixitek.com:pytest002', shell=True)
-
+        time.sleep(1)
+        subprocess.run('python3 vtel.py iscsi h c pyilu_host1 iqn.2020-04.feixitek.com:pyilu01', shell=True)
+        subprocess.run('python3 vtel.py iscsi h c pyilu_host2 iqn.2020-04.feixitek.com:pyilu02', shell=True)
+        subprocess.run('python3 vtel.py iscsi pt c pyilu_portal_1 -ip 10.203.1.184', shell=True)
+        time.sleep(3)
+        subprocess.run('python3 vtel.py iscsi tg c pyilu_target_1 -iqn iqn.2020-02.com.example:pyilu1 -portal pyilu_portal_1', shell=True)
         self.iscsilu = crm.ISCSILogicalUnit()
+        path = self.iscsilu.js.json_data['Disk']['res_pyilu1']
+        lunid = int(path[-4:]) - 1000
+        create_ilu_cmd = f'crm conf primitive res_pyilu1 iSCSILogicalUnit params ' \
+              f'target_iqn="iqn.2020-02.com.example:pyilu1" ' \
+              f'implementation=lio-t ' \
+              f'lun={lunid} ' \
+              f'path={path} ' \
+              f'allowed_initiators="iqn.2020-04.feixitek.com:pyilu01" ' \
+              f'op start timeout=40 interval=0 ' \
+              f'op stop timeout=40 interval=0 ' \
+              f'op monitor timeout=40 interval=15 ' \
+              f'meta target-role=Stopped'
+        subprocess.run(create_ilu_cmd, shell=True)
+        subprocess.run('crm cof colocation col_res_pyilu1 inf: res_pyilu1 pyilu_target_1', shell=True)
+        subprocess.run('crm cof order or_res_pyilu1 pyilu_target_1 res_pyilu1', shell=True)
+        time.sleep(1)
+        subprocess.run('python3 vtel.py iscsi sync', shell=True)
 
     def teardown_class(self):
-        print('teardown')
-        subprocess.run('python3 vtel.py iscsi h d test_host1 -y', shell=True)
-        subprocess.run('python3 vtel.py iscsi h d test_host2 -y', shell=True)
-        subprocess.run('crm res stop res_test', shell=True)
-        subprocess.run('crm conf del res_test', shell=True)
-        subprocess.run('python3 vtel.py stor r d res_test -y', shell=True)
+        subprocess.run('python3 vtel.py iscsi sync', shell=True)
+        subprocess.run('python3 vtel.py iscsi h d pyilu_host1 -y', shell=True)
+        subprocess.run('python3 vtel.py iscsi h d pyilu_host2 -y', shell=True)
+        subprocess.run('crm res stop res_pyilu1', shell=True)
+        subprocess.run('crm conf del res_pyilu1', shell=True)
+        time.sleep(2)
+        subprocess.run('python3 vtel.py iscsi sync', shell=True)
+        time.sleep(1)
+        subprocess.run('python3 vtel.py stor r d res_pyilu -y', shell=True)
+        time.sleep(1)
+        subprocess.run('python3 vtel.py stor r d res_pyilu1 -y', shell=True)
+        time.sleep(1)
+        subprocess.run('python3 vtel.py stor r d res_pyilu2 -y', shell=True)
+        time.sleep(1)
+        subprocess.run('python3 vtel.py stor r d res_pyilu3 -y', shell=True)
+        time.sleep(2)
         subprocess.run('python3 vtel.py iscsi d s', shell=True)
-
-    def test_get_target(self):
-        """获取crm target 信息"""
-        #mat:加一个没有unique name格式的IQN测试
-        assert self.iscsilu.get_target() == ('t_test', 'iqn.2020-04.feixitek.com:versaplx00')
-
+        time.sleep(1)
+        subprocess.run('python3 vtel.py iscsi tg d pyilu_target_1', shell=True)
+        time.sleep(2)
+        subprocess.run('python3 vtel.py iscsi pt d pyilu_portal_1', shell=True)
 
     def test_create(self):
         """创建ISCSILogicalUnit"""
-        disk = iscsi.Disk()
-        disk_data = disk.show('res_test')
-        path = disk_data[0][1]
+        self.iscsilu.js.json_data = self.iscsilu.js.read_json()
+        path = self.iscsilu.js.json_data['Disk']['res_pyilu']
+        # disk = iscsi.Disk()
+        # disk_data = disk.show('res_pyilu')
+        # path = disk_data[0][1]
         lunid = int(path[-4:]) - 1000
-        iscsilu = crm.ISCSILogicalUnit()
-        assert iscsilu.create('res_test', 'iqn.2020-04.feixitek.com:versaplx00', lunid, path,
-                              'iqn.2020-11.com.example:pytest01')
+        # iscsilu = crm.ISCSILogicalUnit()
+        assert self.iscsilu.create('res_pyilu', 'iqn.2020-04.feixitek.com:pycversaplx00', lunid, path,
+                              'iqn.2020-11.com.example:pytest01') is True
         # ISCSILogicalUnit 已存在
         with pytest.raises(consts.CmdError) as exsinfo:
-            iscsilu.create('res_test', 'iqn.2020-04.feixitek.com:versaplx00', lunid, path,
+            self.iscsilu.create('res_pyilu1', 'iqn.2020-04.feixitek.com:versaplx00', lunid, path,
                            'iqn.2020-11.com.example:pytest01')
         assert exsinfo.type == consts.CmdError
         # 数据清洗
-        subprocess.run('crm res stop res_test', shell=True)
-        subprocess.run('crm conf del res_test', shell=True)
-
-    def test_create_mapping(self):
-        """创建mapping"""
-        assert self.iscsilu.create_mapping('res_test', ['iqn.2020-04.feixitek.com:pytest01'])
+        subprocess.run('crm res stop res_pyilu', shell=True)
+        time.sleep(3)
+        subprocess.run('crm conf del res_pyilu', shell=True)
 
     def test_modify_initiators(self):
         """修改ISCSILogicalUnit映射iqn"""
-        assert self.iscsilu.modify_initiators('res_test',
-                                   ['iqn.2020-04.feixitek.com:pytest01', 'iqn.2020-04.feixitek.com:pytest002'])
+        assert self.iscsilu.modify_initiators('res_pyilu1', ['iqn.2020-04.feixitek.com:pyilu01', 'iqn.2020-04.feixitek.com:pyilu02'])
+        with pytest.raises(consts.CmdError) as exsinfo:
+            self.iscsilu.modify_initiators('res_pyilu_1', ['iqn.2020-04.feixitek.com:pyilu01', 'iqn.2020-04.feixitek.com:pyilu02'])
+        assert exsinfo.type == consts.CmdError
 
     def test_modify_target_iqn(self):
-        #mat:+
-        pass
+        """修改Target IQN"""
+        assert self.iscsilu.modify_target_iqn('res_pyilu1', 'iqn.2020-02.com.example:pyilu2')
+        with pytest.raises(consts.CmdError) as exsinfo:
+            self.iscsilu.modify_target_iqn('res_pyilu_1', 'aiqn.2020-02.com.example:pyilu2')
+        assert exsinfo.type == consts.CmdError
+
+    def test_create_mapping(self):
+        """创建mapping"""
+        assert self.iscsilu.create_mapping('res_pyilu2','pyilu_target_1', ['iqn.2020-04.feixitek.com:pyilu01']) is True
+        subprocess.run('crm res stop res_pyilu2', shell=True)
+        time.sleep(3)
+        subprocess.run('crm conf del res_pyilu2', shell=True)
 
     def test_delete(self):
         """删除ISCSILogicalUnit"""
-        assert self.iscsilu.delete('res_test')
+        self.iscsilu.create_mapping('res_pyilu3', 'pyilu_target_1', ['iqn.2020-04.feixitek.com:pyilu01'])
+        assert self.iscsilu.delete('res_pyilu3') is True
         # 删除不存在
         with pytest.raises(consts.CmdError) as exsinfo:
-            self.iscsilu.delete('res_test')
+            self.iscsilu.delete('res_pyilu3')
         assert exsinfo.type == consts.CmdError
