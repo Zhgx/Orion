@@ -1568,8 +1568,6 @@ class LogicalUnit():
         else:
             s.prt_log(f'{name} has been stopped', 0)
 
-    def _get_iqn(self,hosts):
-        return [self.js.json_data['Host'][host] for host in hosts]
 
     def _get_path(self,disk):
         return self.js.json_data['Disk'][disk]
@@ -1578,17 +1576,7 @@ class LogicalUnit():
         return self.js.json_data['Target'][target]['target_iqn']
 
     def _get_initiator_iqns(self,hosts):
-        """
-
-        :param hosts:
-        :type hosts:list
-        :return:
-        """
-        lst = []
-        for host in hosts:
-            lst.append(self.js.json_data['Host'][host])
-
-        return lst
+        return [self.js.json_data['Host'][host] for host in hosts]
 
     def _get_host_data_for_show(self,list_iqn):
         data_list = []
