@@ -655,8 +655,6 @@ class TestOrder:
             assert order.create('or_res_test0', iscsilu.target_name, 'res_test0')
         assert exsinfo.type == consts.CmdError
 
-
-@pytest.mark.portal
 @pytest.mark.target
 class TestISCSITarget:
     def setup_class(self):
@@ -778,8 +776,6 @@ class TestISCSILogicalUnit:
 
     def teardown_class(self):
         subprocess.run('python3 vtel.py iscsi sync', shell=True)
-        subprocess.run('python3 vtel.py iscsi h d pyilu_host1 -y', shell=True)
-        subprocess.run('python3 vtel.py iscsi h d pyilu_host2 -y', shell=True)
         subprocess.run('crm res stop res_pyilu1', shell=True)
         subprocess.run('crm conf del res_pyilu1', shell=True)
         time.sleep(2)
@@ -798,6 +794,9 @@ class TestISCSILogicalUnit:
         subprocess.run('python3 vtel.py iscsi tg d pyilu_target_1', shell=True)
         time.sleep(2)
         subprocess.run('python3 vtel.py iscsi pt d pyilu_portal_1', shell=True)
+        # 手动删host
+        # subprocess.run('python3 vtel.py iscsi h d pyilu_host1', shell=True)
+        # subprocess.run('python3 vtel.py iscsi h d pyilu_host2', shell=True)
 
     def test_create(self):
         """创建ISCSILogicalUnit"""

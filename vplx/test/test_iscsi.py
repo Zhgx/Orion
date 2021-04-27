@@ -931,6 +931,7 @@ class TestTarget:
         time.sleep(3)
         #环境中要先有一个pytest_res的DRBD资源(Disk)
         self.target = iscsi.Target()
+        self.target.js.json_data = self.target.js.read_json()
         path = self.target.js.json_data['Disk']['pytest_res']
         lunid = int(path[-4:]) - 1000
         create_ilu_cmd = f'crm conf primitive pytest_res iSCSILogicalUnit params ' \
@@ -1153,23 +1154,25 @@ class TestTarget:
         mocker.patch.object(crm.CRMConfig, 'get_crm_res_status', return_value="FAILED")
         assert self.target._check_status("xx") is "FAIL"
 
-@pytest.mark.ilu2
+@pytest.mark.ilu
 class TestLogicalUnit:
     def setup_class(self):
         subprocess.run('python3 vtel.py stor r c res_pylun -s 4m -a -num 1', shell=True)
         subprocess.run('python3 vtel.py stor r c res_pylun1 -s 4m -a -num 1', shell=True)
         subprocess.run('python3 vtel.py stor r c res_pylun2 -s 4m -a -num 1', shell=True)
         subprocess.run('python3 vtel.py stor r c res_pylun3 -s 4m -a -num 1', shell=True)
-        time.sleep(2)
+        time.sleep(3)
         subprocess.run('python3 vtel.py iscsi d s', shell=True)
-        time.sleep(1)
-        subprocess.run('python3 vtel.py iscsi h c pylun_host1 iqn.2020-04.feixitek.com:pyilu01', shell=True)
-        subprocess.run('python3 vtel.py iscsi h c pylun_host2 iqn.2020-04.feixitek.com:pyilu02', shell=True)
-        subprocess.run('python3 vtel.py iscsi h c pylun_host3 iqn.2020-04.feixitek.com:pyilu03', shell=True)
+        time.sleep(3)
+        subprocess.run('python3 vtel.py iscsi h c pylun_host1 iqn.2020-04.feixitek.com:pylun01', shell=True)
+        subprocess.run('python3 vtel.py iscsi h c pylun_host2 iqn.2020-04.feixitek.com:pylun02', shell=True)
+        subprocess.run('python3 vtel.py iscsi h c pylun_host3 iqn.2020-04.feixitek.com:pylun03', shell=True)
         subprocess.run('python3 vtel.py iscsi pt c pylun_portal_1 -ip 10.203.1.184', shell=True)
         time.sleep(3)
         subprocess.run('python3 vtel.py iscsi tg c pylun_target_1 -iqn iqn.2020-02.com.example:pyilu1 -portal pylun_portal_1', shell=True)
+        time.sleep(3)
         self.ilu = iscsi.LogicalUnit()
+        self.ilu.js.json_data = self.ilu.js.read_json()
         self.path = self.ilu.js.json_data['Disk']['res_pylun1']
         self.lunid = int(self.path[-4:]) - 1000
         create_ilu_cmd = f'crm conf primitive lun_res_pylun1 iSCSILogicalUnit params ' \
@@ -1177,7 +1180,7 @@ class TestLogicalUnit:
               f'implementation=lio-t ' \
               f'lun={self.lunid} ' \
               f'path={self.path} ' \
-              f'allowed_initiators="iqn.2020-04.feixitek.com:pyilu01" ' \
+              f'allowed_initiators="iqn.2020-04.feixitek.com:pylun01" ' \
               f'op start timeout=40 interval=0 ' \
               f'op stop timeout=40 interval=0 ' \
               f'op monitor timeout=40 interval=15 ' \
@@ -1191,9 +1194,6 @@ class TestLogicalUnit:
 
     def teardown_class(self):
         subprocess.run('python3 vtel.py iscsi sync', shell=True)
-        subprocess.run('python3 vtel.py iscsi h d pylun_host1 -y', shell=True)
-        subprocess.run('python3 vtel.py iscsi h d pylun_host2 -y', shell=True)
-        subprocess.run('python3 vtel.py iscsi h d pylun_host3 -y', shell=True)
         subprocess.run('crm res stop lun_res_pylun1', shell=True)
         time.sleep(2)
         subprocess.run('crm conf del lun_res_pylun1', shell=True)
@@ -1213,6 +1213,10 @@ class TestLogicalUnit:
         subprocess.run('python3 vtel.py iscsi tg d pylun_target_1', shell=True)
         time.sleep(3)
         subprocess.run('python3 vtel.py iscsi pt d pylun_portal_1', shell=True)
+        #手动删host
+        # subprocess.run('python3 vtel.py iscsi h d pylun_host1', shell=True)
+        # subprocess.run('python3 vtel.py iscsi h d pylun_host2', shell=True)
+        # subprocess.run('python3 vtel.py iscsi h d pylun_host3', shell=True)
 
     def test__get_all_drbd_inuse(self):
         self.ilu.js.json_data = self.ilu.js.read_json()
@@ -1252,13 +1256,12 @@ class TestLogicalUnit:
             self.ilu.delete('lun_res_pylun2')
             terminal_print.assert_called_with("Fail！Can't find lun_res_pylun2")
         mocker.patch.object(sundry, 'get_answer', return_value="no")
-        #抛出Systemy异常，待该
-        # with patch('builtins.print') as terminal_print:
-        #     self.ilu.delete('lun_res_pylun1')
-        #     terminal_print.assert_called_with("Delete canceled")
+        with pytest.raises(SystemExit) as exsinfo:
+            self.ilu.delete('lun_res_pylun1')
+        assert exsinfo.type == SystemExit
 
     def test_show(self):
-        assert ['lun_res_pylun1', str(self.lunid),'pylun_target_1', self.path, 'iqn.2020-04.feixitek.com:pyilu01(pylun_host1)', 'Started'] in self.ilu.show()
+        assert ['lun_res_pylun1', str(self.lunid),'pylun_target_1', self.path, 'iqn.2020-04.feixitek.com:pylun01(pylun_host1)', 'Started'] in self.ilu.show()
 
     def test_add(self, mocker):
         self.ilu.create('pylun_target_1', 'res_pylun3', ['pylun_host2'])
@@ -1319,45 +1322,43 @@ class TestLogicalUnit:
         with patch('builtins.print') as terminal_print:
             self.ilu.start("lun_res_pylun3")
             terminal_print.assert_called_with("lun_res_pylun3 has been started")
-        # #模拟FAILED状态
-        # mocker.patch.object(crm.CRMConfig, 'get_crm_res_status', return_value="FAILED")
-        # with patch('builtins.print') as terminal_print:
-        #     self.ilu.start("lun_res_pylun3")
-        #     terminal_print.assert_called_with("lun_res_pylun3 A is in FAILED state")
-        # mocker.patch.object(crm.CRMConfig, 'get_crm_res_status', return_value="Started")
         mocker.patch.object(sundry, 'get_answer', return_value="yes")
         self.ilu.delete('lun_res_pylun3')
         time.sleep(2)
         self.ilu.js.json_data = self.ilu.js.read_json()
+        # 模拟FAILED状态
+        mocker.patch.object(crm.CRMConfig, 'get_crm_res_status', return_value="FAILED")
+        with patch('builtins.print') as terminal_print:
+            self.ilu.start("lun_res_pylun1")
+            terminal_print.assert_called_with("lun_res_pylun1 A is in FAILED state")
 
     def test_stop(self, mocker):
         self.ilu.create('pylun_target_1', 'res_pylun3', ['pylun_host2'])
         time.sleep(1)
         self.ilu.js.json_data = self.ilu.js.read_json()
-        # assert None，find the reason
         with patch('builtins.print') as terminal_print:
-            assert self.ilu.stop("45lun_res_pylun3")
+            self.ilu.stop("45lun_res_pylun3")
             terminal_print.assert_called_with("45lun_res_pylun3 does not exist")
         with patch('builtins.print') as terminal_print:
-            assert self.ilu.stop("lun_res_pylun3")
+            self.ilu.stop("lun_res_pylun3")
             terminal_print.assert_called_with("lun_res_pylun3 has been stopped")
         with patch('builtins.print') as terminal_print:
-            assert self.ilu.stop("lun_res_pylun3")
+            self.ilu.stop("lun_res_pylun3")
             terminal_print.assert_called_with("lun_res_pylun3 has been stopped")
-        # # 模拟资源状态
-        # mocker.patch.object(crm.CRMConfig, 'get_crm_res_status', return_value="FAILED")
-        # with patch('builtins.print') as terminal_print:
-        #     assert self.ilu.stop("lun_res_pylun3")
-        #     terminal_print.assert_called_with("lun_res_pylun3 A is in FAILED state")
-        # mocker.patch.object(crm.CRMConfig, 'get_crm_res_status', return_value="Stopped")
-        # mocker.patch.object(sundry, 'get_answer', return_value="no")
-        # with patch('builtins.print') as terminal_print:
-        #     assert self.ilu.stop("lun_res_pylun3")
-        #     terminal_print.assert_called_with("already cancelled")
-        # mocker.patch.object(crm.CRMConfig, 'get_crm_res_status', return_value="Stopped (disabled)")
+        mocker.patch.object(sundry, 'get_answer', return_value="yes")
         self.ilu.delete('lun_res_pylun3')
         time.sleep(2)
         self.ilu.js.json_data = self.ilu.js.read_json()
+        # 模拟资源状态
+        mocker.patch.object(crm.CRMConfig, 'get_crm_res_status', return_value="FAILED")
+        with patch('builtins.print') as terminal_print:
+            self.ilu.stop("lun_res_pylun1")
+            terminal_print.assert_called_with("lun_res_pylun1 A is in FAILED state")
+        mocker.patch.object(crm.CRMConfig, 'get_crm_res_status', return_value="Stopped")
+        mocker.patch.object(sundry, 'get_answer', return_value="no")
+        with pytest.raises(SystemExit) as exsinfo:
+            self.ilu.stop("lun_res_pylun1")
+        assert exsinfo.type == SystemExit
 
     def test__get_path(self):
         assert '/dev/drbd' in self.ilu._get_path("res_pylun1")
@@ -1366,11 +1367,11 @@ class TestLogicalUnit:
         assert self.ilu._get_target_iqn('pylun_target_1') == 'iqn.2020-02.com.example:pyilu1'
 
     def test__get_initiator_iqns(self):
-        assert self.ilu._get_initiator_iqns(['pylun_host1', 'pylun_host2']) == ['iqn.2020-04.feixitek.com:pyilu01',
-                                                                            'iqn.2020-04.feixitek.com:pyilu02']
+        assert self.ilu._get_initiator_iqns(['pylun_host1', 'pylun_host2']) == ['iqn.2020-04.feixitek.com:pylun01',
+                                                                            'iqn.2020-04.feixitek.com:pylun02']
 
     def test__get_host_data_for_show(self):
-        assert self.ilu._get_host_data_for_show(['iqn.2020-04.feixitek.com:pyilu01']) == 'iqn.2020-04.feixitek.com:pyilu01(pylun_host1)'
+        assert self.ilu._get_host_data_for_show(['iqn.2020-04.feixitek.com:pylun01']) == 'iqn.2020-04.feixitek.com:pylun01(pylun_host1)'
 
     def test__check_status(self, mocker):
         # 模拟返回的资源状态（实际环境比较难获取到各种不同状态）
