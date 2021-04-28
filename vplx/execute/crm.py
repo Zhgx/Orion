@@ -798,7 +798,7 @@ class ISCSILogicalUnit():
             s.prt_log(f"Modify the allowed initiators of {name} successfully",0)
             return True
         else:
-            s.prt_log(result['rts'],1)
+            s.prt_log(result['rst'],1)
             raise consts.CmdError
 
 
@@ -810,7 +810,7 @@ class ISCSILogicalUnit():
             s.prt_log(f"Modify the target iqn of {name} successfully",0)
             return True
         else:
-            s.prt_log(result['rts'],1)
+            s.prt_log(result['rst'],1)
             raise consts.CmdError
 
 

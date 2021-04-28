@@ -64,12 +64,12 @@ class MapCommands():
             help='map_name',
             default=None)
 
-        p_delete_map.add_argument(
-            '-y',
-            dest='yes',
-            action='store_true',
-            help='Skip to confirm selection',
-            default=False)
+        # p_delete_map.add_argument(
+        #     '-y',
+        #     dest='yes',
+        #     action='store_true',
+        #     help='Skip to confirm selection',
+        #     default=False)
 
         p_delete_map.set_defaults(func=self.delete)
 

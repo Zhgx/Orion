@@ -1467,12 +1467,12 @@ class LogicalUnit():
 
         initiators_add = []
         for host in hosts:
+            if not self.js.check_key("Host", host):
+                s.prt_log(f"Fail！Can't find {host}", 1)
+                return
             initiator = self.js.json_data['Host'][host]
             if initiator in self.js.json_data["LogicalUnit"][logicalunit]["initiators"]:
                 s.prt_log(f'{host} is already on the "allowed initiators"', 1)
-                return
-            if not self.js.check_key("Host", host):
-                s.prt_log(f"Fail！Can't find {host}", 1)
                 return
             initiators_add.append(initiator)
 
@@ -1491,6 +1491,9 @@ class LogicalUnit():
 
         initiators_remove = []
         for host in hosts:
+            if not self.js.check_key("Host", host):
+                s.prt_log(f"Fail！Can't find {host}", 1)
+                return
             initiator = self.js.json_data['Host'][host]
             if not initiator in self.js.json_data["LogicalUnit"][logicalunit]["initiators"]:
                 s.prt_log(f'{host} is not in the "allowed initiators"', 1)
@@ -1568,8 +1571,6 @@ class LogicalUnit():
         else:
             s.prt_log(f'{name} has been stopped', 0)
 
-    def _get_iqn(self,hosts):
-        return [self.js.json_data['Host'][host] for host in hosts]
 
     def _get_path(self,disk):
         return self.js.json_data['Disk'][disk]
@@ -1578,17 +1579,7 @@ class LogicalUnit():
         return self.js.json_data['Target'][target]['target_iqn']
 
     def _get_initiator_iqns(self,hosts):
-        """
-
-        :param hosts:
-        :type hosts:list
-        :return:
-        """
-        lst = []
-        for host in hosts:
-            lst.append(self.js.json_data['Host'][host])
-
-        return lst
+        return [self.js.json_data['Host'][host] for host in hosts]
 
     def _get_host_data_for_show(self,list_iqn):
         data_list = []
