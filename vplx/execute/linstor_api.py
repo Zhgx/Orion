@@ -486,74 +486,35 @@ class LinstorAPI():
 
 
 
-# 集群节点配置文件 cfile
-# cfile = {'storagepool':[]}
-#
-#
-# # 写法1和写法2有什么优缺点
-#
-# # 写法1
-# class StoragePool1(LinstorOperation):
-#     def __init__(self,name):
-#         super().__init__()
-#         self.name = name
-#         if self.name in cfile['storagepool']:
-#             self.node = None
-#             self.driver_type = None
-#             self.driver_pool = None
-#             self.total_capacity = None
-#
-#         else:
-#             self.node = cfile['storagepool']['node']
-#
-#
-#     def create(self):
-#         # 可能不需要指定参数，直接用类属性进行定义
-#         pass
-#
-#
-#     def delete(self):
-#         pass
-#
-#
-#
-# # 写法2
-# class StoragePool2(LinstorOperation):
-#     def __init__(self):
-#         super().__init__()
-#
-#
-#     def create(self,name,node,driver):
-#         pass
 
 
 
 
 
-
-def run():
-    try:
-        linstor_ = LinstorAPI()
-        try:
-            print(linstor_.get_resource())
-            # print(linstor_.create_rd('res_b'))
-            # print(linstor_.create_vd('res_b','10M'))
-            # print(linstor_.create_resource('ubuntu','res_b'))
-            # print(linstor_.create_sp('pool_b','ubuntu','LVM','drbdpool'))
-            # print(linstor_.delete_sp('ubuntu','pool_b'))
-            # print(linstor_.delete_resource('ubuntu','res_b'))
-        except Exception as E:
-        # linstor_.delete_rd('res_l')
-            print(E)
-        finally:
-            import subprocess
-            # subprocess.run('linstor rd d res_a',shell=True)
-            # subprocess.run('linstor rd c res_a', shell=True)
-        # linstor_.get_storagepool()
-        #     linstor_.delete_resource(['ubuntu', 'vince2'], 'res_a')
-
-    except linstor.LinstorNetworkError as le:
-        print(le)
+#
+# def run():
+#     try:
+#         linstor_ = LinstorAPI()
+#         try:
+#             print(linstor_.get_resource())
+#             # print(linstor_.create_rd('res_b'))
+#             # print(linstor_.create_vd('res_b','10M'))
+#             # print(linstor_.create_resource('ubuntu','res_b'))
+#             # print(linstor_.create_sp('pool_b','ubuntu','LVM','drbdpool'))
+#             # print(linstor_.delete_sp('ubuntu','pool_b'))
+#             # print(linstor_.delete_resource('ubuntu','res_b'))
+#         except Exception as E:
+#         # linstor_.delete_rd('res_l')
+#             print(E)
+#         finally:
+#             import subprocess
+#             # subprocess.run('linstor rd d res_a',shell=True)
+#             # subprocess.run('linstor rd c res_a', shell=True)
+#         # linstor_.get_storagepool()
+#         #     linstor_.delete_resource(['ubuntu', 'vince2'], 'res_a')
+#
+#     except linstor.LinstorNetworkError as le:
+#         print(le)
 
 
 
@@ -562,4 +523,5 @@ def run():
 
 if __name__ == "__main__":
     # pass
-    run()
+    # run()
+    pass
