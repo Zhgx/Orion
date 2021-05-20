@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport"
+	content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+<title>Resource</title>
+<link href="{{url_for('static',filename='layui/css/layui.css')}}"
+	rel="stylesheet" type="text/css" />
+<style>
+body {
+	margin: 10px;
+}
+
+.demo-carousel {
+	height: 200px;
+	line-height: 200px;
+	text-align: center;
+}
+</style>
+
+</head>
+<body>
+	<div class="layui-row">
+		<fieldset class="layui-elem-field site-demo-button"
+			style="margin-top: 20px; margin-left: 20px; width: 50%;">
+			<legend>资源创建</legend>
+			<form class="layui-form" action="" lay-filter="example">
+				<div class="layui-form-item">
+					<label class="layui-form-label">Name</label>
+					<div class="layui-input-inline">
+						<input type="text" placeholder="请输入正确值" name="sp_name"
+							autocomplete="off" class="layui-input">
+					</div>
+					<!-- 				<div class="layui-form-mid layui-word-aux">请填写6到12位密码</div>
+ -->
+				</div>
+				<div class="layui-form-item">
+					<div class="layui-inline">
+						<label class="layui-form-label">Node</label>
+						<div class="layui-input-inline">
+							<select name="node_name" id="Node" lay-verify="required"
+								lay-search="">
+							</select>
+						</div>
+					</div>
+					<!-- 				<div class="layui-form-mid layui-word-aux">请填写6到12位密码</div>
+ -->
+				</div>
+
+				<div class="layui-form-item">
+					<div class="layui-inline">
+						<label class="layui-form-label">lvm/thin_lvm</label>
+						<div class="layui-input-block">
+							<input type="radio" name="type" value="lvm" title="lvm" checked="" lay-filter="radio_f">
+							<input type="radio" name="type" value="thin_lvm" title="thin_lvm"  lay-filter="radio_f"> 
+						</div>
+				</div>
+				<div class="layui-inline" style="width: 100px;">
+					<select name="volume" id="volume" lay-verify="required"
+						lay-search="">
+						<option value="">直接选择或搜索选择</option>
+					</select>
+				</div>
+	</div>
+	<div class="layui-form-item">
+		<div class="layui-input-block">
+			<button type="submit" class="layui-btn" lay-submit=""
+				lay-filter="demo1">Create</button>
+		</div>
+	</div>
+	</form>
+	</fieldset>
+	</div>
+
+	<div class="layui-row"
+		style="margin-top: 20px; margin-left: 20px; margin-right: 20px;">
+		<div class="layui-col-xs12">
+			<div class="grid-demo grid-demo-bg1">
+				<table class="layui-hide" id="storagepool_test" lay-filter="test"></table>
+			</div>
+		</div>
+	</div>
+
+</body>
+
+<!--  
+<script type="text/html" id="toolbarDemo">
+  <div class="layui-btn-container">
+    <button class="layui-btn layui-btn-sm" lay-event="getCheckData">获取选中数据</button>
+ <button class="layui-btn layui-btn-sm" lay-event="getCheckLength">获取选中数目</button>
+    <button class="layui-btn layui-btn-sm" lay-event="isAll">验证是否全选</button> 
+  </div>
+</script>
+<script type="text/html" id="barDemo">
+  <a class="layui-btn  layui-btn-xs" lay-event="detail">查看</a>
+  <a class="layui-btn layui-btn-normal layui-btn-xs" lay-event="edit">编辑</a>
+  <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+</script>
+
+<script type="text/html" id="barDemo1">
+ <a class="layui-btn  layui-btn-xs" lay-event="detail">查看</a>
+  <a class="layui-btn layui-btn-normal layui-btn-xs" lay-event="edit">编辑</a>
+  <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+	</script>
+-->
+<script type="text/javascript"
+	src="{{url_for('static',filename='personal/js/JQuery.js')}}"></script>
+<script src="{{ url_for('static',filename='layui/layui.all.js') }}"></script>
+<script type="text/javascript"
+	src="{{url_for('static',filename='personal/js/S_f_son_table.js')}}"></script>
+</body>
+</html>

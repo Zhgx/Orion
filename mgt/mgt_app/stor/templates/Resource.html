@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport"
+	content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+<title>Resource</title>
+<link href="{{url_for('static',filename='layui/css/layui.css')}}"
+	rel="stylesheet" type="text/css" />
+</head>
+<body>
+	<div class="layui-row">
+		<fieldset class="layui-elem-field site-demo-button"
+			style="margin-top: 20px; margin-left: 20px; width: 50%;">
+			<legend>资源创建</legend>
+			<div class="layui-tab layui-tab-brief" lay-filter="docDemoTabBrief">
+				<ul class="layui-tab-title">
+					<li class="layui-this">Resource</li>
+					<li>Resource(auto)</li>
+					<li>Diskless Resource</li>
+				</ul>
+				<div class="layui-tab-content">
+					<div class="layui-tab-item layui-show">
+						<form class="layui-form" action="" lay-filter="example">
+							<div class="layui-form-item">
+								<label class="layui-form-label">Name</label>
+								<div class="layui-input-inline">
+									<input type="text" placeholder="请输入正确值" name="res_name"
+										autocomplete="off" class="layui-input">
+								</div>
+								<!-- 				<div class="layui-form-mid layui-word-aux">请填写6到12位密码</div>
+ -->
+							</div>
+							<div class="layui-form-item">
+								<label class="layui-form-label">size</label>
+								<div class="layui-input-inline" style="width: 110px;">
+									<input type="text" placeholder="请输入正确值" name="size"
+										class="layui-input">
+								</div>
+								<div class="layui-input-inline" style="width: 70px;">
+									<select name="size_unit">
+										<option value="GB" selected="">GB</option>
+										<option value="TB">TB</option>
+										<option value="MB">MB</option>
+										<option value="KB">KB</option>
+									</select>
+								</div>
+							</div>
+							<div class="layui-form-item">
+								<label class="layui-form-label">SP</label>
+								<div class="layui-input-inline">
+									<div id="demo" class="xm-select-demo"></div>
+								</div>
+							</div>
+							<div class="layui-form-item">
+								<div class="layui-input-block">
+									<button type="submit" class="layui-btn" lay-submit=""
+										lay-filter="Resource">Create</button>
+									<button type="submit" class="layui-btn" lay-submit=""
+										lay-filter="add_mirror">Add Mirror</button>
+								</div>
+							</div>
+						</form>
+					</div>
+					<div class="layui-tab-item">
+						<form class="layui-form" action="" lay-filter="example">
+							<div class="layui-form-item">
+								<label class="layui-form-label">Name</label>
+								<div class="layui-input-inline">
+									<input type="text" placeholder="请输入正确值" name="res_name"
+										autocomplete="off" class="layui-input">
+								</div>
+								<!-- 				<div class="layui-form-mid layui-word-aux">请填写6到12位密码</div>
+ -->
+							</div>
+							<div class="layui-form-item">
+								<label class="layui-form-label">size</label>
+								<div class="layui-input-inline" style="width: 110px;">
+									<input type="text" placeholder="请输入正确值" name="size"
+										class="layui-input">
+								</div>
+								<div class="layui-input-inline" style="width: 70px;">
+									<select name="size_unit">
+										<option value="GB" selected="">GB</option>
+										<option value="TB">TB</option>
+										<option value="MB">MB</option>
+										<option value="KB">KB</option>
+									</select>
+								</div>
+							</div>
+							<div class="layui-form-item">
+								<div class="layui-inline">
+									<label class="layui-form-label">Node Num</label>
+									<div class="layui-input-inline">
+										<select name="node_num" id="node_num" lay-verify="required"
+											lay-search="">
+										</select>
+									</div>
+								</div>
+								<!-- 				<div class="layui-form-mid layui-word-aux">请填写6到12位密码</div>
+ -->
+							</div>
+							<div class="layui-form-item">
+								<div class="layui-input-block">
+									<button type="submit" class="layui-btn" lay-submit=""
+										lay-filter="Resource_auto">Create</button>
+									<button type="submit" class="layui-btn" lay-submit=""
+										lay-filter="add_mirror_auto">Add Mirror</button>
+								</div>
+							</div>
+						</form>
+					</div>
+					<div class="layui-tab-item">
+						<form class="layui-form" action="" lay-filter="example">
+							<div class="layui-form-item">
+								<label class="layui-form-label">Name</label>
+								<div class="layui-input-inline">
+									<input type="text" placeholder="请输入正确值" name="res_name"
+										autocomplete="off" class="layui-input">
+								</div>
+								<!-- 				<div class="layui-form-mid layui-word-aux">请填写6到12位密码</div>
+ -->
+							</div>
+							<div class="layui-form-item">
+								<div class="layui-inline">
+									<label class="layui-form-label">Node</label>
+									<div class="layui-input-inline">
+										<select name="node" id="Node" multiple=""  lay-verify="required"
+											lay-search="">
+										</select>
+									</div>
+								</div>
+								<!-- 				<div class="layui-form-mid layui-word-aux">请填写6到12位密码</div>
+ -->
+							</div>
+							<div class="layui-form-item">
+								<div class="layui-input-block">
+									<button type="submit" class="layui-btn" lay-submit=""
+										lay-filter="Resource_dis">Create</button>
+								</div>
+							</div>
+						</form>
+					</div>
+				</div>
+			</div>
+		</fieldset>
+	</div>
+	<div class="layui-row"
+		style="margin-top: 20px; margin-left: 20px; margin-right: 20px;">
+		<div class="layui-col-xs12">
+			<div class="grid-demo grid-demo-bg1">
+				<table class="layui-hide" id="resource_test" lay-filter="test"></table>
+			</div>
+		</div>
+	</div>
+</body>
+<!--  
+<script type="text/html" id="toolbarDemo">
+  <div class="layui-btn-container">
+    <button class="layui-btn layui-btn-sm" lay-event="getCheckData">获取选中数据</button>
+ <button class="layui-btn layui-btn-sm" lay-event="getCheckLength">获取选中数目</button>
+    <button class="layui-btn layui-btn-sm" lay-event="isAll">验证是否全选</button> 
+  </div>
+</script>
+<script type="text/html" id="barDemo">
+  <a class="layui-btn  layui-btn-xs" lay-event="detail">查看</a>
+  <a class="layui-btn layui-btn-normal layui-btn-xs" lay-event="edit">编辑</a>
+  <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+</script>
+
+<script type="text/html" id="barDemo1">
+ <a class="layui-btn  layui-btn-xs" lay-event="detail">查看</a>
+  <a class="layui-btn layui-btn-normal layui-btn-xs" lay-event="edit">编辑</a>
+  <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+	</script>
+-->
+
+<script type="text/javascript"
+	src="{{url_for('static',filename='personal/js/JQuery.js')}}"></script>
+<script src="{{ url_for('static',filename='layui/layui.all.js') }}"></script>
+<script src="{{ url_for('static',filename='layui/dist/xm-select.js') }}"></script>
+<script type="text/javascript"
+	src="{{url_for('static',filename='personal/js/R_f_son_table.js')}}"></script>
+</body>
+</html>
